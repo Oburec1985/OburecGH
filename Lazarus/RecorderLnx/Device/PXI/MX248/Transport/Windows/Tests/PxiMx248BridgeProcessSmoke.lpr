@@ -9,7 +9,7 @@ var
   lBridgePath: string;
   lChassis, lSlot: Integer;
   lTransport: TRecorderPxiMx248WindowsTransport;
-  lResult: TRecorderOperationResult;
+  lResult: TRcOperationResult;
 begin
   if (ParamCount < 1) or not FileExists(ParamStr(1)) then
   begin

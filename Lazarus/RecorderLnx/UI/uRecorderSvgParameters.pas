@@ -30,10 +30,22 @@ function ValidateSvgParameterValue(const ASource, AName, AValue: string;
 
 implementation
 
+type
+  TRecorderSvgScaleAngleArguments = record
+    Value: Double;
+    ScaleMin: Double;
+    ScaleMax: Double;
+    ArcStart: Double;
+    AlarmStart: Double;
+    AlarmSweep: Double;
+    Reverse: Boolean;
+  end;
+
 const
   CRecorderDegreeDash = 'recorder-deg-dash(';
   CRecorderTicks = 'recorder-ticks(';
   CRecorderValueAngle = 'recorder-value-angle(';
+  CRecorderScaleAngle = 'recorder-scale-angle(';
 
 function LoadSvgText(const AFileName: string): string;
 var
@@ -265,11 +277,96 @@ begin
   until False;
 end;
 
+function ParseScaleAngleArguments(const AArgs: string;
+  out AArguments: TRecorderSvgScaleAngleArguments): Boolean;
+var
+  I, lCommaPos, lStart: Integer;
+  lParts: array[0..6] of string;
+  lNumbers: array[0..6] of Double;
+begin
+  lStart := 1;
+  for I := 0 to 5 do
+  begin
+    lCommaPos := Pos(',', AArgs, lStart);
+    if lCommaPos = 0 then
+      Exit(False);
+    lParts[I] := Trim(Copy(AArgs, lStart, lCommaPos - lStart));
+    lStart := lCommaPos + 1;
+  end;
+  lParts[6] := Trim(Copy(AArgs, lStart, MaxInt));
+  for I := 0 to High(lNumbers) do
+    if not TryParseSvgNumber(lParts[I], lNumbers[I]) or
+      IsNan(lNumbers[I]) or IsInfinite(lNumbers[I]) then
+      Exit(False);
+
+  if (lNumbers[2] <= lNumbers[1]) or
+    not ((lNumbers[6] = 0) or (lNumbers[6] = 1)) then
+    Exit(False);
+  AArguments.Value := lNumbers[0];
+  AArguments.ScaleMin := lNumbers[1];
+  AArguments.ScaleMax := lNumbers[2];
+  AArguments.ArcStart := lNumbers[3];
+  AArguments.AlarmStart := lNumbers[4];
+  AArguments.AlarmSweep := lNumbers[5];
+  AArguments.Reverse := lNumbers[6] = 1;
+  Result := True;
+end;
+
+function ScaleAngle(const AArguments: TRecorderSvgScaleAngleArguments): Double;
+var
+  lAngleAtMin, lAngleAtMax, lValue, lArcEnd: Double;
+begin
+  lArcEnd := AArguments.AlarmStart + AArguments.AlarmSweep;
+  if AArguments.Reverse then
+  begin
+    lAngleAtMin := lArcEnd;
+    lAngleAtMax := AArguments.ArcStart;
+  end
+  else
+  begin
+    lAngleAtMin := AArguments.ArcStart;
+    lAngleAtMax := lArcEnd;
+  end;
+  lValue := EnsureRange(AArguments.Value, AArguments.ScaleMin,
+    AArguments.ScaleMax);
+  Result := lAngleAtMin + (lValue - AArguments.ScaleMin) *
+    (lAngleAtMax - lAngleAtMin) /
+    (AArguments.ScaleMax - AArguments.ScaleMin);
+end;
+
+function ResolveScaleAngleExpressions(const ASource: string): string;
+var
+  lArgs, lReplacement: string;
+  lClosePos, lOpenPos, lSearchPos: SizeInt;
+  lArguments: TRecorderSvgScaleAngleArguments;
+begin
+  Result := ASource;
+  lSearchPos := 1;
+  repeat
+    lOpenPos := Pos(CRecorderScaleAngle, Result, lSearchPos);
+    if lOpenPos = 0 then
+      Exit;
+    lClosePos := Pos(')', Result, lOpenPos + Length(CRecorderScaleAngle));
+    if lClosePos = 0 then
+      raise EConvertError.Create('Unclosed recorder-scale-angle expression');
+    lArgs := Copy(Result, lOpenPos + Length(CRecorderScaleAngle),
+      lClosePos - lOpenPos - Length(CRecorderScaleAngle));
+    if not ParseScaleAngleArguments(lArgs, lArguments) then
+      raise EConvertError.CreateFmt('Invalid recorder-scale-angle(%s)',
+        [lArgs]);
+    lReplacement := FormatSvgNumber(ScaleAngle(lArguments));
+    Delete(Result, lOpenPos, lClosePos - lOpenPos + 1);
+    Insert(lReplacement, Result, lOpenPos);
+    lSearchPos := lOpenPos + Length(lReplacement);
+  until False;
+end;
+
 function ResolveSvgRendererExpressions(const ASource: string): string;
 begin
   Result := ResolveDegreeDashExpressions(ASource);
   Result := ResolveTickExpressions(Result);
   Result := ResolveValueAngleExpressions(Result);
+  Result := ResolveScaleAngleExpressions(Result);
 end;
 
 function LastPositionBefore(const ASubString, ASource: string;

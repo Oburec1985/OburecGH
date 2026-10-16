@@ -82,6 +82,7 @@ type
       DrawWireframeOverride: Boolean;
       DrawPointsOverride: Boolean;
       DrawNormalsOverride: Boolean;
+      DrawBoundsOverride: Boolean;
       ShapeLines: array of T3dShapeLine;
       destructor Destroy;
       override;
@@ -109,7 +110,23 @@ type
       override;
   end;
 
+  T3dSceneLabel = class
+  public
+    OwnerKey:PtrUInt;
+    Key:Integer;
+    Text:string;
+    Visible:Boolean;
+    NodeId:QWord;
+    LogicalVertexId:LongWord;
+    AtVertex:Boolean;
+    LocalPosition:T3dVector;
+  end;
+
   T3dScene = class
+  private
+      fLabels:array of T3dSceneLabel;
+      function GetLabelCount:Integer;
+      function GetLabel(AIndex:Integer):T3dSceneLabel;
   private
       fBounds: T3dBounds;
       fBoundsDirty: Boolean;
@@ -131,6 +148,13 @@ type
       destructor Destroy;
       override;
       procedure AddNode(ANode: T3dNode);
+      function EnsureLabel(AOwnerKey:PtrUInt; AKey:Integer):T3dSceneLabel;
+      procedure RemoveLabels(AOwnerKey:PtrUInt);
+      function ResolveLabelPosition(ALabel:T3dSceneLabel;
+        out APosition:T3dVector):Boolean;
+      property LabelCount:Integer read GetLabelCount;
+      property Labels[AIndex:Integer]:T3dSceneLabel read GetLabel;
+  public
       function RemoveNode(ANodeId: QWord): Boolean;
       function NextNodeId: QWord;
       procedure AddAnimation(AAnimation: T3dAnimation);
@@ -153,6 +177,67 @@ procedure IncludePoint(var ABounds: T3dBounds; const APoint: T3dVector);
 function ShapePrimitive(AClosed: Boolean): T3dShapePrimitive;
 
 implementation
+
+function T3dScene.GetLabelCount:Integer;
+begin Result:=Length(fLabels) end;
+
+function T3dScene.GetLabel(AIndex:Integer):T3dSceneLabel;
+begin Result:=fLabels[AIndex] end;
+
+function T3dScene.EnsureLabel(AOwnerKey:PtrUInt; AKey:Integer):T3dSceneLabel;
+var I:Integer;
+begin
+  for I:=0 to High(fLabels) do
+    if (fLabels[I].OwnerKey=AOwnerKey) and (fLabels[I].Key=AKey) then
+      Exit(fLabels[I]);
+  Result:=T3dSceneLabel.Create;
+  Result.OwnerKey:=AOwnerKey;
+  Result.Key:=AKey;
+  SetLength(fLabels,Length(fLabels)+1);
+  fLabels[High(fLabels)]:=Result;
+end;
+
+procedure T3dScene.RemoveLabels(AOwnerKey:PtrUInt);
+var I,J:Integer;
+begin
+  J:=0;
+  for I:=0 to High(fLabels) do
+    if fLabels[I].OwnerKey=AOwnerKey then fLabels[I].Free
+    else begin fLabels[J]:=fLabels[I]; Inc(J) end;
+  SetLength(fLabels,J);
+end;
+
+function T3dScene.ResolveLabelPosition(ALabel:T3dSceneLabel;
+  out APosition:T3dVector):Boolean;
+var N:T3dNode; P:T3dVector; I:Integer;
+begin
+  Result:=False;
+  if (ALabel=nil) or not ALabel.Visible then Exit;
+  N:=FindNode(ALabel.NodeId);
+  if N=nil then Exit;
+  P:=ALabel.LocalPosition;
+  if ALabel.AtVertex then
+  begin
+    if N.Mesh=nil then Exit;
+    I:=-1;
+    if (ALabel.LogicalVertexId<LongWord(Length(N.Mesh.LogicalVertices))) and
+       (N.Mesh.LogicalVertices[ALabel.LogicalVertexId].Id=ALabel.LogicalVertexId) then
+      I:=ALabel.LogicalVertexId
+    else
+      for I:=0 to High(N.Mesh.LogicalVertices) do
+        if N.Mesh.LogicalVertices[I].Id=ALabel.LogicalVertexId then Break;
+    if (I<0) or (I>=Length(N.Mesh.LogicalVertices)) then Exit;
+    if N.Mesh.LogicalVertices[I].Id<>ALabel.LogicalVertexId then Exit;
+    if Length(N.Mesh.LogicalVertices[I].CornerIndices)=0 then Exit;
+    I:=N.Mesh.LogicalVertices[I].CornerIndices[0];
+    if I>=Length(N.Mesh.Positions) then Exit;
+    P:=N.Mesh.Positions[I];
+  end;
+  APosition.X:=P.X*N.WorldTransform[0]+P.Y*N.WorldTransform[4]+P.Z*N.WorldTransform[8]+N.WorldTransform[12];
+  APosition.Y:=P.X*N.WorldTransform[1]+P.Y*N.WorldTransform[5]+P.Z*N.WorldTransform[9]+N.WorldTransform[13];
+  APosition.Z:=P.X*N.WorldTransform[2]+P.Y*N.WorldTransform[6]+P.Z*N.WorldTransform[10]+N.WorldTransform[14];
+  Result:=True;
+end;
 
 constructor T3dScene.Create;
 begin
@@ -228,6 +313,7 @@ begin
     Nodes[I].Free;
   for I := 0 to High(Animations) do
     Animations[I].Free;
+  for I:=0 to High(fLabels) do fLabels[I].Free;
   inherited Destroy;
 end;
 

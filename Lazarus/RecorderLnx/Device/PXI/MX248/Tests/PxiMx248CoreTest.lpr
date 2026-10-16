@@ -27,54 +27,54 @@ type
     LastProgramConfiguration: TPxiMx248Configuration;
     StartCount: Integer;
     StopCount: Integer;
-    function Connect: TRecorderOperationResult;
+    function Connect: TRcOperationResult;
     function Initialize(out ASerialNumber, AVersion: string):
-      TRecorderOperationResult;
-    function TestLink: TRecorderOperationResult;
+      TRcOperationResult;
+    function TestLink: TRcOperationResult;
     function SetModuleProperties(
-      const AConfiguration: TPxiMx248Configuration): TRecorderOperationResult;
+      const AConfiguration: TPxiMx248Configuration): TRcOperationResult;
     function ProgramAcquisition(
       const AConfiguration: TPxiMx248Configuration):
-      TRecorderOperationResult;
-    function Start: TRecorderOperationResult;
-    function Stop: TRecorderOperationResult;
+      TRcOperationResult;
+    function Start: TRcOperationResult;
+    function Stop: TRcOperationResult;
     procedure Disconnect;
   end;
 
-function TFakeTransport.Connect: TRecorderOperationResult;
-begin Result := TRecorderOperationResult.Success end;
+function TFakeTransport.Connect: TRcOperationResult;
+begin Result := TRcOperationResult.Success end;
 function TFakeTransport.Initialize(out ASerialNumber, AVersion: string):
-  TRecorderOperationResult;
+  TRcOperationResult;
 begin
   Inc(InitializeCount); ASerialNumber := '248'; AVersion := '1.1';
-  Result := TRecorderOperationResult.Success;
+  Result := TRcOperationResult.Success;
 end;
-function TFakeTransport.TestLink: TRecorderOperationResult;
-begin Result := TRecorderOperationResult.Success end;
+function TFakeTransport.TestLink: TRcOperationResult;
+begin Result := TRcOperationResult.Success end;
 function TFakeTransport.SetModuleProperties(
-  const AConfiguration: TPxiMx248Configuration): TRecorderOperationResult;
+  const AConfiguration: TPxiMx248Configuration): TRcOperationResult;
 begin
   Inc(ModulePropertyCount); ConfigureTrace := ConfigureTrace + 'properties;';
   LastModuleConfiguration := AConfiguration;
   if FailModuleProperties then
-    Exit(TRecorderOperationResult.Failure(rocTransport, 'fake.properties',
+    Exit(TRcOperationResult.Failure(rocTransport, 'fake.properties',
       'injected failure'));
-  Result := TRecorderOperationResult.Success;
+  Result := TRcOperationResult.Success;
 end;
 function TFakeTransport.ProgramAcquisition(
-  const AConfiguration: TPxiMx248Configuration): TRecorderOperationResult;
+  const AConfiguration: TPxiMx248Configuration): TRcOperationResult;
 begin
   Inc(ConfigureCount); ConfigureTrace := ConfigureTrace + 'program;';
   LastProgramConfiguration := AConfiguration;
   if FailProgramming then
-    Exit(TRecorderOperationResult.Failure(rocTransport, 'fake.program',
+    Exit(TRcOperationResult.Failure(rocTransport, 'fake.program',
       'injected failure'));
-  Result := TRecorderOperationResult.Success;
+  Result := TRcOperationResult.Success;
 end;
-function TFakeTransport.Start: TRecorderOperationResult;
-begin Inc(StartCount); Result := TRecorderOperationResult.Success end;
-function TFakeTransport.Stop: TRecorderOperationResult;
-begin Inc(StopCount); Result := TRecorderOperationResult.Success end;
+function TFakeTransport.Start: TRcOperationResult;
+begin Inc(StartCount); Result := TRcOperationResult.Success end;
+function TFakeTransport.Stop: TRcOperationResult;
+begin Inc(StopCount); Result := TRcOperationResult.Success end;
 procedure TFakeTransport.Disconnect;
 begin end;
 
@@ -88,17 +88,17 @@ var
   lFake: TFakeTransport;
   lResponse: string;
   lBeforeCalc: string;
-  lResult: TRecorderOperationResult;
+  lResult: TRcOperationResult;
 begin
   lFake := TFakeTransport.Create;
   lDevice := TPxiMx248Device.Create(lFake);
   try
     lResult := lDevice.GetProperties('sample-rate-hz;channel.1.input-mode',
       lResponse);
-    Check(lResult.IsSuccess and (Pos('sample-rate-hz=1000', lResponse) > 0),
+    Check(lResult.IsSuccess and (Pos('sample-rate-hz=512000', lResponse) > 0),
       'getprop failed');
     lResult := lDevice.SetProperties(
-      'sample-rate-hz=2000;block-samples=512;calibration-mode=pxi;' +
+      'sample-rate-hz=216000;block-samples=512;calibration-mode=pxi;' +
       'channel.1.enabled=false;channel.1.amplifier-enabled=false;' +
       'channel.1.input-mode=single-ended;channel.1.range-index=2;' +
       'channel.1.lpf-index=1;channel.1.icp-current=10;' +
@@ -106,18 +106,22 @@ begin
       'channel.8.icp-current=4');
     Check(lResult.IsSuccess, 'setprop failed');
     lResult := lDevice.SetProperties(
-      'sample-rate-hz=3000;unknown=1');
+      'sample-rate-hz=108000;unknown=1');
     Check(not lResult.IsSuccess, 'unknown property accepted');
     lDevice.GetProperties('sample-rate-hz', lResponse);
-    Check(lResponse = 'sample-rate-hz=2000', 'invalid batch was not atomic');
+    Check(lResponse = 'sample-rate-hz=216000', 'invalid batch was not atomic');
     lResult := lDevice.SetProperties('device.type=1');
     Check(not lResult.IsSuccess, 'read-only property accepted');
     lResult := lDevice.SetProperties('sample-rate-hz=2000.5');
-    Check(lResult.IsSuccess, 'invariant decimal property rejected');
+    Check(not lResult.IsSuccess, 'unsupported sample rate accepted');
     lResult := lDevice.SetProperties('sample-rate-hz');
     Check(not lResult.IsSuccess, 'malformed property accepted');
     lResult := lDevice.SetProperties('block-samples=128;block-samples=256');
     Check(not lResult.IsSuccess, 'duplicate property accepted');
+    lResult := lDevice.SetProperties('block-samples=' +
+      IntToStr(CPxiMx248MaxBlockSamples + 1));
+    Check(not lResult.IsSuccess,
+      'block larger than the bridge payload accepted');
     lDevice.GetProperties('block-samples', lBeforeCalc);
     lResult := lDevice.CalcProperties('block-samples=1024', lResponse);
     Check(lResult.IsSuccess and (Pos('block-samples=1024', lResponse) > 0),
@@ -137,7 +141,7 @@ begin
     lFake.FailProgramming := False;
     lFake.ConfigureTrace := '';
     Check(lDevice.Configure.IsSuccess, 'configure failed');
-    Check(lFake.LastModuleConfiguration.SampleRateHz = 2000.5,
+    Check(lFake.LastModuleConfiguration.SampleRateHz = 216000,
       'sample rate mapping differs');
     Check((lFake.LastModuleConfiguration.BlockSamples = 512) and
       (lFake.LastModuleConfiguration.CalibrationMode = pcmPxi),
@@ -157,22 +161,35 @@ begin
       lFake.LastModuleConfiguration.SampleRateHz,
       'configure stages received different snapshots');
     Check(lDevice.Start.IsSuccess, 'first start failed');
-    lResult := lDevice.SetProperties('sample-rate-hz=3000');
+    lResult := lDevice.SetProperties('sample-rate-hz=108000');
     Check((not lResult.IsSuccess) and (lDevice.State = pmsRunning),
       'running property commit was not rejected');
     lDevice.GetProperties('sample-rate-hz', lResponse);
-    Check(lResponse = 'sample-rate-hz=2000.5',
+    Check(lResponse = 'sample-rate-hz=216000',
       'running rejection changed cached configuration');
     Check(lDevice.Stop.IsSuccess, 'first stop failed');
+    Check(lDevice.SetProperties('sample-rate-hz=108000').IsSuccess,
+      'stopped reconfiguration rejected');
+    lFake.FailProgramming := True;
+    Check(not lDevice.Configure.IsSuccess,
+      'dirty configured retry failure was ignored');
+    Check(not lDevice.Start.IsSuccess,
+      'failed dirty Configure incorrectly enabled Start');
+    lFake.FailProgramming := False;
+    Check(lDevice.Configure.IsSuccess,
+      'dirty configured retry did not program existing session');
+    Check(lFake.LastProgramConfiguration.SampleRateHz = 108000,
+      'dirty configured snapshot was not applied');
     Check(lDevice.Start.IsSuccess, 'second start failed');
     Check(lDevice.Stop.IsSuccess, 'second stop failed');
     Check(lDevice.Stop.IsSuccess, 'idempotent stop failed');
     Check(lDevice.Connect.IsSuccess, 'idempotent connect failed');
     Check(lDevice.Initialize.IsSuccess, 'idempotent initialize failed');
-    Check((lFake.InitializeCount = 1) and (lFake.ConfigureCount = 2) and
-      (lFake.ModulePropertyCount = 3),
+    Check((lFake.InitializeCount = 1) and (lFake.ConfigureCount = 4) and
+      (lFake.ModulePropertyCount = 5),
       'start/stop repeated initialize or configure');
-    Check(lFake.ConfigureTrace = 'properties;program;',
+    Check(lFake.ConfigureTrace =
+      'properties;program;properties;program;properties;program;',
       'MX-248 configure command order differs from original');
     Check((lFake.StartCount = 2) and (lFake.StopCount = 2),
       'start/stop counts differ');

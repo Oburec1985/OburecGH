@@ -22,8 +22,15 @@
 
 ```bat
 collect-files.bat "C:\Program Files (x86)\Mera\Recorder" ^
-  "C:\path\to\VC_redist.x86.exe"
+  "C:\path\to\VC_redist.x86.exe" ^
+  "D:\path\to\RecorderLnx-package.exe" ^
+  "D:\path\to\plugins"
 ```
+
+Без третьего аргумента сборщик продолжает брать `RecorderLnx.exe` из обычного
+каталога сборки. Полный `build-installer.ps1` компилирует приложение отдельно
+в `lib\x86_64-win64\RecorderLnx-package.exe`, а плагины в `package-build\plugins`;
+эти файлы передаются сборщику, поэтому открытое приложение не мешает сборке.
 
 Батник каждый раз полностью пересоздаёт `files`, поэтому устаревшие DLL и
 ресурсы не остаются от предыдущей сборки. Запускать `RecorderLnx.iss` напрямую

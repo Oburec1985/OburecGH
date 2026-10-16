@@ -1,0 +1,5 @@
+{"version":1,"strings":[
+{"hash":18347432,"name":"tdlg_confselect.caption","sourcebytes":[208,146,209,139,208,177,208,190,209,128,32,208,186,208,190,208,189,209,132,208,184,208,179,209,131,209,128,208,176,209,134,208,184,208,184],"value":"\u0412\u044B\u0431\u043E\u0440 \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438"},
+{"hash":3386266,"name":"tdlg_confselect.btnok.caption","sourcebytes":[38,208,158,208,154],"value":"&\u041E\u041A"},
+{"hash":69809520,"name":"tdlg_confselect.btncancel.caption","sourcebytes":[208,158,209,130,208,188,208,181,208,189,208,176],"value":"\u041E\u0442\u043C\u0435\u043D\u0430"}
+]}

@@ -10,9 +10,17 @@ uses
   uRecorderMdbTypes, uRecorderMdbManager;
 
 type
-  { Operator dialog for selecting the product and test whose immutable IDs are
-    attached to subsequent RecorderLnx measurements. SQL stays in the manager. }
+  { Operator dialog for maintaining and selecting the product/test branch of
+    the XML database. Recorded-data paths are attached as registrations. }
   TRecorderMdbDialog = class(TForm)
+    TopPan: TPanel;
+    lblBasePath: TLabel;
+    edBasePath: TEdit;
+    btnBrowsePath: TButton;
+    btnApplyPath: TButton;
+    procedure btnBrowsePathClick(Sender: TObject);
+    procedure btnApplyPathClick(Sender: TObject);
+  published
     btnCancel: TButton;
     btnCreateObject: TButton;
     btnCreateTest: TButton;
@@ -71,6 +79,38 @@ implementation
 
 uses
   DateUtils, LazUTF8;
+
+procedure TRecorderMdbDialog.btnBrowsePathClick(Sender: TObject);
+var lPath: string;
+begin
+  lPath := edBasePath.Text;
+  if SelectDirectory('Каталог базы испытаний', '', lPath) then
+    edBasePath.Text := lPath;
+end;
+
+procedure TRecorderMdbDialog.btnApplyPathClick(Sender: TObject);
+begin
+  try
+    fManager.ChangeBasePath(edBasePath.Text);
+    edBasePath.Text := fManager.Repository.BasePath;
+    fReloading := True;
+    try
+      lbObjects.Clear;
+      lbTests.Clear;
+      SetLength(fObjects, 0);
+      SetLength(fTests, 0);
+      edObjectSearch.Clear;
+      edTestSearch.Clear;
+      fPreferredObjectId := '';
+      fPreferredTestId := '';
+    finally
+      fReloading := False;
+    end;
+    ReloadObjects;
+  except
+    on E: Exception do MessageDlg('База испытаний', E.Message, mtError, [mbOK], 0);
+  end;
+end;
 
 function ContainsText(const AText, AFilter: string): Boolean;
 begin
@@ -270,6 +310,7 @@ end;
 
 procedure TRecorderMdbDialog.edObjectSearchChange(Sender: TObject);
 begin
+  if fReloading then Exit;
   ReloadObjects;
 end;
 
@@ -283,6 +324,7 @@ end;
 procedure TRecorderMdbDialog.lbObjectsSelectionChange(Sender: TObject;
   User: Boolean);
 begin
+  if fReloading then Exit;
   ReloadTests;
 end;
 
@@ -297,6 +339,7 @@ end;
 function TRecorderMdbDialog.Execute(AManager: TRecorderMdbManager): Boolean;
 begin
   fManager := AManager;
+  edBasePath.Text := fManager.Repository.BasePath;
   fPreferredObjectId := fManager.Context.ObjectId;
   fPreferredTestId := fManager.Context.TestId;
   ReloadObjects;

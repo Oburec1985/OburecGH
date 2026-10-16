@@ -10,8 +10,10 @@ uses
 var Input, Output: THandleStream; H: TBridgeHeader; Payload: TBytes;
   ErrorText, VendorDir, DataText: string; Api: TDevApiBinding; Running, ApiReady: Boolean;
   DevResult: Cardinal; DeviceIndex,CrateSerial,SlotNo: Integer;
-  BlockData: TBytes; BlockText: AnsiString;
+  BlockData: TBytes; BlockText: AnsiString; BlockDataSize: Integer;
   Config: TMx248ConfigureV1;
+  PxiConfig: TMx248PxiConfigV1;
+  ChannelMask: Cardinal;
 begin
   ExitCode := 1;
   Api := TDevApiBinding.Create;
@@ -26,7 +28,7 @@ begin
     while Running and ReadFrame(Input, H, Payload, ErrorText) do begin
       case H.Command of
         Ord(bcHello): WriteResult(Output, H, brOk, 'bridge.hello', '',
-          'protocol=1;arch=x86;max_payload=1048576');
+          'protocol=2;arch=x86;max_payload=1048576');
         Ord(bcStatus):
           if ApiReady then WriteResult(Output, H, brOk, 'bridge.status', '', 'devapi=ready')
           else WriteResult(Output, H, brDevApi, 'bridge.status', Api.Missing, 'devapi=unavailable');
@@ -60,6 +62,40 @@ begin
           if DevResult=0 then WriteResult(Output,H,brOk,'mx248.test','','')
           else WriteResult(Output,H,brDevApi,'mx248.test',IntToStr(DevResult),'')
         end;
+        Ord(bcReadProperties): begin
+          if Length(Payload)<>0 then
+            WriteResult(Output,H,brBadFrame,'mx248.read-properties',
+              'READ_PROPERTIES has no request payload','')
+          else begin
+            DevResult:=Api.ReadProperties(DataText);
+            if DevResult=0 then WriteResult(Output,H,brOk,
+              'mx248.read-properties','',RawByteString(UTF8String(DataText)))
+            else WriteResult(Output,H,brDevApi,'mx248.read-properties',
+              IntToStr(DevResult),'')
+          end
+        end;
+        Ord(bcConfigurePxi): begin
+          if not DecodePxiConfigV1(Payload,PxiConfig,ErrorText) then
+            WriteResult(Output,H,brBadFrame,'mx248.configure-pxi',ErrorText,'')
+          else begin
+            DevResult:=Api.ConfigurePxi(PxiConfig);
+            if DevResult=0 then WriteResult(Output,H,brOk,
+              'mx248.configure-pxi','','')
+            else WriteResult(Output,H,brDevApi,'mx248.configure-pxi',
+              IntToStr(DevResult),'')
+          end
+        end;
+        Ord(bcZeroBalance): begin
+          if not DecodeChannelMask(Payload,ChannelMask,ErrorText) then
+            WriteResult(Output,H,brBadFrame,'mx248.zero-balance',ErrorText,'')
+          else begin
+            DevResult:=Api.ZeroBalance(ChannelMask,DataText);
+            if DevResult=0 then WriteResult(Output,H,brOk,
+              'mx248.zero-balance','',RawByteString(UTF8String(DataText)))
+            else WriteResult(Output,H,brDevApi,'mx248.zero-balance',
+              IntToStr(DevResult),'')
+          end
+        end;
         Ord(bcConfigure): begin
           if not DecodeConfigureV1(Payload,Config,ErrorText) then
             WriteResult(Output,H,brBadFrame,'mx248.configure',ErrorText,'')
@@ -80,9 +116,10 @@ begin
           if Length(Payload)<>SizeOf(DeviceIndex) then
             WriteResult(Output,H,brBadFrame,'mx248.read','expected Int32 sample count','')
           else begin
-            Move(Payload[0],DeviceIndex,4); DevResult:=Api.ReadBlock(DeviceIndex,BlockData);
+            Move(Payload[0],DeviceIndex,4);
+            DevResult:=Api.ReadBlock(DeviceIndex,BlockData,BlockDataSize);
             if DevResult=0 then begin
-              SetString(BlockText,PAnsiChar(@BlockData[0]),Length(BlockData));
+              SetString(BlockText,PAnsiChar(@BlockData[0]),BlockDataSize);
               WriteResult(Output,H,brOk,'mx248.read','',RawByteString(BlockText));
             end else WriteResult(Output,H,brDevApi,'mx248.read',IntToStr(DevResult),'');
           end;

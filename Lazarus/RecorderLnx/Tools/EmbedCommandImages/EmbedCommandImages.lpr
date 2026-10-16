@@ -39,9 +39,11 @@ begin
       R.Free;
     end;
     Images := TImageList(C);
+    WriteLn('ImageList count before generation: ', Images.Count);
     RegenerateRecorderDesignerIcons(Images);
     if Images.Count <> CRecorderCommandImageCount then
       raise Exception.CreateFmt('Unexpected image count: %d', [Images.Count]);
+    WriteLn('ImageList count after generation: ', Images.Count);
     T := TStringStream.Create('');
     try
       WriteComponentAsTextToStream(T, Images);

@@ -85,7 +85,9 @@ uses
   uRecorderFrequencyResponseModel, uRcFreqRespDlg,
   uRecorder3dModel, uRecorder3dSettingsDialog, uRecorderSignalGeneratorModel,
   uRecorderSignalGeneratorSettingsDialog, uRecorderImpactHammerModel,
-  uRecorderImpactHammerSettingsDialog;
+  uRecorderImpactHammerSettingsDialog, uRecorderPluginRuntime,
+  uRecorderVisualComponentApiV2, uRecorderDacComponentModel,
+  uRecorderDacSettingsDialog;
   
 
 
@@ -93,17 +95,52 @@ uses
 const
   CTagComboEmptyFilterLimit = 200;
 
+function EditPluginVisual(AOwner: TComponent;
+  AComponent: TRecorderPluginVisualComponent): Boolean;
+var
+  lRequest: TRecorderVisualEditRequestV2;
+  lOwnerWindow: TWinControl;
+  lStatus: LongInt;
+begin
+  FillChar(lRequest, SizeOf(lRequest), 0);
+  lRequest.Header.Size := SizeOf(lRequest);
+  lRequest.Header.AbiMajor := REC_VISUAL_ABI_V2_MAJOR;
+  lRequest.Header.AbiMinor := REC_VISUAL_ABI_V2_MINOR;
+  lRequest.Dpi := Screen.PixelsPerInch;
+  {$IFDEF LCLwin32} lRequest.NativeBackend := REC_VISUAL_NATIVE_WIN32; {$ENDIF}
+  {$IFDEF LCLgtk2} lRequest.NativeBackend := REC_VISUAL_NATIVE_GTK2; {$ENDIF}
+  {$IFDEF LCLgtk3} lRequest.NativeBackend := REC_VISUAL_NATIVE_GTK3; {$ENDIF}
+  {$IFDEF LCLqt5} lRequest.NativeBackend := REC_VISUAL_NATIVE_QT5; {$ENDIF}
+  {$IFDEF LCLqt6} lRequest.NativeBackend := REC_VISUAL_NATIVE_QT6; {$ENDIF}
+  {$IFDEF LCLcocoa} lRequest.NativeBackend := REC_VISUAL_NATIVE_COCOA; {$ENDIF}
+  lOwnerWindow := Application.MainForm;
+  if AOwner is TWinControl then lOwnerWindow := TWinControl(AOwner);
+  if (lOwnerWindow <> nil) and
+    (lRequest.NativeBackend in [REC_VISUAL_NATIVE_WIN32, REC_VISUAL_NATIVE_GTK2]) then
+    lRequest.OwnerWindow := PtrUInt(lOwnerWindow.Handle);
+  lStatus := RecorderPluginVisualEdit(AComponent, lRequest);
+  if lStatus = REC_VISUAL_ERROR then
+    MessageDlg('Plugin editor failed: ' + AComponent.PluginTypeId,
+      mtError, [mbOK], 0);
+  Result := lStatus = REC_VISUAL_OK;
+end;
+
 function ShowComponentSettingsDialog(AOwner: TComponent; AComponent: TRecorderVisualComponent;
   ATagRegistry: TRecorderTagRegistry): Boolean;
 var
   lDialog: TComponentSettingsDialog;
 begin
+  if AComponent is TRecorderPluginVisualComponent then
+    Exit(EditPluginVisual(AOwner, TRecorderPluginVisualComponent(AComponent)));
   if AComponent is TRecorderImpactHammerComponent then
     Exit(ShowRecorderImpactHammerSettings(AOwner,
       TRecorderImpactHammerComponent(AComponent), ATagRegistry));
   if AComponent is TRecorderSignalGeneratorComponent then
     Exit(ShowRecorderSignalGeneratorSettingsDialog(AOwner,
       TRecorderSignalGeneratorComponent(AComponent)));
+  if AComponent is TRecorderDacComponent then
+    Exit(TRecorderDacSettingsDialog.Execute(AOwner,
+      TRecorderDacComponent(AComponent), ATagRegistry));
   if AComponent is TRecorder3dComponent then
     Exit(ShowRecorder3dSettingsDialog(AOwner,
       TRecorder3dComponent(AComponent), ATagRegistry));

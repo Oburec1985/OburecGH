@@ -1,0 +1,216 @@
+object RecorderDacComponentView: TRecorderDacComponentView
+  Height = 266
+  Width = 458
+  ClientHeight = 266
+  ClientWidth = 458
+  TabOrder = 0
+  object pnlTop: TPanel
+    Align = alTop
+    Height = 49
+    BevelOuter = bvNone
+    TabOrder = 0
+    object btnPlay: TButton
+      Left = 12
+      Top = 11
+      Width = 78
+      Height = 27
+      Caption = 'Play'
+      OnClick = PlayClick
+      TabOrder = 0
+    end
+    object cbBackend: TComboBox
+      Left = 96
+      Top = 11
+      Width = 184
+      Height = 27
+      Style = csDropDownList
+      OnChange = BackendChange
+      TabOrder = 1
+    end
+    object btnRefresh: TButton
+      Left = 286
+      Top = 11
+      Width = 78
+      Height = 27
+      Caption = 'Refresh'
+      OnClick = RefreshClick
+      TabOrder = 2
+    end
+    object btnSave: TButton
+      Left = 370
+      Top = 11
+      Width = 76
+      Height = 27
+      Caption = 'Save'
+      OnClick = SaveClick
+      TabOrder = 3
+    end
+  end
+  object pcPrograms: TPageControl
+    Left = 8
+    Top = 53
+    Width = 442
+    Height = 48
+    ActivePage = tsSin
+    Anchors = [akTop, akLeft, akRight]
+    OnChange = ProgramChange
+    TabOrder = 1
+    object tsSin: TTabSheet
+      Caption = 'Sin'
+    end
+    object tsAccurate: TTabSheet
+      Caption = 'AccuracySin'
+    end
+    object tsSweep: TTabSheet
+      Caption = 'SweepSin'
+    end
+    object tsTag: TTabSheet
+      Caption = 'Tag'
+    end
+  end
+  object gbSignal: TGroupBox
+    Left = 8
+    Top = 105
+    Width = 442
+    Height = 154
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Caption = 'Signal Parameters'
+    TabOrder = 2
+    object lblInputTag: TLabel
+      Left = 12
+      Top = 27
+      Caption = 'Source tag'
+      Visible = False
+    end
+    object edInputTag: TEdit
+      Left = 96
+      Top = 22
+      Width = 240
+      Height = 25
+      Anchors = [akTop, akLeft, akRight]
+      ReadOnly = True
+      Visible = False
+      TabOrder = 7
+    end
+    object btnInputTag: TButton
+      Left = 342
+      Top = 22
+      Width = 84
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = 'Select...'
+      OnClick = SelectInputTag
+      Visible = False
+      TabOrder = 8
+    end
+    object lblFrequency: TLabel
+      Left = 12
+      Top = 27
+      Caption = 'Freq, Hz'
+    end
+    object edFrequency: TFloatSpinEdit
+      Left = 96
+      Top = 22
+      Width = 94
+      Height = 25
+      DecimalPlaces = 3
+      MaxValue = 1000000
+      Value = 440
+      OnChange = ParametersChange
+      TabOrder = 0
+    end
+    object lblAmplitude: TLabel
+      Left = 12
+      Top = 58
+      Caption = 'Amplitude'
+    end
+    object edAmplitude: TFloatSpinEdit
+      Left = 96
+      Top = 53
+      Width = 94
+      Height = 25
+      DecimalPlaces = 4
+      Increment = 0.1
+      MaxValue = 1000000
+      Value = 0.5
+      OnChange = ParametersChange
+      TabOrder = 1
+    end
+    object lblStartFreq: TLabel
+      Left = 218
+      Top = 27
+      Caption = 'Start Freq, Hz'
+    end
+    object edStartFreq: TFloatSpinEdit
+      Left = 326
+      Top = 22
+      Width = 100
+      Height = 25
+      MaxValue = 1000000
+      Value = 100
+      OnChange = ParametersChange
+      TabOrder = 2
+    end
+    object lblEndFreq: TLabel
+      Left = 218
+      Top = 58
+      Caption = 'End Freq, Hz'
+    end
+    object edEndFreq: TFloatSpinEdit
+      Left = 326
+      Top = 53
+      Width = 100
+      Height = 25
+      MaxValue = 1000000
+      Value = 10000
+      OnChange = ParametersChange
+      TabOrder = 3
+    end
+    object lblSweepTime: TLabel
+      Left = 218
+      Top = 89
+      Caption = 'Sweep Time, s'
+    end
+    object edSweepTime: TFloatSpinEdit
+      Left = 326
+      Top = 84
+      Width = 100
+      Height = 25
+      DecimalPlaces = 2
+      MaxValue = 1000000
+      Value = 10
+      OnChange = ParametersChange
+      TabOrder = 4
+    end
+    object cbMirror: TCheckBox
+      Left = 12
+      Top = 84
+      Width = 176
+      Height = 23
+      Caption = 'Duplicate to vector tag'
+      OnClick = MirrorClick
+      TabOrder = 5
+    end
+    object lblMirrorTag: TLabel
+      Left = 12
+      Top = 121
+      Caption = 'Tag name'
+    end
+    object edMirrorTag: TEdit
+      OnChange = ParametersChange
+      Left = 96
+      Top = 116
+      Width = 330
+      Height = 25
+      Anchors = [akTop, akLeft, akRight]
+      TabOrder = 6
+    end
+    object lblState: TLabel
+      Left = 218
+      Top = 121
+      Width = 208
+      Caption = 'Остановлен'
+      Visible = False
+    end
+  end
+end

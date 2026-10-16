@@ -1,0 +1,455 @@
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Warning: (lazarus) Дублирующийся модуль "uSharedQueue" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uSharedQueue.ppu"
+Warning: (lazarus) Дублирующийся модуль "uSharedQueue" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uSharedQueue.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uSharedQueue.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartVertexEditListener" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartVertexEditListener.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartVertexEditListener" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartVertexEditListener.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartTypes" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartTypes.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartTypes" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartTypes.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartTypes.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartTrend" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartTrend.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartTrend" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartTrend.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartTrend.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartTextLabel" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartTextLabel.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartTextLabel" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartTextLabel.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartTextLabel.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartSelectListener" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartSelectListener.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartSelectListener" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartSelectListener.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartSelectListener.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartRenderer" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartRenderer.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartRenderer" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartRenderer.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartPanZoomListener" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartPanZoomListener.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartPanZoomListener" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartPanZoomListener.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPanZoomListener.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartPageGeometryListener" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartPageGeometryListener.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartPageGeometryListener" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartPageGeometryListener.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPageGeometryListener.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartPage" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartPage.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartPage" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartPage.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPage.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartMng" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartMng.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartMng" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartMng.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartMng.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartLog" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartLog.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartLog" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartLog.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLog.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartLineHelper" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartLineHelper.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartLineHelper" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartLineHelper.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLineHelper.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartLabelEditListener" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartLabelEditListener.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartLabelEditListener" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartLabelEditListener.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartFrameListener" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartFrameListener.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartFrameListener" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartFrameListener.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartFontMng" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartFontMng.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartFontMng" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartFontMng.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFontMng.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartDrawObj" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartDrawObj.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartDrawObj" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartDrawObj.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartDrawObj.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartCursorListener" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartCursorListener.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartCursorListener" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartCursorListener.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartCursorListener.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartCursor" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartCursor.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartCursor" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartCursor.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartCursor.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartColors" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartColors.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartColors" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartColors.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartColors.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartChart" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartChart.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartChart" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartChart.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartChart.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartBaseObj" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartBaseObj.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartBaseObj" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartBaseObj.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartBaseObj.pas"
+Warning: (lazarus) Дублирующийся модуль "uOglChartAxis" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uOglChartAxis.ppu"
+Warning: (lazarus) Дублирующийся модуль "uOglChartAxis" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uOglChartAxis.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartAxis.pas"
+Warning: (lazarus) Дублирующийся модуль "uoglchart" в "RecorderLnx", orphaned ppu "D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\uoglchart.ppu"
+Warning: (lazarus) Дублирующийся модуль "uoglchart" в "LzrObrPack 0.0", ppu="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64\uoglchart.ppu", source="D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uoglchart.pas"
+Hint: (lazarus) Project needs building: Compile was incomplete for Project
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\RecorderLnx\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-MObjFPC"
+Info: (lazarus) Param[1]="-Scghi"
+Info: (lazarus) Param[2]="-O1"
+Info: (lazarus) Param[3]="-gw3"
+Info: (lazarus) Param[4]="-gl"
+Info: (lazarus) Param[5]="-WG"
+Info: (lazarus) Param[6]="-l"
+Info: (lazarus) Param[7]="-vewnhibq"
+Info: (lazarus) Param[8]="-FiD:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64"
+Info: (lazarus) Param[9]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\"
+Info: (lazarus) Param[10]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Algs"
+Info: (lazarus) Param[11]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Core"
+Info: (lazarus) Param[12]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\UI"
+Info: (lazarus) Param[13]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Mdb"
+Info: (lazarus) Param[14]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Common"
+Info: (lazarus) Param[15]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Donut"
+Info: (lazarus) Param[16]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Editor"
+Info: (lazarus) Param[17]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\FrequencyResponse"
+Info: (lazarus) Param[18]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\ImpactHammer"
+Info: (lazarus) Param[19]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Lissajous"
+Info: (lazarus) Param[20]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\MeasurementSection"
+Info: (lazarus) Param[21]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram"
+Info: (lazarus) Param[22]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\SignalGenerator"
+Info: (lazarus) Param[23]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum"
+Info: (lazarus) Param[24]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\SqlTrend"
+Info: (lazarus) Param[25]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Standard"
+Info: (lazarus) Param[26]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\ThreeD"
+Info: (lazarus) Param[27]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend"
+Info: (lazarus) Param[28]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Calibrations"
+Info: (lazarus) Param[29]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Calibrations\Strains"
+Info: (lazarus) Param[30]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device"
+Info: (lazarus) Param[31]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\DAC\Core"
+Info: (lazarus) Param[32]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\DAC\Audio"
+Info: (lazarus) Param[33]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\DAC\Null"
+Info: (lazarus) Param[34]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\DAC\PXIe"
+Info: (lazarus) Param[35]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\OPC"
+Info: (lazarus) Param[36]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\MIC140"
+Info: (lazarus) Param[37]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\MIC140\UI"
+Info: (lazarus) Param[38]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\MIC140\utils"
+Info: (lazarus) Param[39]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\mic185"
+Info: (lazarus) Param[40]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\mic185\UI"
+Info: (lazarus) Param[41]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\MCbus"
+Info: (lazarus) Param[42]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\MCbus\UI"
+Info: (lazarus) Param[43]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\Architecture"
+Info: (lazarus) Param[44]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Core"
+Info: (lazarus) Param[45]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Runtime"
+Info: (lazarus) Param[46]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows"
+Info: (lazarus) Param[47]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\UI"
+Info: (lazarus) Param[48]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\SDB"
+Info: (lazarus) Param[49]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\SQLdb"
+Info: (lazarus) Param[50]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\SQLdb\SqlTrend"
+Info: (lazarus) Param[51]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK"
+Info: (lazarus) Param[52]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\LuaCalcPlugin"
+Info: (lazarus) Param[53]="-FuD:\works\OburecGH\Lazarus\SharedUtils"
+Info: (lazarus) Param[54]="-FuD:\works\OburecGH\Lazarus\SharedUtils\math"
+Info: (lazarus) Param[55]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\core"
+Info: (lazarus) Param[56]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\contracts"
+Info: (lazarus) Param[57]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\io"
+Info: (lazarus) Param[58]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\interaction"
+Info: (lazarus) Param[59]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\motion"
+Info: (lazarus) Param[60]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\lcl"
+Info: (lazarus) Param[61]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\render\opengl"
+Info: (lazarus) Param[62]="-FuD:\works\OburecGH\Lazarus\Tests\RecorderTests\UITestData"
+Info: (lazarus) Param[63]="-FuD:\works\OburecGH\Lazarus\third_party\fpspreadsheet"
+Info: (lazarus) Param[64]="-FuC:\lazarus\components\tachart\lib\x86_64-win64\win32"
+Info: (lazarus) Param[65]="-FuD:\works\OburecGH\Lazarus\third_party\bgracontrols\lib\x86_64-win64-win32-3.2.2"
+Info: (lazarus) Param[66]="-FuD:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64"
+Info: (lazarus) Param[67]="-FuC:\lazarus\components\ideintf\units\x86_64-win64\win32"
+Info: (lazarus) Param[68]="-FuC:\lazarus\components\synedit\units\x86_64-win64\win32"
+Info: (lazarus) Param[69]="-FuC:\lazarus\components\opengl\lib\x86_64-win64\win32"
+Info: (lazarus) Param[70]="-FuC:\lazarus\components\mouseandkeyinput\lib\x86_64-win64\win32"
+Info: (lazarus) Param[71]="-FuC:\lazarus\components\lazcontrols\lib\x86_64-win64\win32"
+Info: (lazarus) Param[72]="-FuD:\works\OburecGH\Lazarus\third_party\bgrabitmap\bgrabitmap\lib\x86_64-win64-win32-3.2.2"
+Info: (lazarus) Param[73]="-FuC:\lazarus\lcl\units\x86_64-win64\win32"
+Info: (lazarus) Param[74]="-FuC:\lazarus\components\datetimectrls\lib\x86_64-win64\win32"
+Info: (lazarus) Param[75]="-FuC:\lazarus\lcl\units\x86_64-win64"
+Info: (lazarus) Param[76]="-FuC:\lazarus\components\lazedit\lib\x86_64-win64"
+Info: (lazarus) Param[77]="-FuC:\lazarus\components\freetype\lib\x86_64-win64"
+Info: (lazarus) Param[78]="-FuC:\lazarus\components\debuggerintf\lib\x86_64-win64"
+Info: (lazarus) Param[79]="-FuC:\lazarus\components\buildintf\units\x86_64-win64"
+Info: (lazarus) Param[80]="-FuC:\lazarus\components\lazutils\lib\x86_64-win64"
+Info: (lazarus) Param[81]="-FuC:\lazarus\components\lazdebuggers\lazdebuggerintf\lib\x86_64-win64"
+Info: (lazarus) Param[82]="-FuC:\lazarus\packager\units\x86_64-win64"
+Info: (lazarus) Param[83]="-FED:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\"
+Info: (lazarus) Param[84]="-oD:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe"
+Info: (lazarus) Param[85]="-dLCL"
+Info: (lazarus) Param[86]="-dLCLwin32"
+Info: (lazarus) Param[87]="-vm4104,4105,5024,6058"
+Info: (lazarus) Param[88]="RecorderLnx.lpr"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling RecorderLnx.lpr
+(3104) Compiling .\UI\uMainForm.pas
+(3104) Compiling .\Core\uRecorderAppVersion.pas
+(3104) Compiling uRecorderMeraPaths.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\uRecorderMeraPaths.pas(160,22) Hint: (5057) Local variable "lSystemDir" does not seem to be initialized
+(3104) Compiling .\Core\uRecorderRunControlSettings.pas
+(3104) Compiling .\Core\uRecorderFormModel.pas
+(3104) Compiling .\Core\uRecorderDebugLog.pas
+(3104) Compiling .\Core\uRecorderPluginRuntime.pas
+(3104) Compiling .\Plugins\SDK\uRecorderPluginApi.pas
+(3104) Compiling .\Core\uRecorderPluginConfig.pas
+(3104) Compiling .\SQLdb\uRecorderSqlDbTypes.pas
+(3104) Compiling .\UI\uFormPagesDialog.pas
+(3104) Compiling .\Components\Editor\uRcIconIds.pas
+(3104) Compiling .\Components\Editor\uFormEditorController.pas
+(3104) Compiling .\Components\Oscillogram\uRecorderOglOscillogramView.pas
+(3104) Compiling .\Components\Common\uRecorderVisualControl.pas
+(3104) Compiling .\Components\Oscillogram\uRecorderOglOscillogramView.pas
+(3104) Compiling .\Core\uRecorderTagRefs.pas
+(3104) Compiling .\Core\uRecorderFrequencyResponseModel.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Oscillogram\uRecorderOglOscillogramView.pas(1004,29) Hint: (5091) Local variable "lTagColors" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Oscillogram\uRecorderOglOscillogramView.pas(3337,3) Note: (5027) Local variable "lAxis" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Oscillogram\uRecorderOglOscillogramView.pas(32,19) Hint: (5023) Unit "uOglChartTypes" not used in uRecorderOglOscillogramView
+(3104) Compiling .\Components\Trend\uRecorderTrendView.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Trend\uRecorderTrendView.pas(162,23) Hint: (5091) Local variable "lOglAxes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Trend\uRecorderTrendView.pas(261,19) Hint: (5091) Local variable "lPages" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Trend\uRecorderTrendView.pas(151,3) Note: (5027) Local variable "lAxisCount" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Trend\uRecorderTrendView.pas(611,3) Note: (5027) Local variable "lLagSec" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Trend\uRecorderTrendView.pas(18,19) Hint: (5023) Unit "uOglChartTypes" not used in uRecorderTrendView
+(3104) Compiling .\Components\Spectrum\uRecorderSpectrumView.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Spectrum\uRecorderSpectrumView.pas(764,18) Hint: (5091) Local variable "lAxes" of a managed type does not seem to be initialized
+(3104) Compiling .\Components\Lissajous\uRecorderLissajousView.pas
+(3104) Compiling .\Components\Donut\uRecorderDonutView.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Common\uRecorderVisualControl.pas(300,3) Note: (5025) Local variable "I" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Common\uRecorderVisualControl.pas(1070,49) Hint: (5091) Local variable "lFrame" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Common\uRecorderVisualControl.pas(1264,8) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Common\uRecorderVisualControl.pas(1278,32) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Common\uRecorderVisualControl.pas(1303,40) Hint: (5057) Local variable "lBits" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Common\uRecorderVisualControl.pas(228,3) Hint: (5023) Unit "uOglChartTrend" not used in uRecorderVisualControl
+(3104) Compiling .\Components\Editor\uComponentSettingsDialog.pas
+(3104) Compiling .\Components\Trend\uRecorderTrendSettingsDialog.pas
+(3104) Compiling .\Components\Spectrum\uRecorderSpectrumSettingsDialog.pas
+(3104) Compiling .\Components\Donut\uRecorderDonutSettingsDialog.pas
+(3104) Compiling .\Components\Oscillogram\uRecorderOscillogramSettingsDialog.pas
+(3104) Compiling .\Components\Standard\uRecorderImageSettingsDialog.pas
+(3104) Compiling .\Components\Standard\uRecorderButtonSettingsDialog.pas
+(3104) Compiling .\Components\SqlTrend\uRecorderSqlTrendModel.pas
+(3104) Compiling .\Components\SqlTrend\uRecorderSqlTrendSettingsDialog.pas
+(3104) Compiling .\Core\uRecorderMeasurementSectionModel.pas
+(3104) Compiling .\Components\MeasurementSection\uRecorderMeasurementSectionSettingsDialog.pas
+(3104) Compiling .\Components\Standard\uRecorderInputFieldSettingsDialog.pas
+(3104) Compiling .\Components\Standard\uRecorderVibrationEstimateSettingsDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Standard\uRecorderVibrationEstimateSettingsDialog.pas(34,15) Note: (3250) Virtual method "Click;" has a lower visibility (protected) than parent class TCustomButton (public)
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Standard\uRecorderVibrationEstimateSettingsDialog.pas(46,15) Note: (3250) Virtual method "Click;" has a lower visibility (protected) than parent class TCustomButton (public)
+(3104) Compiling .\Components\Lissajous\uRecorderLissajousSettingsDialog.pas
+(3104) Compiling .\Components\FrequencyResponse\uRcFreqRespDlg.pas
+(3104) Compiling .\Components\ThreeD\uRecorder3dModel.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\3d\core\u3dPrimitives.pas
+D:\works\OburecGH\Lazarus\SharedUtils\3d\core\u3dPrimitives.pas(124,23) Hint: (5060) Function result variable does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\3d\core\u3dPrimitives.pas(138,18) Hint: (5091) Local variable "Slots" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\3d\core\u3dPrimitives.pas(441,16) Hint: (5091) Local variable "Spec" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dModel.pas(723,24) Hint: (5092) Variable "AInfluences" of a managed type does not seem to be initialized
+(3104) Compiling .\Components\ThreeD\uRecorder3dSettingsDialog.pas
+(3104) Compiling .\Components\ThreeD\uRecorder3dSkinModifierFrame.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSkinModifierFrame.pas(99,3) Hint: (5023) Unit "Math" not used in uRecorder3dSkinModifierFrame
+(3104) Compiling .\Components\ThreeD\uRecorder3dVertexColorModifierFrame.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSettingsDialog.pas(696,10) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSettingsDialog.pas(702,20) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSettingsDialog.pas(722,14) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSettingsDialog.pas(734,18) Hint: (5091) Local variable "Empty" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSettingsDialog.pas(806,42) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSettingsDialog.pas(956,27) Hint: (5091) Local variable "PrimaryCorners" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSettingsDialog.pas(957,28) Hint: (5091) Local variable "AdjacentCorners" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSettingsDialog.pas(1021,43) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSettingsDialog.pas(11,12) Hint: (5023) Unit "Spin" not used in uRecorder3dSettingsDialog
+(3104) Compiling .\Core\uRecorderSignalGeneratorModel.pas
+(3104) Compiling .\Components\SignalGenerator\uRecorderSignalGeneratorSettingsDialog.pas
+(3104) Compiling .\Components\SignalGenerator\uRecorderSignalGeneratorCreateDialog.pas
+(3104) Compiling .\Components\ImpactHammer\uRecorderImpactHammerModel.pas
+(3104) Compiling .\Components\ImpactHammer\uRecorderImpactHammerSettingsDialog.pas
+(3104) Compiling .\Components\MeasurementSection\uRecorderMeasurementSectionView.pas
+(3104) Compiling .\Mdb\uRecorderMeraBaseView.pas
+(3104) Compiling .\Mdb\uRecorderMdbTypes.pas
+(3104) Compiling .\Mdb\uRecorderMdbManager.pas
+(3104) Compiling .\Mdb\uRecorderMdbRepository.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Mdb\uRecorderMdbRepository.pas(88,19) Hint: (5092) Variable "AItems" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Mdb\uRecorderMdbRepository.pas(129,19) Hint: (5092) Variable "AItems" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Mdb\uRecorderMdbRepository.pas(173,19) Hint: (5092) Variable "AItems" of a managed type does not seem to be initialized
+(3104) Compiling .\Mdb\uRecorderMeraBaseModel.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Mdb\uRecorderMeraBaseView.pas(79,13) Hint: (5023) Unit "FileCtrl" not used in uRecorderMeraBaseView
+(3104) Compiling .\Components\ThreeD\uRecorder3dView.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\3d\render\opengl\u3dOpenGLRenderer.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\3d\lcl\u3dLclWidget.pas
+D:\works\OburecGH\Lazarus\SharedUtils\3d\lcl\u3dLclWidget.pas(79,15) Note: (3250) Virtual method "Paint;" has a lower visibility (protected) than parent class TCustomOpenGLControl (public)
+D:\works\OburecGH\Lazarus\SharedUtils\3d\lcl\u3dLclWidget.pas(1022,16) Hint: (5058) Variable "AHit" does not seem to be initialized
+(3104) Compiling .\Components\ThreeD\uRecorder3dBindingAdapter.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dBindingAdapter.pas(122,18) Hint: (5058) Variable "ABatch" does not seem to be initialized
+(3104) Compiling .\Components\ThreeD\uRecorder3dSceneTreeDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSceneTreeDialog.pas(211,16) Hint: (5091) Local variable "Spec" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dSceneTreeDialog.pas(254,23) Hint: (5091) Local variable "RemovedIds" of a managed type does not seem to be initialized
+(3104) Compiling .\Components\Editor\uRecorderCommandImages.pas
+(3104) Compiling .\Components\ThreeD\uRecorder3dInteractionTrace.pas
+(3104) Compiling .\Components\ThreeD\uRecorder3dImpactBindingController.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dImpactBindingController.pas(134,18) Hint: (5091) Local variable "Specs" of a managed type does not seem to be initialized
+(3104) Compiling .\Components\ThreeD\uRecorder3dSkinBindingAdapter.pas
+(3104) Compiling .\Components\ThreeD\uRecorder3dVertexColorAdapter.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dVertexColorAdapter.pas(141,22) Hint: (5091) Local variable "Gradients" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dVertexColorAdapter.pas(157,20) Hint: (5091) Local variable "MeshIds" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dVertexColorAdapter.pas(180,20) Hint: (5091) Local variable "Evals" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dVertexColorAdapter.pas(236,20) Hint: (5092) Variable "ALabels" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dView.pas(114,15) Note: (3250) Virtual method "Paint;" has a lower visibility (protected) than parent class T3dLclWidget (public)
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dView.pas(323,20) Hint: (5091) Local variable "Primary" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dView.pas(324,21) Hint: (5091) Local variable "Adjacent" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dView.pas(907,13) Hint: (5057) Local variable "C" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dView.pas(917,13) Hint: (5091) Local variable "O" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dView.pas(1144,20) Hint: (5091) Local variable "Targets" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dView.pas(1145,21) Hint: (5091) Local variable "Bindings" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dView.pas(14,65) Hint: (5023) Unit "StdCtrls" not used in uRecorder3dView
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ThreeD\uRecorder3dView.pas(16,3) Hint: (5023) Unit "u3dGizmo" not used in uRecorder3dView
+(3104) Compiling .\Components\ImpactHammer\uRecorderImpactHammerView.pas
+(3104) Compiling .\Components\ImpactHammer\uRecorderImpactHammerService.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(463,22) Hint: (5091) Local variable "Resampled" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(709,21) Hint: (5091) Local variable "Blocks" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(710,28) Hint: (5091) Local variable "IncludedFlags" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(711,24) Hint: (5091) Local variable "Sequences" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(759,24) Hint: (5091) Local variable "Resampled" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(760,23) Hint: (5091) Local variable "Included" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(890,22) Hint: (5092) Variable "AIncluded" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(921,20) Hint: (5092) Variable "ACurves" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(926,26) Hint: (5091) Local variable "EstimateInput" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(976,22) Hint: (5091) Local variable "Resampled" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(1073,21) Hint: (5091) Local variable "Included" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(1094,19) Hint: (5091) Local variable "Curves" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(1098,28) Hint: (5091) Local variable "EstimateInput" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\ImpactHammer\uRecorderImpactHammerService.pas(1693,21) Hint: (5091) Local variable "Bindings" of a managed type does not seem to be initialized
+(3104) Compiling .\Components\ImpactHammer\uRecorderImpactSessionCommands.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(1109,3) Note: (5025) Local variable "lShape" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(1112,3) Note: (5025) Local variable "lOsc" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(1130,3) Note: (5025) Local variable "lSelectionContainsImage" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(1589,18) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(1591,10) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(1593,22) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(1621,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(1645,49) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(1830,44) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(2120,42) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(2196,29) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(2252,23) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(2430,25) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(2544,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(2735,45) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(2885,23) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(2938,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(3046,31) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(3067,19) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(3078,29) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(3102,21) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(3223,39) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(3232,41) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uFormEditorController.pas(343,21) Hint: (5023) Unit "uRecorderImpactHammerModel" not used in uFormEditorController
+(3104) Compiling .\UI\uDetachedMnemonicForm.pas
+(3104) Compiling .\Components\Editor\uRecorderComponentToolGroup.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uRecorderComponentToolGroup.pas(149,14) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uRecorderComponentToolGroup.pas(256,54) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uRecorderComponentToolGroup.pas(272,27) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uRecorderComponentToolGroup.pas(274,54) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Components\Editor\uRecorderComponentToolGroup.pas(294,27) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uDetachedMnemonicForm.pas(397,35) Hint: (5057) Local variable "lIntersection" does not seem to be initialized
+(3104) Compiling .\UI\uRecorderSettingsDialog.pas
+(3104) Compiling .\UI\uTagSettingsDialog.pas
+(3104) Compiling .\SDB\uRecorderSdbStore.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\SDB\uRecorderSdbStore.pas(1124,3) Note: (5027) Local variable "lCsvPath" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\SDB\uRecorderSdbStore.pas(1129,3) Note: (5027) Local variable "lXmlPath" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(733,3) Note: (5027) Local variable "lCalibration" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uTagSettingsDialog.pas(25,22) Hint: (5023) Unit "Math" not used in uTagSettingsDialog
+(3104) Compiling .\Device\MIC140\uRecorderMic140DeviceConfig.pas
+(3104) Compiling .\Core\uRecorderMeraSdbThermocouples.pas
+(3104) Compiling .\Core\uRecorderProjectFiles.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderProjectFiles.pas(266,19) Hint: (5094) Function result variable of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderProjectFiles.pas(282,19) Hint: (5092) Variable "ABytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderProjectFiles.pas(828,3) Note: (5025) Local variable "lTerm" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderProjectFiles.pas(1232,3) Note: (5025) Local variable "lGeneratedSignal" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderProjectFiles.pas(89,55) Hint: (5023) Unit "uRecorderPluginApi" not used in uRecorderProjectFiles
+(3104) Compiling .\Device\MIC140\uRecorderMic140DataSource.pas
+(3104) Compiling .\Device\MIC140\uRecorderMic140Flash.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(123,19) Hint: (5094) Function result variable of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(158,26) Hint: (5058) Variable "AEntries" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(200,22) Hint: (5091) Local variable "lDirBytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(209,21) Hint: (5091) Local variable "lEntries" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(430,17) Hint: (5058) Variable "ATare" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(443,24) Hint: (5057) Local variable "lCandidate" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(506,17) Hint: (5058) Variable "ATare" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(519,24) Hint: (5057) Local variable "lCandidate" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(89,3) Hint: (5023) Unit "Math" not used in uRecorderMic140Flash
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Flash.pas(89,9) Hint: (5023) Unit "StrUtils" not used in uRecorderMic140Flash
+(3104) Compiling .\Device\MIC140\uRecorderMic140Calibration.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Calibration.pas(818,17) Hint: (5057) Local variable "lTare" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Calibration.pas(819,18) Hint: (5057) Local variable "lTare2" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140Calibration.pas(58,3) Hint: (5023) Unit "Math" not used in uRecorderMic140Calibration
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\uRecorderMic140DataSource.pas(1307,28) Hint: (5091) Local variable "lChannelNumbers" of a managed type does not seem to be initialized
+(3104) Compiling .\Core\uRecorderHardwareTree.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Core\uRecorderHardwareTree.pas(261,21) Hint: (5092) Variable "AEntries" of a managed type does not seem to be initialized
+(3104) Compiling .\UI\uRecorderSettingsSourceProbe.pas
+(3104) Compiling .\Device\mic185\uRecorderMic185DataSource.pas
+(3104) Compiling .\Device\mic185\uRecorderMic185Runtime.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185Runtime.pas(60,3) Hint: (5023) Unit "syncobjs" not used in uRecorderMic185Runtime
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(274,15) Note: (3250) Virtual method "PrepareHardware;" has a lower visibility (protected) than parent class TRecorderDataSourceBase (public)
+(3104) Compiling .\Device\mic185\uRecorderMic185Calibration.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185Calibration.pas(535,17) Hint: (5057) Local variable "lInfo" does not seem to be initialized
+(3104) Compiling .\Device\uRecorderDeviceConfigSignature.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(1187,3) Note: (5025) Local variable "I" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(1574,20) Hint: (5091) Local variable "lSums" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(1575,22) Hint: (5091) Local variable "lCounts" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(3162,22) Hint: (5091) Local variable "lChannels" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(3334,24) Hint: (5092) Variable "ATransforms" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\mic185\uRecorderMic185DataSource.pas(311,3) Hint: (5028) Local const "CMic185ZeroBalanceFineBlocks" is not used
+(3104) Compiling .\Core\uRecorderResourcePaths.pas
+(3104) Compiling .\Device\MCbus\uRecorderMc201Calibration.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMc201Calibration.pas(148,19) Hint: (5091) Local variable "lBytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMc201Calibration.pas(95,3) Hint: (5028) Local const "CMc201CalibLoOff" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMc201Calibration.pas(96,3) Hint: (5028) Local const "CMc201CalibHiOff" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MCbus\uRecorderMc201Calibration.pas(22,22) Hint: (5023) Unit "Types" not used in uRecorderMc201Calibration
+(3104) Compiling .\UI\uRecorderWindowDragTrace.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderWindowDragTrace.pas(75,37) Hint: (5057) Local variable "lRect" does not seem to be initialized
+(3104) Compiling .\Device\uRecorderRuntimeSourceFactory.pas
+(3104) Compiling .\Core\uRecorderSignalGeneratorSource.pas
+(3104) Compiling .\Device\PXI\MX248\UI\uRecorderPxiMx248ConfiguredEditor.pas
+(3104) Compiling .\Device\PXI\MX248\Core\uRecorderPxiMx248Properties.pas
+(3104) Compiling .\Device\PXI\MX248\Runtime\uRecorderPxiMx248DeviceAdapter.pas
+(3104) Compiling .\Device\PXI\MX248\Runtime\uRecorderPxiMx248DataSource.pas
+(3104) Compiling .\Device\PXI\MX248\Runtime\uRecorderPxiMx248Factory.pas
+(3104) Compiling .\SQLdb\uRecorderSqlDbProjectManager.pas
+(3104) Compiling .\SQLdb\uRecorderSqlDbSettingsDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(5171,21) Hint: (5091) Local variable "lTasks" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(5172,26) Hint: (5091) Local variable "lProcedures" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(5234,28) Hint: (5091) Local variable "lRetryTasks" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(5235,33) Hint: (5091) Local variable "lRetryProcedures" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(6850,3) Note: (5025) Local variable "lOutput" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(6851,3) Note: (5025) Local variable "lProcess" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(464,3) Hint: (5028) Local const "CShareFolderHelper" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(799,3) Hint: (5028) Local const "CDeviceTreeProbeTimeoutMs" is not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(34,26) Hint: (5023) Unit "uRecorderMeraSdbThermocouples" not used in uRecorderSettingsDialog
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(448,54) Hint: (5023) Unit "uMic185Constants" not used in uRecorderSettingsDialog
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uRecorderSettingsDialog.pas(453,27) Hint: (5023) Unit "uRecorderPxiMx248WindowsTransport" not used in uRecorderSettingsDialog
+(3104) Compiling .\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas
+(3104) Compiling .\Device\MIC140\UI\uRecorderMic140ChannelDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140ChannelDialog.pas(16,25) Hint: (5023) Unit "uRecorderMic140Thermocouple" not used in uRecorderMic140ChannelDialog
+D:\works\OburecGH\Lazarus\RecorderLnx\.\Device\MIC140\UI\uRecorderMic140SettingsDialog.pas(664,41) Hint: (5091) Local variable "lResult" of a managed type does not seem to be initialized
+(3104) Compiling .\Device\uRecorderTagDeviceServices.pas
+(3104) Compiling .\UI\uRecorderMic185SettingsSelfTest.pas
+(3104) Compiling .\Core\uRecorderProjectConfiguration.pas
+(3104) Compiling .\UI\uRecorderBuiltInFormsUI.pas
+(3104) Compiling .\Components\Editor\uRecorderComponentManager.pas
+(3104) Compiling .\Components\FrequencyResponse\uRecorderFrequencyResponseView.pas
+(3104) Compiling .\Components\SignalGenerator\uRecorderSignalGeneratorView.pas
+(3104) Compiling .\Components\SqlTrend\uRecorderSqlTrendView.pas
+(3104) Compiling .\Components\SqlTrend\uRecorderSqlTrendExportDialog.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(1133,61) Note: (5025) Local variable "lHost" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\.\UI\uMainForm.pas(1134,3) Note: (5025) Local variable "lShareName" not used
+(3104) Compiling .\UI\uRecorderSplashForm.pas
+(3104) Compiling .\Core\uRecorderSingleInstance.pas
+(3104) Compiling .\Device\uRecorderHardwareTagSettingsProviders.pas
+(3104) Compiling .\UI\uRecorderUserGuideCapture.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(17,3) Hint: (5023) Unit "uComponentSettingsDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(18,3) Hint: (5023) Unit "uRecorderVirtualTagDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(19,3) Hint: (5023) Unit "uRecorderButtonSettingsDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(20,3) Hint: (5023) Unit "uRecorderTrendSettingsDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(21,3) Hint: (5023) Unit "uRecorderSqlTrendModel" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(22,3) Hint: (5023) Unit "uRecorder3dModel" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(22,38) Hint: (5023) Unit "uRecorder3dImpactBindingController" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(23,3) Hint: (5023) Unit "uRecorderImpactHammerModel" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(23,31) Hint: (5023) Unit "uRecorderImpactHammerSettingsDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(25,3) Hint: (5023) Unit "uRecorderImpactHammerService" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(27,3) Hint: (5023) Unit "uRecorderSignalGeneratorModel" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(28,3) Hint: (5023) Unit "uRecorderSignalGeneratorSettingsDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(29,3) Hint: (5023) Unit "uRecorderSqlTrendSettingsDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(30,3) Hint: (5023) Unit "uRecorderMeasurementSectionModel" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(32,3) Hint: (5023) Unit "uRecorderCalibrationAddDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(32,34) Hint: (5023) Unit "uRecorderCalibrationListDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(33,3) Hint: (5023) Unit "uRecorderCalibrationPropertiesDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(33,41) Hint: (5023) Unit "uRecorderStrainCalibration" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(34,3) Hint: (5023) Unit "uRecorderStrainCalibrationDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(35,3) Hint: (5023) Unit "uRecorderSpectrumSettingsDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(35,36) Hint: (5023) Unit "uRecorderSpectrumView" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(36,27) Hint: (5023) Unit "uRecorderDeviceInterfaces" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(36,54) Hint: (5023) Unit "uMic185Constants" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(37,20) Hint: (5023) Unit "uMic185Device" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(37,35) Hint: (5023) Unit "uMic185MebiusTcpProtocol" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(37,61) Hint: (5023) Unit "uMic185MebiusTypes" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(39,3) Hint: (5023) Unit "uRecorderMic185AdditionalDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(39,36) Hint: (5023) Unit "uRecorderMic185ChannelDialog" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(43,30) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(46,24) Hint: (5023) Unit "uMc201FirmwareResources" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(46,49) Hint: (5023) Unit "uMc201LegacyMdpClient" not used in RecorderLnx
+D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpr(47,3) Hint: (5023) Unit "uMc032Device" not used in RecorderLnx
+(9022) Compiling resource D:\works\OburecGH\Lazarus\RecorderLnx\resources\app\recorderlnx_app.rc
+(9022) Compiling resource D:\works\OburecGH\Lazarus\RecorderLnx\Device\MCbus\resources\mcbus.rc
+(9022) Compiling resource D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.obj
+(9015) Linking D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe
+Error: (9003) Can't create object file: D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe (error code: 5)
+Fatal: Can't create executable D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe
+Fatal: (1018) Compilation aborted
+Error: C:\lazarus\fpc\3.2.2\bin\x86_64-win64\ppcx64.exe returned an error exitcode
+Error: (lazarus) Компиляция проекта, цель: D:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx.exe: stopped with exit code 1
+Info: (lazarus) [TCompiler.Compile] end
+Error: (lazbuild) Failed compiling of project "D:\works\OburecGH\Lazarus\RecorderLnx\RecorderLnx.lpi"

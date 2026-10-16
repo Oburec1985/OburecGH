@@ -1,0 +1,9 @@
+interface:
+  display_name: "RLM Search"
+  short_description: "Recursive search for long-context debugging"
+  default_prompt: "Use $rlm-search to investigate this long-context debugging or research task iteratively."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "local_memory_db"
+      description: "Local MemoryDB/Qdrant semantic index for AGrav and original Recorder sources"

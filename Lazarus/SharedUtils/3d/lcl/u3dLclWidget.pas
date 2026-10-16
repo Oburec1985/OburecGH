@@ -13,7 +13,8 @@ uses
   Classes, SysUtils, Controls, OpenGLContext, u3dCoreTypes, u3dScene,
   u3dSceneMath, u3dGeometryMath, u3dContracts, u3dInteractionTypes, u3dInputRouter,
   u3dInteractionDispatcher, u3dGizmo, u3dCameraRotateOverlay,
-  u3dLegacySceneLoader, u3dScenePicker, u3dSelection;
+  u3dLegacySceneLoader, u3dScenePicker, u3dSelection,
+  u3dScreenGeometryMath;
 
 type
   T3dViewChangedEvent = procedure (Sender: TObject) of object;
@@ -37,9 +38,17 @@ type
     fCameraRotationConstraint: T3dCameraRotationConstraint;
     fGizmo: T3dGizmo;
     fCameraOverlay: T3dCameraRotateOverlay;
+    fCameraOverlayAxis: T3dVector;
+    fCameraOverlayStartPose: T3dOrbitCamera;
+    fCameraOverlayDragStart: T3dPoint;
+    fCameraOverlayCenterStart: T3dPoint;
+    fCameraOverlayDragStarted: Boolean;
     fGizmoStart: T3dVector;
     fGizmoRotate: Boolean;
     fGizmoLastPoint: T3dPoint;
+    fGizmoRotationCenter: T3dPoint;
+    fGizmoRotationTangent: T3dPoint;
+    fGizmoRotationUsesRing: Boolean;
     fOverlayRotateObject: Boolean;
     fOverlayRotateNodeId: QWord;
     fCamera: T3dCamera;
@@ -61,22 +70,23 @@ type
     function OrbitCamera: T3dOrbitCamera;
     function MouseRay(X, Y: Integer): T3dRay;
     function ScreenGizmoHit(X, Y: Integer): T3dGizmoAxis;
+    function GizmoRotationDelta(X, Y: Integer): Single;
+    procedure UpdateGizmoRotationProjection;
     function SelectedNode: T3dNode;
     function PickScene(const ARay: T3dRay; out AHit: T3dHit): Boolean;
+    function PickPointCloudAt(X,Y:Integer; out ANodeId:QWord):Boolean;
     function LogicalVertexFromNode(ANodeId: QWord; X,Y:Integer): Integer;
     function FindNode(AId: QWord): T3dNode;
     function GetSelectedObjectAxis: T3dGizmoAxis;
-    function GetCameraRoll: Single;
-    procedure SetCameraRoll(AValue: Single);
     procedure TranslateNodeWorld(ANode: T3dNode;
       const ANewPosition: T3dVector);
     procedure Trace(const AMessage: string);
-    procedure PrepareCameraRotationPivot;
     procedure SetInteractionEnabled(AValue: Boolean);
     procedure UpdateInteractionCursor;
   protected
     procedure CancelInteraction;
     procedure Paint; override;
+    procedure DrawFrameOverlay; virtual;
     procedure Resize; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
@@ -117,7 +127,7 @@ type
     procedure SetRenderer(const ARenderer: I3dRenderer);
     procedure SetSceneLoader(const ALoader: I3dSceneLoader);
     procedure SetScenePicker(const APicker: I3dScenePicker);
-    procedure SetView(AYaw, APitch, ADistance: Single; AShowAxes: Boolean;
+    procedure SetView(ADistance: Single; AShowAxes: Boolean;
       ABackgroundColor: LongWord);
     procedure SetCameraState(const ACamera: T3dCamera);
     procedure SetStandardView(AView: T3dStandardView);
@@ -136,7 +146,6 @@ type
     property SelectedObjectAxis: T3dGizmoAxis read GetSelectedObjectAxis;
     property CameraRotationConstraint: T3dCameraRotationConstraint
       read fCameraRotationConstraint write SetCameraRotationConstraint;
-    property CameraRoll: Single read GetCameraRoll write SetCameraRoll;
     property InteractionEnabled: Boolean read fInteractionEnabled
       write SetInteractionEnabled;
     property OnInteractionTrace: T3dInteractionTraceEvent
@@ -148,7 +157,7 @@ implementation
 uses
   Math, u3dOpenGLRenderer,
   u3dCamera, u3dCameraInteraction, u3dInteractionMath, u3dTransforms,
-  u3dPrimitives, u3dScreenGeometryMath;
+  u3dPrimitives;
 
 procedure T3dLclWidget.Trace(const AMessage: string);
 begin
@@ -165,8 +174,9 @@ constructor T3dLclWidget.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   AutoResizeViewport := False;
-  fCamera.YawDegrees := 35;
-  fCamera.PitchDegrees := -25;
+  fCamera.Forward := Vector3d(-0.519, -0.423, -0.742);
+  fCamera.Right := Vector3d(0.819, 0, -0.574);
+  fCamera.Up := Vector3d(-0.243, 0.906, -0.347);
   fCamera.Distance := 6;
   fCamera.VerticalFovDegrees := 45;
   fCamera.ProjectionKind := pkPerspective;
@@ -217,12 +227,9 @@ begin
     Invalidate;
 end;
 
-procedure T3dLclWidget.SetView(AYaw, APitch, ADistance: Single;
+procedure T3dLclWidget.SetView(ADistance: Single;
                                AShowAxes: Boolean; ABackgroundColor: LongWord);
 begin
-  fCamera.YawDegrees := AYaw;
-  fCamera.PitchDegrees := APitch;
-  fCamera.PoseValid := False;
   fCamera.Distance := Max(2.5, ADistance);
   fShowAxes := AShowAxes;
   fBackgroundColor := ABackgroundColor;
@@ -259,12 +266,25 @@ begin
     end;
     fCamera.ProjectionKind := pkOrthographic;
     fCamera.OrthographicScale := Max(0.1, fCamera.Distance * 0.5);
-    fCamera.RollDegrees := 0;
-    fCamera.PoseValid := False;
     case AView of
-      svTop: begin fCamera.YawDegrees := 0; fCamera.PitchDegrees := -90; end;
-      svFront: begin fCamera.YawDegrees := 0; fCamera.PitchDegrees := 0; end;
-      svBottom: begin fCamera.YawDegrees := 0; fCamera.PitchDegrees := 90; end;
+      svTop:
+        begin
+          fCamera.Forward := Vector3d(0,-1,0);
+          fCamera.Right := Vector3d(1,0,0);
+          fCamera.Up := Vector3d(0,0,-1);
+        end;
+      svFront:
+        begin
+          fCamera.Forward := Vector3d(0,0,-1);
+          fCamera.Right := Vector3d(1,0,0);
+          fCamera.Up := Vector3d(0,1,0);
+        end;
+      svBottom:
+        begin
+          fCamera.Forward := Vector3d(0,1,0);
+          fCamera.Right := Vector3d(1,0,0);
+          fCamera.Up := Vector3d(0,0,1);
+        end;
       else ;
     end;
   end;
@@ -335,6 +355,8 @@ var R: T3dInputResult;
   A: T3dGizmoAxis;
   N: T3dNode;
   H: T3dCameraRotateHandle;
+  lForward,lRight,lUp: T3dVector;
+  C: T3dOrbitCamera;
   Ctx: T3dInteractionContext;
 begin
   inherited MouseDown(Button, Shift, X, Y);
@@ -374,12 +396,28 @@ begin
           else
             fOverlayRotateNodeId := 0;
           if not fOverlayRotateObject then
-            PrepareCameraRotationPivot;
+          begin
+            C := OrbitCamera;
+            fCameraOverlayStartPose := C;
+            fCameraOverlayDragStart := Point3d(X,Y);
+            fCameraOverlayCenterStart := fCameraOverlay.Center;
+            fCameraOverlayDragStarted := False;
+            CameraBasis(C,lForward,lRight,lUp);
+            case H of
+              crhX: fCameraOverlayAxis:=lRight;
+              crhY: fCameraOverlayAxis:=lUp;
+              crhZ: fCameraOverlayAxis:=lForward;
+              else fCameraOverlayAxis:=Vector3d(0,0,0);
+            end;
+          end;
           if fDispatcher.TryCapture(ictOverlayPick,fCaptureToken) and
              fCameraOverlay.BeginDrag(H,Point3d(X,Y)) then
             begin
               if Assigned(fOnInteractionTrace) then
-                Trace(Format('capture overlay-drag token=%d', [fCaptureToken]));
+                Trace(Format('rotate BEGIN token=%d handle=%d object=%s mouse=(%d,%d) axis=(%.6f,%.6f,%.6f) target=(%.6f,%.6f,%.6f) distance=%.6f',
+                  [fCaptureToken,Ord(H),BoolToStr(fOverlayRotateObject,True),
+                   X,Y,fCameraOverlayAxis.X,fCameraOverlayAxis.Y,fCameraOverlayAxis.Z,
+                   fCamera.Target.X,fCamera.Target.Y,fCamera.Target.Z,fCamera.Distance]));
               MouseCapture := True;
               Exit;
             end
@@ -422,6 +460,9 @@ begin
                              );
               fGizmoRotate := ssCtrl in Shift;
               fGizmoLastPoint := Point3d(X,Y);
+              fGizmoRotationUsesRing := False;
+              if fGizmoRotate then
+                UpdateGizmoRotationProjection;
               if Assigned(fOnInteractionTrace) then
                 Trace(Format('capture object-manipulate token=%d rotate=%s',
                   [fCaptureToken, BoolToStr(fGizmoRotate, True)]));
@@ -476,6 +517,7 @@ var R: T3dInputResult;
   lCameraDelta: T3dPoint;
   C: T3dOrbitCamera;
   H: T3dCameraRotateHandle;
+  lCameraAngle: Single;
 begin
   inherited MouseMove(Shift, X, Y);
   if not fInteractionEnabled then
@@ -495,12 +537,14 @@ begin
               crhX:
                 begin
                   A:=gaX;
-                  lAngle:=-lCameraDelta.Y*0.5;
+                  lAngle:=CameraOverlayAxisDragAngle(crhX,lCameraDelta,
+                    fCameraOverlay.Radius);
                 end;
               crhY:
                 begin
                   A:=gaY;
-                  lAngle:=lCameraDelta.X*0.5;
+                  lAngle:=CameraOverlayAxisDragAngle(crhY,lCameraDelta,
+                    fCameraOverlay.Radius);
                 end;
               else
                 begin
@@ -521,17 +565,29 @@ begin
           end
           else if not fOverlayRotateObject then
           begin
-            C := OrbitCamera;
-            RotateCameraConstrained(C,lCameraDelta,0.5,
-                                    RotationConstraintForHandle(fCameraOverlay.SelectedHandle));
+            if not fCameraOverlayDragStarted then
+              fCameraOverlayDragStarted := True;
+            { Keep the MouseDown pose and point as the absolute origin. The
+              previous code reset both at the drag threshold, discarding the
+              initial movement and leaving only the tiny tail of short drags. }
+            C := fCameraOverlayStartPose;
+            lCameraAngle:=CameraOverlayDragAngleFromStart(
+              fCameraOverlay.SelectedHandle,fCameraOverlayDragStart,
+              Point3d(X,Y),fCameraOverlayCenterStart,0.5);
+            RotateCameraAroundAxis(C,fCameraOverlayAxis,lCameraAngle);
+            fCamera.Target := C.Target;
             fCamera.Forward := C.Forward;
             fCamera.Right := C.Right;
             fCamera.Up := C.Up;
-            fCamera.PoseValid := C.PoseValid;
             MarkDirty;
             if Assigned(fOnInteractionTrace) then
-              Trace(Format('camera overlay yaw=%.3f pitch=%.3f roll=%.3f',
-                [fCamera.YawDegrees,fCamera.PitchDegrees,fCamera.RollDegrees]));
+              Trace(Format('rotate MOVE token=%d handle=%d state=%d captured=%s mouse=(%d,%d) totalDelta=(%.3f,%.3f) angle=%.6f axis=(%.6f,%.6f,%.6f) forward=(%.6f,%.6f,%.6f) up=(%.6f,%.6f,%.6f)',
+                [fCaptureToken,Ord(fCameraOverlay.SelectedHandle),Ord(fCameraOverlay.State),
+                 BoolToStr(MouseCapture,True),X,Y,
+                 X-fCameraOverlayDragStart.X,Y-fCameraOverlayDragStart.Y,
+                 lCameraAngle,fCameraOverlayAxis.X,fCameraOverlayAxis.Y,fCameraOverlayAxis.Z,
+                 fCamera.Forward.X,fCamera.Forward.Y,fCamera.Forward.Z,
+                 fCamera.Up.X,fCamera.Up.Y,fCamera.Up.Z]));
             if Assigned(fOnViewChanged) then
               fOnViewChanged(Self);
           end;
@@ -544,7 +600,7 @@ begin
       N := SelectedNode;
       if (N<>nil) and fGizmoRotate then
         begin
-          lAngle := ((X-fGizmoLastPoint.X)-(Y-fGizmoLastPoint.Y))*0.5;
+          lAngle := GizmoRotationDelta(X,Y);
           if RotateNodeLocalAxis(fScene,N.Id,
              T3dLocalRotationAxis(Ord(fGizmo.SelectedAxis)-1),lAngle) then
             begin
@@ -553,6 +609,7 @@ begin
 { Rotation around the selected local axis leaves that axis invariant.
           Rebuild the complete gizmo basis on MouseUp without interrupting drag. }
               fGizmoLastPoint := Point3d(X,Y);
+              UpdateGizmoRotationProjection;
               MarkDirty;
               if Assigned(fOnInteractionTrace) then
                 Trace(Format('object rotate node=%d angle=%.3f axis=%d',
@@ -610,6 +667,75 @@ begin
     end;
 end;
 
+function T3dLclWidget.GizmoRotationDelta(X,Y:Integer):Single;
+var
+  DeltaX,DeltaY,Radius,PreviousAngle,CurrentAngle,AngleDelta:Single;
+begin
+  DeltaX:=X-fGizmoLastPoint.X;
+  DeltaY:=Y-fGizmoLastPoint.Y;
+  Result:=0;
+  if fGizmoRotationUsesRing then
+    begin
+      Radius:=Sqrt(Sqr(fGizmoLastPoint.X-fGizmoRotationCenter.X)+
+        Sqr(fGizmoLastPoint.Y-fGizmoRotationCenter.Y));
+      if Radius<8 then
+        Exit(0);
+      PreviousAngle:=ArcTan2(-(fGizmoLastPoint.Y-fGizmoRotationCenter.Y),
+        fGizmoLastPoint.X-fGizmoRotationCenter.X);
+      CurrentAngle:=ArcTan2(-(Y-fGizmoRotationCenter.Y),
+        X-fGizmoRotationCenter.X);
+      AngleDelta:=RadToDeg(CurrentAngle-PreviousAngle);
+      while AngleDelta>180 do AngleDelta:=AngleDelta-360;
+      while AngleDelta< -180 do AngleDelta:=AngleDelta+360;
+      Result:=AngleDelta;
+    end;
+  if not fGizmoRotationUsesRing then
+    Result:=-(DeltaX*fGizmoRotationTangent.X+
+      DeltaY*fGizmoRotationTangent.Y)*0.5;
+end;
+
+procedure T3dLclWidget.UpdateGizmoRotationProjection;
+var
+  N:T3dNode;
+  Axis:T3dVector;
+  AxisScreen:T3dPoint;
+  Depth,Length:Single;
+  Viewport:T3dViewport;
+begin
+  N:=SelectedNode;
+  if N=nil then
+    Exit;
+  Viewport.Width:=ClientWidth;
+  Viewport.Height:=ClientHeight;
+  if not ProjectWorldToScreen(Vector3d(N.WorldTransform[12],
+      N.WorldTransform[13],N.WorldTransform[14]),OrbitCamera,Viewport,
+      fGizmoRotationCenter,Depth) then
+    Exit;
+  case fGizmo.SelectedAxis of
+    gaX: Axis:=Vector3d(N.WorldTransform[0],N.WorldTransform[1],
+      N.WorldTransform[2]);
+    gaY: Axis:=Vector3d(N.WorldTransform[4],N.WorldTransform[5],
+      N.WorldTransform[6]);
+    else Axis:=Vector3d(N.WorldTransform[8],N.WorldTransform[9],
+      N.WorldTransform[10]);
+  end;
+  if ProjectWorldToScreen(Add(Vector3d(N.WorldTransform[12],
+      N.WorldTransform[13],N.WorldTransform[14]),Axis),OrbitCamera,
+      Viewport,AxisScreen,Depth) then
+    begin
+      fGizmoRotationTangent:=Point3d(-(AxisScreen.Y-
+        fGizmoRotationCenter.Y),AxisScreen.X-fGizmoRotationCenter.X);
+      Length:=Sqrt(Sqr(fGizmoRotationTangent.X)+
+        Sqr(fGizmoRotationTangent.Y));
+      fGizmoRotationUsesRing:=Length<=0.08;
+      if not fGizmoRotationUsesRing then
+        begin
+          fGizmoRotationTangent.X:=fGizmoRotationTangent.X/Length;
+          fGizmoRotationTangent.Y:=fGizmoRotationTangent.Y/Length;
+        end;
+    end;
+end;
+
 procedure T3dLclWidget.MouseUp(Button: TMouseButton; Shift: TShiftState;
                                X, Y: Integer);
 
@@ -628,6 +754,9 @@ begin
   if (fDispatcher.ActiveContext=ictOverlayPick) and
      (fCameraOverlay.State in [crosPressed,crosDragging]) then
     begin
+      if Assigned(fOnInteractionTrace) then
+        Trace(Format('rotate END token=%d handle=%d mouse=(%d,%d)',
+          [fCaptureToken,Ord(fCameraOverlay.SelectedHandle),X,Y]));
       fCameraOverlay.EndDrag;
       MouseCapture := False;
       fDispatcher.Release(fCaptureToken);
@@ -668,7 +797,11 @@ begin
   if (R.Command=icSelect) and
      (fDispatcher.ActiveContext=ictObjectSelect) then
     begin
-      if PickScene(MouseRay(X,Y),lHit) then
+      if PickPointCloudAt(X,Y,lNodeId) then
+        { Point clouds have no triangle surface for the ray picker. Use the
+          same screen-space point and bounds geometry the editor displays; this
+          takes priority over a surface behind the rendered cloud. }
+      else if PickScene(MouseRay(X,Y),lHit) then
         lNodeId := lHit.NodeId
       else
         lNodeId := 0;
@@ -735,6 +868,10 @@ procedure T3dLclWidget.CancelInteraction;
 
 var R: T3dInputResult;
 begin
+  if Assigned(fOnInteractionTrace) and (fCameraOverlay<>nil) then
+    Trace(Format('rotate CANCEL token=%d context=%d state=%d mode=%d',
+      [fCaptureToken,Ord(fDispatcher.ActiveContext),Ord(fCameraOverlay.State),
+       Ord(fInputMode)]));
   if fOverlayRotateObject and (fScene<>nil) then
     CommitSceneTransforms(fScene);
   fOverlayRotateObject := False;
@@ -780,10 +917,6 @@ begin
   C.Forward := fCamera.Forward;
   C.Right := fCamera.Right;
   C.Up := fCamera.Up;
-  C.PoseValid := fCamera.PoseValid;
-  C.YawDegrees := fCamera.YawDegrees;
-  C.PitchDegrees := fCamera.PitchDegrees;
-  C.RollDegrees := fCamera.RollDegrees;
   C.Distance := fCamera.Distance;
   C.VerticalFovDegrees := EffectiveVerticalFov(fCamera);
   V.Width := ClientWidth;
@@ -803,18 +936,14 @@ begin
   fCamera.Forward := C.Forward;
   fCamera.Right := C.Right;
   fCamera.Up := C.Up;
-  fCamera.PoseValid := C.PoseValid;
-  fCamera.YawDegrees := C.YawDegrees;
-  fCamera.PitchDegrees := C.PitchDegrees;
-  fCamera.RollDegrees := C.RollDegrees;
   fCamera.Distance := C.Distance;
   if fCamera.ProjectionKind = pkOrthographic then
     fCamera.OrthographicScale := Max(0.1, fCamera.Distance * 0.5);
   if Assigned(fOnInteractionTrace) then
     Trace(Format(
-      'camera command=%d target=(%.4f,%.4f,%.4f) yaw=%.3f pitch=%.3f roll=%.3f distance=%.4f',
+      'camera command=%d target=(%.4f,%.4f,%.4f) forward=(%.4f,%.4f,%.4f) distance=%.4f',
       [Ord(AResult.Command),fCamera.Target.X,fCamera.Target.Y,fCamera.Target.Z,
-      fCamera.YawDegrees,fCamera.PitchDegrees,fCamera.RollDegrees,
+      fCamera.Forward.X,fCamera.Forward.Y,fCamera.Forward.Z,
       fCamera.Distance]));
   MarkDirty;
   if Assigned(fOnViewChanged) then
@@ -894,9 +1023,9 @@ begin
   if not B.Valid then
     B := fScene.Bounds;
   C.Target := fCamera.Target;
-  C.YawDegrees := fCamera.YawDegrees;
-  C.PitchDegrees := fCamera.PitchDegrees;
-  C.RollDegrees := fCamera.RollDegrees;
+  C.Forward := fCamera.Forward;
+  C.Right := fCamera.Right;
+  C.Up := fCamera.Up;
   C.Distance := fCamera.Distance;
   C.VerticalFovDegrees := EffectiveVerticalFov(fCamera);
   V.Width := ClientWidth;
@@ -923,10 +1052,11 @@ end;
 
 procedure T3dLclWidget.SetInputMode(AMode:T3dInputMode);
 begin
-  CancelInteraction;
   if (AMode=imRotate) and
      (fCamera.ProjectionKind=pkOrthographic) then
     AMode:=imPan;
+  if fInputMode=AMode then Exit;
+  CancelInteraction;
   fInputMode := AMode;
   fInput.Mode := AMode;
   UpdateInteractionCursor;
@@ -936,52 +1066,12 @@ begin
   MarkDirty;
 end;
 
-procedure T3dLclWidget.PrepareCameraRotationPivot;
-
-var N: T3dNode;
-  B: T3dBounds;
-  NewTarget,Position,Forward,Right,Up: T3dVector;
-  NewDistance: Single;
-begin
-  NewTarget := fCamera.Target;
-  N := SelectedNode;
-  if N<>nil then
-    NewTarget := NodeWorldPivot(N)
-  else if (fScene<>nil) and fScene.Bounds.Valid then
-    begin
-      B := fScene.Bounds;
-      NewTarget := Vector3d((B.Min.X+B.Max.X)*0.5,
-                   (B.Min.Y+B.Max.Y)*0.5,(B.Min.Z+B.Max.Z)*0.5);
-    end;
-  Position := CameraPosition(fCamera);
-  BuildCameraBasis(fCamera,Forward,Right,Up);
-  Forward := VectorSubtract(NewTarget,Position);
-  NewDistance := Sqrt(VectorDot(Forward,Forward));
-  if NewDistance<=1.0e-6 then
-    Exit;
-  Forward := VectorScale(Forward,1/NewDistance);
-  if not TryNormalize(VectorCross(Forward,Up),Right) then
-    if not TryNormalize(VectorCross(Forward,Vector3d(0,1,0)),Right) then
-      TryNormalize(VectorCross(Forward,Vector3d(0,0,1)),Right);
-  TryNormalize(VectorCross(Right,Forward),Up);
-  fCamera.Target := NewTarget;
-  fCamera.Distance := NewDistance;
-  fCamera.Forward := Forward;
-  fCamera.Right := Right;
-  fCamera.Up := Up;
-  fCamera.PoseValid := True;
-end;
-
 function T3dLclWidget.OrbitCamera: T3dOrbitCamera;
 begin
   Result.Target := fCamera.Target;
   Result.Forward := fCamera.Forward;
   Result.Right := fCamera.Right;
   Result.Up := fCamera.Up;
-  Result.PoseValid := fCamera.PoseValid;
-  Result.YawDegrees := fCamera.YawDegrees;
-  Result.PitchDegrees := fCamera.PitchDegrees;
-  Result.RollDegrees := fCamera.RollDegrees;
   Result.Distance := fCamera.Distance;
   Result.VerticalFovDegrees := EffectiveVerticalFov(fCamera);
   Result.ProjectionKind := fCamera.ProjectionKind;
@@ -1021,6 +1111,107 @@ function T3dLclWidget.PickScene(const ARay:T3dRay;
 begin
   FillChar(AHit,SizeOf(AHit),0);
   Result:=(fScenePicker<>nil) and fScenePicker.Pick(fScene,ARay,AHit);
+end;
+
+function T3dLclWidget.PickPointCloudAt(X,Y:Integer;
+  out ANodeId:QWord):Boolean;
+const
+  CPointTolerance=8.0;
+  CBoundsTolerance=7.0;
+  CEdgeA:array[0..11] of Integer=(0,0,0,1,1,2,2,3,4,4,5,6);
+  CEdgeB:array[0..11] of Integer=(1,2,4,3,5,3,6,7,5,6,7,7);
+var
+  I,J,Corner:Integer;
+  Node:T3dNode;
+  Viewport:T3dViewport;
+  OrbitCam:T3dOrbitCamera;
+  ScreenPoint,ScreenA,ScreenB:T3dPoint;
+  WorldPoint:T3dVector;
+  Depth,DistanceSquared,BestPointDistance,BestEdgeDistance:Single;
+  Forward,Right,Up,CameraOrigin,Relative:T3dVector;
+  HalfHeight,HalfWidth,TanHalfFov:Single;
+  Corners:array[0..7] of T3dPoint;
+  CornerVisible:array[0..7] of Boolean;
+
+  function DistanceToSegmentSquared(const P,A,B:T3dPoint):Single;
+  var DX,DY,T:Single;
+  begin
+    DX:=B.X-A.X; DY:=B.Y-A.Y;
+    if Sqr(DX)+Sqr(DY)<1E-8 then
+      Exit(Sqr(P.X-A.X)+Sqr(P.Y-A.Y));
+    T:=((P.X-A.X)*DX+(P.Y-A.Y)*DY)/(Sqr(DX)+Sqr(DY));
+    T:=EnsureRange(T,0,1);
+    Result:=Sqr(P.X-(A.X+T*DX))+Sqr(P.Y-(A.Y+T*DY));
+  end;
+
+begin
+  Result:=False;
+  ANodeId:=0;
+  if (fScene=nil) or (ClientWidth<=0) or (ClientHeight<=0) then Exit;
+  Viewport.Width:=ClientWidth;
+  Viewport.Height:=ClientHeight;
+  OrbitCam:=OrbitCamera;
+  CameraBasis(OrbitCam,Forward,Right,Up);
+  CameraOrigin:=Subtract(OrbitCam.Target,Scale(Forward,OrbitCam.Distance));
+  TanHalfFov:=Tan(DegToRad(OrbitCam.VerticalFovDegrees)*0.5);
+  BestPointDistance:=Sqr(CPointTolerance);
+  BestEdgeDistance:=Sqr(CBoundsTolerance);
+  for I:=0 to High(fScene.Nodes) do
+  begin
+    Node:=fScene.Nodes[I];
+    if (Node=nil) or not Node.DrawBoundsOverride or (Node.Mesh=nil) then Continue;
+    for J:=0 to High(Node.Mesh.Positions) do
+    begin
+      WorldPoint:=TransformPoint(Node.Mesh.Positions[J],Node.WorldTransform);
+      Relative:=Subtract(WorldPoint,CameraOrigin);
+      Depth:=Dot(Relative,Forward);
+      if Depth<=1E-6 then Continue;
+      if OrbitCam.ProjectionKind=pkOrthographic then
+      begin
+        HalfHeight:=OrbitCam.OrthographicScale;
+        if HalfHeight<=1E-6 then HalfHeight:=Max(0.1,OrbitCam.Distance*0.5);
+      end
+      else HalfHeight:=Depth*TanHalfFov;
+      HalfWidth:=HalfHeight*Viewport.Width/Viewport.Height;
+      if (HalfHeight<=1E-6) or (HalfWidth<=1E-6) then Continue;
+      ScreenPoint.X:=(Dot(Relative,Right)/HalfWidth+1)*Viewport.Width*0.5;
+      ScreenPoint.Y:=(1-Dot(Relative,Up)/HalfHeight)*Viewport.Height*0.5;
+      if not ((ScreenPoint.X>=0) and (ScreenPoint.X<ClientWidth) and
+        (ScreenPoint.Y>=0) and (ScreenPoint.Y<ClientHeight)) then
+        Continue;
+      DistanceSquared:=Sqr(ScreenPoint.X-X)+Sqr(ScreenPoint.Y-Y);
+      if DistanceSquared<BestPointDistance then
+      begin
+        BestPointDistance:=DistanceSquared;
+        ANodeId:=Node.Id;
+        Result:=True;
+      end;
+    end;
+    if not Node.Bounds.Valid then Continue;
+    for Corner:=0 to 7 do
+    begin
+      WorldPoint:=Node.Bounds.Min;
+      if (Corner and 1)<>0 then WorldPoint.X:=Node.Bounds.Max.X;
+      if (Corner and 2)<>0 then WorldPoint.Y:=Node.Bounds.Max.Y;
+      if (Corner and 4)<>0 then WorldPoint.Z:=Node.Bounds.Max.Z;
+      WorldPoint:=TransformPoint(WorldPoint,Node.WorldTransform);
+      CornerVisible[Corner]:=ProjectWorldToScreen(WorldPoint,OrbitCam,Viewport,
+        Corners[Corner],Depth);
+    end;
+    for J:=0 to 11 do
+      if CornerVisible[CEdgeA[J]] and CornerVisible[CEdgeB[J]] then
+      begin
+        ScreenA:=Corners[CEdgeA[J]];
+        ScreenB:=Corners[CEdgeB[J]];
+        DistanceSquared:=DistanceToSegmentSquared(Point3d(X,Y),ScreenA,ScreenB);
+        if DistanceSquared<BestEdgeDistance then
+        begin
+          BestEdgeDistance:=DistanceSquared;
+          ANodeId:=Node.Id;
+          Result:=True;
+        end;
+      end;
+  end;
 end;
 
 function T3dLclWidget.LogicalVertexFromNode(ANodeId:QWord;
@@ -1182,22 +1373,6 @@ begin
   MarkDirty;
 end;
 
-function T3dLclWidget.GetCameraRoll: Single;
-begin
-  Result := fCamera.RollDegrees;
-end;
-
-procedure T3dLclWidget.SetCameraRoll(AValue:Single);
-begin
-  if SameValue(fCamera.RollDegrees,AValue) then
-    Exit;
-  fCamera.RollDegrees := AValue;
-  fCamera.PoseValid := False;
-  MarkDirty;
-  if Assigned(fOnViewChanged) then
-    fOnViewChanged(Self);
-end;
-
 procedure T3dLclWidget.SetRenderOptions(const AOptions:T3dRenderOptions);
 begin
   fOptions := AOptions;
@@ -1252,7 +1427,12 @@ begin
   if (csDestroying in ComponentState) or (Parent = nil) or
      (not Parent.HandleAllocated) or (not HandleAllocated) then
     Exit;
+  DrawFrameOverlay;
   SwapBuffers;
+end;
+
+procedure T3dLclWidget.DrawFrameOverlay;
+begin
 end;
 
 function T3dLclWidget.RenderWidth: Integer;

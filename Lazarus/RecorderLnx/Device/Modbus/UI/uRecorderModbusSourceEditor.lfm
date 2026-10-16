@@ -1,0 +1,614 @@
+object RecorderModbusEditorForm: TRecorderModbusEditorForm
+  Height = 760
+  Width = 1080
+  Caption = 'Modbus Master'
+  ClientHeight = 760
+  ClientWidth = 1080
+  Constraints.MinHeight = 680
+  Constraints.MinWidth = 900
+  OnCloseQuery = FormCloseQuery
+  Position = poOwnerFormCenter
+  LCLVersion = '2.2.6.0'
+  object TopPan: TPanel
+    Height = 132
+    Width = 1080
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 0
+    object AliasLabel: TLabel
+      Left = 12
+      Top = 14
+      Caption = 'Алиас'
+    end
+    object TransportLabel: TLabel
+      Left = 360
+      Top = 14
+      Caption = 'Транспорт'
+    end
+    object PollLabel: TLabel
+      Left = 12
+      Top = 51
+      Caption = 'Опрос, мс'
+    end
+    object TimeoutLabel: TLabel
+      Left = 240
+      Top = 51
+      Caption = 'Таймаут, мс'
+    end
+    object RetriesLabel: TLabel
+      Left = 450
+      Top = 51
+      Caption = 'Повторы'
+    end
+    object StatusLabel: TLabel
+      Left = 720
+      Top = 14
+      Width = 160
+      Alignment = taCenter
+      Anchors = [akTop, akRight]
+      Caption = 'Проверка связи не выполнялась'
+    end
+    object AliasEdit: TEdit
+      Left = 132
+      Height = 27
+      Top = 10
+      Width = 210
+      OnChange = ConfigChanged
+      TabOrder = 0
+    end
+    object TransportCombo: TComboBox
+      Left = 450
+      Height = 27
+      Top = 10
+      Width = 180
+      Items.Strings = ('Modbus TCP' 'Modbus RTU')
+      OnChange = TransportChanged
+      Style = csDropDownList
+      TabOrder = 1
+    end
+    object PollEdit: TEdit
+      Left = 132
+      Height = 27
+      Top = 47
+      Width = 90
+      OnChange = ConfigChanged
+      TabOrder = 2
+    end
+    object TimeoutEdit: TEdit
+      Left = 340
+      Height = 27
+      Top = 47
+      Width = 90
+      OnChange = ConfigChanged
+      TabOrder = 3
+    end
+    object RetriesEdit: TEdit
+      Left = 520
+      Height = 27
+      Top = 47
+      Width = 70
+      OnChange = ConfigChanged
+      TabOrder = 4
+    end
+    object TestButton: TButton
+      Left = 720
+      Height = 30
+      Top = 46
+      Width = 160
+      Anchors = [akTop, akRight]
+      Caption = 'Проверить связь'
+      OnClick = TestClick
+      TabOrder = 5
+    end
+    object TcpPanel: TPanel
+      Height = 50
+      Top = 82
+      Width = 1080
+      Anchors = [akTop, akLeft, akRight]
+      BevelOuter = bvNone
+      TabOrder = 6
+      object HostLabel: TLabel
+        Left = 12
+        Top = 12
+        Caption = 'Адрес'
+      end
+      object PortLabel: TLabel
+        Left = 420
+        Top = 12
+        Caption = 'Порт'
+      end
+      object HostEdit: TEdit
+        Left = 132
+        Height = 27
+        Top = 8
+        Width = 270
+        OnChange = ConfigChanged
+        TabOrder = 0
+      end
+      object PortEdit: TEdit
+        Left = 470
+        Height = 27
+        Top = 8
+        Width = 90
+        OnChange = ConfigChanged
+        TabOrder = 1
+      end
+    end
+    object RtuPanel: TPanel
+      Height = 50
+      Top = 82
+      Width = 1080
+      Anchors = [akTop, akLeft, akRight]
+      BevelOuter = bvNone
+      TabOrder = 7
+      Visible = False
+      object SerialLabel: TLabel
+        Left = 12
+        Top = 12
+        Caption = 'Порт'
+      end
+      object BaudLabel: TLabel
+        Left = 350
+        Top = 12
+        Caption = 'Скорость'
+      end
+      object FramingLabel: TLabel
+        Left = 600
+        Top = 12
+        Caption = 'Формат'
+      end
+      object SerialEdit: TEdit
+        Left = 132
+        Height = 27
+        Top = 8
+        Width = 200
+        OnChange = ConfigChanged
+        TabOrder = 0
+      end
+      object BaudCombo: TComboBox
+        Left = 420
+        Height = 27
+        Top = 8
+        Width = 150
+        Items.Strings = ('9600' '19200' '38400' '57600' '115200')
+        OnChange = ConfigChanged
+        Style = csDropDownList
+        TabOrder = 1
+      end
+      object FramingCombo: TComboBox
+        Left = 674
+        Height = 27
+        Top = 8
+        Width = 150
+        Items.Strings = ('8N1' '8E1' '8O1' '8N2')
+        OnChange = ConfigChanged
+        Style = csDropDownList
+        TabOrder = 2
+      end
+    end
+  end
+  object TopSplitter: TSplitter
+    Height = 6
+    Top = 132
+    Width = 1080
+    Align = alTop
+    AutoSnap = False
+  end
+  object DiagnosticsPanel: TPanel
+    Height = 116
+    Top = 596
+    Width = 1080
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 2
+    object DiagnosticsLabel: TLabel
+      Left = 8
+      Top = 3
+      Caption = 'Диагностика'
+    end
+    object DiagnosticsMemo: TMemo
+      Height = 94
+      Top = 22
+      Width = 1080
+      Align = alBottom
+      ReadOnly = True
+      ScrollBars = ssAutoVertical
+      TabOrder = 0
+    end
+  end
+  object DiagnosticsSplitter: TSplitter
+    Height = 6
+    Top = 590
+    Width = 1080
+    Align = alBottom
+    AutoSnap = False
+  end
+  object BottomPanel: TPanel
+    Height = 48
+    Top = 712
+    Width = 1080
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 3
+    object PreviewLabel: TLabel
+      Left = 12
+      Top = 15
+      Width = 650
+      Anchors = [akTop, akLeft, akRight]
+      Caption = 'Публичный адрес: —'
+    end
+    object OkButton: TButton
+      Left = 800
+      Height = 30
+      Top = 9
+      Width = 80
+      Anchors = [akTop, akRight]
+      Caption = 'OK'
+      Default = True
+      ModalResult = 1
+      OnClick = OkClick
+      TabOrder = 0
+    end
+    object ApplyButton: TButton
+      Left = 984
+      Height = 30
+      Top = 9
+      Width = 84
+      Anchors = [akTop, akRight]
+      Caption = 'Применить'
+      OnClick = ApplyClick
+      TabOrder = 2
+    end
+    object CancelButton: TButton
+      Left = 890
+      Height = 30
+      Top = 9
+      Width = 84
+      Anchors = [akTop, akRight]
+      Cancel = True
+      Caption = 'Отмена'
+      ModalResult = 2
+      TabOrder = 1
+    end
+  end
+  object WorkspacePanel: TPanel
+    Height = 452
+    Top = 138
+    Width = 1080
+    Align = alClient
+    BevelOuter = bvNone
+    TabOrder = 1
+    object TreePanel: TPanel
+      Height = 452
+      Width = 430
+      Align = alLeft
+      BevelOuter = bvNone
+      Constraints.MinWidth = 320
+      TabOrder = 0
+      object SearchLabel: TLabel
+        Left = 8
+        Top = 10
+        Caption = 'Поиск'
+      end
+      object SearchEdit: TEdit
+        Left = 62
+        Height = 27
+        Top = 6
+        Width = 360
+        Anchors = [akTop, akLeft, akRight]
+        OnChange = SearchChanged
+        TabOrder = 0
+      end
+      object ToolPanel: TPanel
+        Height = 40
+        Top = 38
+        Width = 430
+        Anchors = [akTop, akLeft, akRight]
+        BevelOuter = bvNone
+        TabOrder = 1
+        object AddDeviceButton: TButton
+          Left = 8
+          Height = 28
+          Top = 5
+          Width = 104
+          Caption = '+ Устройство'
+          OnClick = AddDeviceClick
+          TabOrder = 0
+        end
+        object AddTagButton: TButton
+          Left = 118
+          Height = 28
+          Top = 5
+          Width = 78
+          Caption = '+ Тег'
+          OnClick = AddTagClick
+          TabOrder = 1
+        end
+        object DuplicateButton: TButton
+          Left = 202
+          Height = 28
+          Top = 5
+          Width = 98
+          Caption = 'Дублировать'
+          OnClick = DuplicateClick
+          TabOrder = 2
+        end
+        object DeleteButton: TButton
+          Left = 306
+          Height = 28
+          Top = 5
+          Width = 86
+          Caption = 'Удалить'
+          OnClick = DeleteClick
+          TabOrder = 3
+        end
+      end
+      object ConfigTree: TTreeView
+        Height = 374
+        Top = 78
+        Width = 430
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        HideSelection = False
+        ReadOnly = True
+        TabOrder = 2
+        OnSelectionChanged = TreeSelectionChanged
+      end
+    end
+    object WorkspaceSplitter: TSplitter
+      Left = 430
+      Height = 452
+      Width = 6
+      Align = alLeft
+      AutoSnap = False
+    end
+    object DetailsPanel: TPanel
+      Left = 436
+      Height = 452
+      Width = 644
+      Align = alClient
+      BevelOuter = bvNone
+      Constraints.MinWidth = 430
+      TabOrder = 1
+      object NoSelectionLabel: TLabel
+        Left = 22
+        Top = 24
+        Caption = 'Выберите устройство или тег слева.'
+      end
+      object DevicePanel: TPanel
+        Height = 452
+        Width = 644
+        Align = alClient
+        BevelOuter = bvNone
+        TabOrder = 0
+        Visible = False
+        object DeviceNameLabel: TLabel
+          Left = 16
+          Top = 18
+          Caption = 'Имя'
+        end
+        object UnitIdLabel: TLabel
+          Left = 16
+          Top = 58
+          Caption = 'Unit ID'
+        end
+        object DeviceNameEdit: TEdit
+          Left = 144
+          Height = 27
+          Top = 14
+          Width = 360
+          OnChange = DetailChanged
+          TabOrder = 0
+        end
+        object UnitIdEdit: TEdit
+          Left = 144
+          Height = 27
+          Top = 54
+          Width = 90
+          OnChange = DetailChanged
+          TabOrder = 1
+        end
+        object DeviceEnabledCheck: TCheckBox
+          Left = 144
+          Top = 98
+          Caption = 'Включено'
+          OnChange = DetailChanged
+          TabOrder = 2
+        end
+      end
+      object TagPanel: TPanel
+        Height = 452
+        Width = 644
+        Align = alClient
+        BevelOuter = bvNone
+        TabOrder = 1
+        Visible = False
+        object TagNameLabel: TLabel
+          Left = 16
+          Top = 14
+          Caption = 'Имя'
+        end
+        object DescriptionLabel: TLabel
+          Left = 16
+          Top = 50
+          Caption = 'Описание'
+        end
+        object RegionLabel: TLabel
+          Left = 16
+          Top = 86
+          Caption = 'Область / функция'
+        end
+        object AddressLabel: TLabel
+          Left = 16
+          Top = 122
+          Caption = 'Адрес (zero-based)'
+        end
+        object AddressModeLabel: TLabel
+          Left = 336
+          Top = 86
+          Caption = 'Режим адреса'
+        end
+        object NotationLabel: TLabel
+          Left = 336
+          Top = 122
+          Caption = 'Человеческая запись: —'
+        end
+        object DataTypeLabel: TLabel
+          Left = 16
+          Top = 158
+          Caption = 'Тип данных'
+        end
+        object EndianLabel: TLabel
+          Left = 336
+          Top = 158
+          Caption = 'Порядок байт'
+        end
+        object AccessLabel: TLabel
+          Left = 16
+          Top = 194
+          Caption = 'Доступ'
+        end
+        object UnitLabel: TLabel
+          Left = 16
+          Top = 230
+          Caption = 'Единица'
+        end
+        object ScaleLabel: TLabel
+          Left = 266
+          Top = 230
+          Caption = 'Масштаб'
+        end
+        object OffsetLabel: TLabel
+          Left = 456
+          Top = 230
+          Caption = 'Смещение'
+        end
+        object EndianHintLabel: TLabel
+          Left = 336
+          Height = 38
+          Top = 324
+          Width = 290
+          AutoSize = False
+          Caption = 'ABCD/BADC/CDAB/DCBA задаёт совместный порядок байт и слов.'
+          WordWrap = True
+        end
+        object CanonicalLabel: TLabel
+          Left = 16
+          Height = 42
+          Top = 276
+          Width = 610
+          Anchors = [akTop, akLeft, akRight]
+          AutoSize = False
+          Caption = 'Канонический адрес: —'
+          WordWrap = True
+        end
+        object TagNameEdit: TEdit
+          Left = 166
+          Height = 27
+          Top = 10
+          Width = 460
+          Anchors = [akTop, akLeft, akRight]
+          OnChange = DetailChanged
+          TabOrder = 0
+        end
+        object DescriptionEdit: TEdit
+          Left = 166
+          Height = 27
+          Top = 46
+          Width = 460
+          Anchors = [akTop, akLeft, akRight]
+          OnChange = DetailChanged
+          TabOrder = 1
+        end
+        object RegionCombo: TComboBox
+          Left = 166
+          Height = 27
+          Top = 82
+          Width = 300
+          Items.Strings = ('01 — Coils' '02 — Discrete Inputs' '04 — Input Registers' '03 — Holding Registers')
+          OnChange = DetailChanged
+          Style = csDropDownList
+          TabOrder = 2
+        end
+        object AddressModeCombo: TComboBox
+          Left = 442
+          Height = 27
+          Top = 82
+          Width = 184
+          Items.Strings = ('Zero-based (0..65535)' 'Человеческий (00001/10001/30001/40001)')
+          OnChange = AddressModeChanged
+          Style = csDropDownList
+          TabOrder = 3
+        end
+        object AddressEdit: TEdit
+          Left = 166
+          Height = 27
+          Top = 118
+          Width = 140
+          OnChange = DetailChanged
+          TabOrder = 4
+        end
+        object DataTypeCombo: TComboBox
+          Left = 166
+          Height = 27
+          Top = 154
+          Width = 140
+          Items.Strings = ('Bool' 'UInt16' 'Int16' 'UInt32' 'Int32' 'Float32' 'Float64')
+          OnChange = DetailChanged
+          Style = csDropDownList
+          TabOrder = 5
+        end
+        object EndianCombo: TComboBox
+          Left = 442
+          Height = 27
+          Top = 154
+          Width = 184
+          Items.Strings = ('ABCD' 'BADC' 'CDAB' 'DCBA')
+          OnChange = DetailChanged
+          Style = csDropDownList
+          TabOrder = 6
+        end
+        object AccessCombo: TComboBox
+          Left = 166
+          Height = 27
+          Top = 190
+          Width = 180
+          Items.Strings = ('Только чтение' 'Чтение и запись')
+          OnChange = DetailChanged
+          Style = csDropDownList
+          TabOrder = 7
+        end
+        object TagEnabledCheck: TCheckBox
+          Left = 442
+          Top = 194
+          Caption = 'Включено'
+          OnChange = DetailChanged
+          TabOrder = 8
+        end
+        object UnitEdit: TEdit
+          Left = 166
+          Height = 27
+          Top = 226
+          Width = 88
+          OnChange = DetailChanged
+          TabOrder = 9
+        end
+        object ScaleEdit: TEdit
+          Left = 336
+          Height = 27
+          Top = 226
+          Width = 106
+          OnChange = DetailChanged
+          TabOrder = 10
+        end
+        object OffsetEdit: TEdit
+          Left = 526
+          Height = 27
+          Top = 226
+          Width = 100
+          OnChange = DetailChanged
+          TabOrder = 11
+        end
+      end
+    end
+  end
+end

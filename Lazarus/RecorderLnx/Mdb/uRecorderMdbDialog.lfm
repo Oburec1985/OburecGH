@@ -4,15 +4,56 @@ object RecorderMdbDialog: TRecorderMdbDialog
   Top = 160
   Width = 960
   BorderStyle = bsSizeable
-  Caption = 'Контекст измерения: изделие и испытание'
+  Caption = 'База испытаний: объект → испытание → регистрации'
   ClientHeight = 560
   ClientWidth = 960
   Constraints.MinHeight = 500
   Constraints.MinWidth = 920
   Position = poScreenCenter
+  object TopPan: TPanel
+    Left = 0
+    Top = 0
+    Width = 960
+    Height = 48
+    Align = alTop
+    TabOrder = 4
+    object lblBasePath: TLabel
+      Left = 10
+      Top = 16
+      Caption = 'Путь к БД:'
+    end
+    object edBasePath: TEdit
+      Left = 85
+      Top = 10
+      Width = 665
+      Height = 27
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 0
+    end
+    object btnBrowsePath: TButton
+      Left = 760
+      Top = 8
+      Width = 40
+      Height = 32
+      Anchors = [akTop, akRight]
+      Caption = '...'
+      OnClick = btnBrowsePathClick
+      TabOrder = 1
+    end
+    object btnApplyPath: TButton
+      Left = 810
+      Top = 8
+      Width = 140
+      Height = 32
+      Anchors = [akTop, akRight]
+      Caption = 'Применить путь'
+      OnClick = btnApplyPathClick
+      TabOrder = 2
+    end
+  end
   object ObjectPan: TPanel
     Left = 0 Height = 510 Top = 0 Width = 300 Align = alLeft TabOrder = 0
-    object lblObjectSearch: TLabel Left = 10 Height = 17 Top = 10 Width = 50 Caption = 'Поиск'
+    object lblObjectSearch: TLabel Left = 10 Height = 17 Top = 10 Width = 180 Caption = 'Объект — поиск'
     end
     object edObjectSearch: TEdit Left = 10 Height = 27 Top = 30 Width = 280 Anchors = [akTop, akLeft, akRight] OnChange = edObjectSearchChange TabOrder = 0
     end
@@ -36,7 +77,7 @@ object RecorderMdbDialog: TRecorderMdbDialog
   object SplitterLeft: TSplitter Left = 300 Height = 510 Top = 0 Width = 5 Align = alLeft MinSize = 220
   end
   object TestPan: TPanel Left = 305 Height = 510 Top = 0 Width = 270 Align = alLeft TabOrder = 1
-    object lblTestSearch: TLabel Left = 10 Height = 17 Top = 10 Width = 50 Caption = 'Поиск'
+    object lblTestSearch: TLabel Left = 10 Height = 17 Top = 10 Width = 180 Caption = 'Испытание — поиск'
     end
     object edTestSearch: TEdit Left = 10 Height = 27 Top = 30 Width = 250 Anchors = [akTop, akLeft, akRight] OnChange = edTestSearchChange TabOrder = 0
     end
@@ -52,7 +93,7 @@ object RecorderMdbDialog: TRecorderMdbDialog
   object SplitterRight: TSplitter Left = 575 Height = 510 Top = 0 Width = 5 Align = alLeft MinSize = 220
   end
   object ClientPan: TPanel Left = 580 Height = 510 Top = 0 Width = 380 Align = alClient TabOrder = 2
-    object lblContext: TLabel Left = 10 Height = 20 Top = 10 Width = 250 Caption = 'Замеры выбранного испытания'
+    object lblContext: TLabel Left = 10 Height = 20 Top = 10 Width = 250 Caption = 'Регистрации выбранного испытания'
     end
     object lvMeasurements: TListView Left = 10 Height = 460 Top = 38 Width = 360 Anchors = [akTop, akLeft, akRight, akBottom] ReadOnly = True RowSelect = True ViewStyle = vsReport TabOrder = 0
       Columns = <item Caption = 'Начало' Width = 135 end item Caption = 'Статус' Width = 75 end item Caption = 'Значений' Width = 70 end item Caption = 'Файлов' Width = 60 end>

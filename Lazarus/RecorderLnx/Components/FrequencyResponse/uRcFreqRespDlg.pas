@@ -169,7 +169,7 @@ begin a:=SelectedAxis; l:=SelectedLine; if l<>nil then begin for I:=0 to fDraft.
 
 function TRcFreqRespDlg.FloatValue(AEdit:TEdit; ADefault:Double):Double;
 var s:string;
-begin s:=StringReplace(Trim(AEdit.Text),'.',DecimalSeparator,[rfReplaceAll]); s:=StringReplace(s,',',DecimalSeparator,[rfReplaceAll]); Result:=StrToFloatDef(s,ADefault); end;
+begin s:=StringReplace(Trim(AEdit.Text),'.',DefaultFormatSettings.DecimalSeparator,[rfReplaceAll]); s:=StringReplace(s,',',DefaultFormatSettings.DecimalSeparator,[rfReplaceAll]); Result:=StrToFloatDef(s,ADefault); end;
 
 procedure TRcFreqRespDlg.OkClick(Sender:TObject);
 var I:Integer;

@@ -21,12 +21,24 @@ uses
 
 function RecorderDiscoverPxiMx248Responsive(
   out ADevices: TPxiMx248DiscoveredDevices;
-  const AService: IPxiMx248SettingsService = nil): TRecorderOperationResult;
+  const AService: IPxiMx248SettingsService = nil): TRcOperationResult;
+procedure RecorderKnownPxiMx248Devices(out ADevices: TPxiMx248DiscoveredDevices);
 
 implementation
 
 uses
   uRecorderPxiMx248WindowsTransport;
+
+var
+  g_KnownDevices: TPxiMx248DiscoveredDevices;
+
+procedure RecorderKnownPxiMx248Devices(
+  out ADevices: TPxiMx248DiscoveredDevices);
+begin
+  { Discovery results are published and consumed by GUI code only. The worker
+    owns its private array until Synchronize has completed. }
+  ADevices := Copy(g_KnownDevices, 0, Length(g_KnownDevices));
+end;
 
 type
   TPxiMx248DiscoveryWorker = class(TThread)
@@ -34,7 +46,7 @@ type
     fCompleted: Boolean;
     fDevices: TPxiMx248DiscoveredDevices;
     fErrorText: string;
-    fResult: TRecorderOperationResult;
+    fResult: TRcOperationResult;
     fService: IPxiMx248SettingsService;
     procedure Deliver;
   protected
@@ -43,7 +55,7 @@ type
     constructor Create(const AService: IPxiMx248SettingsService);
     property Completed: Boolean read fCompleted;
     property Devices: TPxiMx248DiscoveredDevices read fDevices;
-    property DiscoveryResult: TRecorderOperationResult read fResult;
+    property DiscoveryResult: TRcOperationResult read fResult;
   end;
 
 constructor TPxiMx248DiscoveryWorker.Create(
@@ -71,14 +83,14 @@ end;
 procedure TPxiMx248DiscoveryWorker.Deliver;
 begin
   if fErrorText <> '' then
-    fResult := TRecorderOperationResult.Failure(rocInternal,
+    fResult := TRcOperationResult.Failure(rocInternal,
       'mx248.discovery.worker', fErrorText);
   fCompleted := True;
 end;
 
 function RecorderDiscoverPxiMx248Responsive(
   out ADevices: TPxiMx248DiscoveredDevices;
-  const AService: IPxiMx248SettingsService): TRecorderOperationResult;
+  const AService: IPxiMx248SettingsService): TRcOperationResult;
 var
   lWorker: TPxiMx248DiscoveryWorker;
 begin
@@ -93,6 +105,8 @@ begin
     end;
     ADevices := Copy(lWorker.Devices, 0, Length(lWorker.Devices));
     Result := lWorker.DiscoveryResult;
+    if Result.IsSuccess then
+      g_KnownDevices := Copy(ADevices, 0, Length(ADevices));
   finally
     lWorker.WaitFor;
     lWorker.Free;

@@ -9,6 +9,22 @@ unit uRecorderFrfContracts;
 interface
 
 type
+  { Spectrum bins already contain RMS amplitudes. Band magnitude is their
+    root-sum-square, without dividing by the bin count; phase is sampled at
+    the center frequency. Missing bins or unavailable source return False. }
+  IRecorderFrfBandSampler = interface
+    ['{A5E77E7B-7D64-4CF6-9E83-B3C2C99B4F22}']
+    function TrySampleBand(ACurveId: QWord; ACenterHz,
+      ATolerancePercent: Double; AAmplitude: Boolean;
+      out AMagnitude, APhaseRadians: Double): Boolean;
+  end;
+
+  IRecorderAmplitudeSampler = interface
+    ['{B205F4C3-2AF7-45C9-8395-08C9F53F5B38}']
+    function TrySampleAmplitude(ACurveId: QWord; AFrequencyHz: Double;
+      out AMagnitude, APhaseRadians: Double): Boolean;
+  end;
+
   IRecorderFrfSampler = interface
     ['{B491A68B-C7E3-4B03-B598-F7D88C4129C6}']
     function TrySample(ACurveId: QWord; AFrequencyHz: Double;
@@ -32,6 +48,8 @@ procedure UnregisterRecorderFrfProvider(AOwner: TObject);
 procedure NotifyRecorderFrfProviderChanged(
   const AProvider: IRecorderFrfProvider);
 function RecorderAggregateFrfProvider: IRecorderFrfProvider;
+function RecorderSelectedFrfFrequency: Double;
+procedure SetRecorderSelectedFrfFrequency(AFrequencyHz: Double);
 
 implementation
 
@@ -45,7 +63,7 @@ type
   { One retained aggregate snapshot represents one atomic view of registry
     membership. Each child snapshot is immutable for the entire read. }
   TRecorderAggregateFrfSnapshot = class(TInterfacedObject,
-    IRecorderFrfSampler)
+    IRecorderFrfSampler, IRecorderAmplitudeSampler, IRecorderFrfBandSampler)
   private
     fVersion: QWord;
     fSnapshots: array of IRecorderFrfSampler;
@@ -55,6 +73,11 @@ type
     function TrySample(ACurveId: QWord; AFrequencyHz: Double;
       out AMagnitude, APhaseRadians: Double): Boolean;
     function Version: QWord;
+    function TrySampleAmplitude(ACurveId: QWord; AFrequencyHz: Double;
+      out AMagnitude, APhaseRadians: Double): Boolean;
+    function TrySampleBand(ACurveId: QWord; ACenterHz,
+      ATolerancePercent: Double; AAmplitude: Boolean;
+      out AMagnitude, APhaseRadians: Double): Boolean;
   end;
 
   { Registry entries are keyed by the owning component/service. Replacing or
@@ -84,6 +107,7 @@ type
 var
   GProviderLock: TRTLCriticalSection;
   GProvider: IRecorderFrfProvider;
+  GSelectedFrequency: Double = 1;
   GAggregate: TRecorderAggregateFrfProvider;
   GAggregateProvider: IRecorderFrfProvider;
 
@@ -97,6 +121,48 @@ begin
   SetLength(fSnapshots, Length(ASnapshots));
   for lIndex := 0 to High(ASnapshots) do
     fSnapshots[lIndex] := ASnapshots[lIndex];
+end;
+
+function TRecorderAggregateFrfSnapshot.TrySampleBand(ACurveId: QWord;
+  ACenterHz, ATolerancePercent: Double; AAmplitude: Boolean;
+  out AMagnitude, APhaseRadians: Double): Boolean;
+var
+  lSnapshot: IRecorderFrfSampler;
+  lBand: IRecorderFrfBandSampler;
+begin
+  for lSnapshot in fSnapshots do
+    if lSnapshot.QueryInterface(IRecorderFrfBandSampler, lBand) = 0 then
+      if lBand.TrySampleBand(ACurveId, ACenterHz, ATolerancePercent,
+        AAmplitude, AMagnitude, APhaseRadians) then Exit(True);
+  Result := False;
+end;
+
+function TRecorderAggregateFrfSnapshot.TrySampleAmplitude(ACurveId: QWord;
+  AFrequencyHz: Double; out AMagnitude, APhaseRadians: Double): Boolean;
+var
+  Snapshot: IRecorderFrfSampler;
+  Amplitude: IRecorderAmplitudeSampler;
+begin
+  for Snapshot in fSnapshots do
+    if Snapshot.QueryInterface(IRecorderAmplitudeSampler, Amplitude) = 0 then
+      if Amplitude.TrySampleAmplitude(ACurveId, AFrequencyHz,
+        AMagnitude, APhaseRadians) then Exit(True);
+  Result := False;
+end;
+
+function RecorderSelectedFrfFrequency: Double;
+begin
+  EnterCriticalSection(GProviderLock);
+  try Result := GSelectedFrequency;
+  finally LeaveCriticalSection(GProviderLock); end;
+end;
+
+procedure SetRecorderSelectedFrfFrequency(AFrequencyHz: Double);
+begin
+  if AFrequencyHz < 0 then Exit;
+  EnterCriticalSection(GProviderLock);
+  try GSelectedFrequency := AFrequencyHz;
+  finally LeaveCriticalSection(GProviderLock); end;
 end;
 
 function TRecorderAggregateFrfSnapshot.TrySample(ACurveId: QWord;

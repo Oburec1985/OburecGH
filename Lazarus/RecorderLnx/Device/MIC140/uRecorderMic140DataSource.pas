@@ -127,8 +127,8 @@ type
     function BuildSourceId: string; override;
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
     procedure DoTick; override;
-    procedure PrepareHardware; override;
   public
+    procedure PrepareHardware; override;
     constructor Create(const ASourceId, AHost: string; APort: Word;
       AChannelCount: Integer; APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
       ATagNames: TStrings = nil; AOutputMode: TRecorderMic140OutputMode = momMillivolts);
@@ -195,7 +195,7 @@ function RecorderMic140EnsureThermocoupleCalibration(
 implementation
 
 uses
-  Math, StrUtils, Controls, Dialogs, Forms,
+  Math, Controls, Dialogs, Forms,
   uRecorderMeraPaths, uRecorderMeraSdbThermocouples, uRecorderSdbStore,
   uRecorderMic140LegacyConstants, uRecorderMic140LegacyTiming,
   uRecorderMic140Thermocouple, uRecorderMic140StreamHelpers,
@@ -724,7 +724,6 @@ var
   J: Integer;
   lCal: TRecorderCalibration;
   lCalName: string;
-  lResolvedKey: string;
 begin
   if ATag = nil then
     Exit;
@@ -1305,7 +1304,7 @@ begin
     Exit;
   end;
 
-  SetLength(lChannelNumbers, 0);
+  lChannelNumbers := nil;
   lFreq := MIC140DefaultPollFrequencyHz;
   for I := 0 to ATags.Count - 1 do
   begin
@@ -1948,13 +1947,15 @@ var
   lHardwareCalibration: TRecorderCalibration;
   lThermocoupleCalibration: TRecorderCalibration;
   lUseCjc: Boolean;
+  {$IFDEF MIC140_RUNTIME_DIAGNOSTICS}
   lSum: Double;
-  lRaw: Double;
   lPreview: string;
   lAll48: string;
   lAll48S1: string;
   lGood48: Integer;
   lGood48S1: Integer;
+  {$ENDIF}
+  lRaw: Double;
 begin
   { Защита общего тракта от повторной либо переставленной порции. Кольцо
     устройства обязано отдавать FIFO; перекрывающий блок нельзя второй раз

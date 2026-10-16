@@ -4,10 +4,10 @@ library SampleInfoPlugin;
 {$codepage UTF8}
 
 uses
-  SysUtils, uRecorderPluginApi, PluginClass;
+  Interfaces, Forms, SysUtils, uRecorderPluginApi, uOscPluginV2;
 
 const
-  PluginDescription: PAnsiChar = 'RecorderLnx plugin oscillogram (DoRepaint ABI)';
+  PluginDescription: PAnsiChar = 'Self-contained Oscillograph, visual ABI 2.7';
 
 function GetPluginType: LongInt; cdecl;
 begin
@@ -22,50 +22,20 @@ end;
 procedure GetPluginInfo(var AInfo: TRecorderPluginInfo); cdecl;
 begin
   FillChar(AInfo, SizeOf(AInfo), 0);
-  StrPLCopy(@AInfo.name[0], 'Осциллограмма', High(AInfo.name));
+  StrPLCopy(@AInfo.name[0], UTF8Encode('Осциллограф'), High(AInfo.name));
   StrPLCopy(@AInfo.describe[0], PluginDescription, High(AInfo.describe));
   StrPLCopy(@AInfo.vendor[0], 'Mera', High(AInfo.vendor));
   AInfo.version := 1;
-  AInfo.SubVersion := 1;
-end;
-
-function CreatePluginClass: Pointer; cdecl;
-begin
-  Result := TPluginClass.Create;
-end;
-
-function DestroyPluginClass(AInstance: Pointer): LongInt; cdecl;
-begin
-  TPluginClass(AInstance).Free;
-  Result := 0;
-end;
-
-function PluginCreate(AInstance: Pointer;
-  AHostApi: PRecorderPluginHostApi): LongBool; cdecl;
-begin
-  Result := (AInstance <> nil) and TPluginClass(AInstance)._Create(AHostApi);
-end;
-
-function PluginNotify(AInstance: Pointer; AEvent: LongInt;
-  AData: Pointer): LongBool; cdecl;
-begin
-  Result := (AInstance <> nil) and TPluginClass(AInstance).Notify(AEvent, AData);
-end;
-
-function PluginClose(AInstance: Pointer): LongBool; cdecl;
-begin
-  Result := (AInstance <> nil) and TPluginClass(AInstance).Close;
+  AInfo.SubVersion := 3;
 end;
 
 exports
+  RecorderVisualGetDescriptorV2 name 'RecorderVisualGetDescriptorV2',
   GetPluginType name 'GetPluginType',
   GetPluginDescription name 'GetPluginDescription',
-  GetPluginInfo name 'GetPluginInfo',
-  CreatePluginClass name 'CreatePluginClass',
-  DestroyPluginClass name 'DestroyPluginClass',
-  PluginCreate name 'PluginCreate',
-  PluginNotify name 'PluginNotify',
-  PluginClose name 'PluginClose';
+  GetPluginInfo name 'GetPluginInfo';
 
 begin
+  Application.Initialize;
+  Application.ShowMainForm := False;
 end.

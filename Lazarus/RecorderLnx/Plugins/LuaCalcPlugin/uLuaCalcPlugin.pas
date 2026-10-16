@@ -1,5 +1,12 @@
 unit uLuaCalcPlugin;
 
+{ Plugin boundary:
+  Lua execution, script state, and script behavior remain plugin-owned. Host
+  integration is limited to the stable SDK callbacks/notifications; do not add
+  dependencies on Recorder domain models, tag classes, device classes, or
+  concrete plugin dispatch. Use host services through uRecorderPluginApi.
+}
+
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 

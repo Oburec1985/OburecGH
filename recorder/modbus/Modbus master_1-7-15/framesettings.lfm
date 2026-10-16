@@ -1,0 +1,4 @@
+inherited FrameSettings: TFrameSettings
+  DesignLeft = 816
+  DesignTop = 484
+end

@@ -1,0 +1,37 @@
+inherited frm_protocol: Tfrm_protocol
+  Height = 570
+  Width = 661
+  ClientHeight = 570
+  ClientWidth = 661
+  DesignLeft = 545
+  DesignTop = 240
+  object memProtocol: TMemo[0]
+    Left = 4
+    Height = 562
+    Top = 4
+    Width = 653
+    Align = alClient
+    BorderSpacing.Around = 4
+    Lines.Strings = (
+      'memProtocol'
+    )
+    PopupMenu = PopupMenuMemProt
+    ReadOnly = True
+    ScrollBars = ssBoth
+    TabOrder = 0
+  end
+  object PopupMenuMemProt: TPopupMenu[1]
+    Left = 208
+    Top = 176
+    object MenuItem1: TMenuItem
+      Caption = 'Очистить протокол'
+      OnClick = MenuItem1Click
+    end
+  end
+  object Timer1: TTimer[2]
+    Interval = 300000
+    OnTimer = Timer1Timer
+    Left = 453
+    Top = 167
+  end
+end

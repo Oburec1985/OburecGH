@@ -28,6 +28,7 @@ uses
   uMic185MebiusTypes,
   uRecorderHardwareTagSettingsProviders,
   uRecorderTagSettingsProvider,
+  uRecorderConfiguredDataSources,
   uRecorderDeviceDataThread,
   uRecorderAcquisitionTypes,
   uRecorderMeraPaths,
@@ -869,6 +870,104 @@ begin
   LogLine('RESULT MIC-185 tag-settings visible unit test passed.');
 end;
 
+procedure TestPxiMx248TagSettingsSourceFrequency;
+var
+  lApply: TRecorderTagSettingsApplyResult;
+  lCalibrationResult: TRecorderHardwareCalibrationResult;
+  lConfigured: TRecorderConfiguredDataSource;
+  lDraft: TRecorderTagSettingsDraft;
+  lError: string;
+  lProvider: IRecorderTagSettingsProvider;
+  lRegistry: TRecorderTagRegistry;
+  lResolver: IRecorderTagSettingsProviderResolver;
+  lState: TRecorderTagSettingsState;
+  lTag1, lTag2, lOtherTag, lOriginalTag1: TRecorderTag;
+begin
+  LogLine('--- PXI MX-248 standard tag settings provider test ---');
+  lRegistry := TRecorderTagRegistry.Create;
+  try
+    lConfigured := RecorderConfiguredDataSourcesEnsure(lRegistry,
+      'pxi-mx248:2:14', 'PXI MX-248', 512000);
+    lConfigured.SpecificConfigText :=
+      'device.type=24909;sample-rate-hz=512000;future-trigger-key=PXI_TRIG0';
+    lTag1 := lRegistry.CreateTag('MX248_ch01', 1024);
+    lTag1.SourceId := 'pxi-mx248:2:14';
+    lTag1.Address := '1';
+    lTag1.PollFrequencyHz := 512000;
+    lTag2 := lRegistry.CreateTag('MX248_ch02', 1024);
+    lTag2.SourceId := 'pxi-mx248:2:14';
+    lTag2.Address := '2';
+    lTag2.PollFrequencyHz := 512000;
+    lOtherTag := lRegistry.CreateTag('Other_ch01', 1024);
+    lOtherTag.SourceId := 'pxi-mx248:3:7';
+    lOtherTag.PollFrequencyHz := 512000;
+    lOriginalTag1 := lTag1;
+
+    lResolver := CreateRecorderHardwareTagSettingsResolver;
+    AssertTrue(lResolver.Resolve(lTag1, nil, lProvider),
+      'Resolve MX-248 tag-settings provider');
+    AssertTrue(lProvider.ReadState(lRegistry, lTag1, lState),
+      'Read MX-248 tag-settings state');
+    AssertTrue(Length(lState.FrequencyNames) = 11,
+      'MX-248 must expose the eleven DevAPI sample rates');
+    AssertTrue((lState.FrequencyNames[0] = '422') and
+      (lState.FrequencyNames[10] = '512000'),
+      'MX-248 sample-rate list boundaries');
+    AssertTrue(lState.HardwareCalibrationDownloadable,
+      'MX-248 must advertise live DevAPI sensitivity readback');
+
+    RecorderInitTagSettingsDraft(lTag1, 200, lDraft);
+    lDraft.PollFrequencyHz := 1000;
+    AssertTrue(not lProvider.NormalizeDraft(lRegistry, lTag1, lDraft, lError),
+      'Unsupported MX-248 rate must be rejected');
+    AssertEquals(lTag1.PollFrequencyHz, 512000,
+      'Rejected rate must not mutate tag');
+
+    lDraft.PollFrequencyHz := 216000;
+    AssertTrue(lProvider.NormalizeDraft(lRegistry, lTag1, lDraft, lError),
+      'Supported MX-248 rate must pass normalization: ' + lError);
+    if lProvider.ApplyDraft(lRegistry, lTag1, lDraft, lApply, lError) then
+    begin
+      AssertTrue(lApply.FrequencyChanged and
+        SameValue(lApply.PollFrequencyHz, 216000, 1E-9),
+        'MX-248 provider must report source-wide rate change');
+      AssertTrue((lTag1 = lOriginalTag1) and
+        SameValue(lTag1.PollFrequencyHz, 216000, 1E-9) and
+        SameValue(lTag2.PollFrequencyHz, 216000, 1E-9),
+        'MX-248 tags must be updated in place');
+      AssertEquals(lOtherTag.PollFrequencyHz, 512000,
+        'Another MX-248 source must not be changed');
+      AssertTrue(Pos('sample-rate-hz=216000',
+        lConfigured.SpecificConfigText) > 0,
+        'MX-248 source packet must persist selected rate');
+      AssertTrue(Pos('future-trigger-key=PXI_TRIG0',
+        lConfigured.SpecificConfigText) > 0,
+        'MX-248 source packet update must preserve unknown future fields');
+      AssertEquals(lConfigured.DefaultPollFrequencyHz, 216000,
+        'MX-248 configured source default rate');
+    end
+    else
+    begin
+      { Unit-test hosts do not carry the 32-bit vendor bridge. A failed live
+        apply must be transactional: neither tags nor persisted source may
+        claim the requested hardware frequency. Hardware success is covered
+        by the dedicated stand acceptance CLI. }
+      AssertTrue(Trim(lError) <> '',
+        'Unavailable MX-248 hardware must return a diagnostic');
+      AssertTrue((lTag1 = lOriginalTag1) and
+        SameValue(lTag1.PollFrequencyHz, 512000, 1E-9) and
+        SameValue(lTag2.PollFrequencyHz, 512000, 1E-9),
+        'Failed live apply must leave MX-248 tags unchanged');
+      AssertTrue(Pos('sample-rate-hz=512000',
+        lConfigured.SpecificConfigText) > 0,
+        'Failed live apply must leave persisted rate unchanged');
+    end;
+  finally
+    lRegistry.Free;
+  end;
+  LogLine('RESULT PXI MX-248 standard tag settings provider test passed.');
+end;
+
 procedure TestMic185ProductionValueTransform;
 var
   lCalibration: TRecorderCalibration;
@@ -1057,6 +1156,11 @@ begin
       TestMic185ProductionValueTransform;
       Exit;
     end;
+    if SameText(ParamStr(1), '--mx248-tag-only') then
+    begin
+      TestPxiMx248TagSettingsSourceFrequency;
+      Exit;
+    end;
     TestMockSineDataSource;
     LogLine('');
     TestDiagnosticsDataSource;
@@ -1077,6 +1181,7 @@ begin
     LogLine('');
     TestMic185TagSettingsDraftUsesVisibleUnit;
     TestMic185ProductionValueTransform;
+    TestPxiMx248TagSettingsSourceFrequency;
     LogLine('');
     TestDeviceDataThreadLeaseRing;
   finally

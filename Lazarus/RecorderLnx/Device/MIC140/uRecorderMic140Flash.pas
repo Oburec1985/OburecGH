@@ -52,7 +52,7 @@ function Mic140BytesToHex(const AData; ASize, AMaxBytes: Integer): string;
 function Mic140FlashDirEntryName(const AEntry: TMic140FlashDirEntry): string;
 function Mic140FlashDirEntryIsEmpty(const AEntry: TMic140FlashDirEntry): Boolean;
 function Mic140ParseFlashDirEntries(const AData: array of Byte;
-  out AEntries: array of TMic140FlashDirEntry): Integer;
+  var AEntries: array of TMic140FlashDirEntry): Integer;
 function Mic140Mic118TarFileSize(AMaxAinChannels, AMaxTinChannels: Integer): LongWord;
 function Mic140ResolveMaxAinChannels(AChannelCountHint: Integer): Integer;
 function Mic140FindMi118TarBaseAddress(AClient: IMic140LegacyClient;
@@ -86,7 +86,6 @@ function Mic140TryReadHardwareTare2FromFlash(AClient: IMic140LegacyClient;
 implementation
 
 uses
-  Math, StrUtils,
   uSharedFileLogger, uRecorderMeraPaths;
 
 function Mic140FlashLogFilePath: string;
@@ -107,6 +106,7 @@ var
   lBytes: PByte;
 begin
   Result := '';
+  Result := '';
   lBytes := @AData;
   lCount := ASize;
   if lCount > AMaxBytes then
@@ -120,7 +120,7 @@ function Mic140FlashDirEntryName(const AEntry: TMic140FlashDirEntry): string;
 var
   I: Integer;
 begin
-  SetLength(Result, 0);
+  Result := '';
   for I := 0 to CMic140FlashNameLength - 1 do
   begin
     if (AEntry.Name[I] = #0) or (AEntry.Name[I] = AnsiChar(#$FF)) then
@@ -145,7 +145,7 @@ begin
 end;
 
 function Mic140ParseFlashDirEntries(const AData: array of Byte;
-  out AEntries: array of TMic140FlashDirEntry): Integer;
+  var AEntries: array of TMic140FlashDirEntry): Integer;
 var
   I, lOffset: Integer;
 begin
@@ -197,6 +197,7 @@ begin
   lPrefix := ALogPrefix;
   if lPrefix <> '' then
     lPrefix := lPrefix + ' ';
+  lDirBytes := nil;
   SetLength(lDirBytes, CMic140FlashDirSize);
   if not AClient.ReadFlashStorage(CMic140FlashDirOffset, lDirBytes[0],
     CMic140FlashDirSize, AErrorMessage) then
@@ -206,6 +207,7 @@ begin
     Exit;
   end;
 
+  lEntries := nil;
   SetLength(lEntries, CMic140FlashMaxDirEntries);
   lFileCount := Mic140ParseFlashDirEntries(lDirBytes, lEntries);
   Mic140LogFlash(lPrefix + Format('flash dir entries=%d tareRecSize=%d expectedTareFileSize=%d',
@@ -427,7 +429,8 @@ begin
   Result := False;
   ARangeIndex := -1;
   AErrorMessage := '';
-  FillChar(ATare, SizeOf(ATare), 0);
+  ATare := Default(TMic140TareType1);
+  lCandidate := Default(TMic140TareType1);
   lFoundAny := False;
   lPrefix := ALogPrefix;
   if lPrefix <> '' then
@@ -440,7 +443,7 @@ begin
   begin
     lAddress := Mic140CalcBaseCalibrAddress(AMi118Base, AChanIndex, lTryRange,
       AMaxAinChannels, AMaxTinChannels);
-    FillChar(lCandidate, SizeOf(lCandidate), 0);
+    lCandidate := Default(TMic140TareType1);
     if not AClient.ReadFlashStorage(lAddress, lCandidate, SizeOf(lCandidate),
       AErrorMessage) then
     begin
@@ -503,7 +506,8 @@ begin
   Result := False;
   ARangeIndex := -1;
   AErrorMessage := '';
-  FillChar(ATare, SizeOf(ATare), 0);
+  ATare := Default(TMic140TareType2);
+  lCandidate := Default(TMic140TareType2);
   lFoundAny := False;
   lPrefix := ALogPrefix;
   if lPrefix <> '' then
@@ -516,7 +520,7 @@ begin
   begin
     lAddress := Mic140CalcBaseCalibrAddress(AMi118Base, AChanIndex, lTryRange,
       AMaxAinChannels, AMaxTinChannels);
-    FillChar(lCandidate, SizeOf(lCandidate), 0);
+    lCandidate := Default(TMic140TareType2);
     if not AClient.ReadFlashStorage(lAddress, lCandidate, SizeOf(lCandidate),
       AErrorMessage) then
     begin

@@ -15,7 +15,9 @@ uses
   uRecorderImpactHammer, uRecorderImpactDsp,
   uRecorderFrfRepository, uRecorderFrfMotionAdapter, u3dCoreTypes, u3dScene,
   u3dMotionContracts, u3dSceneMotionEngine, uRecorder3dModel,
-  uRecorder3dImpactBindingController, u3dLegacySceneLoader;
+  uRecorder3dImpactBindingController, u3dLegacySceneLoader,
+  uRecorder3dVertexColorAdapter, u3dSkin, uRecorderFrfRoute,
+  uRecorderFrfPointStore, uRecorderImpactSessionContracts;
 
 type
   TTrackingProvider = class(TInterfacedObject, IRecorderFrfProvider)
@@ -49,6 +51,8 @@ type
 
   TPointCatalog = class(TInterfacedObject, IRecorderModelPointCatalog)
   public
+    function ObjectCount:Integer;
+    function ObjectInfo(AIndex:Integer; out AInfo:TRecorderModelObjectInfo):Boolean;
     function ResolvePoint(const APointGroup: string; APointNumber: Integer;
       out ATargetNodeId: QWord): Boolean;
   end;
@@ -143,6 +147,7 @@ begin
     HammerModel.HammerTagId := Registry.FindByName('fixture-hammer').Id;
     HammerModel.HammerTagName := 'fixture-hammer';
     HammerModel.Target3dComponentId := SceneComponent.Id;
+    HammerModel.GeometryBindingMode:=rgbmOscillation;
     HammerModel.BasePointNumber := 0;
     HammerModel.PretriggerSamples := 1;
     HammerModel.CaptureSamples := 8;
@@ -157,6 +162,7 @@ begin
     Response.Axis := iraX;
     Response.Space := irsWorld;
     Response.Gain := 1;
+    Response.IntensityOnly:=False;
     Check(Service.Configure(HammerModel, Registry), Service.LastError);
     Service.ConfigurePointBindingTarget(Catalog, BindingSink);
     Service.SavePointBindings;
@@ -389,6 +395,12 @@ begin
   end;
   fRegistry.PublishBlock('hammer', Times, Values, Length(Times), True);
 end;
+
+function TPointCatalog.ObjectCount:Integer;
+begin Result:=0; end;
+function TPointCatalog.ObjectInfo(AIndex:Integer;
+  out AInfo:TRecorderModelObjectInfo):Boolean;
+begin AInfo:=Default(TRecorderModelObjectInfo); Result:=False; end;
 
 function TPointCatalog.ResolvePoint(const APointGroup: string;
   APointNumber: Integer; out ATargetNodeId: QWord): Boolean;
@@ -830,10 +842,14 @@ begin
     lResponseX := lRegistry.CreateTag('response-x', 64);
     lResponseY := lRegistry.CreateTag('response-y', 64);
     ConfigureModel(lModel, lHammer, lResponseX, lResponseY);
+    lModel.GeometryBindingMode:=rgbmOscillation;
+    lModel.Responses[0].IntensityOnly:=False;
+    lModel.Responses[1].IntensityOnly:=False;
     lModel.Responses[0].PointGroup := 'G';
     lModel.Responses[0].PointIncrement := 0;
     lModel.Responses[1].PointGroup := 'G';
     lModel.Responses[1].PointIncrement := 2;
+    lModel.Responses[1].PointNumber:=13;
     Check(lService.Configure(lModel, lRegistry), lService.LastError);
     lProcessing.Estimator := Ord(ifeH2);
     lProcessing.WindowKind := Ord(iwHann);
@@ -853,7 +869,7 @@ begin
     Check((Length(lPointSink.Bindings) = 2) and
       (lPointSink.Bindings[0].PointNumber = 11) and
       (lPointSink.Bindings[1].PointNumber = 13),
-      'legacy base point plus group increment mapping');
+      'explicit geometry point mapping');
     Check((lPointSink.Bindings[0].Axis = maxisX) and
       (lPointSink.Bindings[1].Axis = maxisY),
       'response axis mapping');
@@ -1075,8 +1091,200 @@ begin
   end;
 end;
 
+procedure TestRoutePointNavigation;
+var
+  lBus: TRecorderEventBus;
+  lRegistry: TRecorderTagRegistry;
+  lModel: TRecorderImpactHammerComponent;
+  lService: TRecorderImpactHammerService;
+  lHammer, lX, lY: TRecorderTag;
+  lEntry: TRecorderFrfRouteEntry;
+  lView: TRecorderImpactHammerSnapshot;
+  lStored, lLive: TRecorderImpactSessionSnapshot;
+  lError, lDirectory: string;
+  lId: TGuid;
+begin
+  CreateGuid(lId);
+  lDirectory := IncludeTrailingPathDelimiter(GetTempDir) + 'frf-route-' + GuidToString(lId);
+  lBus := TRecorderEventBus.Create;
+  lRegistry := TRecorderTagRegistry.Create(lBus);
+  lModel := TRecorderImpactHammerComponent.Create;
+  lService := TRecorderImpactHammerService.Create;
+  try
+    lHammer := lRegistry.CreateTag('hammer', 64);
+    lX := lRegistry.CreateTag('response-x', 64);
+    lY := lRegistry.CreateTag('response-y', 64);
+    ConfigureModel(lModel, lHammer, lX, lY);
+    Check(lService.Configure(lModel, lRegistry), lService.LastError);
+    lEntry := Default(TRecorderFrfRouteEntry);
+    lEntry.ChannelIndex := 0;
+    lEntry.PointNumber := 1;
+    lEntry.PointLabel := 'one';
+    lService.Route.Add(lEntry);
+    lEntry.PointNumber := 2;
+    lEntry.PointLabel := 'two';
+    lService.Route.Add(lEntry);
+    lService.Route.Save(lDirectory);
+    lBus.Publish(TRecorderEventBus.MakeEvent(rceStarted));
+    PublishImpact(lRegistry, 1, 2);
+    WaitForImpactCount(lService, 1);
+    Check(lService.SelectRoutePoint(0, lError), lError);
+    Check(lService.SaveRoutePoint(lError), lError);
+    Check(lService.Route.CurrentIndex = 0, 'save advanced selected route point');
+    Check(lService.RoutePointHasData, 'point session was not saved');
+    Check(TRecorderFrfPointStore.Load(lService.Route.PointDirectory(0), lStored, lError), lError);
+    Check((Length(lStored.Curves) = 2) and
+      (Length(lStored.Impacts[0].Responses) = 2), 'point did not save all sensors');
+    Check(lService.SelectRoutePoint(1, lError), lError);
+    lService.FillSnapshot(lView);
+    Check(Length(lView.Results[irtTime].Curves) = 0, 'missing point retained previous time curve');
+    Check(lService.SelectRoutePoint(0, lError), lError);
+    lService.FillSnapshot(lView);
+    Check((Length(lView.Results[irtTime].Curves) = 3) and
+      (Length(lView.Results[irtSpectrum].Curves) = 3) and
+      (Length(lView.Results[irtFrfMagnitude].Curves) = 2), 'saved full presentation missing');
+    Check(Abs(TimeResponsePeak(lView) - 16) < 1E-9, 'saved time data was not restored');
+    PublishImpact(lRegistry, 4, 4);
+    WaitForImpactCount(lService, 2);
+    Check(lService.SelectRoutePoint(0, lError), lError);
+    lService.FillSnapshot(lView);
+    Check(Abs(TimeResponsePeak(lView) - 32) < 1E-9, 'stored point overwrote unsaved current time data');
+    Check(lService.SelectRoutePoint(1, lError), lError);
+    lService.FillSnapshot(lView);
+    Check(Abs(TimeResponsePeak(lView) - 32) < 1E-9, 'empty point discarded current acquisition');
+    Check(lService.SaveRoutePoint(lError), lError);
+    Check(lService.Route.CurrentIndex = 1, 'save advanced second point');
+    Check(lService.SelectRoutePoint(0, lError), lError);
+    lService.FillSnapshot(lView);
+    Check(Abs(TimeResponsePeak(lView) - 16) < 1E-9, 'first saved point not restored');
+    lService.BuildSessionSnapshot(lLive);
+    Check(Length(lLive.Impacts) = 2, 'disk navigation mutated runtime history');
+    lService.UseLiveRoute;
+    lService.FillSnapshot(lView);
+    Check(Abs(TimeResponsePeak(lView) - 32) < 1E-9, 'live history not retained after disk navigation');
+  finally
+    lService.Free;
+    lModel.Free;
+    lRegistry.Free;
+    lBus.Free;
+  end;
+end;
+
+procedure TestFrfVertexColorModifier;
+var lScene:T3dScene; lNode:T3dNode; lComponent,lClone:TRecorder3dComponent;
+  lController:TRecorder3dImpactBindingController;
+  lSink:IRecorderModelPointBindingSink;
+  lBindings:array[0..1] of TRecorderModelPointBinding;
+  lCurves:array[0..1] of TRecorderFrfCurveData;
+  lRepo:TRecorderFrfRepository; lProvider:IRecorderFrfProvider;
+  lAdapter:TRecorder3dVertexColorAdapter; lIndex:Integer;
+begin
+  lScene:=T3dScene.Create;
+  lComponent:=TRecorder3dComponent.Create;
+  lClone:=TRecorder3dComponent.Create;
+  lAdapter:=TRecorder3dVertexColorAdapter.Create;
+  lRepo:=TRecorderFrfRepository.Create;
+  lProvider:=lRepo;
+  try
+    lComponent.Id:='scene-color';
+    lNode:=T3dNode.Create; lNode.Id:=77;
+    SetIdentity(lNode.WorldTransform);
+    lNode.Mesh:=T3dMeshData.Create;
+    SetLength(lNode.Mesh.Positions,2);
+    lNode.Mesh.Positions[0]:=Vector3d(0,0,0);
+    lNode.Mesh.Positions[1]:=Vector3d(10,0,0);
+    lNode.Mesh.BasePositions:=Copy(lNode.Mesh.Positions);
+    SetLength(lNode.Mesh.LogicalVertices,2);
+    for lIndex:=0 to 1 do
+    begin
+      lNode.Mesh.LogicalVertices[lIndex].Id:=lIndex;
+      SetLength(lNode.Mesh.LogicalVertices[lIndex].CornerIndices,1);
+      lNode.Mesh.LogicalVertices[lIndex].CornerIndices[0]:=lIndex;
+      lBindings[lIndex]:=Default(TRecorderModelPointBinding);
+      lBindings[lIndex].CurveId:=lIndex+1;
+      lBindings[lIndex].TargetNodeId:=77;
+      lBindings[lIndex].ModifierTargetNodeId:=77;
+      lBindings[lIndex].PointNumber:=lIndex+1;
+      lBindings[lIndex].PointLabel:='route-'+IntToStr(lIndex+1);
+      lBindings[lIndex].Gain:=1;
+      lBindings[lIndex].Enabled:=True;
+      lBindings[lIndex].CreateColorModifier:=True;
+      lBindings[lIndex].GradientEnabled:=True;
+      lBindings[lIndex].HideAnchors:=True;
+      lBindings[lIndex].EnvelopeXEnabled:=True;
+      lBindings[lIndex].EnvelopeX:=2;
+      lCurves[lIndex].Id:=lIndex+1;
+      lCurves[lIndex].FrequencyHz:=[100.0,200.0];
+      lCurves[lIndex].Magnitude:=[Double(lIndex+1),Double(2-lIndex)];
+      lCurves[lIndex].Amplitude:=[Double(2-lIndex),Double(lIndex+1)];
+      lCurves[lIndex].PhaseRadians:=[0.0,0.0];
+      lCurves[lIndex].Coherence:=[1.0,1.0];
+    end;
+    lScene.AddNode(lNode);
+    lController:=TRecorder3dImpactBindingController.Create(lComponent,lScene);
+    lSink:=lController;
+    lSink.PublishBindings('frf-color','scene-color',lBindings);
+    Check(lComponent.VertexColorAnchorCount=2,'FRF creates color anchors');
+    Check(lComponent.GradientStripCount=1,'FRF creates shared CAD gradient');
+    Check(lComponent.VertexColorAnchors[0].Name='route-1','anchor route label');
+    Check(not lComponent.VertexColorAnchors[0].ShowValueLabel,'FRF anchors hidden');
+    Check(lComponent.VertexColorAnchors[1].LogicalVertexId=1,'point mapped to logical index');
+    lSink.PublishBindings('frf-color','scene-color',lBindings);
+    Check((lComponent.VertexColorAnchorCount=2) and
+      (lComponent.GradientStripCount=1),'republishing creates no duplicate modifier');
+    lClone.Assign(lComponent);
+    Check((lClone.FrfBindings[0].PointLabel='route-1') and
+      lClone.FrfBindings[0].CreateColorModifier and
+      lClone.VertexColorAnchors[0].EnvelopeXEnabled and
+      (lClone.VertexColorAnchors[0].FrfCurveId=1) and
+      lClone.GradientStrips[0].CadGradient,'modifier copy preserves source and envelope');
+    Check(lRepo.Publish(lCurves),'publish color FRF');
+    lAdapter.Configure(lComponent,nil);
+    lAdapter.ConfigureFrfProvider(lProvider);
+    SetRecorderSelectedFrfFrequency(100);
+    lAdapter.AttachScene(lScene);
+    Check((lNode.Mesh.VertexColors[0].R=255) and
+      (lNode.Mesh.VertexColors[0].G=255),'half maximum FRF maps yellow');
+    Check((lNode.Mesh.VertexColors[1].R=255) and
+      (lNode.Mesh.VertexColors[1].G=0),'maximum FRF maps red');
+    SetRecorderSelectedFrfFrequency(200);
+    Check(lAdapter.ApplyChanged,'pinned cursor frequency updates colors');
+    Check((lNode.Mesh.VertexColors[0].G=0) and
+      (lNode.Mesh.VertexColors[1].G=255),'frequency changes swap color intensities');
+    for lIndex:=0 to 1 do lBindings[lIndex].IntensitySource:=risAmplitude;
+    lSink.PublishBindings('frf-color','scene-color',lBindings);
+    lAdapter.AttachScene(lScene);
+    Check((lNode.Mesh.VertexColors[0].G=255) and
+      (lNode.Mesh.VertexColors[1].G=0),'amplitude source independent of FRF');
+    lBindings[0].CreateColorModifier:=False;
+    lSink.PublishBindings('frf-color','scene-color',lBindings);
+    Check(lComponent.VertexColorAnchorCount=1,'disabling modifier removes obsolete anchors');
+    lSink.RemoveBindings('frf-color');
+    Check(lComponent.VertexColorAnchorCount=0,'removing source removes generated anchors');
+    lAdapter.AttachScene(lScene);
+    Check(Length(lNode.Mesh.VertexColors)=0,'removing last modifier restores mesh colors');
+  finally
+    lAdapter.Free;
+    lSink:=nil;
+    lProvider:=nil;
+    lClone.Free; lComponent.Free; lScene.Free;
+  end;
+end;
+
 begin
   try
+    if (ParamCount > 0) and (ParamStr(1) = '--route-point-only') then
+    begin
+      TestRoutePointNavigation;
+      WriteLn('RESULT FrfRoutePointNavigation passed');
+      Halt(0);
+    end;
+    TestFrfVertexColorModifier;
+    if (ParamCount>0) and (ParamStr(1)='--frf-vertex-color-only') then
+    begin
+      WriteLn('RESULT FrfVertexColorModifier passed');
+      Halt(0);
+    end;
     TestActualObrPointMotionChain;
     TestConcrete3dPointTarget;
     TestWelchFlagThroughService;

@@ -18,19 +18,23 @@
         <Filename Value="SampleInfoPlugin.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-      <Unit>
-        <Filename Value="PluginClass.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="units/uCreateComponents.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="forms/uSampleOscillogram.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
+      <Unit><Filename Value="oscillogram/uOscPluginV2.pas"/><IsPartOfProject Value="True"/></Unit>
+      <Unit><Filename Value="oscillogram/model/uOscModel.pas"/><IsPartOfProject Value="True"/></Unit>
+      <Unit><Filename Value="oscillogram/model/uOscLegacyImport.pas"/><IsPartOfProject Value="True"/></Unit>
+      <Unit><Filename Value="oscillogram/data/uOscDataAdapter.pas"/><IsPartOfProject Value="True"/></Unit>
+      <Unit><Filename Value="oscillogram/data/uOscTags.pas"/><IsPartOfProject Value="True"/></Unit>
+      <Unit><Filename Value="oscillogram/data/uOscUnits.pas"/><IsPartOfProject Value="True"/></Unit>
+      <Unit><Filename Value="oscillogram/view/uOscBehavior.pas"/><IsPartOfProject Value="True"/></Unit>
+      <Unit><Filename Value="oscillogram/view/uOscView.pas"/><IsPartOfProject Value="True"/></Unit>
+      <Unit><Filename Value="oscillogram/view/uOscNativeForm.pas"/><IsPartOfProject Value="True"/><ComponentName Value="OscNativeForm"/><ResourceBaseClass Value="Form"/></Unit>
+      <Unit><Filename Value="oscillogram/view/uOscBaseForm.pas"/><IsPartOfProject Value="True"/><ComponentName Value="OscBaseForm"/><ResourceBaseClass Value="Form"/></Unit>
+      <Unit><Filename Value="oscillogram/editor/uOscSettings.pas"/><IsPartOfProject Value="True"/><ComponentName Value="OscSettings"/><ResourceBaseClass Value="Form"/></Unit>
     </Units>
+    <RequiredPackages>
+      <Item><PackageName Value="LzrObrPack"/></Item>
+      <Item><PackageName Value="LazOpenGLContext"/></Item>
+      <Item><PackageName Value="LCL"/></Item>
+    </RequiredPackages>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
@@ -38,7 +42,7 @@
       <Filename Value="../../lib/$(TargetCPU)-$(TargetOS)/plugins/SampleInfoPlugin"/>
     </Target>
     <SearchPaths>
-      <OtherUnitFiles Value="../SDK;units;forms"/>
+      <OtherUnitFiles Value="../SDK;oscillogram;oscillogram/model;oscillogram/data;oscillogram/view;oscillogram/editor;../../../SharedUtils;../../../SharedUtils/math"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>

@@ -1,125 +1,106 @@
 program SamplePluginProbe;
-
 {$mode objfpc}{$H+}
-
-uses
-  SysUtils, DynLibs, uRecorderPluginApi;
-
-var
-  g_RegisterCount: Integer;
-  g_ComponentContext: Pointer;
-  g_ComponentClose: TRecorderPluginOscillogramClose;
-
-procedure Check(ACondition: Boolean; const AMessage: string);
+{ Production plugin export/state probe. Only flat SDK callbacks and opaque
+  buffers cross the DLL boundary; no RecorderLnx classes or legacy factory API. }
+uses SysUtils,DynLibs,fpjson,jsonparser,uRecorderPluginApi,
+  uRecorderVisualComponentApiV2;
+procedure Check(AValue:Boolean; const AMessage:string);
+begin if not AValue then raise Exception.Create(AMessage); end;
+function EnumTags(AContext:Pointer; AIndex:LongWord;
+  AInfo:PRecorderVisualTagInfoV2):LongInt; cdecl;
+begin Result:=REC_VISUAL_END_OF_ENUMERATION; end;
+function EnumUnits(AContext:Pointer; AIndex:LongWord;
+  AInfo:PRecorderVisualUnitInfoV2):LongInt; cdecl;
+begin Result:=REC_VISUAL_END_OF_ENUMERATION; end;
+function CopyHistory(AContext:Pointer; ATagId:QWord; AWindowSeconds:Double;
+  ATimes,AValues:PDouble; ACapacity:LongWord; out ACount:LongWord;
+  out ARevision:QWord; out AStart,ALatest:Double):LongInt; cdecl;
 begin
-  if not ACondition then
-    raise Exception.Create(AMessage);
+  ACount:=0; ARevision:=0; AStart:=0; ALatest:=0;
+  Result:=REC_VISUAL_NOT_FOUND;
 end;
-
-function RegisterOscillogram(AHostContext: Pointer;
-  ATypeId, ACaption, AGroupId: PAnsiChar;
-  ACreate: TRecorderPluginCreateComponent;
-  APluginContext: Pointer): LongBool; cdecl;
-var
-  lSpec: TRecorderPluginComponentSpec;
-  lFrame: TRecorderPluginOscillogramFrame;
-  lValues: array[0..2] of Double;
+function Snapshot(const ADescriptor:TRecorderVisualComponentDescriptorV2;
+  AInstance:Pointer):UTF8String;
+var lRequired,lWritten:SizeUInt; lCanary:Byte;
 begin
-  Check(AHostContext = Pointer(1), 'wrong host context');
-  Check(StrPas(ATypeId) = 'sample.oscillogram', 'wrong type id');
-  Check(StrPas(ACaption) = 'Sample oscillogram', 'wrong caption');
-  Check(StrPas(AGroupId) = 'charts', 'wrong toolbar group');
-  Check(Assigned(ACreate), 'missing factory callback');
-  FillChar(lSpec, SizeOf(lSpec), 0);
-  lSpec.Size := SizeOf(lSpec);
-  Check(ACreate(APluginContext, @lSpec), 'factory callback failed');
-  Check((lSpec.Width = 650) and (lSpec.Height = 350), 'wrong component size');
-  Check(lSpec.ComponentContext <> nil, 'missing component context');
-  Check(Assigned(lSpec.DoRepaint) and Assigned(lSpec.DoClose),
-    'missing visual lifecycle callbacks');
-  lValues[0] := -3;
-  lValues[1] := 0;
-  lValues[2] := 4;
-  lFrame := Default(TRecorderPluginOscillogramFrame);
-  lFrame.Size := SizeOf(lFrame);
-  lFrame.SampleCount := Length(lValues);
-  lFrame.Values := @lValues[0];
-  Check(lSpec.DoRepaint(lSpec.ComponentContext, @lFrame), 'doRepaint failed');
-  Check((lFrame.MinValue = -3) and (lFrame.MaxValue = 4) and
-    (Abs(lFrame.RmsValue - Sqrt(25 / 3)) < 1E-9),
-    'wrong Peak/RMS calculations');
-  g_ComponentContext := lSpec.ComponentContext;
-  g_ComponentClose := lSpec.DoClose;
-  Inc(g_RegisterCount);
-  Result := True;
+  Check(ADescriptor.SaveState(AInstance,nil,0,lRequired)=REC_VISUAL_BUFFER_TOO_SMALL,
+    'state size query failed');
+  Check((lRequired>0) and (lRequired<=REC_VISUAL_MAX_STATE_BYTES),'invalid state size');
+  lCanary:=$A5;
+  Check((ADescriptor.SaveState(AInstance,@lCanary,0,lWritten)=REC_VISUAL_BUFFER_TOO_SMALL)
+    and (lCanary=$A5) and (lWritten=lRequired),'short state buffer was overwritten');
+  SetLength(Result,lRequired);
+  Check((ADescriptor.SaveState(AInstance,@Result[1],Length(Result),lWritten)=REC_VISUAL_OK)
+    and (lWritten=lRequired),'state save failed');
 end;
-
-procedure RunProbe(const ALibraryPath: string);
-var
-  lLibrary: TLibHandle;
-  lGetType: TRecorderPluginGetType;
-  lGetInfo: TRecorderPluginGetInfo;
-  lCreateClass: TRecorderPluginCreateClass;
-  lDestroyClass: TRecorderPluginDestroyClass;
-  lCreate: TRecorderPluginCreate;
-  lNotify: TRecorderPluginNotify;
-  lClose: TRecorderPluginClose;
-  lInfo: TRecorderPluginInfo;
-  lHostApi: TRecorderPluginHostApi;
-  lInstance: Pointer;
+procedure RunProbe(const APath:string);
+const LegacyNames:array[0..4] of string =
+  ('CreatePluginClass','DestroyPluginClass','PluginCreate','PluginNotify','PluginClose');
+var lLibrary:TLibHandle; lGetInfo:TRecorderPluginGetInfo;
+  lGetType:TRecorderPluginGetType; lGetDescriptor:TRecorderVisualGetDescriptorV2;
+  lInfo:TRecorderPluginInfo; lDescriptor:TRecorderVisualComponentDescriptorV2;
+  lServices:TRecorderVisualHostServicesV2; lFirst,lSecond:Pointer;
+  lInitial,lChanged,lBad:UTF8String; lJson:TJSONData; lName:string;
+  lStatus:LongInt; lOutputSize:SizeUInt;
 begin
-  lLibrary := LoadLibrary(ALibraryPath);
-  Check(lLibrary <> NilHandle, 'cannot load ' + ALibraryPath);
+  lLibrary:=LoadLibrary(APath);
+  Check(lLibrary<>NilHandle,'cannot load '+APath);
+  lFirst:=nil; lSecond:=nil;
   try
-    lGetType := TRecorderPluginGetType(GetProcedureAddress(lLibrary, 'GetPluginType'));
-    lGetInfo := TRecorderPluginGetInfo(GetProcedureAddress(lLibrary, 'GetPluginInfo'));
-    lCreateClass := TRecorderPluginCreateClass(GetProcedureAddress(lLibrary, 'CreatePluginClass'));
-    lDestroyClass := TRecorderPluginDestroyClass(GetProcedureAddress(lLibrary, 'DestroyPluginClass'));
-    lCreate := TRecorderPluginCreate(GetProcedureAddress(lLibrary, 'PluginCreate'));
-    lNotify := TRecorderPluginNotify(GetProcedureAddress(lLibrary, 'PluginNotify'));
-    lClose := TRecorderPluginClose(GetProcedureAddress(lLibrary, 'PluginClose'));
-    Check(Assigned(lGetType) and Assigned(lGetInfo) and
-      Assigned(lCreateClass) and Assigned(lDestroyClass) and
-      Assigned(lCreate) and Assigned(lNotify) and Assigned(lClose),
-      'required export missing');
-    Check(SizeOf(lInfo) = 512, 'PLUGININFO ABI size differs from C++');
-    Check(lGetType() = PLUGIN_CLASS, 'wrong plugin type');
-    FillChar(lInfo, SizeOf(lInfo), 0);
-    lGetInfo(lInfo);
-    Check(StrPas(@lInfo.Name[0]) = 'SampleInfoPlugin', 'wrong plugin name');
-    Check((lInfo.Version = 1) and (lInfo.SubVersion = 1),
-      'wrong plugin version');
-
-    FillChar(lHostApi, SizeOf(lHostApi), 0);
-    lHostApi.Size := SizeOf(lHostApi);
-    lHostApi.HostContext := Pointer(1);
-    lHostApi.RegisterOscillogramFactory := @RegisterOscillogram;
-    lInstance := lCreateClass();
-    Check(lInstance <> nil, 'CreatePluginClass failed');
-    try
-      Check(lCreate(lInstance, @lHostApi), 'PluginCreate failed');
-      Check(g_RegisterCount = 1, 'factory was not registered once');
-      Check(lNotify(lInstance, 42, nil), 'PluginNotify failed');
-      g_ComponentClose(g_ComponentContext);
-      Check(lClose(lInstance), 'PluginClose failed');
-    finally
-      Check(lDestroyClass(lInstance) = 0, 'DestroyPluginClass failed');
-    end;
+    for lName in LegacyNames do
+      Check(GetProcedureAddress(lLibrary,lName)=nil,'obsolete export remains: '+lName);
+    Pointer(lGetType):=GetProcedureAddress(lLibrary,'GetPluginType');
+    Pointer(lGetInfo):=GetProcedureAddress(lLibrary,'GetPluginInfo');
+    Pointer(lGetDescriptor):=GetProcedureAddress(lLibrary,'RecorderVisualGetDescriptorV2');
+    Check(Assigned(lGetType) and Assigned(lGetInfo) and Assigned(lGetDescriptor),
+      'metadata/V2 discovery export missing');
+    Check(GetProcedureAddress(lLibrary,'GetPluginDescription')<>nil,'description export missing');
+    Check(lGetType()=PLUGIN_CLASS,'wrong metadata type');
+    lInfo:=Default(TRecorderPluginInfo); lGetInfo(lInfo);
+    Check((SizeOf(lInfo)=512) and (lInfo.Version>=1),'metadata ABI/version mismatch');
+    Check((Byte(lInfo.Name[0])=$D0) and (Byte(lInfo.Name[1])=$9E),'metadata not UTF8');
+    lDescriptor:=Default(TRecorderVisualComponentDescriptorV2);
+    Check(lGetDescriptor(0,@lDescriptor,SizeOf(lDescriptor))=REC_VISUAL_OK,'V2 descriptor missing');
+    Check((lDescriptor.Header.AbiMajor=REC_VISUAL_ABI_V2_MAJOR) and
+      (StrPas(@lDescriptor.TypeId[0])='sample.oscillogram'),'wrong descriptor');
+    Check(Assigned(lDescriptor.CreateInstance) and Assigned(lDescriptor.DestroyInstance)
+      and Assigned(lDescriptor.SaveState) and Assigned(lDescriptor.LoadState)
+      and Assigned(lDescriptor.ViewDispatch),'missing state/lifecycle callbacks');
+    lServices:=Default(TRecorderVisualHostServicesV2);
+    lServices.Header.Size:=SizeOf(lServices); lServices.Header.AbiMajor:=REC_VISUAL_ABI_V2_MAJOR;
+    lServices.Header.AbiMinor:=REC_VISUAL_ABI_V2_MINOR;
+    lServices.EnumerateTags:=@EnumTags; lServices.CopyLatestHistory:=@CopyHistory;
+    lServices.EnumerateUnits:=@EnumUnits;
+    Check(lDescriptor.CreateInstance(@lServices,nil,0,lFirst)=REC_VISUAL_OK,'first instance failed');
+    Check(lDescriptor.CreateInstance(@lServices,nil,0,lSecond)=REC_VISUAL_OK,'second instance failed');
+    lInitial:=Snapshot(lDescriptor,lFirst);
+    Check(Snapshot(lDescriptor,lSecond)=lInitial,'new instances differ');
+    lJson:=GetJSON(lInitial);
+    try TJSONObject(lJson).Strings['TagName']:='Private instance binding'; lChanged:=lJson.AsJSON;
+    finally lJson.Free; end;
+    Check(lDescriptor.LoadState(lFirst,@lChanged[1],Length(lChanged))=REC_VISUAL_OK,'state load failed');
+    Check((Snapshot(lDescriptor,lFirst)=lChanged) and
+      (Snapshot(lDescriptor,lSecond)=lInitial),'instance state is shared/not persisted');
+    lBad:='{"Version":999}';
+    Check(lDescriptor.LoadState(lFirst,@lBad[1],Length(lBad))=REC_VISUAL_ERROR,'invalid state accepted');
+    Check(Snapshot(lDescriptor,lFirst)=lChanged,'invalid state changed prior state');
+    for lStatus:=REC_VISUAL_DISPATCH_START to REC_VISUAL_DISPATCH_DATA_UPDATED do
+      Check(lDescriptor.ViewDispatch(lFirst,lStatus,nil,0,nil,0,lOutputSize)=REC_VISUAL_OK,
+        'standard lifecycle dispatch failed');
+    lDescriptor.DestroyInstance(lFirst); lFirst:=nil;
+    Check(Snapshot(lDescriptor,lSecond)=lInitial,'destroying peer changed surviving instance');
+    lDescriptor.DestroyInstance(lSecond); lSecond:=nil;
   finally
+    if lFirst<>nil then lDescriptor.DestroyInstance(lFirst);
+    if lSecond<>nil then lDescriptor.DestroyInstance(lSecond);
     UnloadLibrary(lLibrary);
   end;
 end;
-
 begin
   try
-    Check(ParamCount = 1, 'usage: SamplePluginProbe <dll-or-so-path>');
+    Check(ParamCount=1,'usage: SamplePluginProbe plugin-library');
     RunProbe(ParamStr(1));
-    WriteLn('RESULT sample-plugin passed');
-  except
-    on E: Exception do
-    begin
-      WriteLn('RESULT sample-plugin failed: ', E.Message);
-      Halt(1);
-    end;
-  end;
+    WriteLn('RESULT sample-plugin flat V2 descriptor/state/lifecycle/no-legacy passed');
+  except on E:Exception do
+    begin WriteLn('RESULT sample-plugin failed: ',E.Message); Halt(1); end; end;
 end.

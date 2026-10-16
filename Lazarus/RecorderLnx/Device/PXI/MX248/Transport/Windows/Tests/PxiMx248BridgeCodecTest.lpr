@@ -37,6 +37,8 @@ var
   lHeader, lDecoded: TPxiMx248BridgeHeader;
   lHeaderBytes: array[0..15] of Byte;
   lConfigure: array[0..79] of Byte;
+  lPxi: array[0..31] of Byte;
+  lMask: array[0..3] of Byte;
   lConfiguration: TPxiMx248Configuration;
   lError: string;
 begin
@@ -62,12 +64,19 @@ begin
   Check((lConfigure[16 + 7 * 8] = 0) and
     (lConfigure[16 + 7 * 8 + 5] = Ord(pic10mA)),
     'configure channel bytes');
+  PxiMx248EncodePxiConfiguration(0,1,2,3,7,1,lPxi);
+  Check((lPxi[0]=0) and (lPxi[4]=1) and (lPxi[8]=2) and
+    (lPxi[12]=3) and (lPxi[16]=7) and (lPxi[20]=1) and (lPxi[31]=0),
+    'PXI configure fields/reserved bytes');
+  PxiMx248EncodeChannelMask($81,lMask);
+  Check((lMask[0]=$81) and (lMask[1]=0) and (lMask[3]=0),
+    'zero balance channel mask');
 end;
 
 procedure TestResultAndPreallocatedBlock;
 var
   lPayload: array[0..55] of Byte;
-  lBlock: TRecorderAcquisitionBlock;
+  lBlock: TRcAcquisitionBlock;
   lCode, lOffset, lSize: Cardinal;
   lStage, lText, lError: string;
 begin

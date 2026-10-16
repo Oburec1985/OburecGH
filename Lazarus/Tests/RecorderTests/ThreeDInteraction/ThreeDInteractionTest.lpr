@@ -86,6 +86,45 @@ begin
   end;
 end;
 
+procedure TestPointCloudSectionOrder;
+var
+  Spec:T3dPrimitiveSpec;
+  Node:T3dNode;
+  Topology:T3dMeshTopology;
+  I,Corner:Integer;
+begin
+  FillChar(Spec,SizeOf(Spec),0);
+  Spec.NodeId:=801;
+  Spec.Kind:=pkPointCloud;
+  Spec.Name:='Section ordered cloud';
+  Spec.SizeX:=2; Spec.SizeY:=1; Spec.SizeZ:=1;
+  Spec.IterationsX:=2; Spec.IterationsY:=1; Spec.IterationsZ:=1;
+  Spec.Iterations:=1;
+  Spec.PointCloudShape:=pcsBox;
+  Node:=CreatePrimitiveNode(Spec);
+  try
+    Topology:=BuildMeshTopology(Node.Mesh);
+    Check(Length(Topology.Vertices)=12,'box cloud has two ordered Z sections');
+    Check(Node.DrawBoundsOverride and Node.DrawWireframeOverride,
+      'point cloud defaults to a visible bounding box');
+    for I:=0 to High(Topology.Vertices) do
+    begin
+      Check(Topology.Vertices[I].StableId=LongWord(I),
+        'stable vertex ID follows deterministic section order');
+      Check(Length(Topology.LogicalToCorners[I])=1,
+        'box-cloud logical point maps to one render point');
+      Corner:=Topology.LogicalToCorners[I][0];
+      Check(Corner=I,'table row and generated point share section-order index');
+      Check(Topology.Vertices[I].Position.X=Node.Mesh.Positions[I].X,
+        'section row position matches indexed point');
+      Check(Topology.Vertices[I].Position.X=Single((I mod 3)-1),
+        'X advances first within each section row');
+    end;
+  finally
+    Node.Free;
+  end;
+end;
+
 procedure TestResolveVertexHighlightCorners;
 var
   Scene:T3dScene;
@@ -198,9 +237,9 @@ var
 begin
   FillChar(lCamera,SizeOf(lCamera),0);
   lCamera.Target := Vector3d(0, 0, 0);
-  lCamera.YawDegrees := 0;
-  lCamera.PitchDegrees := 0;
-  lCamera.RollDegrees := 0;
+  lCamera.Forward := Vector3d(0,0,-1);
+  lCamera.Right := Vector3d(1,0,0);
+  lCamera.Up := Vector3d(0,1,0);
   lCamera.Distance := 10;
   lCamera.VerticalFovDegrees := 60;
   lViewport.Width := 800;
@@ -214,7 +253,7 @@ begin
   CheckNear(lCamera.Distance, 9, 'zoom factor');
   RotateCamera(lCamera, Point3d(10, -1000), 1);
   CameraBasis(lCamera,lForward,lRight,lUp);
-  Check(lCamera.PoseValid,'rotation stores canonical camera pose');
+  CheckNear(Dot(lForward,lRight),0,'rotation keeps orthogonal basis');
 
   lCamera.VerticalFovDegrees := 60;
   FitCamera(lCamera, Vector3d(1, 2, 3), 1, lViewport);
@@ -266,7 +305,10 @@ var
     lCameraDelta,lTargetDelta:T3dVector;
 begin
   FillChar(lCamera,SizeOf(lCamera),0); lCamera.Distance:=10;
-  lCamera.VerticalFovDegrees:=60; lCamera.RollDegrees:=30;
+  lCamera.VerticalFovDegrees:=60;
+  lCamera.Forward:=Vector3d(0,0,-1);
+  lCamera.Right:=Vector3d(1,0,0);
+  lCamera.Up:=Vector3d(0,1,0);
   lViewport.Width:=800; lViewport.Height:=600;
   CameraBasis(lCamera,lForward0,lRight0,lUp0); lTarget0:=lCamera.Target;
   lPosition0:=Subtract(lCamera.Target,Scale(lForward0,lCamera.Distance));
@@ -278,12 +320,45 @@ begin
   Check(Dot(Subtract(lCamera.Target,lTarget0),lUp0)>0,
     'down drag moves camera up so surface follows pointer');
   CheckNear(lCamera.Distance,10,'pan keeps distance');
-  CheckNear(lCamera.YawDegrees,0,'pan keeps yaw');
-  CheckNear(lCamera.RollDegrees,30,'pan keeps roll');
   CheckNear(Dot(lForward0,lForward1),1,'pan keeps forward');
   lCameraDelta:=Subtract(lPosition1,lPosition0);
   lTargetDelta:=Subtract(lCamera.Target,lTarget0);
   CheckNear(lCameraDelta.X,lTargetDelta.X,'camera and target translate together X');
+end;
+
+procedure TestOrbitPreservesPanTarget;
+var
+  Camera:T3dOrbitCamera;
+  Viewport:T3dViewport;
+  TargetBefore,Forward,Right,Up,PositionBefore,PositionAfter:T3dVector;
+begin
+  FillChar(Camera,SizeOf(Camera),0);
+  Camera.Target:=Vector3d(12,-4,7);
+  Camera.Forward:=Vector3d(0,0,-1);
+  Camera.Right:=Vector3d(1,0,0);
+  Camera.Up:=Vector3d(0,1,0);
+  Camera.Distance:=8;
+  Camera.VerticalFovDegrees:=45;
+  Viewport.Width:=800;
+  Viewport.Height:=600;
+  PanCamera(Camera,Point3d(55,-23),Viewport);
+  TargetBefore:=Camera.Target;
+  CameraBasis(Camera,Forward,Right,Up);
+  PositionBefore:=Subtract(Camera.Target,Scale(Forward,Camera.Distance));
+
+  RotateCamera(Camera,Point3d(37,-19),0.5);
+
+  CheckNear(Camera.Target.X,TargetBefore.X,'orbit keeps panned target X');
+  CheckNear(Camera.Target.Y,TargetBefore.Y,'orbit keeps panned target Y');
+  CheckNear(Camera.Target.Z,TargetBefore.Z,'orbit keeps panned target Z');
+  CameraBasis(Camera,Forward,Right,Up);
+  PositionAfter:=Subtract(Camera.Target,Scale(Forward,Camera.Distance));
+  CheckNear(Sqrt(Dot(Subtract(PositionAfter,Camera.Target),
+    Subtract(PositionAfter,Camera.Target))),Camera.Distance,
+    'orbit remains at the configured target distance');
+  Check(Sqrt(Dot(Subtract(PositionAfter,PositionBefore),
+    Subtract(PositionAfter,PositionBefore)))>0.01,
+    'orbit changes camera position around the same target');
 end;
 
 procedure TestCanonicalCameraMatrices;
@@ -291,7 +366,9 @@ var O:T3dOrbitCamera; C:T3dCamera; S0,S1:T3dCameraSnapshot;
   V:T3dViewport; P0,P1:T3dVector;
 begin
   FillChar(O,SizeOf(O),0); O.Distance:=10; O.VerticalFovDegrees:=52;
-  O.YawDegrees:=20; O.PitchDegrees:=-10; O.RollDegrees:=25;
+  O.Forward:=Vector3d(0,0,-1);
+  O.Right:=Vector3d(1,0,0);
+  O.Up:=Vector3d(0,1,0);
   C:=CanonicalCamera(O); S0:=BuildCameraSnapshot(C,900,600,20);
   P0:=S0.Position; V.Width:=900; V.Height:=600;
   PanCamera(O,Point3d(30,-15),V); C:=CanonicalCamera(O);
@@ -328,19 +405,22 @@ begin
 end;
 
 procedure TestFitBoxAllCorners;
-var C:T3dOrbitCamera; V:T3dViewport; Yaw,Pitch,Roll:Single;
+var C:T3dOrbitCamera; V:T3dViewport; F0,R0,U0,F1,R1,U1:T3dVector;
 begin
   FillChar(C,SizeOf(C),0); C.VerticalFovDegrees:=45;
-  C.YawDegrees:=27; C.PitchDegrees:=-18; C.RollDegrees:=33;
-  Yaw:=C.YawDegrees; Pitch:=C.PitchDegrees; Roll:=C.RollDegrees;
+  C.Forward:=Vector3d(0,0,-1);
+  C.Right:=Vector3d(1,0,0);
+  C.Up:=Vector3d(0,1,0);
+  CameraBasis(C,F0,R0,U0);
   V.Width:=1200; V.Height:=500;
   CheckBoxFits(C,Vector3d(10,-4,2),Vector3d(18,6,9),V,'landscape rolled');
   CheckNear(C.Target.X,14,'off-center fit target X');
   V.Width:=400; V.Height:=1000;
   CheckBoxFits(C,Vector3d(-8,-2,-6),Vector3d(5,12,3),V,'portrait rolled');
-  CheckNear(C.YawDegrees,Yaw,'fit preserves yaw');
-  CheckNear(C.PitchDegrees,Pitch,'fit preserves pitch');
-  CheckNear(C.RollDegrees,Roll,'fit preserves roll');
+  CameraBasis(C,F1,R1,U1);
+  CheckNear(Dot(F0,F1),1,'fit preserves forward');
+  CheckNear(Dot(R0,R1),1,'fit preserves right');
+  CheckNear(Dot(U0,U1),1,'fit preserves up');
 end;
 
 procedure TestSelection;
@@ -459,15 +539,17 @@ begin
   CheckNear(Dot(lRight,Vector3d(1,0,0)),Cos(DegToRad(15)),
     'Z constraint rotates camera pose');
 
-  lCamera.PoseValid:=False;
-  lCamera.YawDegrees:=0; lCamera.PitchDegrees:=0; lCamera.RollDegrees:=90;
+  lCamera.Forward:=Vector3d(0,0,-1);
+  lCamera.Right:=Vector3d(0,1,0);
+  lCamera.Up:=Vector3d(-1,0,0);
   CameraBasis(lCamera,lForward,lRight,lUp);
   CheckNear(lRight.X,0,'roll rotates right X');
   CheckNear(lRight.Y,1,'roll rotates right into up');
   CheckNear(lUp.X,-1,'roll rotates up into left');
 
-  lCamera.PoseValid:=False;
-  lCamera.YawDegrees:=31; lCamera.PitchDegrees:=-23; lCamera.RollDegrees:=37;
+  lCamera.Forward:=Vector3d(-0.4,-0.3,-0.8660254);
+  lCamera.Right:=Vector3d(0.9077,0,-0.4196);
+  lCamera.Up:=Vector3d(-0.1259,0.9539,-0.2723);
   CameraBasis(lCamera,lForward,lRight,lUp);
   RotateCameraConstrained(lCamera,Point3d(0,12),1,crcX);
   CameraBasis(lCamera,lNewForward,lNewRight,lNewUp);
@@ -476,8 +558,9 @@ begin
     'local X rotates by requested angle');
   Check(Dot(lNewForward,lUp)<0,'local X preserves vertical drag sign');
 
-  lCamera.PoseValid:=False;
-  lCamera.YawDegrees:=31; lCamera.PitchDegrees:=-23; lCamera.RollDegrees:=37;
+  lCamera.Forward:=Vector3d(-0.4,-0.3,-0.8660254);
+  lCamera.Right:=Vector3d(0.9077,0,-0.4196);
+  lCamera.Up:=Vector3d(-0.1259,0.9539,-0.2723);
   CameraBasis(lCamera,lForward,lRight,lUp);
   RotateCameraConstrained(lCamera,Point3d(14,0),1,crcY);
   CameraBasis(lCamera,lNewForward,lNewRight,lNewUp);
@@ -486,8 +569,9 @@ begin
     'local Y rotates by requested angle');
   Check(Dot(lNewForward,lRight)<0,'local Y preserves horizontal drag sign');
 
-  lCamera.PoseValid:=False;
-  lCamera.YawDegrees:=31; lCamera.PitchDegrees:=-23; lCamera.RollDegrees:=37;
+  lCamera.Forward:=Vector3d(-0.4,-0.3,-0.8660254);
+  lCamera.Right:=Vector3d(0.9077,0,-0.4196);
+  lCamera.Up:=Vector3d(-0.1259,0.9539,-0.2723);
   CameraBasis(lCamera,lForward,lRight,lUp);
   RotateCameraConstrained(lCamera,Point3d(16,0),1,crcZ);
   CameraBasis(lCamera,lNewForward,lNewRight,lNewUp);
@@ -506,6 +590,70 @@ begin
   CameraBasis(lCamera,lNewForward,lNewRight,lNewUp);
   Check(Dot(lForward,lNewForward)<0.999,
     'Y axis remains responsive after crossing former Euler pole');
+end;
+
+procedure TestCameraRotationUsesFixedAxisDuringGesture;
+var
+  lCamera:T3dOrbitCamera;
+  lForward,lRight,lUp,lAxis:T3dVector;
+  I:Integer;
+begin
+  FillChar(lCamera,SizeOf(lCamera),0);
+  CameraBasis(lCamera,lForward,lRight,lUp);
+  lAxis:=lUp;
+  for I:=1 to 100 do
+    RotateCameraAroundAxis(lCamera,lAxis,0.2);
+  CameraBasis(lCamera,lForward,lRight,lUp);
+  CheckNear(lForward.X,-Sin(DegToRad(20)),
+    'fixed green-axis drag accumulates rotation around the captured axis');
+  CheckNear(lForward.Z,-Cos(DegToRad(20)),
+    'fixed green-axis drag has no camera-relative axis drift');
+  CheckNear(Dot(lAxis,lForward),0,
+    'rotation keeps forward perpendicular to the captured axis');
+end;
+
+procedure TestCameraOverlayUsesAbsoluteDragFromStart;
+var
+  StartCamera,CurrentCamera,ExpectedCamera:T3dOrbitCamera;
+  StartPoint,CurrentPoint,Center:T3dPoint;
+  Axis,Forward,Right,Up:T3dVector;
+  I:Integer;
+  Angle:Single;
+begin
+  FillChar(StartCamera,SizeOf(StartCamera),0);
+  StartCamera.Target:=Vector3d(8,-3,2);
+  StartCamera.Forward:=Vector3d(0,0,-1);
+  StartCamera.Right:=Vector3d(1,0,0);
+  StartCamera.Up:=Vector3d(0,1,0);
+  StartCamera.Distance:=12;
+  CameraBasis(StartCamera,Forward,Right,Up);
+  Axis:=Up;
+  StartPoint:=Point3d(100,100);
+  Center:=Point3d(100,100);
+  for I:=1 to 50 do
+  begin
+    CurrentPoint:=Point3d(100+I,100);
+    Angle:=CameraOverlayDragAngleFromStart(crhY,StartPoint,CurrentPoint,
+      Center,0.5);
+    CurrentCamera:=StartCamera;
+    RotateCameraAroundAxis(CurrentCamera,Axis,Angle);
+  end;
+  ExpectedCamera:=StartCamera;
+  RotateCameraAroundAxis(ExpectedCamera,Axis,25);
+  CheckNear(Dot(CurrentCamera.Forward,ExpectedCamera.Forward),1,
+    'camera pose is recomputed from drag-start snapshot, not accumulated deltas');
+  CheckNear(CurrentCamera.Target.X,StartCamera.Target.X,
+    'absolute camera rotation preserves panned target X');
+  CheckNear(CurrentCamera.Target.Y,StartCamera.Target.Y,
+    'absolute camera rotation preserves panned target Y');
+  CheckNear(CurrentCamera.Target.Z,StartCamera.Target.Z,
+    'absolute camera rotation preserves panned target Z');
+  { The overlay enters dragging after a small threshold. That first event
+    must still use the MouseDown origin, not silently rebase at the threshold. }
+  CurrentPoint:=Point3d(StartPoint.X+3,StartPoint.Y);
+  CheckNear(CameraOverlayDragAngleFromStart(crhY,StartPoint,CurrentPoint,
+    Center,0.5),1.5,
+    'first threshold-crossing movement contributes its full angle');
 end;
 
 procedure TestCameraRotateOverlay;
@@ -527,8 +675,11 @@ begin
     Check(lOverlay.BeginDrag(crhY,Point3d(125,100)),'selected handle pressed');
     Check(not lOverlay.UpdateDrag(Point3d(126,100),lDelta),
       'click is separate from drag threshold');
-    Check(lOverlay.UpdateDrag(Point3d(130,100),lDelta),'drag after threshold');
-    CheckNear(lDelta.X,5,'overlay incremental drag X');
+    Check(not lOverlay.UpdateDrag(Point3d(127,100),lDelta),
+      'sub-threshold movement remains click');
+    Check(lOverlay.UpdateDrag(Point3d(128,100),lDelta),
+      'drag starts after threshold');
+    CheckNear(lDelta.X,1,'threshold movement is not applied as a jump');
     lOverlay.EndDrag;
     Check(lOverlay.SelectedHandle=crhY,'camera handle stays selected');
     lOverlay.SelectHandle(crhZ);
@@ -543,6 +694,26 @@ begin
   finally
     lOverlay.Free;
   end;
+end;
+
+procedure TestCameraOverlayDragFromStart;
+var
+  lStart,lCurrent,lCenter:T3dPoint;
+  lAngle:Single;
+begin
+  lStart:=Point3d(100,100);
+  lCenter:=Point3d(100,100);
+  lCurrent:=Point3d(110,104);
+  CheckNear(CameraOverlayDragAngleFromStart(crhY,lStart,lCurrent,lCenter,0.5),
+    5,'green horizontal rotation is measured from drag start');
+  CheckNear(CameraOverlayDragAngleFromStart(crhX,lStart,lCurrent,lCenter,0.5),
+    -2,'red vertical rotation is measured from drag start');
+  lStart:=Point3d(150,100);
+  lCurrent:=Point3d(100,150);
+  lAngle:=CameraOverlayDragAngleFromStart(crhZ,lStart,lCurrent,lCenter,0.5);
+  CheckNear(lAngle,90,'blue ring uses signed cursor angle from drag start');
+  CheckNear(CameraOverlayDragAngleFromStart(crhY,lStart,lStart,lCenter,0.5),0,
+    'no movement from drag origin produces zero rotation');
 end;
 
 procedure TestScreenAxisHitTolerance;
@@ -1146,6 +1317,14 @@ begin
   Gradients[2].RightValue:=1;
   Color:=GradientColor(Gradients[0],0.5);
   Check(Color.R=255,'constant red gradient evaluates');
+  Color:=CadIntensityColor(0);
+  Check((Color.G=0) and (Color.R=0) and (Color.B=255),'CAD starts blue');
+  Color:=CadIntensityColor(1/3);
+  Check((Color.G=255) and (Color.R=0) and (Color.B=0),'CAD green at one third');
+  Color:=CadIntensityColor(2/3);
+  Check((Color.G=255) and (Color.R=255) and (Color.B=0),'CAD yellow at two thirds');
+  Color:=CadIntensityColor(1);
+  Check((Color.R=255) and (Color.G=0) and (Color.B=0),'CAD ends red');
 
   Mesh:=T3dMeshData.Create;
   Engine:=T3dVertexColorEngine.Create;
@@ -1193,6 +1372,34 @@ begin
       'zero-radius anchor colors its epicenter');
     Check(Mesh.VertexColors[2].R=Mesh.Color.R,
       'zero-radius anchor does not color neighbouring vertices');
+    Anchors[0].EnvelopeXEnabled:=True;
+    Anchors[0].EnvelopeX:=2;
+    Engine.Configure(Mesh,Gradients,Anchors);
+    Engine.Apply;
+    Check(Mesh.VertexColors[2].R=255,
+      'enabled X envelope controls extent instead of radius');
+    Anchors[0].EnvelopeX:=0.5;
+    Engine.Configure(Mesh,Gradients,Anchors);
+    Engine.Apply;
+    Check(Mesh.VertexColors[2].R=Mesh.Color.R,
+      'vertex outside enabled envelope remains uncolored');
+    Anchors[0].EnvelopeXEnabled:=False;
+    Anchors[0].EnvelopeYEnabled:=True;
+    Anchors[0].EnvelopeY:=1;
+    Engine.Configure(Mesh,Gradients,Anchors);
+    Engine.Apply;
+    Check(Mesh.VertexColors[2].R=255,
+      'disabled axes do not clip the envelope');
+    SetLength(Anchors,2);
+    Anchors[0].EnvelopeYEnabled:=False;
+    Anchors[0].Radius:=2; Anchors[0].Value:=0;
+    Anchors[1]:=Anchors[0]; Anchors[1].Value:=1;
+    Gradients[0].CadGradient:=True;
+    Engine.Configure(Mesh,Gradients,Anchors);
+    Engine.Apply;
+    Check((Mesh.VertexColors[0].R=128) and
+      (Mesh.VertexColors[0].G=255) and (Mesh.VertexColors[0].B=0),
+      'CAD blends scalar before palette and keeps midpoint yellow green');
   finally
     Engine.Free;
     Mesh.Free;
@@ -1202,6 +1409,7 @@ end;
 begin
   try
     TestDefaultCubeIsSceneGeometry;
+    TestPointCloudSectionOrder;
     TestRenderPassLightingPolicy;
     TestEditorOverlayDepthPolicy;
     TestSelectedHelperAxisIgnoresHelperScale;
@@ -1212,6 +1420,7 @@ begin
     TestCameraMath;
     TestOrthographicInteractionMath;
     TestCameraPan;
+    TestOrbitPreservesPanTarget;
     TestCanonicalCameraMatrices;
     TestFitBoxAllCorners;
     TestSelection;
@@ -1219,7 +1428,10 @@ begin
     TestLocalAxisGizmo;
     TestGizmoSelectedAxis;
     TestCameraRotationConstraints;
+    TestCameraRotationUsesFixedAxisDuringGesture;
+    TestCameraOverlayUsesAbsoluteDragFromStart;
     TestCameraRotateOverlay;
+    TestCameraOverlayDragFromStart;
     TestScreenAxisHitTolerance;
     TestExclusiveInteractionContexts;
     TestSelectedPivotAndFit;

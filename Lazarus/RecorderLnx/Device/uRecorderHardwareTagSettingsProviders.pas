@@ -40,7 +40,11 @@ uses
   uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig,
   uRecorderMic140DataSource, uRecorderMic140Calibration,
   uMic185MebiusTypes, uRecorderMic185DataSource, uRecorderMic185Calibration,
-  uRecorderMc201Calibration;
+  uRecorderMc201Calibration, uRecorderPxiMx248Types,
+  uRecorderPxiMx248Addressing,
+  uRecorderPxiMx248Properties,
+  uRecorderDriverContractsV2, uRecorderPxiMx248RuntimeTransport,
+  uRecorderPxiMx248WindowsTransport;
 
 type
   IRecorderHardwareTagSettingsProvider = interface(IRecorderTagSettingsProvider)
@@ -82,6 +86,35 @@ type
   end;
 
   TRecorderMic185TagSettingsProvider = class(TRecorderHardwareTagSettingsProvider)
+  public
+    function Accepts(ATag: TRecorderTag): Boolean; override;
+    function ReadState(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+      out AState: TRecorderTagSettingsState): Boolean; override;
+    function NormalizeDraft(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+      var ADraft: TRecorderTagSettingsDraft; out AErrorText: string): Boolean; override;
+    function ApplyDraft(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+      const ADraft: TRecorderTagSettingsDraft;
+      out AResult: TRecorderTagSettingsApplyResult;
+      out AErrorText: string): Boolean; override;
+    function DownloadHardwareCalibration(ARegistry: TRecorderTagRegistry;
+      ATag: TRecorderTag; out AResult: TRecorderHardwareCalibrationResult;
+      out AErrorText: string): Boolean; override;
+  end;
+
+  { MX-248 has one ADC clock for all eight channels. The common tag dialog
+    therefore edits the persisted source packet and every already published
+    tag in place; replacing tag objects here would break external bindings. }
+  TRecorderPxiMx248TagSettingsProvider = class(
+    TRecorderHardwareTagSettingsProvider)
+  private
+    function ProgramSourceFrequency(ARegistry: TRecorderTagRegistry;
+      ATag: TRecorderTag; AFrequencyHz: Double;
+      out AErrorText: string): Boolean;
+    procedure ApplySourceFrequency(ARegistry: TRecorderTagRegistry;
+      ATag: TRecorderTag; AFrequencyHz: Double);
+    function PersistSourceFrequency(ARegistry: TRecorderTagRegistry;
+      ATag: TRecorderTag; AFrequencyHz: Double;
+      out AErrorText: string): Boolean;
   public
     function Accepts(ATag: TRecorderTag): Boolean; override;
     function ReadState(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
@@ -344,6 +377,313 @@ begin
     AResult.PresentationText := RecorderMic185FormatHardwareKx(lK, lB);
 end;
 
+function TRecorderPxiMx248TagSettingsProvider.Accepts(
+  ATag: TRecorderTag): Boolean;
+begin
+  Result := (ATag <> nil) and StartsText('pxi-mx248:',
+    RecorderNormalizeTagSourceId(ATag.SourceId));
+end;
+
+function TRecorderPxiMx248TagSettingsProvider.ReadState(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  out AState: TRecorderTagSettingsState): Boolean;
+var
+  I: Integer;
+begin
+  Result := inherited ReadState(ARegistry, ATag, AState);
+  if not Result then Exit;
+  AState.FrequencyEditable := True;
+  SetLength(AState.FrequencyNames, CPxiMx248SampleRateCount);
+  for I := Low(CPxiMx248SampleRates) to High(CPxiMx248SampleRates) do
+    AState.FrequencyNames[I] := IntToStr(CPxiMx248SampleRates[I]);
+  AState.HardwareCalibrationDownloadable := True;
+end;
+
+function TRecorderPxiMx248TagSettingsProvider.NormalizeDraft(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  var ADraft: TRecorderTagSettingsDraft; out AErrorText: string): Boolean;
+begin
+  Result := inherited NormalizeDraft(ARegistry, ATag, ADraft, AErrorText);
+  if not Result then Exit;
+  if PxiMx248IsSupportedSampleRate(ADraft.PollFrequencyHz) then Exit(True);
+  AErrorText := Format('MX-248 does not support sample rate %g Hz',
+    [ADraft.PollFrequencyHz]);
+  Result := False;
+end;
+
+function IsPxiMx248AcquisitionProperty(const AName: string): Boolean;
+var
+  lName, lSuffix: string;
+  lChannel, lDot: Integer;
+begin
+  lName := LowerCase(Trim(AName));
+  if MatchText(lName, ['sample-rate-hz', 'block-samples',
+    'calibration-mode']) then Exit(True);
+  if Pos('channel.', lName) <> 1 then Exit(False);
+  lSuffix := Copy(lName, Length('channel.') + 1, MaxInt);
+  lDot := Pos('.', lSuffix);
+  if (lDot <= 1) or not TryStrToInt(Copy(lSuffix, 1, lDot - 1), lChannel) or
+    (lChannel < 1) or (lChannel > CPxiMx248ChannelCount) then Exit(False);
+  lSuffix := Copy(lSuffix, lDot + 1, MaxInt);
+  Result := MatchText(lSuffix, ['enabled', 'amplifier-enabled', 'input-mode',
+    'range-index', 'lpf-index', 'icp-current', 'calibration-enabled',
+    'input-floating']);
+end;
+
+function TRecorderPxiMx248TagSettingsProvider.ProgramSourceFrequency(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  AFrequencyHz: Double; out AErrorText: string): Boolean;
+var
+  lCanonical, lProperties, lSerial, lVersion: string;
+  lConfigured: TRecorderConfiguredDataSource;
+  lConfiguration: TPxiMx248Configuration;
+  lFormat: TFormatSettings;
+  lItems, lValues: TStringList;
+  I, lChassis, lSlot: Integer;
+  lResult: TRcOperationResult;
+  lStore: TPxiMx248PropertyStore;
+  lTransport: TRecorderPxiMx248WindowsTransport;
+begin
+  Result := False;
+  AErrorText := '';
+  lConfigured := RecorderConfiguredDataSourcesFind(ARegistry, ATag.SourceId);
+  if lConfigured = nil then
+  begin
+    AErrorText := 'MX-248 configured source was not found';
+    Exit;
+  end;
+  lItems := TStringList.Create;
+  lValues := TStringList.Create;
+  lStore := TPxiMx248PropertyStore.Create(nil);
+  try
+    lItems.StrictDelimiter := True;
+    lItems.Delimiter := ':';
+    lItems.DelimitedText := RecorderNormalizeTagSourceId(ATag.SourceId);
+    if (lItems.Count <> 3) or not SameText(lItems[0], 'pxi-mx248') or
+      not TryStrToInt(lItems[1], lChassis) or
+      not TryStrToInt(lItems[2], lSlot) then
+    begin
+      AErrorText := 'Tag is not linked to a valid PXI MX-248 source';
+      Exit;
+    end;
+    lValues.StrictDelimiter := True;
+    lValues.Delimiter := ';';
+    lValues.NameValueSeparator := '=';
+    lValues.DelimitedText := lConfigured.SpecificConfigText;
+    for I := lValues.Count - 1 downto 0 do
+      if not IsPxiMx248AcquisitionProperty(lValues.Names[I]) then
+        lValues.Delete(I);
+    lFormat := DefaultFormatSettings;
+    lFormat.DecimalSeparator := '.';
+    lFormat.ThousandSeparator := #0;
+    lValues.Values['sample-rate-hz'] := FloatToStr(AFrequencyHz, lFormat);
+    lResult := lStore.CalcProperties(lValues.DelimitedText, lCanonical);
+    if lResult.IsSuccess then
+      lResult := lStore.CurrentConfiguration(lConfiguration);
+    if not lResult.IsSuccess then
+    begin
+      AErrorText := lResult.Stage + ': ' + lResult.MessageText;
+      Exit;
+    end;
+    lTransport := TRecorderPxiMx248WindowsTransport.Create(lChassis, lSlot);
+    try
+      lResult := lTransport.Connect;
+      if lResult.IsSuccess then
+        lResult := lTransport.Initialize(lSerial, lVersion);
+      if lResult.IsSuccess then
+        lResult := lTransport.ProgramAcquisition(lConfiguration);
+      if lResult.IsSuccess then
+        lResult := lTransport.ReadLiveProperties(lProperties);
+      if not lResult.IsSuccess then
+      begin
+        AErrorText := lResult.Stage + ': ' + lResult.MessageText;
+        Exit;
+      end;
+      lValues.DelimitedText := lProperties;
+      if not SameText(Trim(lValues.Values['sample-rate-hz']),
+        IntToStr(Round(AFrequencyHz))) then
+      begin
+        AErrorText := 'MX-248 readback did not confirm the requested frequency';
+        Exit;
+      end;
+    finally
+      lTransport.Disconnect;
+      lTransport.Free;
+    end;
+    Result := True;
+  finally
+    lStore.Free;
+    lValues.Free;
+    lItems.Free;
+  end;
+end;
+
+function TRecorderPxiMx248TagSettingsProvider.PersistSourceFrequency(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  AFrequencyHz: Double; out AErrorText: string): Boolean;
+var
+  lConfigured: TRecorderConfiguredDataSource;
+  lFormat: TFormatSettings;
+  lValues: TStringList;
+begin
+  Result := False;
+  AErrorText := '';
+  lConfigured := RecorderConfiguredDataSourcesFind(ARegistry, ATag.SourceId);
+  if lConfigured = nil then
+  begin
+    AErrorText := 'MX-248 configured source was not found';
+    Exit;
+  end;
+  lFormat := DefaultFormatSettings;
+  lFormat.DecimalSeparator := '.';
+  lFormat.ThousandSeparator := #0;
+  lValues := TStringList.Create;
+  try
+    lValues.StrictDelimiter := True;
+    lValues.Delimiter := ';';
+    lValues.NameValueSeparator := '=';
+    lValues.DelimitedText := lConfigured.SpecificConfigText;
+    lValues.Values['sample-rate-hz'] := FloatToStr(AFrequencyHz, lFormat);
+    lConfigured.SpecificConfigText := lValues.DelimitedText;
+    lConfigured.DefaultPollFrequencyHz := AFrequencyHz;
+  finally
+    lValues.Free;
+  end;
+  Result := True;
+end;
+
+procedure TRecorderPxiMx248TagSettingsProvider.ApplySourceFrequency(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  AFrequencyHz: Double);
+var
+  I: Integer;
+  lTag: TRecorderTag;
+  lSourceId: string;
+begin
+  if (ARegistry = nil) or (ATag = nil) then Exit;
+  lSourceId := RecorderNormalizeTagSourceId(ATag.SourceId);
+  for I := 0 to ARegistry.TagCount - 1 do
+  begin
+    lTag := ARegistry.Tags[I];
+    if SameText(RecorderNormalizeTagSourceId(lTag.SourceId), lSourceId) then
+      lTag.PollFrequencyHz := AFrequencyHz;
+  end;
+end;
+
+function TRecorderPxiMx248TagSettingsProvider.ApplyDraft(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  const ADraft: TRecorderTagSettingsDraft;
+  out AResult: TRecorderTagSettingsApplyResult;
+  out AErrorText: string): Boolean;
+begin
+  Result := inherited ApplyDraft(ARegistry, ATag, ADraft, AResult, AErrorText);
+  if not Result then Exit;
+  if not PxiMx248IsSupportedSampleRate(ADraft.PollFrequencyHz) then
+  begin
+    AErrorText := Format('MX-248 does not support sample rate %g Hz',
+      [ADraft.PollFrequencyHz]);
+    Exit(False);
+  end;
+  if SameValue(ATag.PollFrequencyHz, ADraft.PollFrequencyHz, 1E-9) then
+    Exit(True);
+  if not ProgramSourceFrequency(ARegistry, ATag, ADraft.PollFrequencyHz,
+    AErrorText) then Exit(False);
+  if not PersistSourceFrequency(ARegistry, ATag, ADraft.PollFrequencyHz,
+    AErrorText) then Exit(False);
+  ApplySourceFrequency(ARegistry, ATag, ADraft.PollFrequencyHz);
+  AResult.PollFrequencyHz := ADraft.PollFrequencyHz;
+  AResult.FrequencyChanged := True;
+end;
+
+function TRecorderPxiMx248TagSettingsProvider.DownloadHardwareCalibration(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  out AResult: TRecorderHardwareCalibrationResult;
+  out AErrorText: string): Boolean;
+var
+  lChannel: Integer;
+  lDevice: IRecorderDevice;
+  lControl: IPxiMx248LiveControlDevice;
+  lItems, lValues: TStringList;
+  lAdcSensitivity, lAmplifierSensitivity, lNominal: string;
+  lConversionScale, lOutputUnit, lProperties: string;
+  lResult: TRcOperationResult;
+begin
+  RecorderInitHardwareCalibrationResult(AResult);
+  Result := False;
+  AErrorText := '';
+  if (ARegistry = nil) or (ATag = nil) or
+    not PxiMx248TryChannelFromAddress(ATag.Address, lChannel) then
+  begin
+    AErrorText := 'MX-248 channel address must be 1..8';
+    Exit;
+  end;
+  lItems := TStringList.Create;
+  lValues := TStringList.Create;
+  try
+    lItems.StrictDelimiter := True;
+    lItems.Delimiter := ':';
+    lItems.DelimitedText := RecorderNormalizeTagSourceId(ATag.SourceId);
+    if (lItems.Count <> 3) or not SameText(lItems[0], 'pxi-mx248') then
+    begin
+      AErrorText := 'Tag is not linked to a valid PXI MX-248 source';
+      Exit;
+    end;
+    lDevice := RecorderHardwareFindLiveDevice(ATag.SourceId);
+    if (lDevice = nil) or
+      not Supports(lDevice, IPxiMx248LiveControlDevice, lControl) then
+    begin
+      AErrorText := 'Нет активной сессии MX-248';
+      Exit;
+    end;
+    lResult := lControl.ReadLiveProperties(lProperties);
+    if not lResult.IsSuccess then
+    begin
+      AErrorText := lResult.Stage + ': ' + lResult.MessageText;
+      Exit;
+    end;
+    lValues.StrictDelimiter := True;
+    lValues.Delimiter := ';';
+    lValues.NameValueSeparator := '=';
+    lValues.DelimitedText := lProperties;
+    lAdcSensitivity := Trim(lValues.Values[
+      Format('ch%d.adc-sensitivity', [lChannel])]);
+    { Older bridge versions exposed this field under sensitivity. }
+    if lAdcSensitivity = '' then
+      lAdcSensitivity := Trim(lValues.Values[
+        Format('ch%d.sensitivity', [lChannel])]);
+    lNominal := Trim(lValues.Values[
+      Format('ch%d.sensitivity-nominal', [lChannel])]);
+    if (lAdcSensitivity = '') or (lNominal = '') then
+    begin
+      AErrorText := 'DevAPI did not return MX-248 sensitivity coefficients';
+      Exit;
+    end;
+    lAmplifierSensitivity := Trim(lValues.Values[
+      Format('ch%d.amplifier-sensitivity', [lChannel])]);
+    lConversionScale := Trim(lValues.Values[
+      Format('ch%d.conversion-scale', [lChannel])]);
+    lOutputUnit := Trim(lValues.Values[
+      Format('ch%d.output-unit', [lChannel])]);
+    AResult.PresentationText := Format('adc-sensitivity=%s codes/V; ' +
+      'sensitivity-nominal=%s', [lAdcSensitivity, lNominal]);
+    if lAmplifierSensitivity <> '' then
+      AResult.PresentationText := AResult.PresentationText +
+        '; amplifier-sensitivity=' + lAmplifierSensitivity;
+    if lConversionScale <> '' then
+      AResult.PresentationText := AResult.PresentationText +
+        '; conversion-scale=' + lConversionScale;
+    if lOutputUnit <> '' then
+      AResult.PresentationText := AResult.PresentationText +
+        '; output-unit=' + lOutputUnit;
+    AResult.MessageText := 'DevAPI уже применил аппаратную ГХ; значения ' +
+      'приведены только для информации.';
+    Result := True;
+  finally
+    lValues.Free;
+    lItems.Free;
+  end;
+end;
+
 function TRecorderMc201TagSettingsProvider.Accepts(ATag: TRecorderTag): Boolean;
 begin
   Result := (ATag <> nil) and
@@ -444,6 +784,8 @@ begin
   fProviders.Add(TRecorderMic140TagSettingsProvider.Create as
     IRecorderHardwareTagSettingsProvider);
   fProviders.Add(TRecorderMic185TagSettingsProvider.Create as
+    IRecorderHardwareTagSettingsProvider);
+  fProviders.Add(TRecorderPxiMx248TagSettingsProvider.Create as
     IRecorderHardwareTagSettingsProvider);
   fProviders.Add(TRecorderMc201TagSettingsProvider.Create as
     IRecorderHardwareTagSettingsProvider);

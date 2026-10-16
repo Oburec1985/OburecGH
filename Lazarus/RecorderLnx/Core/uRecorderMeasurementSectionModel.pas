@@ -142,8 +142,7 @@ type
 
   TRecorderMeasurementSectionFactory = class(TRecorderComponentFactoryBase)
   protected
-    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
-      const AContext: TRecorderComponentCreateContext); override;
+    procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent; const AContext: TRecorderComponentCreateContext); override;
   public
     constructor Create; reintroduce;
   end;

@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <PathDelim Value="\"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+        <MainUnitHasScaledStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="plgModbusMaster"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <i18n>
+      <EnableI18N Value="True"/>
+      <OutDir Value="languages"/>
+    </i18n>
+    <VersionInfo>
+      <UseVersionInfo Value="True"/>
+      <MajorVersionNr Value="1"/>
+      <MinorVersionNr Value="7"/>
+      <RevisionNr Value="15"/>
+      <Attributes pvaDebug="True"/>
+      <StringTable ProductVersion="0.0.0.0"/>
+    </VersionInfo>
+    <BuildModes Count="1">
+      <Item1 Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <HostApplicationFilename Value="C:\Program Files (x86)\Mera\Recorder\Recorder.exe"/>
+      </local>
+      <FormatVersion Value="2"/>
+      <Modes Count="1">
+        <Mode0 Name="default">
+          <local>
+            <HostApplicationFilename Value="C:\Program Files (x86)\Mera\Recorder\Recorder.exe"/>
+          </local>
+        </Mode0>
+      </Modes>
+    </RunParams>
+    <RequiredPackages Count="3">
+      <Item1>
+        <PackageName Value="laz_synapse"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="bgracontrols"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="LCL"/>
+      </Item3>
+    </RequiredPackages>
+    <Units Count="34">
+      <Unit0>
+        <Filename Value="plgModbusMaster.lpr"/>
+        <IsPartOfProject Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="interfaces\blaccess.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="interfaces\journal.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="interfaces\signal.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="interfaces\tags.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="interfaces\transf.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="interfaces\recorder.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="interfaces\modules.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="interfaces\plugin.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="interfaces\waitwnd.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="interfaces\transformers.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="interfaces\device.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="pluginclass.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="PluginClass"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="ufrm_settings.lfm"/>
+        <IsPartOfProject Value="True"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="ufrm_settings.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Frm_Settings"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="ufrm_Settings"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="uxmlfunc.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uXMLFunc"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="ModbusUnits\ModbusDevice.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="ufrmsimple.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FrmSimple"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uFrmSimple"/>
+      </Unit17>
+      <Unit18>
+        <Filename Value="uform_settings.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form_Settings"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="UForm_Settings"/>
+      </Unit18>
+      <Unit19>
+        <Filename Value="ufrm_bus.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Frm_Bus"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit19>
+      <Unit20>
+        <Filename Value="framesettings.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FrameSettings"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="FrameSettings"/>
+      </Unit20>
+      <Unit21>
+        <Filename Value="ufrm_adr.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frm_adr"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit21>
+      <Unit22>
+        <Filename Value="ufrm_comport.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frm_port"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit22>
+      <Unit23>
+        <Filename Value="dlgnodecopy.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="dlgNodeCopy"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="dlgNodeCopy"/>
+      </Unit23>
+      <Unit24>
+        <Filename Value="ufrm_device.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Frm_Device"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit24>
+      <Unit25>
+        <Filename Value="ufrm_value.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Frm_Value"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit25>
+      <Unit26>
+        <Filename Value="ufrm_protocol.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frm_protocol"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit26>
+      <Unit27>
+        <Filename Value="ufrmabout.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmAbout"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uFrmAbout"/>
+      </Unit27>
+      <Unit28>
+        <Filename Value="dlgconfselect.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Dlg_ConfSelect"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="dlgConfSelect"/>
+      </Unit28>
+      <Unit29>
+        <Filename Value="udatag.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UDATag"/>
+      </Unit29>
+      <Unit30>
+        <Filename Value="resstr.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ResStr"/>
+      </Unit30>
+      <Unit31>
+        <Filename Value="ModbusUnits\ulogger.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ULogger"/>
+      </Unit31>
+      <Unit32>
+        <Filename Value="ModbusUnits\uprotmanager.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UProtManager"/>
+      </Unit32>
+      <Unit33>
+        <Filename Value="uupdatable.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uUpdatable"/>
+      </Unit33>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <PathDelim Value="\"/>
+    <Target>
+      <Filename Value="C:\Program Files (x86)\Mera\Recorder\Plugins\plgModbusMaster.dll"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir);interfaces;H:\LazComps\TLazSerial\;D:\LazComps\LazSerial\"/>
+      <OtherUnitFiles Value="ModbusUnits;interfaces;H:\LazComps\TLazSerial\;D:\LazComps\LazSerial\"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Parsing>
+      <SyntaxOptions>
+        <IncludeAssertionCode Value="True"/>
+      </SyntaxOptions>
+    </Parsing>
+    <CodeGeneration>
+      <RelocatableUnit Value="True"/>
+      <Checks>
+        <IOChecks Value="True"/>
+        <OverflowChecks Value="True"/>
+        <StackChecks Value="True"/>
+      </Checks>
+      <VerifyObjMethodCallValidity Value="True"/>
+      <TargetCPU Value="i386"/>
+      <TargetOS Value="win32"/>
+    </CodeGeneration>
+    <Linking>
+      <Debugging>
+        <DebugInfoType Value="dsDwarf3"/>
+      </Debugging>
+      <Options>
+        <ExecutableType Value="Library"/>
+      </Options>
+    </Linking>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

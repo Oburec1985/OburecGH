@@ -1,0 +1,4 @@
+interface:
+  display_name: "RunTime Programming"
+  short_description: "Rules for allocation-free real-time hot paths"
+  default_prompt: "Use $runtime-programming to audit and optimize this runtime hot path."

@@ -8,3 +8,5 @@ if errorlevel 1 exit /b 1
 if not exist "%OUT%resources\devices\mc201" mkdir "%OUT%resources\devices\mc201"
 copy /Y "%~dp0..\Device\MCbus\resources\devices\mc201\mc_201a.bio" "%OUT%resources\devices\mc201\" >nul
 if errorlevel 1 exit /b 1
+copy /Y "%~dp0..\Device\DAC\Audio\Runtime\Win64\portaudio.dll" "%OUT%portaudio.dll" >nul
+if errorlevel 1 exit /b 1

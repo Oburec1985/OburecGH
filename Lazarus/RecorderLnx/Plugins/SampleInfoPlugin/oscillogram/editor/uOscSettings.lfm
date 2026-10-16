@@ -1,0 +1,283 @@
+object OscSettings: TOscSettings
+  Left = 200
+  Top = 100
+  Width = 616
+  Height = 650
+  ClientWidth = 600
+  ClientHeight = 610
+  Caption = 'Настройка осциллографа'
+  Position = poOwnerFormCenter
+  OnShow = NativeShown
+  Constraints.MinWidth = 616
+  Constraints.MinHeight = 650
+  object laSearch: TLabel
+    Left = 12
+    Top = 16
+    Width = 155
+    Height = 20
+    Caption = 'Поиск тега:'
+  end
+  object edSearch: TEdit
+    Left = 178
+    Top = 12
+    Width = 410
+    Height = 24
+    Anchors = [akTop, akLeft, akRight]
+    OnChange = SearchChange
+  end
+  object laTag: TLabel
+    Left = 12
+    Top = 48
+    Width = 155
+    Height = 20
+    Caption = 'Канал:'
+  end
+  object cbTag: TComboBox
+    Left = 178
+    Top = 44
+    Width = 210
+    Height = 24
+    Style = csDropDownList
+    Anchors = [akTop, akLeft, akRight]
+    OnChange = TagChange
+  end
+  object btApply: TButton
+    Left = 398
+    Top = 44
+    Width = 90
+    Height = 26
+    Caption = 'Применить'
+    Anchors = [akTop, akRight]
+    OnClick = ApplyClick
+  end
+  object btAdd: TButton
+    Left = 498
+    Top = 44
+    Width = 90
+    Height = 26
+    Caption = 'Добавить'
+    Anchors = [akTop, akRight]
+    OnClick = AddClick
+  end
+  object laBind: TLabel
+    Left = 12
+    Top = 80
+    Width = 155
+    Height = 20
+    Caption = 'Привязка:'
+  end
+  object cbBinding: TComboBox
+    Left = 178
+    Top = 76
+    Width = 410
+    Height = 24
+    Style = csDropDownList
+    Items.Strings = ('Относительно выбранного тега' 'Абсолютная')
+    Anchors = [akTop, akLeft, akRight]
+    OnChange = BindingChange
+  end
+  object laedOffset: TLabel
+    Left = 12
+    Top = 112
+    Width = 155
+    Height = 20
+    Caption = 'Смещение тега:'
+  end
+  object edOffset: TEdit
+    Left = 178
+    Top = 108
+    Width = 180
+    Height = 24
+  end
+  object laedFormat: TLabel
+    Left = 12
+    Top = 144
+    Width = 155
+    Height = 20
+    Caption = 'Формат чисел:'
+  end
+  object edFormat: TEdit
+    Left = 178
+    Top = 140
+    Width = 180
+    Height = 24
+  end
+  object lbLines: TListBox
+    Left = 12
+    Top = 176
+    Width = 576
+    Height = 130
+    Anchors = [akTop, akLeft, akRight]
+    OnClick = LineChange
+  end
+  object btDelete: TButton
+    Left = 12
+    Top = 314
+    Width = 100
+    Height = 26
+    Caption = 'Удалить'
+    OnClick = DeleteClick
+  end
+  object cbColor: TColorBox
+    Left = 122
+    Top = 314
+    Width = 180
+    Height = 26
+    Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames]
+  end
+  object ckVisible: TCheckBox
+    Left = 322
+    Top = 314
+    Width = 150
+    Height = 26
+    Caption = 'Показывать'
+  end
+  object laAxis: TLabel
+    Left = 12
+    Top = 356
+    Width = 155
+    Height = 20
+    Caption = 'Ось линии:'
+  end
+  object cbAxis: TComboBox
+    Left = 178
+    Top = 352
+    Width = 310
+    Height = 24
+    Style = csDropDownList
+    OnChange = AxisChange
+    Anchors = [akTop, akLeft, akRight]
+  end
+  object btAxis: TButton
+    Left = 498
+    Top = 352
+    Width = 90
+    Height = 26
+    Caption = 'Новая ось'
+    OnClick = NewAxisClick
+    Anchors = [akTop, akRight]
+  end
+  object laedY: TLabel
+    Left = 12
+    Top = 388
+    Width = 155
+    Height = 20
+    Caption = 'Масштаб Y:'
+  end
+  object edY: TEdit
+    Left = 178
+    Top = 384
+    Width = 180
+    Height = 24
+  end
+  object laedShift: TLabel
+    Left = 12
+    Top = 420
+    Width = 155
+    Height = 20
+    Caption = 'Смещение Y:'
+  end
+  object edShift: TEdit
+    Left = 178
+    Top = 416
+    Width = 180
+    Height = 24
+  end
+  object laedX: TLabel
+    Left = 12
+    Top = 452
+    Width = 155
+    Height = 20
+    Caption = 'Окно X, с (0=общее):'
+  end
+  object edX: TEdit
+    Left = 178
+    Top = 448
+    Width = 180
+    Height = 24
+  end
+  object ckClosed: TCheckBox
+    Left = 388
+    Top = 448
+    Width = 195
+    Height = 26
+    Caption = 'Закрытый вход'
+  end
+  object ckTrigger: TCheckBox
+    Left = 12
+    Top = 484
+    Width = 155
+    Height = 26
+    Caption = 'Триггер включён'
+  end
+  object cbTrigger: TComboBox
+    Left = 178
+    Top = 484
+    Width = 310
+    Height = 24
+    Style = csDropDownList
+    Anchors = [akTop, akLeft, akRight]
+  end
+  object cbEdge: TComboBox
+    Left = 498
+    Top = 484
+    Width = 90
+    Height = 24
+    Style = csDropDownList
+    Items.Strings = ('Фронт ↑' 'Спад ↓')
+    Anchors = [akTop, akRight]
+  end
+  object laedLevel: TLabel
+    Left = 12
+    Top = 520
+    Width = 155
+    Height = 20
+    Caption = 'Уровень:'
+  end
+  object edLevel: TEdit
+    Left = 178
+    Top = 516
+    Width = 180
+    Height = 24
+  end
+  object laedPreRoll: TLabel
+    Left = 12
+    Top = 552
+    Width = 155
+    Height = 20
+    Caption = 'До триггера, %:'
+  end
+  object edPreRoll: TEdit
+    Left = 178
+    Top = 548
+    Width = 180
+    Height = 24
+  end
+  object pnBottom: TPanel
+    Align = alBottom
+    Height = 46
+    BevelOuter = bvNone
+    TabOrder = 25
+    object btOK: TButton
+      Left = 398
+      Top = 10
+      Width = 90
+      Height = 26
+      Anchors = [akTop, akRight]
+      Caption = 'OK'
+      Default = True
+      OnClick = OkClick
+    end
+    object btCancel: TButton
+      Left = 498
+      Top = 10
+      Width = 90
+      Height = 26
+      Anchors = [akTop, akRight]
+      Caption = 'Отмена'
+      Cancel = True
+      ModalResult = 2
+    end
+  end
+end
+

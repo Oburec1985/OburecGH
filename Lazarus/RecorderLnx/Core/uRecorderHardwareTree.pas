@@ -281,6 +281,11 @@ begin
         actual connection attempt reports otherwise. }
       if not lEntry.Enabled then
         lEntry.LinkOk := False
+      else if SameText(RecorderNormalizeTagSourceId(lEntry.SourceId),
+        'pxi-mx248:0:0') then
+        { A newly added MX-248 node is only a draft until discovery or the
+          settings dialog binds it to a concrete chassis and slot. }
+        lEntry.LinkOk := False
       else if RecorderIsVirtualTagSource(lEntry.SourceId) then
         lEntry.LinkOk := RecorderMeraFilePathExists(lEntry.SourceId)
       else

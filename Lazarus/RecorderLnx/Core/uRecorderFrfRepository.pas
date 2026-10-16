@@ -19,6 +19,7 @@ type
     Magnitude: array of Double;
     PhaseRadians: array of Double;
     Coherence: array of Double;
+    Amplitude: array of Double;
   end;
 
   TRecorderFrfRepository = class(TInterfacedObject, IRecorderFrfProvider)
@@ -38,7 +39,8 @@ type
 implementation
 
 type
-  TRecorderFrfSnapshot = class(TInterfacedObject, IRecorderFrfSampler)
+  TRecorderFrfSnapshot = class(TInterfacedObject, IRecorderFrfSampler,
+    IRecorderAmplitudeSampler, IRecorderFrfBandSampler)
   private
     fVersion: QWord;
     fCurves: array of TRecorderFrfCurveData;
@@ -49,6 +51,11 @@ type
     function TrySample(ACurveId: QWord; AFrequencyHz: Double;
       out AMagnitude, APhaseRadians: Double): Boolean;
     function Version: QWord;
+    function TrySampleAmplitude(ACurveId: QWord; AFrequencyHz: Double;
+      out AMagnitude, APhaseRadians: Double): Boolean;
+    function TrySampleBand(ACurveId: QWord; ACenterHz,
+      ATolerancePercent: Double; AAmplitude: Boolean;
+      out AMagnitude, APhaseRadians: Double): Boolean;
   end;
 
 function Finite(AValue: Double): Boolean;
@@ -98,6 +105,7 @@ begin
     fCurves[lCurve].Magnitude := Copy(ACurves[lCurve].Magnitude);
     fCurves[lCurve].PhaseRadians := Copy(ACurves[lCurve].PhaseRadians);
     fCurves[lCurve].Coherence := Copy(ACurves[lCurve].Coherence);
+    fCurves[lCurve].Amplitude := Copy(ACurves[lCurve].Amplitude);
   end;
 end;
 
@@ -158,6 +166,87 @@ end;
 function TRecorderFrfSnapshot.Version: QWord;
 begin
   Result := fVersion;
+end;
+
+function TRecorderFrfSnapshot.TrySampleBand(ACurveId: QWord;
+  ACenterHz, ATolerancePercent: Double; AAmplitude: Boolean;
+  out AMagnitude, APhaseRadians: Double): Boolean;
+var
+  lCurve, lLow, lHigh, lMiddle, lCount: Integer;
+  lMinHz, lMaxHz, lValue, lScale, lSquares, lCenterMagnitude: Double;
+begin
+  Result := False;
+  if not Finite(ACenterHz) or not Finite(ATolerancePercent) or
+    (ACenterHz < 0) or (ATolerancePercent < 0) then Exit;
+  if not TrySample(ACurveId, ACenterHz, lCenterMagnitude, APhaseRadians) then Exit;
+  lCurve := FindCurve(ACurveId);
+  if AAmplitude and (Length(fCurves[lCurve].Amplitude) <>
+    Length(fCurves[lCurve].FrequencyHz)) then Exit;
+  lMinHz := ACenterHz * (1 - ATolerancePercent / 100);
+  lMaxHz := ACenterHz * (1 + ATolerancePercent / 100);
+  if not Finite(lMinHz) or not Finite(lMaxHz) then Exit;
+  lLow := 0;
+  lHigh := Length(fCurves[lCurve].FrequencyHz);
+  while lLow < lHigh do
+  begin
+    lMiddle := (lLow + lHigh) div 2;
+    if fCurves[lCurve].FrequencyHz[lMiddle] < lMinHz then
+      lLow := lMiddle + 1
+    else lHigh := lMiddle;
+  end;
+  lScale := 0;
+  lSquares := 0;
+  lCount := 0;
+  while (lLow < Length(fCurves[lCurve].FrequencyHz)) and
+    (fCurves[lCurve].FrequencyHz[lLow] <= lMaxHz) do
+  begin
+    if AAmplitude then lValue := fCurves[lCurve].Amplitude[lLow]
+    else lValue := fCurves[lCurve].Magnitude[lLow];
+    if not Finite(lValue) or (lValue < 0) then Exit;
+    { Scaled accumulation prevents overflow when individual bins are large. }
+    if lValue > lScale then
+    begin
+      lSquares := 1 + lSquares * Sqr(lScale / lValue);
+      lScale := lValue;
+    end
+    else if lScale > 0 then lSquares := lSquares + Sqr(lValue / lScale);
+    Inc(lCount);
+    Inc(lLow);
+  end;
+  if lCount = 0 then Exit;
+  AMagnitude := lScale * Sqrt(lSquares);
+  Result := Finite(AMagnitude);
+end;
+
+function TRecorderFrfSnapshot.TrySampleAmplitude(ACurveId: QWord;
+  AFrequencyHz: Double; out AMagnitude, APhaseRadians: Double): Boolean;
+var
+  Curve, Lo, Hi, Mid: Integer;
+  Ratio: Double;
+begin
+  Result := TrySample(ACurveId, AFrequencyHz, AMagnitude, APhaseRadians);
+  if not Result then Exit;
+  Curve := FindCurve(ACurveId);
+  Result := Length(fCurves[Curve].Amplitude) = Length(fCurves[Curve].FrequencyHz);
+  if not Result then Exit;
+  Lo := 0;
+  Hi := High(fCurves[Curve].FrequencyHz);
+  while Lo < Hi do
+  begin
+    Mid := (Lo + Hi) div 2;
+    if fCurves[Curve].FrequencyHz[Mid] < AFrequencyHz then Lo := Mid + 1
+    else Hi := Mid;
+  end;
+  AMagnitude := fCurves[Curve].Amplitude[Lo];
+  if fCurves[Curve].FrequencyHz[Lo] <> AFrequencyHz then
+  begin
+    Hi := Lo;
+    Dec(Lo);
+    Ratio := (AFrequencyHz - fCurves[Curve].FrequencyHz[Lo]) /
+      (fCurves[Curve].FrequencyHz[Hi] - fCurves[Curve].FrequencyHz[Lo]);
+    AMagnitude := fCurves[Curve].Amplitude[Lo] + Ratio *
+      (fCurves[Curve].Amplitude[Hi] - fCurves[Curve].Amplitude[Lo]);
+  end;
 end;
 
 constructor TRecorderFrfRepository.Create;

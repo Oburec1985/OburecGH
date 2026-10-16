@@ -22,7 +22,7 @@ uses
 
 const
   CPxiMx248BridgeMagic = $42383432;
-  CPxiMx248BridgeVersion = 1;
+  CPxiMx248BridgeVersion = 2;
   CPxiMx248BridgeHeaderSize = 16;
   CPxiMx248BridgeMaxPayload = 1024 * 1024;
 
@@ -37,6 +37,9 @@ const
   CPxiMx248CommandStop = 16;
   CPxiMx248CommandReadBlock = 17;
   CPxiMx248CommandDisconnect = 18;
+  CPxiMx248CommandReadProperties = 19;
+  CPxiMx248CommandConfigurePxi = 20;
+  CPxiMx248CommandZeroBalance = 21;
   CPxiMx248CommandShutdown = 255;
 
 type
@@ -55,12 +58,16 @@ function PxiMx248DecodeHeader(const ABuffer: array of Byte;
 procedure PxiMx248EncodeInt32(AValue: LongInt; var ABuffer: array of Byte);
 procedure PxiMx248EncodeConfigure(const AConfiguration: TPxiMx248Configuration;
   var ABuffer: array of Byte);
+procedure PxiMx248EncodePxiConfiguration(ARtsiSev, ARtsiClock, ARtsiSync,
+  ATriggerMode, ATriggerSource, ATriggerLevel: LongInt;
+  var ABuffer: array of Byte);
+procedure PxiMx248EncodeChannelMask(AMask: Cardinal; var ABuffer: array of Byte);
 function PxiMx248DecodeResult(const APayload: array of Byte; APayloadSize: Cardinal;
   out ACode: Cardinal; out AStage, AText: string;
   out ADataOffset, ADataSize: Cardinal; out AError: string): Boolean;
 function PxiMx248DecodeBlock(const APayload: array of Byte;
   AOffset, ASize: Cardinal; ASampleRateHz: Double;
-  var ABlock: TRecorderAcquisitionBlock; out AError: string): Boolean;
+  var ABlock: TRcAcquisitionBlock; out AError: string): Boolean;
 
 implementation
 
@@ -163,6 +170,28 @@ begin
   end;
 end;
 
+procedure PxiMx248EncodePxiConfiguration(ARtsiSev, ARtsiClock, ARtsiSync,
+  ATriggerMode, ATriggerSource, ATriggerLevel: LongInt;
+  var ABuffer: array of Byte);
+begin
+  if Length(ABuffer) < 32 then
+    raise EArgumentException.Create('MX-248 PXI configure buffer is too small');
+  FillChar(ABuffer[0],32,0);
+  WriteU32(Cardinal(ARtsiSev),ABuffer,0);
+  WriteU32(Cardinal(ARtsiClock),ABuffer,4);
+  WriteU32(Cardinal(ARtsiSync),ABuffer,8);
+  WriteU32(Cardinal(ATriggerMode),ABuffer,12);
+  WriteU32(Cardinal(ATriggerSource),ABuffer,16);
+  WriteU32(Cardinal(ATriggerLevel),ABuffer,20);
+end;
+
+procedure PxiMx248EncodeChannelMask(AMask: Cardinal; var ABuffer: array of Byte);
+begin
+  if Length(ABuffer)<4 then
+    raise EArgumentException.Create('MX-248 channel mask buffer is too small');
+  WriteU32(AMask,ABuffer,0)
+end;
+
 function ReadText(const APayload: array of Byte; APayloadSize: Cardinal;
   var AOffset: Cardinal;
   out AText: string): Boolean;
@@ -251,7 +280,7 @@ end;
 
 function PxiMx248DecodeBlock(const APayload: array of Byte;
   AOffset, ASize: Cardinal; ASampleRateHz: Double;
-  var ABlock: TRecorderAcquisitionBlock; out AError: string): Boolean;
+  var ABlock: TRcAcquisitionBlock; out AError: string): Boolean;
 var
   I, J: Integer;
   lChannelCount, lChannelId, lWidth, lCount, lFirstCount: Cardinal;

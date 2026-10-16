@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Math, Forms, Controls, StdCtrls, ComCtrls, ExtCtrls, Dialogs, Grids,
-  Graphics, LCLType, uRecorderTags, uRecorderImpactHammerModel,
+  Graphics, LCLType, LMessages, uRecorderTags, uRecorderImpactHammerModel,
   uRecorderImpactHammerContracts;
 
 type
@@ -87,6 +87,8 @@ type
     fRegistry: TRecorderTagRegistry;
     fEnabledZeroPadFactor: Integer;
     fAvailableTags: TList;
+    fTagListWindowProc: TWndMethod;
+    procedure TagListWindowProc(var AMessage: TLMessage);
     procedure PopulateAvailableTags;
     procedure PopulateHammerTags;
     procedure UpdatePortion;
@@ -137,6 +139,8 @@ var
   I: Integer;
 begin
   inherited Create(AOwner);
+  fTagListWindowProc := lbAvailableTags.WindowProc;
+  lbAvailableTags.WindowProc := @TagListWindowProc;
   fTarget := AComponent;
   fRegistry := ARegistry;
   fDraft := TRecorderImpactHammerComponent.Create;
@@ -476,6 +480,28 @@ begin
   finally
     tvChannels.Items.EndUpdate;
   end;
+end;
+
+procedure TRecorderImpactHammerSettingsDialog.TagListWindowProc(var AMessage: TLMessage);
+var
+  Item: Integer;
+  lPoint: TPoint;
+begin
+  // Native extended selection collapses a selected group on the next plain
+  // mouse-down. Starting a drag from inside that group must preserve it.
+  if (AMessage.Msg = LM_LBUTTONDOWN) and (lbAvailableTags.SelCount > 1) and
+    ((AMessage.WParam and (MK_CONTROL or MK_SHIFT)) = 0) then
+  begin
+    lPoint.X := TLMMouse(AMessage).XPos;
+    lPoint.Y := TLMMouse(AMessage).YPos;
+    Item := lbAvailableTags.ItemAtPos(lPoint, True);
+    if (Item >= 0) and lbAvailableTags.Selected[Item] then
+    begin
+      lbAvailableTags.BeginDrag(False);
+      Exit;
+    end;
+  end;
+  fTagListWindowProc(AMessage);
 end;
 
 procedure TRecorderImpactHammerSettingsDialog.edTagSearchChange(Sender: TObject);

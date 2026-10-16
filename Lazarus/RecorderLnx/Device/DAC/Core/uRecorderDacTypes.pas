@@ -44,6 +44,14 @@ type
     DroppedMirrorBlocks: QWord;
   end;
 
+  TRecorderDacEndpoint = record
+    BackendId: string;
+    Endpoint: string;
+    DisplayName: string;
+  end;
+
+  TRecorderDacEndpoints = array of TRecorderDacEndpoint;
+
 function RecorderDacOk: TRecorderDacResult;
 function RecorderDacFailed(AError: TRecorderDacError;
   AStage: TRecorderDacStage; const AText: string;

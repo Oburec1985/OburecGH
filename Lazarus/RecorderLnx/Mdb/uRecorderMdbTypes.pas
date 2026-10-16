@@ -38,13 +38,14 @@ type
     FinishedAtUtc: Double;
     Status: string;
     Reason: string;
+    DataPath: string;
     ValueCount: Int64;
     EventCount: Int64;
     FileCount: Int64;
   end;
   TMdbMeasurementInfos = array of TMdbMeasurementInfo;
 
-  { Immutable value copied to the SQL writer when a measurement starts. }
+  { Selected domain context copied when a new measurement registration starts. }
   TMdbMeasurementContext = record
     ObjectId: string;
     TestId: string;

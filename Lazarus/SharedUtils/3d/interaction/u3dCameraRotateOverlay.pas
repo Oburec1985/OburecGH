@@ -44,6 +44,10 @@ type
 
 function RotationConstraintForHandle(AHandle:T3dCameraRotateHandle):
                                                                      T3dCameraRotationConstraint;
+function CameraOverlayAxisDragAngle(AHandle:T3dCameraRotateHandle;
+  const ADelta:T3dPoint; ARadius:Single):Single;
+function CameraOverlayDragAngleFromStart(AHandle:T3dCameraRotateHandle;
+  const AStart,ACurrent,ACenter:T3dPoint; ASensitivityDegreesPerPixel:Single):Single;
 
 implementation
 
@@ -63,6 +67,7 @@ procedure T3dCameraRotateOverlay.Show(const ACenter:T3dPoint; ARadius:Single);
 begin
   fCenter := ACenter;
   fRadius := Max(ARadius,16);
+  if fState in [crosPressed,crosDragging] then Exit;
   fHover := crhNone;
   fState := crosIdle;
 end;
@@ -87,6 +92,8 @@ begin
     end;
 end;
 begin
+  if fState in [crosPressed,crosDragging] then
+    Exit(fSelected);
   Result := crhNone;
   if fState=crosHidden then
     Exit;
@@ -143,7 +150,13 @@ begin
     Exit;
   if (fState=crosPressed) and
      (Sqrt(Sqr(APoint.X-fPress.X)+Sqr(APoint.Y-fPress.Y))<fDragThreshold) then
+  begin
+    { Keep the motion threshold from accumulating into a first-frame jump.
+      Movement before the threshold only distinguishes a click from a drag;
+      it must not be replayed as one large rotation when the drag begins. }
+    fLast := APoint;
     Exit;
+  end;
   fState := crosDragging;
   if fSelected=crhZ then
   begin
@@ -178,6 +191,46 @@ begin
     crhY: Result := crcY;
     crhZ: Result := crcZ;
     else Result := crcFree;
+  end;
+end;
+
+function CameraOverlayAxisDragAngle(AHandle:T3dCameraRotateHandle;
+  const ADelta:T3dPoint; ARadius:Single):Single;
+begin
+  if ARadius<16 then
+    ARadius:=16;
+  { The red and green handles are diameters of the same screen-space
+    rotation control as the blue ring. Convert their tangent pixel motion to
+    radians using that control's radius, then to degrees. This keeps the
+    angular response tied to the visible handle size instead of a fixed
+    degrees-per-pixel constant. }
+  case AHandle of
+    crhX: Result:=RadToDeg(-ADelta.Y/ARadius);
+    crhY: Result:=RadToDeg( ADelta.X/ARadius);
+    else Result:=0;
+  end;
+end;
+
+function CameraOverlayDragAngleFromStart(AHandle:T3dCameraRotateHandle;
+  const AStart,ACurrent,ACenter:T3dPoint; ASensitivityDegreesPerPixel:Single):Single;
+var
+  StartAngle,CurrentAngle,DeltaAngle:Single;
+begin
+  case AHandle of
+    crhX:
+      Result:=-(ACurrent.Y-AStart.Y)*ASensitivityDegreesPerPixel;
+    crhY:
+      Result:=(ACurrent.X-AStart.X)*ASensitivityDegreesPerPixel;
+    crhZ:
+      begin
+        StartAngle:=ArcTan2(-(AStart.Y-ACenter.Y),AStart.X-ACenter.X);
+        CurrentAngle:=ArcTan2(-(ACurrent.Y-ACenter.Y),ACurrent.X-ACenter.X);
+        DeltaAngle:=RadToDeg(CurrentAngle-StartAngle);
+        while DeltaAngle>180 do DeltaAngle:=DeltaAngle-360;
+        while DeltaAngle< -180 do DeltaAngle:=DeltaAngle+360;
+        Result:=-DeltaAngle;
+      end;
+    else Result:=0;
   end;
 end;
 

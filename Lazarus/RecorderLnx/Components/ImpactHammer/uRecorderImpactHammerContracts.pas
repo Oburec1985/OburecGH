@@ -9,9 +9,18 @@ unit uRecorderImpactHammerContracts;
 interface
 
 uses
-  SysUtils, uRecorderFrfContracts, u3dMotionContracts;
+  Classes, SysUtils, uRecorderFrfContracts, u3dMotionContracts, uRecorderFrfRoute;
 
 type
+  TRecorderGeometryBindingMode = (rgbmIntensity, rgbmOscillation);
+  TRecorderPointVisualization = (rpvVector, rpvSphere);
+  TRecorderIntensitySource = (risFrf, risAmplitude);
+
+  TRecorderModelObjectInfo = record
+    NodeId: QWord;
+    Name: string;
+  end;
+
   TRecorderImpactResultType = (irtTime, irtSpectrum, irtFrfMagnitude,
     irtPhase, irtCoherence);
 
@@ -94,12 +103,29 @@ type
     Space: T3dMotionSpace;
     Gain: Double;
     Enabled: Boolean;
+    Mode: TRecorderGeometryBindingMode;
+    ModifierTargetNodeId: QWord;
+    IntensityOnly: Boolean;
+    Visualization: TRecorderPointVisualization;
+    Color: LongInt;
+    MarkerSizePixels: Double;
+    IntensitySource: TRecorderIntensitySource;
+    BandRms,GradientEnabled:Boolean;
+    BandTolerancePercent:Double;
+    PointLabel:string;
+    CreateColorModifier,HideAnchors:Boolean;
+    OnlySensors:Boolean;
+    EnvelopeXEnabled,EnvelopeYEnabled,EnvelopeZEnabled:Boolean;
+    EnvelopeX,EnvelopeY,EnvelopeZ:Double;
   end;
 
   IRecorderModelPointCatalog = interface
     ['{463A8057-041C-46B1-B1C5-DF2E09709E70}']
     function ResolvePoint(const APointGroup: string; APointNumber: Integer;
       out ATargetNodeId: QWord): Boolean;
+    function ObjectCount: Integer;
+    function ObjectInfo(AIndex: Integer;
+      out AInfo: TRecorderModelObjectInfo): Boolean;
   end;
 
   IRecorderModelPointBindingSink = interface
@@ -134,6 +160,17 @@ type
     CaptureDurationSeconds: Double;
   end;
 
+  IRecorderFrfRouteService = interface
+    ['{03B792D6-6097-48A5-B3B4-A3E4B9CB34AF}']
+    function Route: TRecorderFrfRoute;
+    function CaptureRouteStep(out AError: string): Boolean;
+    function SelectRoutePoint(AIndex: Integer; out AError: string): Boolean;
+    function SaveRoutePoint(out AError: string): Boolean;
+    function RoutePointHasData: Boolean;
+    function ShowSavedRoute(out AError: string): Boolean;
+    procedure UseLiveRoute;
+  end;
+
   IRecorderImpactHammerApplicationService = interface
     ['{A788C011-3BC4-479E-A092-0A06BB1F5B13}']
     procedure NavigateToPreviousImpact;
@@ -165,6 +202,12 @@ procedure UnregisterRecorderModelPointTarget(const AComponentId: string);
 function FindRecorderModelPointTarget(const AComponentId: string;
   out ACatalog: IRecorderModelPointCatalog;
   out ASink: IRecorderModelPointBindingSink): Boolean;
+procedure GetRecorderModelPointTargetIds(AIds: TStrings);
+procedure SetRecorderGeometryPreview(const AComponentId: string;
+  const ABinding: TRecorderModelPointBinding);
+procedure ClearRecorderGeometryPreview;
+function GetRecorderGeometryPreview(const AComponentId: string;
+  out ABinding: TRecorderModelPointBinding; out ARevision: QWord): Boolean;
 
 implementation
 
@@ -178,6 +221,41 @@ type
 var
   GPointTargetLock: TRTLCriticalSection;
   GPointTargets: array of TRecorderModelPointTarget;
+  GPreviewComponentId: string;
+  GPreviewBinding: TRecorderModelPointBinding;
+  GPreviewRevision: QWord;
+
+procedure SetRecorderGeometryPreview(const AComponentId: string;
+  const ABinding: TRecorderModelPointBinding);
+begin
+  EnterCriticalSection(GPointTargetLock);
+  try
+    GPreviewComponentId := AComponentId;
+    GPreviewBinding := ABinding;
+    Inc(GPreviewRevision);
+  finally LeaveCriticalSection(GPointTargetLock); end;
+end;
+
+procedure ClearRecorderGeometryPreview;
+begin
+  EnterCriticalSection(GPointTargetLock);
+  try
+    GPreviewComponentId := '';
+    GPreviewBinding := Default(TRecorderModelPointBinding);
+    Inc(GPreviewRevision);
+  finally LeaveCriticalSection(GPointTargetLock); end;
+end;
+
+function GetRecorderGeometryPreview(const AComponentId: string;
+  out ABinding: TRecorderModelPointBinding; out ARevision: QWord): Boolean;
+begin
+  EnterCriticalSection(GPointTargetLock);
+  try
+    ARevision := GPreviewRevision;
+    ABinding := GPreviewBinding;
+    Result := (AComponentId <> '') and (AComponentId = GPreviewComponentId);
+  finally LeaveCriticalSection(GPointTargetLock); end;
+end;
 
 procedure RegisterRecorderModelPointTarget(const AComponentId: string;
   const ACatalog: IRecorderModelPointCatalog;
@@ -247,6 +325,27 @@ begin
     LeaveCriticalSection(GPointTargetLock);
   end;
   Result := False;
+end;
+
+procedure GetRecorderModelPointTargetIds(AIds: TStrings);
+var
+  I: Integer;
+begin
+  if AIds = nil then
+    Exit;
+  AIds.BeginUpdate;
+  try
+    AIds.Clear;
+    EnterCriticalSection(GPointTargetLock);
+    try
+      for I := 0 to High(GPointTargets) do
+        AIds.Add(GPointTargets[I].ComponentId);
+    finally
+      LeaveCriticalSection(GPointTargetLock);
+    end;
+  finally
+    AIds.EndUpdate;
+  end;
 end;
 
 initialization

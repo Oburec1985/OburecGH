@@ -2,6 +2,8 @@
 		<PropertyGroup>
 			<ProjectGuid>{17843fac-20c4-49d5-9b8c-304302d01b5c}</ProjectGuid>
 			<MainSource>GlPackage.dpk</MainSource>
+			<DCC_BplOutput>C:\Users\Public\Documents\RAD Studio\7.0\Bpl</DCC_BplOutput>
+			<DCC_DcpOutput>C:\Users\Public\Documents\RAD Studio\7.0\Dcp</DCC_DcpOutput>
 			<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
 			<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>

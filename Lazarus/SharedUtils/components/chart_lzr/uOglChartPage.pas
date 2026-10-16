@@ -51,6 +51,7 @@ type
     fReverseDragZoomOut: Boolean;
     fReverseDragZoomOutBothAxes: Boolean;
     fPreserveAutoFitZoomY: Boolean;
+    fSelectedYAxisOnly: Boolean;
   public
     // Установка свойств страницы по умолчанию
     procedure AssignDefaultProperties; override;
@@ -73,6 +74,9 @@ type
     property ReverseDragZoomOut: Boolean read fReverseDragZoomOut write fReverseDragZoomOut;
     property ReverseDragZoomOutBothAxes: Boolean read fReverseDragZoomOutBothAxes write fReverseDragZoomOutBothAxes;
     property PreserveAutoFitZoomY: Boolean read fPreserveAutoFitZoomY write fPreserveAutoFitZoomY;
+    { When enabled, generic pan/zoom falls back to the first Y axis instead of
+      broadcasting Y changes to every axis. Select a series or axis to change it. }
+    property SelectedYAxisOnly: Boolean read fSelectedYAxisOnly write fSelectedYAxisOnly;
   end;
 
   TChartPage = cBasePage;
@@ -114,6 +118,7 @@ begin
   fReverseDragZoomOut := False;
   fReverseDragZoomOutBothAxes := False;
   fPreserveAutoFitZoomY := False;
+  fSelectedYAxisOnly := False;
 end;
 
 procedure ChartPageApplyUserXValue(APage: TChartPage; AIsMin: Boolean; AValue: Double);

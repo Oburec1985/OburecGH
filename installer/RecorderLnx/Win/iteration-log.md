@@ -1,5 +1,28 @@
 # Журнал итераций Windows-инсталлятора RecorderLnx
 
+## 2026-10-15 — PortAudio runtime для компонента ЦАП
+
+**Запрос:** устанавливать работоспособный аудио-ЦАП со списком физических устройств без ручной установки PortAudio.
+
+**Сделано:** payload collector копирует Win64 `portaudio.dll`, Inno Setup устанавливает её рядом с `RecorderLnx.exe`.
+
+**Проверка:** DLL загружается (`Pa_Initialize=0`), production discovery нашёл 22 выходных endpoint-а; forced-сборка RecorderLnx с тем же post-build runtime — OK.
+
+**Статус:** готово.
+
+## 2026-10-12 — изолированный package output, 0.1.159
+
+**Запрос:** собрать инсталлятор, не перезаписывая открытый `RecorderLnx.exe`.
+
+**Сделано:** приложение собирается в `RecorderLnx-package.exe`; сборщик принимает
+путь к EXE и каталог package-плагинов, сохраняя прежние значения по умолчанию.
+
+**Проверка:** штатный скрипт собрал installer 0.1.159; protocol, ABI и
+installed-layout smoke прошли. SHA-256 installer: `3C030C1BBDB859EE6E05D9B4843954682DA5E14048E2C98211ACE2A470F97135`.
+Lua CHM взят из проверенного существующего артефакта из-за ошибки записи Python 3.14.
+
+**Статус:** готово.
+
 ## 2026-10-09 — целостный MX-248 vendor payload
 
 - `collect-files.bat` теперь кладёт в структурированный payload полный

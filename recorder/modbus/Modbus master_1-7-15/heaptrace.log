@@ -1,0 +1,2725 @@
+C:\Program Files (x86)\Mera\Recorder\Recorder.exe 
+Heap dump by heaptrc unit of C:\Program Files (x86)\Mera\Recorder\Recorder.exe
+81832 memory blocks allocated : 32925215/33562776
+79125 memory blocks freed     : 32602342/33235984
+2707 unfreed memory blocks : 322873
+True heap size : 3473408 (112 used in System startup)
+True free heap : 2847760
+Should be : 2886632
+Call trace for block $0F143830 size 72
+  $1045DBE4
+  $10289707
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0279D41B
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+Call trace for block $13FF1508 size 16
+  $1045DBE4
+  $10289707
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0279D41B
+  $1015629A
+  $101573FA
+  $101EBA7A
+Call trace for block $006D5FF0 size 86
+  $1045DBE4
+  $102896F0
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0279D41B
+  $101573FA
+  $101EBA7A
+  $1013D2E5
+Call trace for block $13FF1308 size 16
+  $1045DBE4
+  $102896F0
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0279D41B
+  $77071840
+  $77070FFB
+  $7706F74F
+Call trace for block $1400C2D0 size 48
+  $102896D9
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0279D41B
+  $770577C4
+  $77057BCA
+  $027608BC
+  $101EBA7A
+Call trace for block $13FF1388 size 20
+  $1028969F
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+ C:\Program Files (x86)\Mera\Recorder\Recorder.exe 
+Heap dump by heaptrc unit of C:\Program Files (x86)\Mera\Recorder\Recorder.exe
+253358 memory blocks allocated : 116390232/118837256
+250651 memory blocks freed     : 116067359/118510464
+2707 unfreed memory blocks : 322873
+True heap size : 3702784 (112 used in System startup)
+True free heap : 3077136
+Should be : 3116008
+Call trace for block $0F1431A0 size 72
+  $1045DBE4
+  $10289707
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0305D41B
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+Call trace for block $13DF3E18 size 16
+  $1045DBE4
+  $10289707
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0305D41B
+  $1015629A
+  $101573FA
+  $101EBA7A
+Call trace for block $00695000 size 86
+  $1045DBE4
+  $102896F0
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0305D41B
+  $101573FA
+  $101EBA7A
+  $1013D2E5
+Call trace for block $13DF3998 size 16
+  $1045DBE4
+  $102896F0
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0305D41B
+  $10155AD1
+  $101624AB
+  $101659EC
+Call trace for block $13E0E2E0 size 48
+  $102896D9
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0305D41B
+  $770577C4
+  $77057BCA
+  $030208BC
+  $101EBA7A
+Call trace for block $13DF3A98 size 20
+  $1028969F
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0305D41B
+  $77063ECF
+  $7705ADAB
+  $770575ED
+  $770562FA
+Call trace for block $0FE6CB40 size 1024
+  $10289679
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0305D41B
+  $10156835
+  $1015661D
+  $101599F7
+  $10168A40
+Call trace for block $13DF3C98 size 20
+  $10289679
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0305D41B
+  $77056A8C
+  $6B4E7A0E
+  $6B4EA654
+  $6B4E0A7F
+Call trace for block $0F1430F0 size 64
+  $1028A414
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0305D41B
+  $10160134
+  $1015629A
+  $101573FA
+  $101EBA7A
+  $1013D2E5
+Call trace for block $0F133610 size 108
+  $102800CC  SAVESETTINGS,  line 830 of uform_settings.pas
+  $1027FE35  FORMDESTROY,  line 739 of uform_settings.pas
+  $10089821
+  $10087DEA
+  $1027F0B7  DESTROY,  line 515 of uform_settings.pas
+  $1004E4C2
+  $1004F0FF
+  $1004E294
+  $1004302B  fin$00000007,  line 68 of plgModbusMaster.lpr
+  $0305D41B
+  $770577C4
+  $77057BCA
+  $030208BC
+  $77057BCA
+  $030208BC
+  $BAADF00D
+Call trace for block $0F133530 size 112
+  $102457F9
+  $1024592A
+  $1027BADF  CREATE,  line 54 of ModbusUnits/UMasterConnectionThread.pas
+  $10271F36  CONNECT,  line 82 of ModbusUnits/UTCPClient.pas
+  $1023D9E1  SETACTIVE,  line 3460 of ModbusUnits/ModbusDevice.pas
+  $1028299F  SETSTARTED,  line 1112 of uform_settings.pas
+  $10280011  BTNSTART_CLICK,  line 813 of uform_settings.pas
+  $10162378
+  $1016EE5F
+  $10170BD4
+  $1004E981
+  $10160134
+  $1015629A
+  $101573FA
+  $101EBA7A
+  $1013D2E5
+Call trace for block $13DF3B98 size 16
+  $1005FA33
+  $10240EAE
+  $10240DC6
+  $10244854
+  $102457E8
+  $1024592A
+  $1027BADF  CREATE,  line 54 of ModbusUnits/UMasterConnectionThread.pas
+  $10271F36  CONNECT,  line 82 of ModbusUnits/UTCPClient.pas
+  $1023D9E1  SETACTIVE,  line 3460 of ModbusUnits/ModbusDevice.pas
+  $1028299F  SETSTARTED,  line 1112 of uform_settings.pas
+  $10280011  BTNSTART_CLICK,  line 813 of uform_settings.pas
+  $10162378
+  $1016EE5F
+  $10170BD4
+  $1004E981
+  $10160134
+Call trace for block $0F005120 size 16
+  $10240EAE
+  $10240DC6
+  $10244854
+  $102457E8
+  $1024592A
+  $1027BADF  CREATE,  line 54 of ModbusUnits/UMasterConnectionThread.pas
+  $10271F36  CONNECT,  line 82 of ModbusUnits/UTCPClient.pas
+  $1023D9E1  SETACTIVE,  line 3460 of ModbusUnits/ModbusDevice.pas
+  $1028299F  SETSTARTED,  line 1112 of uform_settings.pas
+  $10280011  BTNSTART_CLICK,  line 813 of uform_settings.pas
+  $10162378
+  $1016EE5F
+  $10170BD4
+  $1004E981
+  $10160134
+  $1015629A
+Call trace for block $0F103F90 size 568
+  $1027BADF  CREATE,  line 54 of ModbusUnits/UMasterConnectionThread.pas
+  $10271F36  CONNECT,  line 82 of ModbusUnits/UTCPClient.pas
+  $1023D9E1  SETACTIVE,  line 3460 of ModbusUnits/ModbusDevice.pas
+  $1028299F  SETSTARTED,  line 1112 of uform_settings.pas
+  $10280011  BTNSTART_CLICK,  line 813 of uform_settings.pas
+  $10162378
+  $1016EE5F
+  $10170BD4
+  $1004E981
+  $10160134
+  $1015629A
+  $101573FA
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $770562FA
+Call trace for block $13E07C48 size 10
+  $102357BC  CREATE,  line 694 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+Call trace for block $13E07BC8 size 10
+  $10235720  CREATE,  line 689 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+Call trace for block $13DED9C0 size 28
+  $10235601  CREATE,  line 676 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1027EB23  LOADSETTINGS,  line 422 of uform_settings.pas
+Call trace for block $00694940 size 84
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+  $BAADF00D
+Call trace for block $13E073C8 size 20
+  $1004B988
+  $1027E36A  LOADSETTINGS,  line 393 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $030208BC
+Call trace for block $13E0E060 size 52
+  $1027EB0A  LOADSETTINGS,  line 420 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $10285ECA  ADDVALUE,  line 975 of ufrm_settings.pas
+  $1027EB23  LOADSETTINGS,  line 422 of uform_settings.pas
+Call trace for block $13E07B48 size 10
+  $102357BC  CREATE,  line 694 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+Call trace for block $13E07AC8 size 10
+  $10235720  CREATE,  line 689 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+Call trace for block $13DED930 size 28
+  $10235601  CREATE,  line 676 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1027EB23  LOADSETTINGS,  line 422 of uform_settings.pas
+Call trace for block $00694880 size 84
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+  $BAADF00D
+Call trace for block $13E07A48 size 20
+  $1004B988
+  $1027E36A  LOADSETTINGS,  line 393 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $030208BC
+Call trace for block $13E079C8 size 12
+  $102357BC  CREATE,  line 694 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+Call trace for block $13E07948 size 12
+  $1023576C  CREATE,  line 691 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+Call trace for block $13DED8A0 size 28
+  $10235601  CREATE,  line 676 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1027EB23  LOADSETTINGS,  line 422 of uform_settings.pas
+Call trace for block $006947C0 size 84
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+  $BAADF00D
+Call trace for block $13E078C8 size 20
+  $1004B988
+  $1027E36A  LOADSETTINGS,  line 393 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $030208BC
+Call trace for block $13E07848 size 12
+  $102357BC  CREATE,  line 694 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+Call trace for block $13E077C8 size 12
+  $102356F8  CREATE,  line 688 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+Call trace for block $13DED810 size 28
+  $10235601  CREATE,  line 676 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1027EB23  LOADSETTINGS,  line 422 of uform_settings.pas
+Call trace for block $00694700 size 84
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+  $BAADF00D
+Call trace for block $13E07748 size 20
+  $1004B988
+  $1027E36A  LOADSETTINGS,  line 393 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $030208BC
+Call trace for block $13E076C8 size 12
+  $102357BC  CREATE,  line 694 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+Call trace for block $13E07648 size 12
+  $10235790  CREATE,  line 692 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $101A9818
+Call trace for block $13DED780 size 28
+  $10235601  CREATE,  line 676 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $101A4078
+Call trace for block $00694640 size 84
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+  $BAADF00D
+Call trace for block $13E075C8 size 20
+  $1004B988
+  $1027E36A  LOADSETTINGS,  line 393 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $030208BC
+Call trace for block $13E07348 size 10
+  $102357BC  CREATE,  line 694 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+Call trace for block $13E072C8 size 10
+  $10235720  CREATE,  line 689 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+Call trace for block $13DED6F0 size 28
+  $10235601  CREATE,  line 676 of ModbusUnits/ModbusDevice.pas
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+Call trace for block $00694580 size 84
+  $1027EA6F  LOADSETTINGS,  line 414 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $770562FA
+  $77056D3A
+Call trace for block $13E070C8 size 16
+  $1004B988
+  $1027E36A  LOADSETTINGS,  line 393 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $BAADF00D
+Call trace for block $13DED420 size 32
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1027CCF8  LOADSETTINGS,  line 262 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+Call trace for block $13E07248 size 16
+  $102887C1
+  $10288A1B
+  $10289FC6
+  $1028B324
+  $1027E25C  LOADSETTINGS,  line 387 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+Call trace for block $13DED540 size 32
+  $10289FC6
+  $1028B324
+  $1027E25C  LOADSETTINGS,  line 387 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+Call trace for block $13E071C8 size 24
+  $1045DBB3
+  $10289F81
+  $1028B324
+  $1027E25C  LOADSETTINGS,  line 387 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+Call trace for block $13E07148 size 16
+  $1045DBB3
+  $10289F81
+  $1028B324
+  $1027E25C  LOADSETTINGS,  line 387 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+Call trace for block $13E069C8 size 20
+  $1027E018  LOADSETTINGS,  line 371 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $77056D3A
+  $770577C4
+Call trace for block $13DED5D0 size 28
+  $1023712F  CREATE,  line 1389 of ModbusUnits/ModbusDevice.pas
+  $1027E00B  LOADSETTINGS,  line 371 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1013D2E5
+Call trace for block $13DED4B0 size 28
+  $1023711A  CREATE,  line 1388 of ModbusUnits/ModbusDevice.pas
+  $1027E00B  LOADSETTINGS,  line 371 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1004E981
+Call trace for block $13E06BC8 size 24
+  $10237105  CREATE,  line 1387 of ModbusUnits/ModbusDevice.pas
+  $1027E00B  LOADSETTINGS,  line 371 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $770577C4
+Call trace for block $13E0E100 size 56
+  $1027E00B  LOADSETTINGS,  line 371 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $1013D992
+  $1022EBF5
+Call trace for block $13E07048 size 24
+  $1004B988
+  $1027DAB2  LOADSETTINGS,  line 355 of uform_settings.pas
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $030208BC
+  $770577C4
+Call trace for block $13E06E48 size 16
+  $1027FA60  PROCESSPLUGINMESSAGE,  line 679 of uform_settings.pas
+  $1004E981
+  $1015759B
+  $1008A88F
+  $101EBA7A
+  $1013D2E5
+  $1013D992
+  $1022EBF5
+  $770562FA
+  $77056D3A
+  $770577C4
+  $77057BCA
+  $C:\Program Files (x86)\Mera\Recorder\Recorder.exe 
+Heap dump by heaptrc unit of C:\Program Files (x86)\Mera\Recorder\Recorder.exe
+93651 memory blocks allocated : 28749698/29270568
+85886 memory blocks freed     : 25541470/26046520
+7765 unfreed memory blocks : 3208228
+True heap size : 5144576 (112 used in System startup)
+True free heap : 1067072
+Should be : 1174976
+Call trace for block $13DF4228 size 12
+  $101C5B44
+  $1016E6ED
+  $100FB69C
+  $100FEE27
+  $100FFE23
+  $10100AA4
+  $101B0144
+  $101B27F1
+  $101B27B0
+  $102829F0  SETSTARTED,  line 1118 of uform_settings.pas
+  $1028003B  BTNSTART_CLICK,  line 817 of uform_settings.pas
+  $10162388
+  $1016EE6F
+  $10170BE4
+  $1004E991
+  $10160144
+Call trace for block $13DF4128 size 12
+  $101C5A99
+  $1016E6ED
+  $100FB69C
+  $100FEE27
+  $100FFE23
+  $10100AA4
+  $101B0144
+  $101B27F1
+  $101B27B0
+  $102829F0  SETSTARTED,  line 1118 of uform_settings.pas
+  $1028003B  BTNSTART_CLICK,  line 817 of uform_settings.pas
+  $10162388
+  $1016EE6F
+  $10170BE4
+  $1004E991
+  $10160144
+Call trace for block $13DF40A8 size 24
+  $100C5E62
+  $10102595
+  $101023B0
+  $10156AEA
+  $1015A698
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $770562FA
+  $77057316
+  $7705965E
+  $7706724A
+  $101391AD
+Call trace for block $13DF4028 size 12
+  $10102595
+  $101023B0
+  $10156AEA
+  $1015A698
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $770562FA
+  $77057316
+  $7705965E
+  $7706724A
+  $101391AD
+  $1013CB0A
+Call trace for block $13DEE6C0 size 28
+  $1011C0BA
+  $10102595
+  $101023B0
+  $10156AEA
+  $1015A698
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $770562FA
+  $77057316
+  $7705965E
+  $7706724A
+  $101391AD
+Call trace for block $13DF3F28 size 24
+  $100C5E62
+  $10102595
+  $101023B0
+  $10156AEA
+  $1015A698
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $770562FA
+  $77057316
+  $7705965E
+  $7706724A
+  $101391AD
+Call trace for block $13DEE7E0 size 36
+  $1011C090
+  $10102595
+  $101023B0
+  $10156AEA
+  $1015A698
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $770562FA
+  $77057316
+  $7705965E
+  $7706724A
+  $101391AD
+Call trace for block $0EF96778 size 204
+  $10156909
+  $101591B1
+  $10156ADE
+  $1015A698
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $770562FA
+  $77057316
+  $7705965E
+  $7706724A
+  $101391AD
+  $1013CB0A
+Call trace for block $13DF3E28 size 20
+  $10088F34
+  $101641F2
+  $101628E2
+  $101627AB
+  $10153EA0
+  $10167F06
+  $10165D5B
+  $100888D6
+  $10095E31
+  $10095F79
+  $1009604B
+  $10092AA7
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+Call trace for block $13DF3D28 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10095D84
+  $10095E21
+  $10095F79
+  $1009604B
+  $10092AA7
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+Call trace for block $13DF3DA8 size 21
+  $10103709
+  $1013E662
+  $100957B8
+  $10095947
+  $100961E8
+  $10092A12
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $BAADF00D
+Call trace for block $0F133420 size 108
+  $10095799
+  $10095947
+  $100961E8
+  $10092A12
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+Call trace for block $13DF3CA8 size 24
+  $100C5E62
+  $10102595
+  $101023B0
+  $101051D8
+  $10107B0F
+  $1010788A
+  $100958EE
+  $1009640D
+  $1015AF23
+  $1008622A
+  $1008D706
+  $1015A7F1
+  $1015B8F2
+  $1014C8BF
+  $10107A5E
+  $10107291
+Call trace for block $13DF3C28 size 12
+  $10102595
+  $101023B0
+  $101051D8
+  $10107B0F
+  $1010788A
+  $100958EE
+  $1009640D
+  $1015AF23
+  $1008622A
+  $1008D706
+  $1015A7F1
+  $1015B8F2
+  $1014C8BF
+  $10107A5E
+  $10107291
+  $100961D7
+Call trace for block $13DEE5A0 size 28
+  $1011C0BA
+  $10102595
+  $101023B0
+  $101051D8
+  $10107B0F
+  $1010788A
+  $100958EE
+  $1009640D
+  $1015AF23
+  $1008622A
+  $1008D706
+  $1015A7F1
+  $1015B8F2
+  $1014C8BF
+  $10107A5E
+  $10107291
+Call trace for block $13DF3BA8 size 16
+  $10160ACF
+  $101668F2
+  $10138D4C
+  $1013BA3B
+  $1013D9A2
+  $770562FA
+  $77056D3A
+  $7705965E
+  $7706724A
+  $101DA669
+  $1022FE19
+  $1015ADCF
+  $1008622A
+  $1008D706
+  $1015A7F1
+  $1015B8F2
+Call trace for block $13DF3B28 size 24
+  $100C5E62
+  $101045FC
+  $101048F5
+  $101DA64E
+  $1022FE19
+  $1015ADCF
+  $1008622A
+  $1008D706
+  $1015A7F1
+  $1015B8F2
+  $1014C8BF
+  $10107A5E
+  $10107291
+  $100961D7
+  $10092A12
+  $10092C7A
+Call trace for block $005D5D00 size 88
+  $10102C8D
+  $101045FC
+  $101048F5
+  $101DA64E
+  $1022FE19
+  $1015ADCF
+  $1008622A
+  $1008D706
+  $1015A7F1
+  $1015B8F2
+  $1014C8BF
+  $10107A5E
+  $10107291
+  $100961D7
+  $10092A12
+  $10092C7A
+Call trace for block $13DF3AA8 size 24
+  $100C5E62
+  $101045FC
+  $101048F5
+  $101DA64E
+  $1022FE19
+  $1015ADCF
+  $1008622A
+  $1008D706
+  $1015A7F1
+  $1015B8F2
+  $1014C8BF
+  $10107A5E
+  $10107291
+  $100961D7
+  $10092A12
+  $10092C7A
+Call trace for block $13DEE510 size 36
+  $10102C67
+  $101045FC
+  $101048F5
+  $101DA64E
+  $1022FE19
+  $1015ADCF
+  $1008622A
+  $1008D706
+  $1015A7F1
+  $1015B8F2
+  $1014C8BF
+  $10107A5E
+  $10107291
+  $100961D7
+  $10092A12
+  $10092C7A
+Call trace for block $005CFAD8 size 104
+  $101DA58E
+  $1022FE19
+  $1015ADCF
+  $1008622A
+  $1008D706
+  $1015A7F1
+  $1015B8F2
+  $1014C8BF
+  $10107A5E
+  $10107291
+  $100961D7
+  $10092A12
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+Call trace for block $13DF3A28 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10095D84
+  $10165194
+  $100929E8
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $0F00A838 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10095D84
+  $10165114
+  $100929D7
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $13DF3728 size 16
+  $10065C49
+  $101C172B
+  $1009565B
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $13DF37A8 size 16
+  $1006566B
+  $10065C49
+  $101C172B
+  $1009565B
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $1013DC27
+  $770562FA
+Call trace for block $005D5C40 size 88
+  $1009565B
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+Call trace for block $0F00A8B8 size 20
+  $1008C432
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+Call trace for block $13DEE480 size 32
+  $1008C419
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+Call trace for block $13DEE3F0 size 32
+  $1008C419
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+Call trace for block $13DF39A8 size 16
+  $10108993
+  $100FEAF0
+  $101097F4
+  $1008C3BE
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $BAADF00D
+Call trace for block $13DF3928 size 24
+  $100FEAF0
+  $101097F4
+  $1008C3BE
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $BAADF00D
+  $BAADF00D
+Call trace for block $0F142D80 size 72
+  $1008C3BE
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+  $BAADF00D
+Call trace for block $005D5B80 size 76
+  $10086D86
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $BAADF00D
+  $BAADF00D
+Call trace for block $005D5AC0 size 76
+  $10086D69
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $77057B16
+  $770579C7
+Call trace for block $13DEE360 size 32
+  $101075F8
+  $1014C784
+  $101687AA
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $0EF96638 size 204
+  $101055DF
+  $101126A3
+  $101123CB
+  $10107505
+  $1014C784
+  $101687AA
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+Call trace for block $005CD8B8 size 92
+  $101055AF
+  $10112630
+  $101123BD
+  $10107505
+  $1014C784
+  $101687AA
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+Call trace for block $13DF38A8 size 16
+  $101123AF
+  $10107505
+  $1014C784
+  $101687AA
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+Call trace for block $0F133340 size 108
+  $1010557F
+  $101125C0
+  $101123AF
+  $10107505
+  $1014C784
+  $101687AA
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+Call trace for block $13DF36A8 size 16
+  $1005FA43
+  $101123A1
+  $10107505
+  $1014C784
+  $101687AA
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+Call trace for block $13DF3828 size 16
+  $101123A1
+  $10107505
+  $1014C784
+  $101687AA
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+Call trace for block $05C01AA8 size 184
+  $101687AA
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $1016EE6F
+Call trace for block $0F142CD0 size 64
+  $101593F1
+  $1016879B
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+Call trace for block $0F133260 size 108
+  $10167180
+  $101593CB
+  $1016879B
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $13DEE2D0 size 28
+  $101670C1
+  $101593CB
+  $1016879B
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $13DEE1B0 size 28
+  $101670C1
+  $101593CB
+  $1016879B
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $13DEE240 size 28
+  $101670C1
+  $101593CB
+  $1016879B
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $13DEE090 size 28
+  $101670C1
+  $101593CB
+  $1016879B
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $0F142C20 size 60
+  $1016725E
+  $10167093
+  $101593CB
+  $1016879B
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+Call trace for block $0F142B70 size 60
+  $1016707C
+  $101593CB
+  $1016879B
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $13DEE120 size 36
+  $1015D4B5
+  $1016075F
+  $10167044
+  $101593CB
+  $1016879B
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+Call trace for block $0F142AC0 size 72
+  $1016075F
+  $10167044
+  $101593CB
+  $1016879B
+  $10086D4B
+  $10086FAB
+  $1008C311
+  $1009555D
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+Call trace for block $0EFA8840 size 336
+  $101BDA10
+  $101D9FA8
+  $101C5551
+  $10095804
+  $101B7B1C
+  $101B7C7B
+  $10095522
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $05BA48A8 size 284
+  $101BD9BF
+  $101D9FA8
+  $101C5551
+  $10095804
+  $101B7B1C
+  $101B7C7B
+  $10095522
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+Call trace for block $0F103B10 size 1216
+  $10095522
+  $10092960
+  $10092C7A
+  $101C1A4F
+  $101C199D
+  $1013DC27
+  $770562FA
+  $77057B16
+  $770579C7
+  $77057BCA
+  $044108BC
+  $770577C4
+  $77057BCA
+  $044108BC
+  $10168A50
+  $1004E991
+Call trace for block $0EF964F8 size 204
+  $10156909
+  $101591B1
+  $10156ADE
+  $1015A698
+  $1004E991
+  $101575AB
+  $1017E38F
+  $101EBA8A
+  $101E3C46
+  $770562FA
+  $77057316
+  $7705965E
+  $7706724A
+  $101391AD
+  $1013CB0A
+  $1013D9A2
+Call trace for block $0EF963B8 size 204
+  $10156909
+  $101591B1
+  $10156ADE
+  $1015A698
+  $1004E991
+  $101575AB
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $770562FA
+  $77057316
+  $7705965E
+  $7706724A
+  $101391AD
+  $1013CB0A
+  $1013D9A2
+Call trace for block $0F142A10 size 60
+  $101E3D69
+  $1017CD2C
+  $1015AF23
+  $1015A7F1
+  $1015B8F2
+  $1015AFDC
+  $1008622A
+  $1015A7F1
+  $1015B8F2
+  $10154163
+  $101541B9
+  $10153E6D
+  $10167F06
+  $10167EF6
+  $101656FB
+  $1008755F
+Call trace for block $13DF3528 size 16
+  $10160ACF
+  $101668F2
+  $10138D4C
+  $1013BA3B
+  $1013D9A2
+  $101E3C5D
+  $770562FA
+  $77056D3A
+  $7705965E
+  $7706724A
+  $101DA669
+  $101E3D19
+  $1015ADCF
+  $1015A7F1
+  $1015B8F2
+  $1015AFDC
+Call trace for block $005CFA08 size 104
+  $101DA58E
+  $101E3D19
+  $1015ADCF
+  $1015A7F1
+  $1015B8F2
+  $1015AFDC
+  $1008622A
+  $1015A7F1
+  $1015B8F2
+  $10154163
+  $101541B9
+  $10153E6D
+  $10167F06
+  $10167EF6
+  $101656FB
+  $1008755F
+Call trace for block $13E07D58 size 16
+  $10160ACF
+  $101668F2
+  $10138D4C
+  $1013BA3B
+  $1013D9A2
+  $770562FA
+  $77056D3A
+  $7705965E
+  $7706724A
+  $101DA669
+  $101DA85B
+  $1015ADCF
+  $1008622A
+  $1015A7F1
+  $1015B8F2
+  $10154163
+Call trace for block $005CF6C8 size 104
+  $101DA58E
+  $101DA85B
+  $1015ADCF
+  $1008622A
+  $1015A7F1
+  $1015B8F2
+  $10154163
+  $101541B9
+  $10153E6D
+  $10167F06
+  $10167EF6
+  $101656FB
+  $1008755F
+  $1027EEB9  ACTIVATEFRAME,  line 491 of uform_settings.pas
+  $1027F510  SBTNLISTINGCLICK,  line 582 of uform_settings.pas
+  $10162388
+Call trace for block $0F133180 size 112
+  $10245809
+  $1024593A
+  $1027BAEF  CREATE,  line 54 of ModbusUnits/UMasterConnectionThread.pas
+  $10271F46  CONNECT,  line 82 of ModbusUnits/UTCPClient.pas
+  $1023D9F1  SETACTIVE,  line 3460 of ModbusUnits/ModbusDevice.pas
+  $102829AF  SETSTARTED,  line 1112 of uform_settings.pas
+  $10280021  BTNSTART_CLICK,  line 813 of uform_settings.pas
+  $10162388
+  $1016EE6F
+  $10170BE4
+  $1004E991
+  $10160144
+  $101562AA
+  $1015740A
+  $101EBA8A
+  $1013D2F5
+Call trace for block $13DF3628 size 16
+  $1005FA43
+  $10240EBE
+  $10240DD6
+  $10244864
+  $102457F8
+  $1024593A
+  $1027BAEF  CREATE,  line 54 of ModbusUnits/UMasterConnectionThread.pas
+  $10271F46  CONNECT,  line 82 of ModbusUnits/UTCPClient.pas
+  $1023D9F1  SETACTIVE,  line 3460 of ModbusUnits/ModbusDevice.pas
+  $102829AF  SETSTARTED,  line 1112 of uform_settings.pas
+  $10280021  BTNSTART_CLICK,  line 813 of uform_settings.pas
+  $10162388
+  $1016EE6F
+  $10170BE4
+  $1004E991
+  $10160144
+Call trace for block $0F00D138 size 16
+  $10240EBE
+  $10240DD6
+  $10244864
+  $102457F8
+  $1024593A
+  $1027BAEF  CREATE,  line 54 of ModbusUnits/UMasterConnectionThread.pas
+  $10271F46  CONNECT,  line 82 of ModbusUnits/UTCPClient.pas
+  $1023D9F1  SETACTIVE,  line 3460 of ModbusUnits/ModbusDevice.pas
+  $102829AF  SETSTARTED,  line 1112 of uform_settings.pas
+  $10280021  BTNSTART_CLICK,  line 813 of uform_settings.pas
+  $10162388
+  $1016EE6F
+  $10170BE4
+  $1004E991
+  $10160144
+  $101562AA
+Call trace for block $0FE95AB0 size 568
+  $1027BAEF  CREATE,  line 54 of ModbusUnits/UMasterConnectionThread.pas
+  $10271F46  CONNECT,  line 82 of ModbusUnits/UTCPClient.pas
+  $1023D9F1  SETACTIVE,  line 3460 of ModbusUnits/ModbusDevice.pas
+  $102829AF  SETSTARTED,  line 1112 of uform_settings.pas
+  $10280021  BTNSTART_CLICK,  line 813 of uform_settings.pas
+  $10162388
+  $1016EE6F
+  $10170BE4
+  $1004E991
+  $10160144
+  $101562AA
+  $1015740A
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $770562FA
+Call trace for block $13DF35A8 size 12
+  $101C5B44
+  $1016E6ED
+  $100FB69C
+  $100FEE27
+  $100FFE23
+  $10100AA4
+  $101B0144
+  $101B27F1
+  $101B27B0
+  $10282910  SETSTARTED,  line 1107 of uform_settings.pas
+  $10280021  BTNSTART_CLICK,  line 813 of uform_settings.pas
+  $10162388
+  $1016EE6F
+  $10170BE4
+  $1004E991
+  $10160144
+Call trace for block $13DF34A8 size 12
+  $101C5A99
+  $1016E6ED
+  $100FB69C
+  $100FEE27
+  $100FFE23
+  $10100AA4
+  $101B0144
+  $101B27F1
+  $101B27B0
+  $10282910  SETSTARTED,  line 1107 of uform_settings.pas
+  $10280021  BTNSTART_CLICK,  line 813 of uform_settings.pas
+  $10162388
+  $1016EE6F
+  $10170BE4
+  $1004E991
+  $10160144
+Call trace for block $13DF3428 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF33A8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF3328 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF32A8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF3228 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF31A8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF3128 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF30A8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF3028 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2FA8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2F28 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2EA8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2E28 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2DA8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2D28 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2CA8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2C28 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2BA8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2B28 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2AA8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2A28 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF29A8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2928 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF28A8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2828 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF27A8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2728 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF26A8 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $101575AB
+  $1008A89F
+  $101EBA8A
+  $1013D2F5
+  $1013D9A2
+  $1022EC05
+  $770562FA
+  $77056D3A
+  $77064131
+Call trace for block $13DF2628 size 20
+  $10088F84
+  $1015FA92
+  $1015E5BA
+  $1016482D
+  $1015BFCF
+  $10159CA2
+  $1004E991
+  $1015

@@ -14,8 +14,7 @@ interface
 
 uses
   Classes, SysUtils, fpjson,
-  uRecorderTags, uRecorderMic140Utils, uRecorderMic140StreamTypes,
-  uRecorderDeviceInterfaces;
+  uRecorderTags, uRecorderMic140Utils, uRecorderMic140StreamTypes;
 
 type
   TRecorderMic140DialogResult = record
@@ -148,7 +147,7 @@ procedure DoneRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResul
 implementation
 
 uses
-  Math, StrUtils, uRecorderMeraSdbThermocouples, uRecorderMic140LegacyConstants,
+  Math, uRecorderMeraSdbThermocouples, uRecorderMic140LegacyConstants,
   uRecorderProjectFiles, uRecorderMic140DataSource, uRecorderMic140Thermocouple,
   uRecorderConfiguredDataSources;
 
@@ -609,7 +608,7 @@ end;
 
 procedure RecorderMic140InitLegacyTagFields(out AFields: TRecorderMic140LegacyTagFields);
 begin
-  FillChar(AFields, SizeOf(AFields), 0);
+  AFields := Default(TRecorderMic140LegacyTagFields);
   AFields.CjcDefault := True;
 end;
 
@@ -650,7 +649,7 @@ begin
     Exit;
   if Trim(ATag.Address) <> '' then
     ASettings.ChannelAddress := ATag.Address;
-  if (ALegacy.MeasRangeIndex >= 0) and (ALegacy.MeasRangeIndex < CMic140RangeCount) then
+  if ALegacy.MeasRangeIndex < CMic140RangeCount then
     ASettings.RangeIndex := ALegacy.MeasRangeIndex;
   ASettings.SoftBalance := ALegacy.SoftBalance;
   ASettings.DefaultCjc := ALegacy.CjcDefault;

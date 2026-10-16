@@ -20,7 +20,7 @@
     <Version Value="11"/><PathDelim Value="\"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..;..\..\Core;..\..\..\..\Architecture;..\..\..\..;..\..\..\..\..;..\..\..\..\..\Core;..\..\..\..\..\..\SharedUtils"/>
+      <OtherUnitFiles Value="..;..\..\Core;..\..\..\..\Architecture;..\..\..\..;..\..\..\..\..;..\..\..\..\..\Core;..\..\..\..\..\Algs;..\..\..\..\..\..\SharedUtils"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking><Debugging><DebugInfoType Value="dsDwarf2"/></Debugging></Linking>

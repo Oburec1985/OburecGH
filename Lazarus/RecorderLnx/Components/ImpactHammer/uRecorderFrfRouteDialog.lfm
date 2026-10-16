@@ -1,0 +1,229 @@
+object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
+  Left = 300
+  Height = 520
+  Top = 200
+  Width = 830
+  Caption = 'Маршрут измерений FRF'
+  ClientHeight = 520
+  ClientWidth = 830
+  Constraints.MinHeight = 420
+  Constraints.MinWidth = 740
+  Position = poScreenCenter
+  LCLVersion = '4.2.0.0'
+  object lblScene: TLabel
+    Left = 12
+    Height = 0
+    Top = 17
+    Width = 0
+    Caption = '3D-сцена'
+  end
+  object cbScene: TComboBox
+    Left = 12
+    Height = 25
+    Top = 45
+    Width = 270
+    ItemHeight = 0
+    Style = csDropDownList
+    TabOrder = 15
+    OnChange = SceneChange
+    OnDropDown = SceneDropDown
+  end
+  object lblObject: TLabel
+    Left = 294
+    Height = 0
+    Top = 17
+    Width = 0
+    Caption = 'Объект геометрии'
+  end
+  object lblPoint: TLabel
+    Left = 556
+    Height = 0
+    Top = 17
+    Width = 0
+    Caption = 'Точка'
+  end
+  object edSearch: TEdit
+    Left = 12
+    Height = 25
+    Top = 12
+    Width = 270
+    TabOrder = 0
+    TextHint = 'Поиск канала по имени'
+    Visible = False
+    OnChange = SearchChange
+  end
+  object cbChannel: TComboBox
+    Left = 12
+    Height = 25
+    Top = 45
+    Width = 270
+    ItemHeight = 0
+    Style = csDropDownList
+    TabOrder = 1
+    Visible = False
+  end
+  object cbObject: TComboBox
+    Left = 294
+    Height = 25
+    Hint = 'Объект геометрии'
+    Top = 45
+    Width = 250
+    ItemHeight = 0
+    ParentShowHint = False
+    ShowHint = True
+    Style = csDropDownList
+    TabOrder = 2
+    OnDropDown = ObjectDropDown
+  end
+  object edPoint: TEdit
+    Left = 556
+    Height = 25
+    Hint = 'Номер точки'
+    Top = 45
+    Width = 65
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 3
+    Text = '1'
+  end
+  object btnAdd: TButton
+    Left = 632
+    Height = 29
+    Top = 75
+    Width = 82
+    Caption = 'Добавить'
+    TabOrder = 4
+    OnClick = AddClick
+  end
+  object btnDelete: TButton
+    Left = 725
+    Height = 29
+    Top = 75
+    Width = 82
+    Caption = 'Удалить'
+    TabOrder = 5
+    OnClick = DeleteClick
+  end
+  object gridRoute: TStringGrid
+    Left = 12
+    Height = 248
+    Top = 116
+    Width = 795
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ColCount = 6
+    DefaultRowHeight = 24
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing]
+    RowCount = 2
+    TabOrder = 6
+    OnDragDrop = RouteDragDrop
+    OnDragOver = RouteDragOver
+    OnMouseDown = RouteMouseDown
+    OnSelectCell = SelectCell
+    OnSetEditText = LabelSet
+    ColWidths = (
+      45
+      180
+      235
+      65
+      150
+      100
+    )
+  end
+  object lblPointLabel: TLabel
+    Left = 12
+    Height = 0
+    Top = 82
+    Width = 0
+    Caption = 'Подпись точки'
+  end
+  object edPointLabel: TEdit
+    Left = 110
+    Height = 25
+    Top = 78
+    Width = 510
+    TabOrder = 13
+    TextHint = 'По умолчанию — номер точки в объекте'
+  end
+  object edFolder: TEdit
+    Left = 12
+    Height = 25
+    Top = 376
+    Width = 360
+    Anchors = [akLeft, akRight, akBottom]
+    TabOrder = 7
+    TextHint = 'Папка сохранённых реализаций'
+  end
+  object chkMdb: TCheckBox
+    Left = 378
+    Height = 23
+    Hint = 'Использовать каталог текущего объекта базы данных испытаний для FRF'
+    Top = 378
+    Width = 190
+    Anchors = [akRight, akBottom]
+    Caption = 'MDB — использовать БД'
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 14
+    OnClick = MdbChange
+  end
+  object btnFolder: TButton
+    Left = 578
+    Height = 29
+    Top = 374
+    Width = 100
+    Anchors = [akRight, akBottom]
+    Caption = 'Папка…'
+    TabOrder = 8
+    OnClick = FolderClick
+  end
+  object btnLoad: TButton
+    Left = 689
+    Height = 29
+    Top = 374
+    Width = 118
+    Anchors = [akRight, akBottom]
+    Caption = 'Загрузить маршрут'
+    TabOrder = 9
+    OnClick = LoadClick
+  end
+  object lblState: TLabel
+    Left = 12
+    Height = 30
+    Top = 413
+    Width = 795
+    Anchors = [akLeft, akRight, akBottom]
+    AutoSize = False
+    WordWrap = True
+  end
+  object btnSave: TButton
+    Left = 12
+    Height = 32
+    Top = 454
+    Width = 155
+    Anchors = [akLeft, akBottom]
+    Caption = 'Сохранить маршрут'
+    TabOrder = 10
+    OnClick = SaveClick
+  end
+  object btnApply: TButton
+    Left = 179
+    Height = 32
+    Top = 454
+    Width = 275
+    Anchors = [akLeft, akBottom]
+    Caption = 'Применить изменения точки'
+    TabOrder = 11
+    OnClick = ApplyClick
+  end
+  object btnAssemble: TButton
+    Left = 466
+    Height = 32
+    Top = 454
+    Width = 341
+    Anchors = [akLeft, akRight, akBottom]
+    Caption = 'Показать интенсивность из сохранённых FRF'
+    TabOrder = 12
+    OnClick = AssembleClick
+  end
+end

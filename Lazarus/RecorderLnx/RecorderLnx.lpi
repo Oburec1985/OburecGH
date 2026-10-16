@@ -225,6 +225,10 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Components/Editor/uRecorderComponentManager.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="UI/uFormPagesDialog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -234,6 +238,17 @@
         <ComponentName Value="MainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderBuiltInFormsUI.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderBuiltInFormsFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderProjectConfiguration.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="UI/uRecorderCalibrationAddDialog.pas"/>
@@ -274,10 +289,6 @@
       </Unit>
       <Unit>
         <Filename Value="Components/Oscillogram/uRecorderOglOscillogramView.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="Components/Editor/uRecorderOscillogramPageView.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -718,6 +729,13 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Components/ThreeD/uRecorder3dPrimitivePropertiesFrame.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Recorder3dPrimitivePropertiesFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit>
+      <Unit>
         <Filename Value="Components/ThreeD/uRecorder3dSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Recorder3dSettingsDialog"/>
@@ -833,6 +851,32 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Device/DAC/Core/uRecorderDacBackendRegistry.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Component/uRecorderDacComponentModel.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Component/uRecorderDacRuntime.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Component/uRecorderDacComponentView.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderDacComponentView"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/DAC/Component/uRecorderDacSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderDacSettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
         <Filename Value="../SharedUtils/3d/core/u3dCoreTypes.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -916,8 +960,127 @@
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
+        <Filename Value="Device/PXI/MX248/UI/uRecorderPxiMx248ChannelDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="PxiMx248ChannelDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
         <Filename Value="Device/PXI/MX248/UI/uRecorderPxiMx248ConfiguredEditor.pas"/>
         <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Mdb/uRecorderMdbDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderMdbDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/Lissajous/uRecorderLissajousSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderLissajousSettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ThreeD/uRecorder3dVertexColorModifierFrame.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Recorder3dVertexColorModifierFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ThreeD/uRecorder3dSkinModifierFrame.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Recorder3dSkinModifierFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ThreeD/uRecorder3dFrfModifierFrame.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Recorder3dFrfModifierFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactGeometryBindingDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderImpactGeometryBindingDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRecorderFrfRouteDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderFrfRouteDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/ImpactHammer/uRcFrfPeakForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RcFrfPeakForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Components/Standard/uRecorderImageSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderImageSettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Device/MCbus/UI/uRecorderMc201SlotSettingsDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderMc201SlotSettingsDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderTagCalibrationDialog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderTagCalibrationDialog"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderTachoAlgorithmFrame.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderTachoAlgorithmFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderSplashForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderSplashForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderPhaseAlgorithmFrame.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderPhaseAlgorithmFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderCounterAlgorithmFrame.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderCounterAlgorithmFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UI/uRecorderArithmeticAlgorithmFrame.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RecorderArithmeticAlgorithmFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit>
     </Units>
   </ProjectOptions>
@@ -925,7 +1088,7 @@
     <Version Value="11"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="Algs;Core;UI;Mdb;Components/Common;Components/Donut;Components/Editor;Components/FrequencyResponse;Components/ImpactHammer;Components/Lissajous;Components/MeasurementSection;Components/Oscillogram;Components/SignalGenerator;Components/Spectrum;Components/SqlTrend;Components/Standard;Components/ThreeD;Components/Trend;Calibrations;Calibrations/Strains;Device;Device/DAC/Core;Device/DAC/Audio;Device/DAC/Null;Device/DAC/PXIe;Device/OPC;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;Device/Architecture;Device/PXI/MX248/Core;Device/PXI/MX248/Runtime;Device/PXI/MX248/Transport/Windows;Device/PXI/MX248/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;Plugins/LuaCalcPlugin;../SharedUtils;../SharedUtils/math;../SharedUtils/3d/core;../SharedUtils/3d/contracts;../SharedUtils/3d/io;../SharedUtils/3d/interaction;../SharedUtils/3d/motion;../SharedUtils/3d/lcl;../SharedUtils/3d/render/opengl;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
+      <OtherUnitFiles Value="Algs;Core;UI;Mdb;Components/Common;Components/Donut;Components/Editor;Components/FrequencyResponse;Components/ImpactHammer;Components/Lissajous;Components/MeasurementSection;Components/Oscillogram;Components/SignalGenerator;Components/Spectrum;Components/SqlTrend;Components/Standard;Components/ThreeD;Components/Trend;Calibrations;Calibrations/Strains;Device;Device/Modbus;Device/Modbus/Core;Device/Modbus/Runtime;Device/Modbus/UI;Device/DAC/Core;Device/DAC/Component;Device/DAC/Audio;Device/DAC/Null;Device/DAC/PXIe;Device/OPC;Device/MIC140;Device/MIC140/UI;Device/MIC140/utils;Device/mic185;Device/mic185/UI;Device/MCbus;Device/MCbus/UI;Device/Architecture;Device/PXI/MX248/Core;Device/PXI/MX248/Runtime;Device/PXI/MX248/Transport/Windows;Device/PXI/MX248/UI;SDB;SQLdb;SQLdb/SqlTrend;Plugins/SDK;Plugins/LuaCalcPlugin;../SharedUtils;../SharedUtils/math;../SharedUtils/3d/core;../SharedUtils/3d/contracts;../SharedUtils/3d/io;../SharedUtils/3d/interaction;../SharedUtils/3d/motion;../SharedUtils/3d/lcl;../SharedUtils/3d/render/opengl;../Tests/RecorderTests/UITestData;../third_party/fpspreadsheet"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
@@ -979,6 +1142,9 @@
       </Item>
       <Item>
         <Name Value="EInvalidGraphic"/>
+      </Item>
+      <Item>
+        <Name Value="EInvalidOperation"/>
       </Item>
     </Exceptions>
   </Debugging>

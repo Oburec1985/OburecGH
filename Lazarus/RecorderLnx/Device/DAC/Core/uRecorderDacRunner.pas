@@ -23,6 +23,7 @@ type
   TRecorderDacRunner = class(TThread)
   private
     fSession: TRecorderDacSession;
+    fConfig: TRecorderDacConfig;
     fResultLock: TRTLCriticalSection;
     fLastResult: TRecorderDacResult;
     fStarted: Boolean;
@@ -32,7 +33,8 @@ type
   protected
     procedure Execute; override;
   public
-    constructor Create(ASession: TRecorderDacSession);
+    constructor Create(ASession: TRecorderDacSession;
+      const AConfig: TRecorderDacConfig);
     destructor Destroy; override;
     procedure StartRun;
     procedure RequestStop;
@@ -41,16 +43,17 @@ type
 
 implementation
 
-constructor TRecorderDacRunner.Create(ASession: TRecorderDacSession);
+constructor TRecorderDacRunner.Create(ASession: TRecorderDacSession;
+  const AConfig: TRecorderDacConfig);
 begin
   inherited Create(True);
   FreeOnTerminate := False;
   fSession := ASession;
+  fConfig := AConfig;
   InitCriticalSection(fResultLock);
   fLastResult := RecorderDacOk;
   fMirrorWake := TEvent.Create(nil, False, False, '');
-  fMirrorPublisher := TRecorderDacMirrorPublisher.Create(fSession, fMirrorWake);
-  fMirrorPublisher.Start;
+  fMirrorPublisher := nil;
 end;
 
 destructor TRecorderDacRunner.Destroy;
@@ -60,10 +63,13 @@ begin
     RequestStop;
     WaitFor;
   end;
-  fMirrorPublisher.Terminate;
-  fMirrorWake.SetEvent;
-  fMirrorPublisher.WaitFor;
-  fMirrorPublisher.Free;
+  if fMirrorPublisher <> nil then
+  begin
+    fMirrorPublisher.Terminate;
+    fMirrorWake.SetEvent;
+    fMirrorPublisher.WaitFor;
+    fMirrorPublisher.Free;
+  end;
   fMirrorWake.Free;
   DoneCriticalSection(fResultLock);
   inherited Destroy;
@@ -85,6 +91,15 @@ var
   lFailed: Boolean;
   lResult: TRecorderDacResult;
 begin
+  if not fSession.Configure(fConfig, lResult) then
+  begin
+    StoreResult(lResult);
+    Exit;
+  end;
+  if Terminated then
+    Exit;
+  fMirrorPublisher := TRecorderDacMirrorPublisher.Create(fSession, fMirrorWake);
+  fMirrorPublisher.Start;
   if not fSession.Start(lResult) then
   begin
     StoreResult(lResult);
@@ -116,7 +131,8 @@ end;
 procedure TRecorderDacRunner.RequestStop;
 begin
   Terminate;
-  fSession.Abort;
+  if fSession.State = rdsRunning then
+    fSession.Abort;
   fMirrorWake.SetEvent;
 end;
 

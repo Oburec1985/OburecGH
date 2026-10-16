@@ -1,0 +1,322 @@
+object OscView: TOscView
+  Left = 0
+  Height = 420
+  Top = 0
+  Width = 640
+  Color = clWhite
+  ParentBackground = False
+  ParentColor = False
+  TabOrder = 0
+  object fToolBar: TToolBar
+    Left = 0
+    Height = 22
+    Top = 0
+    Width = 640
+    Align = alTop
+    AutoSize = True
+    EdgeBorders = []
+    Images = fToolImages
+    ParentBiDiMode = False
+    BiDiMode = bdLeftToRight
+    OnPaintButton = PaintToolButton
+    ShowCaptions = False
+    object fLevelButton: TToolButton
+      Left = 0
+      Top = 0
+      Hint = 'Курсор уровня'
+      Style = tbsCheck
+      ShowHint = True
+      OnClick = ToolButtonClick
+    end
+    object fAutoRangeButton: TToolButton
+      Left = 23
+      Top = 0
+      Hint = 'Автодиапазон всех осей'
+      Style = tbsCheck
+      ShowHint = True
+      OnClick = ToolButtonClick
+    end
+    object fXCursorButton: TToolButton
+      Left = 46
+      Top = 0
+      Hint = 'Курсор X (режим — правой кнопкой)'
+      Style = tbsCheck
+      ShowHint = True
+      PopupMenu = fXCursorMenu
+      OnClick = ToolButtonClick
+    end
+    object fLegendButton: TToolButton
+      Left = 69
+      Top = 0
+      Hint = 'Показать/скрыть легенду'
+      Style = tbsCheck
+      Down = True
+      ShowHint = True
+      OnClick = ToolButtonClick
+    end
+  end
+  object fLegendSplitter: TOscLegendSplitter
+    Left = 0
+    Height = 5
+    Top = 349
+    Width = 640
+    Align = alBottom
+    AutoSnap = False
+    Cursor = crVSplit
+    MinSize = 64
+    OnDragStarted = LegendSplitterDragStarted
+    OnMoved = LegendSplitterMoved
+  end
+  object fLegendHostPanel: TPanel
+    Left = 0
+    Height = 66
+    Top = 354
+    Width = 640
+    Align = alBottom
+    BevelOuter = bvNone
+    Constraints.MinHeight = 44
+    TabOrder = 3
+    object fLegendPanel: TScrollBox
+      Left = 0
+      Height = 66
+      Top = 0
+      Width = 640
+      Align = alClient
+      AutoScroll = True
+      OnResize = LegendPanelResize
+      TabOrder = 0
+      object fLegendGrid: TStringGrid
+        Left = 0
+        Height = 62
+        Top = 0
+        Width = 636
+        Align = alClient
+        ColCount = 7
+        FixedCols = 0
+        RowCount = 2
+        DefaultRowHeight = 22
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing]
+        OnMouseDown = LegendGridMouseDown
+        OnMouseUp = LegendGridMouseUp
+        OnPrepareCanvas = LegendPrepareCanvas
+        OnDrawCell = LegendDrawCell
+        TabOrder = 0
+      end
+    end
+  end
+  object fInfoPanel: TPanel
+    Left = 4
+    Height = 18
+    Top = 22
+    Width = 632
+    Align = alTop
+    BorderSpacing.Left = 4
+    BorderSpacing.Right = 4
+    BevelOuter = bvNone
+    ParentBackground = True
+    TabOrder = 0
+    Visible = False
+  end
+  object fControlPanel: TScrollBox
+    Left = 458
+    Height = 420
+    Top = 0
+    Width = 182
+    Align = alRight
+    AutoScroll = True
+    Color = clBtnFace
+    ParentColor = False
+    TabOrder = 2
+    object XScaleLabel: TLabel
+      Left = 8
+      Height = 17
+      Top = 8
+      Width = 150
+      Caption = 'Развертка X, с'
+    end
+    object fXScaleEdit: TEdit
+      OnEditingDone = ControlValueEdited
+      Left = 8
+      Height = 23
+      Top = 27
+      Width = 105
+    end
+    object fXScaleSpin: TUpDown
+      OnClick = ScaleSpinClick
+      Left = 113
+      Height = 23
+      Top = 27
+      Width = 25
+    end
+    object YScaleLabel: TLabel
+      Left = 8
+      Height = 17
+      Top = 57
+      Width = 150
+      Caption = 'Масштаб Y'
+    end
+    object fYScaleEdit: TEdit
+      OnEditingDone = ControlValueEdited
+      Left = 8
+      Height = 23
+      Top = 76
+      Width = 105
+    end
+    object fYScaleSpin: TUpDown
+      OnClick = ScaleSpinClick
+      Left = 113
+      Height = 23
+      Top = 76
+      Width = 25
+    end
+    object OffsetLabel: TLabel
+      Left = 8
+      Height = 17
+      Top = 106
+      Width = 150
+      Caption = 'Смещение Y'
+    end
+    object fOffsetEdit: TEdit
+      OnEditingDone = ControlValueEdited
+      Left = 8
+      Height = 23
+      Top = 125
+      Width = 105
+    end
+    object fTriggerCheck: TCheckBox
+      OnChange = TriggerChanged
+      Left = 8
+      Height = 23
+      Top = 155
+      Width = 70
+      Caption = 'Триггер'
+    end
+    object fTriggerFallingCheck: TCheckBox
+      OnChange = TriggerEdgeChanged
+      Left = 78
+      Height = 23
+      Top = 153
+      Width = 86
+      Caption = 'Спад ↓'
+    end
+    object LevelLabel: TLabel
+      Left = 8
+      Height = 17
+      Top = 184
+      Width = 150
+      Caption = 'Уровень'
+    end
+    object fLevelEdit: TEdit
+      OnEditingDone = ControlValueEdited
+      Left = 8
+      Height = 23
+      Top = 203
+      Width = 105
+    end
+    object fLevelCursorCheck: TCheckBox
+      OnChange = TriggerChanged
+      Left = 8
+      Height = 23
+      Top = 233
+      Width = 136
+      Caption = 'Курсор уровня'
+      Visible = False
+    end
+    object fClosedInputCheck: TCheckBox
+      OnChange = ClosedInputChanged
+      Left = 8
+      Height = 23
+      Top = 233
+      Width = 136
+      Caption = 'Закрытый вход'
+    end
+    object PreRollLabel: TLabel
+      Left = 8
+      Height = 17
+      Top = 263
+      Width = 165
+      Caption = 'До триггера, % окна'
+    end
+    object fPreRollEdit: TEdit
+      OnEditingDone = ControlValueEdited
+      Left = 8
+      Height = 23
+      Top = 282
+      Width = 105
+    end
+    object fSignalSplitter: TSplitter
+      Left = 0
+      Height = 5
+      Top = 265
+      Width = 178
+      Align = alBottom
+      Cursor = crVSplit
+    end
+    object fSignalPanel: TPanel
+      Left = 0
+      Height = 150
+      Top = 270
+      Width = 178
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 7
+      object fSignalLabel: TLabel
+        Left = 8
+        Height = 17
+        Top = 2
+        Width = 170
+        Align = alTop
+        BorderSpacing.Left = 8
+        BorderSpacing.Top = 2
+        BorderSpacing.Bottom = 2
+        Caption = 'Активный сигнал'
+      end
+      object fSignalGrid: TStringGrid
+        OnSelectCell = SignalGridSelectCell
+        Left = 0
+        Height = 129
+        Top = 21
+        Width = 178
+        Align = alClient
+        ColCount = 2
+        FixedCols = 0
+        RowCount = 2
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect]
+        TabOrder = 0
+      end
+    end
+  end
+  object fChart: TOglChart
+    Left = 0
+    Height = 420
+    Top = 0
+    Width = 640
+    Align = alClient
+    AutoResizeViewport = True
+  end
+  object fToolImages: TImageList
+    Bitmap = {
+      4C7A040000001000000010000000640000000000000078DAFBCFF07F148E70D8
+      C0C0F09F1C3C1A72A37030A43F72D2E240EAA7D4FD94E887A925A41F5B1EC7A5
+      079D8D8B4F483F3E7F10720B396148CDF81F2D3F898BB751FDA3FA69AD7F28D7
+      0DD4D03F5AFF0FCD3826C5DFA3FE1F5CEE1FAAF53F00C7ACA80C
+    }
+  end
+  object fXCursorMenu: TPopupMenu
+    object CursorSingle: TMenuItem
+      Caption = 'Один курсор X'
+      Tag = 1
+      RadioItem = True
+      GroupIndex = 1
+      Checked = True
+      OnClick = XCursorModeClick
+    end
+    object CursorDouble: TMenuItem
+      Caption = 'Два курсора X'
+      Tag = 2
+      RadioItem = True
+      GroupIndex = 1
+      OnClick = XCursorModeClick
+    end
+  end
+end

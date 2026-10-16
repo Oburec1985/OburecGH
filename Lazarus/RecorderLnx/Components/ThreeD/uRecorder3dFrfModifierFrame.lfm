@@ -1,0 +1,12 @@
+object Recorder3dFrfModifierFrame: TRecorder3dFrfModifierFrame
+  Height = 240
+  Width = 400
+  object fGrid: TStringGrid
+    Align = alClient
+    ColCount = 6
+    RowCount = 2
+    FixedCols = 0
+    FixedRows = 1
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect]
+  end
+end

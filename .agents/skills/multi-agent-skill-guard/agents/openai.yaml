@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multi-agent Skill Guard"
+  short_description: "Audit skill compliance with a separate agent"
+  default_prompt: "Use a separate read-only agent to audit compliance with all applicable skills."

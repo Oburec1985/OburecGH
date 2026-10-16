@@ -18,13 +18,9 @@ type
 
   T3dCamera = record
     Target: T3dVector;
-    { Canonical runtime orientation. Euler fields below are retained only for
-      loading legacy settings and initializing this pose. }
+    { Camera orientation is a world-space orthonormal basis. It is the only
+      runtime source of camera orientation. }
     Forward, Right, Up: T3dVector;
-    PoseValid: Boolean;
-    YawDegrees: Single;
-    PitchDegrees: Single;
-    RollDegrees: Single;
     Distance: Single;
     VerticalFovDegrees: Single;
     NearPlane: Single;

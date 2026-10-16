@@ -58,12 +58,12 @@
 
     <!-- Pointed needles reach the inner edge of the coloured scale.  Their
          white fill retains the original outlined-arrow appearance. -->
-    <g transform="rotate(recorder-value-angle({{LeftValue|2.8}},{{LeftScaleMin|0}},{{LeftScaleMax|6}},-180,0) 350 235)">
+    <g transform="rotate(recorder-scale-angle({{LeftValue|2.8}},{{LeftScaleMin|0}},{{LeftScaleMax|6}},{{LeftGreenStart|-180}},{{LeftAlarmStart|-30}},{{LeftAlarmSweep|30}},0) 350 235)">
       <path d="M344 235 L350 43 L356 235 Z"
             fill="#ffffff" stroke="{{LeftNeedleColor|#174cff}}"
             stroke-width="2" stroke-linejoin="miter"/>
     </g>
-    <g transform="rotate(recorder-value-angle({{RightValue|1.4}},{{RightScaleMin|0}},{{RightScaleMax|3}},180,0) 350 235)">
+    <g transform="rotate(recorder-scale-angle({{RightValue|1.4}},{{RightScaleMin|0}},{{RightScaleMax|3}},{{RightGreenStart|0}},{{RightAlarmStart|150}},{{RightAlarmSweep|30}},1) 350 235)">
       <path d="M344 235 L350 43 L356 235 Z"
             fill="#ffffff" stroke="{{RightNeedleColor|#174cff}}"
             stroke-width="2" stroke-linejoin="miter"/>

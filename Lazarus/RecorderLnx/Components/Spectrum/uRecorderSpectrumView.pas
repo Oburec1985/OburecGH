@@ -271,6 +271,8 @@ end;
 
 procedure TRecorderSpectrumView.LegendPrepareCanvas(Sender: TObject; ACol,
   ARow: Integer; AState: TGridDrawState);
+var
+  lSeries: cBuffTrend1d;
 begin
   if not (Sender is TStringGrid) then
     Exit;
@@ -281,7 +283,13 @@ begin
   end
   else
   begin
-    TStringGrid(Sender).Canvas.Font.Color := GetSpectrumColor(ARow - 1);
+    lSeries := nil;
+    if (ARow > 0) and (ARow <= fSeriesList.Count) then
+      lSeries := cBuffTrend1d(fSeriesList[ARow - 1]);
+    if lSeries <> nil then
+      TStringGrid(Sender).Canvas.Font.Color := TColor(lSeries.Color and $00FFFFFF)
+    else
+      TStringGrid(Sender).Canvas.Font.Color := GetSpectrumColor(ARow - 1);
     TStringGrid(Sender).Canvas.Font.Style := [];
   end;
 end;
@@ -308,9 +316,11 @@ var
   I: Integer;
   lPairSeries: cBuffTrend1d;
   lBaseName: string;
+  lAxis: TChartAxis;
 begin
-  if (ASeries = nil) or (fAxisY = nil) or (ASeries.Parent <> fAxisY) then
+  if (ASeries = nil) or not (ASeries.Parent is TChartAxis) then
     Exit;
+  lAxis := TChartAxis(ASeries.Parent);
 
   { Порядок fSeriesList остаётся логическим порядком каналов и легенды.
     Меняем только порядок дочерних объектов оси, по которому рендерер рисует линии. }
@@ -330,9 +340,9 @@ begin
 
   { В Re/Im-режиме сначала поднимаем вторую линию пары, затем именно
     выбранную: обе оказываются выше остальных каналов, а активная линия рисуется последней. }
-  if (lPairSeries <> nil) and (lPairSeries.Parent = fAxisY) then
-    fAxisY.MoveChildToEnd(lPairSeries);
-  fAxisY.MoveChildToEnd(ASeries);
+  if (lPairSeries <> nil) and (lPairSeries.Parent = lAxis) then
+    lAxis.MoveChildToEnd(lPairSeries);
+  lAxis.MoveChildToEnd(ASeries);
 end;
 
 function TRecorderSpectrumView.GetSpectrumColor(AIndex: Integer): TColor;
@@ -488,7 +498,10 @@ begin
   if not lFlag.Visible then
     Exit;
   lFlag.Trend := ASeries;
-  lFlag.Axis := fAxisY;
+  if ASeries.Parent is TChartAxis then
+    lFlag.Axis := TChartAxis(ASeries.Parent)
+  else
+    lFlag.Axis := fAxisY;
   lFlag.AnchorX := lFrame.MaxFrequencyHz;
   lFlag.WorldX := lFrame.MaxFrequencyHz;
   lFlag.WorldY := lFrame.MaxRms;
@@ -635,6 +648,8 @@ var
   I, J: Integer;
   lSeries: cBuffTrend1d;
   lFlag: TChartFlagLabel;
+  lAxis: TChartAxis;
+  lAxes: array of TChartAxis;
   lPageArea: TChartFloatRect;
   lFrame: TRecorderSpectrumFrame;
 begin
@@ -738,6 +753,7 @@ begin
   fPage.ResetZoomOnDoubleClick := True;
   fPage.ReverseDragZoomOut := True;
   fPage.PreserveAutoFitZoomY := True;
+  fPage.SelectedYAxisOnly := True;
   if fComponent.LgX then
     fPage.XScale := casLog10
   else
@@ -745,23 +761,40 @@ begin
   fModel.AddChild(fPage);
   fModel.AlignPagesAuto;
 
-  fAxisY := TChartAxis.Create;
-  fAxisY.Name := 'Amplitude';
-  fAxisY.MinValue := fComponent.RangeMinY;
-  fAxisY.MaxValue := fComponent.RangeMaxY;
-  fAxisY.PresetMinValue := fComponent.RangeMinY;
-  fAxisY.PresetMaxValue := fComponent.RangeMaxY;
-  fAxisY.HasPresetRange := True;
-  fAxisY.Color := $FF404040;
-  if fComponent.LgY then
-    fAxisY.Scale := casLog10
-  else
-    fAxisY.Scale := casLinear;
-  fPage.AddChild(fAxisY);
+  SetLength(lAxes, Max(1, fComponent.AxisCount));
+  for J := 0 to High(lAxes) do
+  begin
+    lAxis := TChartAxis.Create;
+    if J < fComponent.AxisCount then
+    begin
+      lAxis.Name := fComponent.Axes[J].Name;
+      lAxis.MinValue := fComponent.Axes[J].RangeMin;
+      lAxis.MaxValue := fComponent.Axes[J].RangeMax;
+    end
+    else
+    begin
+      lAxis.Name := 'Y1';
+      lAxis.MinValue := fComponent.RangeMinY;
+      lAxis.MaxValue := fComponent.RangeMaxY;
+    end;
+    lAxis.PresetMinValue := lAxis.MinValue;
+    lAxis.PresetMaxValue := lAxis.MaxValue;
+    lAxis.HasPresetRange := True;
+    lAxis.Color := OglChartLinePaletteGLColor(J);
+    if fComponent.LgY then
+      lAxis.Scale := casLog10
+    else
+      lAxis.Scale := casLinear;
+    fPage.AddChild(lAxis);
+    lAxes[J] := lAxis;
+  end;
+  fAxisY := lAxes[0];
 
   RecorderSyncSpectrumComponentTagNames(fTagRegistry, fComponent);
   for I := 0 to fComponent.TagNames.Count - 1 do
   begin
+    J := Max(0, Min(fComponent.TagAxisIndexAt(I), High(lAxes)));
+    lAxis := lAxes[J];
     lSeries := cBuffTrend1d.Create;
     lSeries.Name := fComponent.TagNames[I] + '#primary';
     if fComponent.ResultType = 2 then
@@ -775,7 +808,7 @@ begin
     else
       lSeries.Color := OglChartLinePaletteGLColor(I);
     lSeries.Visible := True;
-    fAxisY.AddChild(lSeries);
+    lAxis.AddChild(lSeries);
     fSeriesList.Add(lSeries);
     lFlag := TChartFlagLabel.Create;
     lFlag.Name := Format('MaxFlag%d', [I]);
@@ -784,8 +817,8 @@ begin
     lFlag.Width := 160;
     lFlag.Height := 40;
     lFlag.Trend := lSeries;
-    lFlag.Axis := fAxisY;
-    fAxisY.AddChild(lFlag);
+    lFlag.Axis := lAxis;
+    lAxis.AddChild(lFlag);
     fMaxFlags.Add(lFlag);
     if fComponent.ResultType = 2 then
     begin
@@ -796,17 +829,24 @@ begin
       lSeries.DX := 1.0;
       lSeries.Color := OglChartLinePaletteGLColor(I * 2 + 1);
       lSeries.Visible := True;
-      fAxisY.AddChild(lSeries);
+      lAxis.AddChild(lSeries);
       fSeriesList.Add(lSeries);
       lFlag := TChartFlagLabel.Create;
       lFlag.Name := Format('MaxFlagIm%d', [I]);
       lFlag.Visible := False;
       lFlag.Trend := lSeries;
-      lFlag.Axis := fAxisY;
-      fAxisY.AddChild(lFlag);
+      lFlag.Axis := lAxis;
+      lAxis.AddChild(lFlag);
       fMaxFlags.Add(lFlag);
     end;
   end;
+
+  { Start navigation on the first configured signal's axis so the first
+    pan/zoom gesture cannot accidentally change every Y axis. }
+  if fSeriesList.Count > 0 then
+    fChart.SelectedObject := cBuffTrend1d(fSeriesList[0])
+  else
+    fChart.SelectedObject := lAxes[0];
 
   if fToken = 0 then
     if (fTagRegistry <> nil) and (fTagRegistry.EventBus <> nil) then
@@ -958,6 +998,7 @@ var
   lWorldX, lY, lPixelY: Double;
   I: Integer;
   lSeries: cBuffTrend1d;
+  lSeriesAxis: TChartAxis;
   lDist, lBestDist: Double;
 begin
   Result := '';
@@ -976,9 +1017,12 @@ begin
   for I := 0 to fSeriesList.Count - 1 do
   begin
     lSeries := cBuffTrend1d(fSeriesList[I]);
+    if not (lSeries.Parent is TChartAxis) then
+      Continue;
+    lSeriesAxis := TChartAxis(lSeries.Parent);
     if SeriesValueAtX(lSeries, lWorldX, lY) then
     begin
-      lPixelY := lRenderer.AxisValueToPixel(fAxisY, lY,
+      lPixelY := lRenderer.AxisValueToPixel(lSeriesAxis, lY,
         lContentRect.Bottom, lContentRect.Top);
       lDist := Abs(AY - lPixelY);
       if lDist < lBestDist then

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Channel picker search"
+  short_description: "Substring search in every channel and tag picker"
+  default_prompt: "Review or implement a channel picker with mandatory substring search."

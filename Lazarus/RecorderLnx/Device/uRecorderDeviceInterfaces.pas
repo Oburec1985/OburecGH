@@ -77,10 +77,10 @@ type
   );
 
   {
-    Устаревшее имя блока отсчётов. Используйте TRecorderAcquisitionBlock.
+    Устаревшее имя блока отсчётов. Используйте TRcAcquisitionBlock.
     Поля Temperature* удалены — TIn это каналы устройства, не часть Core.
   }
-  TRecorderDeviceSampleBlock = TRecorderAcquisitionBlock;
+  TRecorderDeviceSampleBlock = TRcAcquisitionBlock;
 
   // OnStart/OnStop при необходимости вынести в отдельный интерфейс.
   IRecorderDevice = interface
@@ -117,7 +117,7 @@ type
     //  Legacy pull-модель чтения блока. Целевой путь — push через sink в драйвере v2.
     //  Вызывать только из потока источника данных, не из GUI.
     function ReadBlock(ATimeoutMs: Cardinal;
-      out ABlock: TRecorderAcquisitionBlock): Boolean;
+      out ABlock: TRcAcquisitionBlock): Boolean;
 
     // Проверка связи по уже открытой сессии (без нового TCP).
     function TestLink(out AErrorText: string): Boolean;
@@ -131,7 +131,7 @@ type
     property State: TRecorderDeviceState read GetState;
   end;
 
-  TRecorderDevice = class(TInterfacedObject, IRecorderDevice)
+  TRcDevice = class(TInterfacedObject, IRecorderDevice)
   protected
     fDeviceId: string;
     fState: TRecorderDeviceState;
@@ -173,7 +173,7 @@ type
     procedure Stop; virtual;
     // прочитать блок данных
     function ReadBlock(ATimeoutMs: Cardinal;
-      out ABlock: TRecorderAcquisitionBlock): Boolean; virtual;
+      out ABlock: TRcAcquisitionBlock): Boolean; virtual;
     // проверка связи
     function TestLink(out AErrorText: string): Boolean; virtual;
     function SupportsDeviceAction(AAction: TRecorderDeviceAction): Boolean; virtual;
@@ -242,7 +242,7 @@ begin
   Result := TryStrToFloat(lText, AValue);
 end;
 
-constructor TRecorderDevice.Create(const ADeviceId, AName: string);
+constructor TRcDevice.Create(const ADeviceId, AName: string);
 begin
   inherited Create;
   fDeviceId := ADeviceId;
@@ -250,46 +250,46 @@ begin
   fState := rdsDisconnected;
 end;
 
-procedure TRecorderDevice.ReadDeviceParameters;
+procedure TRcDevice.ReadDeviceParameters;
 begin
 end;
 
-function TRecorderDevice.BuildChannelName(AIndex: Integer): string;
+function TRcDevice.BuildChannelName(AIndex: Integer): string;
 begin
   Result := Format('AIn%d', [AIndex + 1]);
 end;
 
-function TRecorderDevice.BuildChannelAddress(AIndex: Integer): string;
+function TRcDevice.BuildChannelAddress(AIndex: Integer): string;
 begin
   Result := IntToStr(AIndex + 1);
 end;
 
-procedure TRecorderDevice.SetFs(fs: Double);
+procedure TRcDevice.SetFs(fs: Double);
 begin
   fPollFrequencyHz := fs;
 end;
 
-function TRecorderDevice.GetDeviceId: string;
+function TRcDevice.GetDeviceId: string;
 begin
   Result := fDeviceId;
 end;
 
-function TRecorderDevice.GetName: string;
+function TRcDevice.GetName: string;
 begin
   Result := fName;
 end;
 
-function TRecorderDevice.GetState: TRecorderDeviceState;
+function TRcDevice.GetState: TRecorderDeviceState;
 begin
   Result := fState;
 end;
 
-function TRecorderDevice.GetNativeObject: TObject;
+function TRcDevice.GetNativeObject: TObject;
 begin
   Result := Self;
 end;
 
-function TRecorderDevice.GetChannels: TRecorderDeviceChannelArray;
+function TRcDevice.GetChannels: TRecorderDeviceChannelArray;
 var
   I: Integer;
 begin
@@ -306,7 +306,7 @@ begin
   end;
 end;
 
-function TRecorderDevice.GetDeviceProperty(AProperty: TRecorderDeviceProperty;
+function TRcDevice.GetDeviceProperty(AProperty: TRecorderDeviceProperty;
   AIndex: Integer): Variant;
 begin
   case AProperty of
@@ -324,7 +324,7 @@ begin
   end;
 end;
 
-function TRecorderDevice.TrySetDeviceProperty(
+function TRcDevice.TrySetDeviceProperty(
   AProperty: TRecorderDeviceProperty; const AValue: Variant;
   AIndex: Integer): Boolean;
 begin
@@ -341,7 +341,7 @@ begin
   end;
 end;
 
-function TRecorderDevice.GetProp(const AName: string; AIndex: Integer): string;
+function TRcDevice.GetProp(const AName: string; AIndex: Integer): string;
 var
   lName: string;
 begin
@@ -363,7 +363,7 @@ begin
     Result := '';
 end;
 
-function TRecorderDevice.SetProp(const AText: string; AIndex: Integer): Boolean;
+function TRcDevice.SetProp(const AText: string; AIndex: Integer): Boolean;
 var
   lFloat: Double;
   lInt: Integer;
@@ -390,55 +390,55 @@ begin
     Result := TrySetDeviceProperty(rdpChannelCount, lInt, AIndex) or Result;
 end;
 
-procedure TRecorderDevice.Connect;
+procedure TRcDevice.Connect;
 begin
   ReadDeviceParameters;
   fState := rdsConnected;
 end;
 
-procedure TRecorderDevice.Disconnect;
+procedure TRcDevice.Disconnect;
 begin
   fState := rdsDisconnected;
 end;
 
-procedure TRecorderDevice.ProgramDevice;
+procedure TRcDevice.ProgramDevice;
 begin
   InitializeDevice;
   ConfigureDevice;
 end;
 
-procedure TRecorderDevice.InitializeDevice;
+procedure TRcDevice.InitializeDevice;
 begin
   if fState = rdsDisconnected then
     Connect;
 end;
 
-procedure TRecorderDevice.ConfigureDevice;
+procedure TRcDevice.ConfigureDevice;
 begin
   if fState = rdsDisconnected then
     Connect;
   fState := rdsProgrammed;
 end;
 
-procedure TRecorderDevice.Start;
+procedure TRcDevice.Start;
 begin
   fState := rdsStarted;
 end;
 
-procedure TRecorderDevice.Stop;
+procedure TRcDevice.Stop;
 begin
   if fState = rdsStarted then
     fState := rdsProgrammed;
 end;
 
-function TRecorderDevice.ReadBlock(ATimeoutMs: Cardinal;
-  out ABlock: TRecorderAcquisitionBlock): Boolean;
+function TRcDevice.ReadBlock(ATimeoutMs: Cardinal;
+  out ABlock: TRcAcquisitionBlock): Boolean;
 begin
-  ABlock := Default(TRecorderAcquisitionBlock);
+  ABlock := Default(TRcAcquisitionBlock);
   Result := False;
 end;
 
-function TRecorderDevice.TestLink(out AErrorText: string): Boolean;
+function TRcDevice.TestLink(out AErrorText: string): Boolean;
 begin
   AErrorText := '';
   Result := fState <> rdsDisconnected;
@@ -446,13 +446,13 @@ begin
     AErrorText := 'Device is not connected';
 end;
 
-function TRecorderDevice.SupportsDeviceAction(
+function TRcDevice.SupportsDeviceAction(
   AAction: TRecorderDeviceAction): Boolean;
 begin
   Result := False;
 end;
 
-function TRecorderDevice.ExecuteDeviceAction(AAction: TRecorderDeviceAction;
+function TRcDevice.ExecuteDeviceAction(AAction: TRecorderDeviceAction;
   const AChannelIndices: array of Integer; out AValues: TRecorderDeviceActionValues;
   out AErrorText: string): Boolean;
 begin

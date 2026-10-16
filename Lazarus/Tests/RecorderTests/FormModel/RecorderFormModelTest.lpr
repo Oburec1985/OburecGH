@@ -13,7 +13,7 @@ program RecorderFormModelTest;
 
 uses
   Classes, SysUtils, IniFiles,
-  uRecorderFormModel,
+  uRecorderFormModel, uRecorderRunControlSettings,
   uRecorderProjectFiles, uRecorderTags, uRecorderLissajousMath,
   uRecorder3dModel, uRecorder3dSkinBindingAdapter,
   uRecorderImpactHammerModel, uRecorderSvgParameters,
@@ -21,17 +21,44 @@ uses
   u3dVertexColors;
 
 type
-  TTestPluginOscillographFactory = class(TRecorderComponentFactoryBase)
+  TTestLifecycleComponent = class(TRecorderVisualComponent)
   public
-    constructor Create; reintroduce;
+    StartCount: Integer;
+    StopCount: Integer;
+    UpdateCount: Integer;
+    procedure DoStart; override;
+    procedure DoStop; override;
+    procedure DoUpdateData; override;
   end;
 
 procedure AssertTrue(ACondition: Boolean; const AStep: string); forward;
 
-constructor TTestPluginOscillographFactory.Create;
+procedure TestOscillogramTriggerEdges;
 begin
-  inherited Create('test.oscillograph', 'Test Oscillograph',
-    TRecorderOscillogramComponent, 360, 220, True);
+  AssertTrue(RecorderSignalCrossesTriggerLevel(-1, 0, 0, rseRising),
+    'rising trigger crossing includes threshold endpoint');
+  AssertTrue(not RecorderSignalCrossesTriggerLevel(1, 0, 0, rseRising),
+    'rising trigger ignores falling samples');
+  AssertTrue(RecorderSignalCrossesTriggerLevel(1, 0, 0, rseFalling),
+    'falling trigger crossing includes threshold endpoint');
+  AssertTrue(not RecorderSignalCrossesTriggerLevel(-1, 0, 0, rseFalling),
+    'falling trigger ignores rising samples');
+  Writeln('Oscillogram trigger edge tests passed.');
+end;
+
+procedure TTestLifecycleComponent.DoStart;
+begin
+  Inc(StartCount);
+end;
+
+procedure TTestLifecycleComponent.DoStop;
+begin
+  Inc(StopCount);
+end;
+
+procedure TTestLifecycleComponent.DoUpdateData;
+begin
+  Inc(UpdateCount);
 end;
 
 procedure TestLissajousShiftedTimestamps;
@@ -174,8 +201,8 @@ begin
 
     AssertTrue(lFactory.IsComponentRegistered(TRecorderTagValueComponent.TypeId),
       'tag value component is registered');
-    AssertTrue(lFactory.IsComponentRegistered(TRecorderOscillogramComponent.TypeId),
-      'oscillogram component is registered');
+    AssertTrue(lFactory.IsComponentRegistered('Oscillogram'),
+      'simple oscillogram remains a built-in host component');
     AssertTrue(not lFactory.IsComponentRegistered('UnknownType'),
       'unknown component type is not registered');
 
@@ -183,6 +210,37 @@ begin
   finally
     lFactory.Free;
   end;
+end;
+
+procedure TestComponentLifecycleDispatch;
+var
+  lRegistry: TRecorderComponentFactory;
+  lFactory: TRecorderComponentFactoryBase;
+  lFirst: TTestLifecycleComponent;
+  lSecond: TTestLifecycleComponent;
+begin
+  lRegistry := TRecorderComponentFactory.Create;
+  try
+    lFactory := TRecorderComponentFactoryBase.Create('test.lifecycle',
+      'Lifecycle test', TTestLifecycleComponent, 10, 10, False);
+    lRegistry.RegisterFactory(lFactory);
+    lFirst := TTestLifecycleComponent(lFactory.CreateComponent);
+    lSecond := TTestLifecycleComponent(lFactory.CreateComponent);
+
+    lRegistry.DoStart;
+    lRegistry.DoUpdateData;
+    lRegistry.DoStop;
+
+    AssertEquals(lFirst.StartCount, 1, 'first component start dispatch');
+    AssertEquals(lFirst.UpdateCount, 1, 'first component update dispatch');
+    AssertEquals(lFirst.StopCount, 1, 'first component stop dispatch');
+    AssertEquals(lSecond.StartCount, 1, 'second component start dispatch');
+    AssertEquals(lSecond.UpdateCount, 1, 'second component update dispatch');
+    AssertEquals(lSecond.StopCount, 1, 'second component stop dispatch');
+  finally
+    lRegistry.Free;
+  end;
+  Writeln('Component lifecycle dispatch test passed.');
 end;
 
 procedure TestFormPages;
@@ -296,134 +354,236 @@ begin
   end;
 end;
 
-procedure TestGuiConfigSavesOscillogramBinding;
+procedure TestLegacyPluginSectionRemainsOpaque;
+var
+  lFactory: TRecorderComponentFactory;
+  lLoaded, lReloaded: TRecorderFormManager;
+  lIni: TIniFile;
+  lFileName, lSecondFileName: string;
+  lComponent: TRecorderPluginVisualComponent;
+  lExpected: TRecorderPluginConfigBytes;
+begin
+  { Domain parsing is tested against the production DLL in
+    OscillogramRuntimeSmoke. This host test proves lossless transport only. }
+  lFileName := GetTempDir(False) + 'RecorderLegacyOpaque.gui.ini';
+  lSecondFileName := GetTempDir(False) + 'RecorderLegacyOpaqueReload.gui.ini';
+  lFactory := TRecorderComponentFactory.Create;
+  lLoaded := TRecorderFormManager.Create;
+  lReloaded := TRecorderFormManager.Create;
+  try
+    lFactory.RegisterDefaultComponents;
+    lIni := TIniFile.Create(lFileName);
+    try
+      lIni.WriteInteger('Project', 'PageCount', 1);
+      lIni.WriteString('Page.0', 'Name', 'Legacy');
+      lIni.WriteInteger('Page.0', 'ComponentCount', 2);
+      lIni.WriteString('Page.0.Component.0', 'Type', 'Oscillogram');
+      lIni.WriteString('Page.0.Component.0', 'TagName', 'AbsTag');
+      lIni.WriteInteger('Page.0.Component.0', 'BindingMode', Ord(rtbmAbsoluteTag));
+      lIni.WriteInteger('Page.0.Component.0', 'TagOffset', 3);
+      lIni.WriteInteger('Page.0.Component.0', 'OscLineCount', 1);
+      lIni.WriteString('Page.0.Component.0', 'OscLine0TagName', 'OtherTag');
+      lIni.WriteString('Page.0.Component.0', 'OscXScale', '0.5');
+      lIni.WriteString('Page.0.Component.1', 'Type', 'sample.oscillogram');
+      lIni.WriteString('Page.0.Component.1', 'FuturePluginKey', 'must survive');
+    finally lIni.Free; end;
+    LoadRecorderGuiConfig(lFileName, lLoaded, lFactory);
+    AssertEquals(lLoaded.PageCount, 1, 'opaque legacy page count');
+    AssertEquals(lLoaded.Pages[0].ComponentCount, 2, 'legacy component count');
+    AssertTrue(lLoaded.Pages[0].Components[0] is TRecorderOscillogramComponent,
+      'simple oscillogram remains built-in');
+    AssertEquals(TRecorderOscillogramComponent(lLoaded.Pages[0].Components[0]).TagOffset,
+      3, 'simple tag offset');
+    AssertEquals(TRecorderOscillogramComponent(lLoaded.Pages[0].Components[0]).LineCount,
+      1, 'simple line count');
+    AssertTrue(lLoaded.Pages[0].Components[1] is TRecorderPluginVisualComponent,
+      'legacy plugin becomes generic placeholder');
+    lComponent := TRecorderPluginVisualComponent(lLoaded.Pages[0].Components[1]);
+    AssertTrue(lComponent.Factory = nil, 'missing plugin has no factory');
+    lExpected := lComponent.ConfigBlob;
+    AssertTrue(Length(lExpected) > 0, 'legacy section retained');
+    SaveRecorderGuiConfig(lSecondFileName, lLoaded);
+    LoadRecorderGuiConfig(lSecondFileName, lReloaded, lFactory);
+    AssertEquals(TRecorderOscillogramComponent(lReloaded.Pages[0].Components[0]).TagOffset,
+      3, 'simple binding reload');
+    AssertEquals(TRecorderOscillogramComponent(lReloaded.Pages[0].Components[0]).Lines[0].TagName,
+      'OtherTag', 'simple line reload');
+    lComponent := TRecorderPluginVisualComponent(lReloaded.Pages[0].Components[1]);
+    AssertTrue((Length(lComponent.ConfigBlob) = Length(lExpected)) and
+      CompareMem(@lComponent.ConfigBlob[0], @lExpected[0], Length(lExpected)),
+      'complete unknown legacy section survives opaque reload');
+    Writeln('Legacy plugin section opaque transport passed.');
+  finally
+    lReloaded.Free; lLoaded.Free; lFactory.Free;
+    DeleteFile(lFileName); DeleteFile(lSecondFileName);
+  end;
+end;
+
+procedure TestUnknownPluginVisualStateRoundTrip;
+var
+  lFactory: TRecorderComponentFactory;
+  lFileName, lSecondFileName: string;
+  lIni: TIniFile;
+  lLoaded, lSecondLoaded, lManager: TRecorderFormManager;
+  lPage: TRecorderFormPage;
+  lSource, lRestored: TRecorderPluginVisualComponent;
+  lExpected, lActual: TRecorderPluginConfigBytes;
+  lOpaqueText: RawByteString;
+begin
+  lFileName := IncludeTrailingPathDelimiter(GetTempDir(False)) +
+    'RecorderUnknownPluginVisual.gui.ini';
+  lSecondFileName := IncludeTrailingPathDelimiter(GetTempDir(False)) +
+    'RecorderUnknownPluginVisual2.gui.ini';
+  if FileExists(lFileName) then DeleteFile(lFileName);
+  if FileExists(lSecondFileName) then DeleteFile(lSecondFileName);
+  lFactory := TRecorderComponentFactory.Create;
+  lLoaded := TRecorderFormManager.Create;
+  lSecondLoaded := TRecorderFormManager.Create;
+  lManager := TRecorderFormManager.Create;
+  lSource := TRecorderPluginVisualComponent.Create;
+  try
+    lFactory.RegisterDefaultComponents;
+    lPage := TRecorderFormPage.Create('PluginPage', 'PluginPage', 'Plugin');
+    lManager.AddPage(lPage);
+    lSource.PluginTypeId := 'org.example.unavailable-view';
+    lSource.ConfigSchemaId := 'org.example.unavailable-view.config';
+    lSource.ConfigSchemaVersion := 9;
+    lSource.Id := 'plugin-instance-1';
+    lSource.Name := 'Unavailable component';
+    lSource.TagId := 4242;
+    lSource.TagName := 'pressure';
+    lSource.SetBounds(11, 22, 333, 144);
+    SetLength(lExpected, 5);
+    lExpected[0] := 0;
+    lExpected[1] := 1;
+    lExpected[2] := 127;
+    lExpected[3] := 128;
+    lExpected[4] := 255;
+    lSource.ConfigBlob := lExpected;
+    lPage.AddComponent(lSource);
+    lSource := nil;
+
+    SaveRecorderGuiConfig(lFileName, lManager);
+    LoadRecorderGuiConfig(lFileName, lLoaded, lFactory);
+    lRestored := TRecorderPluginVisualComponent(lLoaded.Pages[0].Components[0]);
+    lActual := lRestored.ConfigBlob;
+    AssertTrue((Length(lActual) = Length(lExpected)) and
+      (CompareByte(lActual[0], lExpected[0], Length(lExpected)) = 0),
+      'opaque binary plugin payload roundtrip');
+
+    { Simulate an older plugin section without the new opaque-state envelope. }
+    lIni := TIniFile.Create(lFileName);
+    try
+      lIni.WriteString('Page.0.Component.0', 'LegacyPrivateOption', 'a=b; c');
+      lIni.DeleteKey('Page.0.Component.0', 'PluginStateEncoding');
+      lIni.DeleteKey('Page.0.Component.0', 'PluginStateData');
+      lIni.UpdateFile;
+    finally
+      lIni.Free;
+    end;
+
+    LoadRecorderGuiConfig(lFileName, lLoaded, lFactory);
+    AssertEquals(lLoaded.Pages[0].ComponentCount, 1,
+      'unknown plugin component retained');
+    lRestored := TRecorderPluginVisualComponent(lLoaded.Pages[0].Components[0]);
+    AssertEquals(lRestored.PluginTypeId, 'org.example.unavailable-view',
+      'unknown plugin type id retained');
+    AssertEquals(lRestored.ConfigSchemaId,
+      'org.example.unavailable-view.config', 'unknown plugin schema retained');
+    AssertTrue(lRestored.ConfigSchemaVersion = 9,
+      'unknown plugin schema version retained');
+    AssertTrue((lRestored.TagId = 4242) and (lRestored.Bounds.Width = 333),
+      'unknown plugin common fields retained');
+    lActual := lRestored.ConfigBlob;
+    SetLength(lOpaqueText, Length(lActual));
+    if Length(lActual) > 0 then
+      Move(lActual[0], lOpaqueText[1], Length(lActual));
+    AssertTrue(Pos('LegacyPrivateOption', string(lOpaqueText)) > 0,
+      'unrecognized legacy plugin field captured in opaque payload');
+    AssertTrue(Pos('a=b; c', string(lOpaqueText)) > 0,
+      'legacy plugin field value preserved');
+
+    SaveRecorderGuiConfig(lSecondFileName, lLoaded);
+    LoadRecorderGuiConfig(lSecondFileName, lSecondLoaded, lFactory);
+    lActual := TRecorderPluginVisualComponent(
+      lSecondLoaded.Pages[0].Components[0]).ConfigBlob;
+    AssertTrue((Length(lActual) = Length(lOpaqueText)) and
+      (CompareByte(lActual[0], lOpaqueText[1], Length(lActual)) = 0),
+      'opaque legacy plugin state survives a subsequent save and load');
+    Writeln('GUI config unknown plugin state roundtrip test passed.');
+  finally
+    lSource.Free;
+    lManager.Free;
+    lLoaded.Free;
+    lSecondLoaded.Free;
+    lFactory.Free;
+    if FileExists(lFileName) then DeleteFile(lFileName);
+    if FileExists(lSecondFileName) then DeleteFile(lSecondFileName);
+  end;
+end;
+
+procedure TestSpectrumMultipleAxesRoundTrip;
 var
   lComponentFactory: TRecorderComponentFactory;
   lFileName: string;
   lLoaded: TRecorderFormManager;
-  lLoadedOsc: TRecorderOscillogramComponent;
   lManager: TRecorderFormManager;
-  lOsc: TRecorderOscillogramComponent;
   lPage: TRecorderFormPage;
+  lSpectrum, lLoadedSpectrum: TRecorderSpectrumComponent;
 begin
   lFileName := IncludeTrailingPathDelimiter(GetTempDir(False)) +
-    'RecorderFormModelOscTest.gui.ini';
+    'RecorderFormModelSpectrumAxesTest.gui.ini';
   if FileExists(lFileName) then
     DeleteFile(lFileName);
-
   lComponentFactory := TRecorderComponentFactory.Create;
   lLoaded := TRecorderFormManager.Create;
   lManager := TRecorderFormManager.Create;
   try
     lComponentFactory.RegisterDefaultComponents;
-    lPage := TRecorderFormPage.Create('Page1', 'Page1', 'Mnemonic');
+    lPage := TRecorderFormPage.Create('SpectrumPage', 'SpectrumPage',
+      'Spectrum');
     lManager.AddPage(lPage);
-
-    lOsc := TRecorderOscillogramComponent(
-      lComponentFactory.CreateComponent(TRecorderOscillogramComponent.TypeId));
-    lOsc.Id := 'Page1.osc1';
-    lOsc.Name := 'Osc1';
-    lOsc.TagName := 'AbsTag';
-    lOsc.BindingMode := rtbmAbsoluteTag;
-    lOsc.TagOffset := 3;
-    lOsc.ClosedInput := True;
-    lOsc.AddAxis.Name := 'Y2';
-    lOsc.Axes[1].YScale := 2.5;
-    lOsc.Axes[1].YOffset := 4.0;
-    lOsc.PrimaryAxisIndex := 1;
-    lOsc.AddLine.TagName := 'OtherSourceTag';
-    lOsc.Lines[0].AxisIndex := 1;
-    lOsc.SetBounds(10, 20, 300, 180);
-    lPage.AddComponent(lOsc);
+    lSpectrum := TRecorderSpectrumComponent(
+      lComponentFactory.CreateComponent(TRecorderSpectrumComponent.TypeId));
+    lSpectrum.Id := 'SpectrumPage.Spectrum1';
+    lSpectrum.Name := 'Spectrum1';
+    lSpectrum.TagNames.Add('SignalA');
+    lSpectrum.TagNames.Add('SignalB');
+    lSpectrum.Axes[0].Name := 'Y1';
+    lSpectrum.Axes[0].RangeMin := -5;
+    lSpectrum.Axes[0].RangeMax := 5;
+    lSpectrum.AddAxis.Name := 'Y2';
+    lSpectrum.Axes[1].RangeMin := -100;
+    lSpectrum.Axes[1].RangeMax := 100;
+    lSpectrum.SetTagAxisIndexAt(0, 1);
+    lSpectrum.SetTagAxisIndexAt(1, 0);
+    lPage.AddComponent(lSpectrum);
 
     SaveRecorderGuiConfig(lFileName, lManager);
     LoadRecorderGuiConfig(lFileName, lLoaded, lComponentFactory);
 
-    AssertEquals(lLoaded.PageCount, 1, 'loaded osc page count');
-    AssertEquals(lLoaded.Pages[0].ComponentCount, 1, 'loaded osc component count');
-    AssertTrue(lLoaded.Pages[0].Components[0] is TRecorderOscillogramComponent,
-      'loaded component is oscillogram');
-    lLoadedOsc := TRecorderOscillogramComponent(lLoaded.Pages[0].Components[0]);
-    AssertEquals(lLoadedOsc.TagName, 'AbsTag', 'loaded osc absolute tag');
-    AssertEquals(Ord(lLoadedOsc.BindingMode), Ord(rtbmAbsoluteTag),
-      'loaded osc binding mode');
-    AssertEquals(lLoadedOsc.TagOffset, 3, 'loaded osc tag offset');
-    AssertTrue(not lLoadedOsc.ClosedInput,
-      'base osc ignores plugin closed input');
-    AssertEquals(lLoadedOsc.AxisCount, 1, 'base osc restores one axis');
-    AssertEquals(lLoadedOsc.PrimaryAxisIndex, 0, 'base osc primary axis');
-    AssertEquals(lLoadedOsc.LineCount, 1, 'loaded osc line count');
-    AssertEquals(lLoadedOsc.Lines[0].AxisIndex, 0,
-      'base osc ignores plugin line axis');
-    Writeln('GUI config base oscillogram binding test passed.');
+    AssertEquals(lLoaded.Pages[0].ComponentCount, 1,
+      'loaded spectrum component count');
+    lLoadedSpectrum := TRecorderSpectrumComponent(
+      lLoaded.Pages[0].Components[0]);
+    AssertEquals(lLoadedSpectrum.AxisCount, 2,
+      'spectrum axis count roundtrip');
+    AssertEquals(lLoadedSpectrum.Axes[1].Name, 'Y2',
+      'second spectrum axis name roundtrip');
+    AssertTrue((lLoadedSpectrum.Axes[1].RangeMin = -100) and
+      (lLoadedSpectrum.Axes[1].RangeMax = 100),
+      'second spectrum axis range roundtrip');
+    AssertEquals(lLoadedSpectrum.TagAxisIndexAt(0), 1,
+      'first signal uses second spectrum axis');
+    AssertEquals(lLoadedSpectrum.TagAxisIndexAt(1), 0,
+      'second signal uses first spectrum axis');
+    Writeln('Spectrum multiple axes roundtrip test passed.');
   finally
     lManager.Free;
     lLoaded.Free;
     lComponentFactory.Free;
     if FileExists(lFileName) then
       DeleteFile(lFileName);
-  end;
-end;
-
-procedure TestGuiConfigSavesPluginOscillographState;
-var
-  lComponentFactory: TRecorderComponentFactory;
-  lFileName: string;
-  lLoaded: TRecorderFormManager;
-  lLoadedOsc: TRecorderOscillogramComponent;
-  lManager: TRecorderFormManager;
-  lOsc: TRecorderOscillogramComponent;
-  lPage: TRecorderFormPage;
-begin
-  lFileName := IncludeTrailingPathDelimiter(GetTempDir(False)) +
-    'RecorderFormModelPluginOscTest.gui.ini';
-  if FileExists(lFileName) then DeleteFile(lFileName);
-  lComponentFactory := TRecorderComponentFactory.Create;
-  lLoaded := TRecorderFormManager.Create;
-  lManager := TRecorderFormManager.Create;
-  try
-    lComponentFactory.RegisterDefaultComponents;
-    lComponentFactory.RegisterFactory(TTestPluginOscillographFactory.Create);
-    lPage := TRecorderFormPage.Create('Page1', 'Page1', 'Mnemonic');
-    lManager.AddPage(lPage);
-    lOsc := TRecorderOscillogramComponent(
-      lComponentFactory.CreateComponent('test.oscillograph'));
-    lOsc.Id := 'Page1.pluginOsc1';
-    lOsc.Name := 'PluginOsc1';
-    lOsc.TagName := 'AbsTag';
-    lOsc.ClosedInput := True;
-    lOsc.XScale := 0.5;
-    lOsc.AddAxis.Name := 'Y2';
-    lOsc.Axes[1].YScale := 2.5;
-    lOsc.Axes[1].YOffset := 4.0;
-    lOsc.PrimaryAxisIndex := 1;
-    lOsc.AddLine.TagName := 'OtherSourceTag';
-    lOsc.Lines[0].AxisIndex := 1;
-    lPage.AddComponent(lOsc);
-
-    SaveRecorderGuiConfig(lFileName, lManager);
-    LoadRecorderGuiConfig(lFileName, lLoaded, lComponentFactory);
-    lLoadedOsc := TRecorderOscillogramComponent(
-      lLoaded.Pages[0].Components[0]);
-    AssertTrue(RecorderIsPluginOscillograph(lLoadedOsc),
-      'loaded plugin oscillograph capability');
-    AssertTrue(lLoadedOsc.ClosedInput, 'plugin closed input');
-    AssertTrue(Abs(lLoadedOsc.XScale - 0.5) < 1E-9,
-      'plugin X scale');
-    AssertEquals(lLoadedOsc.AxisCount, 2, 'plugin axis count');
-    AssertEquals(lLoadedOsc.PrimaryAxisIndex, 1, 'plugin primary axis');
-    AssertTrue(Abs(lLoadedOsc.Axes[1].YScale - 2.5) < 1E-9,
-      'plugin second axis scale');
-    AssertTrue(Abs(lLoadedOsc.Axes[1].YOffset - 4.0) < 1E-9,
-      'plugin second axis offset');
-    AssertEquals(lLoadedOsc.Lines[0].AxisIndex, 1,
-      'plugin line axis');
-    Writeln('GUI config plugin oscillograph state test passed.');
-  finally
-    lManager.Free;
-    lLoaded.Free;
-    lComponentFactory.Free;
-    if FileExists(lFileName) then DeleteFile(lFileName);
   end;
 end;
 
@@ -435,7 +595,7 @@ var
   Page:TRecorderFormPage;
   Source,Restored:TRecorder3dComponent;
   Frf:TRecorder3dFrfBinding;
-  Primitive:T3dPrimitiveSpec;
+  Primitive,Cloud:T3dPrimitiveSpec;
   OverrideItem:TRecorder3dNodeRenderOverride;
   SkinItem:TRecorder3dSkinBinding;
   SkinBone:TRecorder3dSkinBone;
@@ -472,11 +632,23 @@ begin
     Primitive.Position:=Vector3d(1.25,-2.5,7.75);
     Primitive.Iterations:=4;
     Primitive.CrossSectionIterations:=3;
+    Primitive.DrawPointNumbers:=False;
     Source.AddPrimitive(Primitive);
+    FillChar(Cloud,SizeOf(Cloud),0);
+    Cloud.NodeId:=Primitive.NodeId+1;
+    Cloud.Kind:=pkPointCloud;
+    Cloud.Name:='Numbered cloud';
+    Cloud.SizeX:=4; Cloud.SizeY:=5; Cloud.SizeZ:=6;
+    Cloud.Iterations:=1;
+    Cloud.IterationsX:=2; Cloud.IterationsY:=3; Cloud.IterationsZ:=4;
+    Cloud.PointCloudShape:=pcsBox;
+    Cloud.DrawPointNumbers:=True;
+    Cloud.Color:=$000000FF;
+    Source.AddPrimitive(Cloud);
     Source.DrawPoints:=True;
     Source.PointColor:=$0000A5FF;
     Source.MarkNodeRemoved(15);
-    Source.NextPrimitiveNodeId:=Primitive.NodeId+1;
+    Source.NextPrimitiveNodeId:=Primitive.NodeId+2;
     OverrideItem:=Source.AddNodeRenderOverride;
     OverrideItem.NodeId:=Primitive.NodeId;
     OverrideItem.HasRenderSettings:=True;
@@ -537,17 +709,25 @@ begin
       (Restored.FrfBindings[0].CurveId=9001),'3d stable FRF curve id');
     AssertEquals(Restored.FrfBindings[0].SourceBindingId, 'hammer-main',
       '3d FRF source binding id roundtrip');
-    AssertTrue(Restored.PrimitiveCount=1,'3d primitive count roundtrip');
+    AssertTrue(Restored.PrimitiveCount=2,'3d primitive count roundtrip');
     AssertTrue(Restored.DrawPoints and (Restored.PointColor=$0000A5FF),
       '3d point display settings roundtrip');
     AssertTrue((Restored.Primitives[0].NodeId=Primitive.NodeId) and
       (Restored.Primitives[0].Kind=pkBeam) and
       (Restored.Primitives[0].Name='Beam saved') and
       (Restored.Primitives[0].Iterations=4) and
-      (Restored.Primitives[0].CrossSectionIterations=3),
+      (Restored.Primitives[0].CrossSectionIterations=3) and
+      Restored.Primitives[0].DrawPointNumbers,
       '3d primitive spec roundtrip');
     AssertTrue(Abs(Restored.Primitives[0].Position.Y+2.5)<1E-9,
       '3d primitive position roundtrip');
+    AssertTrue((Restored.Primitives[1].Kind=pkPointCloud) and
+      (Restored.Primitives[1].PointCloudShape=pcsBox) and
+      (Restored.Primitives[1].IterationsX=2) and
+      (Restored.Primitives[1].IterationsY=3) and
+      (Restored.Primitives[1].IterationsZ=4) and
+      Restored.Primitives[1].DrawPointNumbers,
+      'point-cloud numbering and section settings roundtrip');
     AssertTrue((Restored.RemovedNodeCount=1) and
       (Restored.RemovedNodeIds[0]=15),'3d removed node roundtrip');
     AssertTrue(Restored.NextPrimitiveNodeId=Primitive.NodeId+1,
@@ -606,6 +786,7 @@ begin
     try
       Ini.DeleteKey('Page.0.Component.0','GradientStripCount');
       Ini.DeleteKey('Page.0.Component.0','VertexColorAnchorCount');
+      Ini.DeleteKey('Page.0.Component.0','Primitive1DrawPointNumbers');
     finally
       Ini.Free;
     end;
@@ -614,6 +795,8 @@ begin
     AssertTrue((Restored.GradientStripCount=0) and
       (Restored.VertexColorAnchorCount=0),
       'legacy 3d config without vertex color keys stays empty');
+    AssertTrue(not Restored.Primitives[1].DrawPointNumbers,
+      'legacy point cloud numbering defaults off');
   finally
     Manager.Free; Legacy.Free; Loaded.Free; Factory.Free;
     if FileExists(FileName) then DeleteFile(FileName);
@@ -1190,6 +1373,17 @@ begin
 end;
 
 begin
+  if SameText(ParamStr(1), '--unknown-plugin-state-only') then
+  begin
+    TestUnknownPluginVisualStateRoundTrip;
+    Halt(0);
+  end;
+  if SameText(ParamStr(1), '--osc-trigger-edges-only') then
+  begin
+    TestOscillogramTriggerEdges;
+    Halt(0);
+  end;
+  TestOscillogramTriggerEdges;
   if SameText(ParamStr(1), '--3d-editor-snapshot-only') then
   begin
     Test3dEditorSnapshotRestoresDeepState;
@@ -1204,10 +1398,12 @@ begin
   TestProjectCalibrationKeepsSdbReference;
   TestProjectMic185OhmUnitRoundTrip;
   TestComponentFactory;
+  TestComponentLifecycleDispatch;
   TestFormPages;
   TestGuiConfigSavesBaseOscillogramCount;
-  TestGuiConfigSavesOscillogramBinding;
-  TestGuiConfigSavesPluginOscillographState;
+  TestLegacyPluginSectionRemainsOpaque;
+  TestSpectrumMultipleAxesRoundTrip;
+  TestUnknownPluginVisualStateRoundTrip;
   TestGuiConfigSavesComplete3dCamera;
   Test3dEditorSnapshotRestoresDeepState;
   Test3dSkinHelperMaterialization;

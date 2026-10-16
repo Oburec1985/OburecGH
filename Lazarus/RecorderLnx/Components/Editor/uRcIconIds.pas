@@ -15,6 +15,7 @@ const
   CIconIdOscillogram = 'oscillogram';
   CIconIdTrend = 'trend';
   CIconIdSqlTrend = 'sql-trend';
+  CIconIdMeraBase = 'mera-base';
   CIconIdFrequencyResponse = 'frequency-response';
   CIconId3dView = '3d-view';
   CIconIdLissajous = 'lissajous';
@@ -75,7 +76,7 @@ const
   CIcon3dCameraRotate = 70;
   CIcon3dZoom = 71;
   CIcon3dFitScene = 72;
-  CIcon3dRotateFree = 73;
+  CIconMeraBase = 73;
   CIcon3dRotateX = 74;
   CIcon3dRotateY = 75;
   CIcon3dRotateZ = 76;
@@ -94,6 +95,7 @@ begin
   else if SameText(AIconId, CIconIdOscillogram) then Result := CIconOscillogram
   else if SameText(AIconId, CIconIdTrend) then Result := CIconTrends
   else if SameText(AIconId, CIconIdSqlTrend) then Result := CIconSqlTrend
+  else if SameText(AIconId, CIconIdMeraBase) then Result := CIconMeraBase
   else if SameText(AIconId, CIconIdFrequencyResponse) then Result := CIconFrequencyResponse
   else if SameText(AIconId, CIconId3dView) then Result := CIcon3dScene
   else if SameText(AIconId, CIconIdLissajous) then Result := CIconLissajous

@@ -5,7 +5,7 @@ program ImpactHammerUiSmoke;
 
 uses
   Interfaces, Forms, Classes, SysUtils, Math, Controls, Graphics, StdCtrls, ExtCtrls,
-  Buttons,
+  Buttons, LMessages, LCLType, uRecorderMeraBaseModel, uRecorderMdbRepository,
   uRecorderFormModel, uRecorderTags, uRecorderCoreServices,
   uRecorderVisualControl,
   uRecorderStateMachine, uRecorderImpactHammer, uRecorderImpactHammerModel,
@@ -17,6 +17,11 @@ uses
   uOglChartRenderer, uOglChartTypes, uOglChartDrawObj,
   uOglChartTrend, uOglChartTextLabel, uOglChartCursor,
   uSharedColorCheckTable,
+  uRecorder3dFrfModifierFrame,
+  uRecorder3dSettingsDialog, uRecorder3dModel,
+  uRecorderFrfRouteDialog, uRecorderFrfRoute,
+  uRecorderFrfIntensityAdapter, uRecorderFrfRepository,
+  uRecorderFrfContracts, u3dScene, u3dCoreTypes,
   uOglChartPanZoomListener;
 
 type
@@ -57,6 +62,121 @@ procedure Check(AValue: Boolean; const AMessage: string);
 begin
   if not AValue then
     raise Exception.Create(AMessage);
+end;
+
+procedure CheckSceneFontDialog;
+var
+  Model:TRecorder3dComponent;
+  Dlg:TRecorder3dSettingsDialog;
+begin
+  Model:=TRecorder3dComponent.Create;
+  Dlg:=nil;
+  try
+    Dlg:=TRecorder3dSettingsDialog.CreateDialog(nil,Model,nil,0);
+    Check(Dlg.seLabelFontSize<>nil,'Scene font-size editor resource loads');
+    Dlg.seLabelFontSize.Value:=14;
+    Check(Model.LabelFontSize=14,'Scene font-size edits apply live');
+  finally Dlg.Free; Model.Free; end;
+end;
+
+procedure CheckIntensityMarkers;
+var
+  Scene: T3dScene;
+  Node: T3dNode;
+  Repo: TRecorderFrfRepository;
+  Provider: IRecorderFrfProvider;
+  Curves: array[0..1] of TRecorderFrfCurveData;
+  Bindings: array[0..1] of TRecorderFrfIntensityBinding;
+  Adapter: TRecorderFrfIntensityAdapter;
+  Demo, Retrieved: TRecorderModelPointBinding;
+  PreviewRevision: QWord;
+  I: Integer;
+begin
+  Scene := T3dScene.Create;
+  Adapter := TRecorderFrfIntensityAdapter.Create;
+  Repo := TRecorderFrfRepository.Create;
+  Provider := Repo;
+  try
+    Node := T3dNode.Create;
+    Node.Id := 77;
+    FillChar(Node.WorldTransform, SizeOf(Node.WorldTransform), 0);
+    for I := 0 to 3 do Node.WorldTransform[I * 5] := 1;
+    Node.Mesh := T3dMeshData.Create;
+    SetLength(Node.Mesh.Positions, 2);
+    Node.Mesh.Positions[0] := Vector3d(1, 2, 3);
+    Node.Mesh.Positions[1] := Vector3d(4, 5, 6);
+    Scene.AddNode(Node);
+    for I := 0 to 1 do
+    begin
+      Curves[I].Id := I + 1;
+      SetLength(Curves[I].FrequencyHz, 1);
+      SetLength(Curves[I].Magnitude, 1);
+      SetLength(Curves[I].Amplitude, 1);
+      SetLength(Curves[I].PhaseRadians, 1);
+      SetLength(Curves[I].Coherence, 1);
+      Curves[I].FrequencyHz[0] := 100;
+      Curves[I].Magnitude[0] := 2 * (I + 1);
+      Curves[I].Amplitude[0] := 4 - 2 * I;
+      Curves[I].Coherence[0] := 1;
+      Bindings[I] := Default(TRecorderFrfIntensityBinding);
+      Bindings[I].CurveId := I + 1;
+      Bindings[I].TargetNodeId := 77;
+      Bindings[I].PointNumber := I + 1;
+      Bindings[I].Enabled := True;
+      Bindings[I].Gain := 1;
+      Bindings[I].MarkerSizePixels := 10;
+      Bindings[I].IntensitySource := risFrf;
+    end;
+    Check(Repo.Publish(Curves), 'Publish intensity test curves');
+    Adapter.Configure(Provider, Scene, Bindings);
+    Adapter.Update(100);
+    Check(SameValue(Adapter.Marker(0).SizePixels, 10), 'Half-range marker is 10px');
+    Check(SameValue(Adapter.Marker(1).SizePixels, 20), 'Full-range marker is 20px');
+    Check(SameValue(Adapter.Marker(1).Position.X, 4), 'Point number maps mesh vertex');
+    Adapter.Update(100, 0, True);
+    Check(Adapter.Marker(1).SizePixels < 0.001, 'Animation phase changes marker size');
+    for I := 0 to 1 do Bindings[I].IntensitySource := risAmplitude;
+    Adapter.Configure(Provider, Scene, Bindings);
+    Adapter.Update(100);
+    Check(SameValue(Adapter.Marker(0).SizePixels, 20), 'Amplitude source differs from FRF');
+    Check(SameValue(Adapter.Marker(1).SizePixels, 10), 'Amplitude source scaling');
+    for I:=0 to 1 do
+    begin
+      Bindings[I].BandRms:=True;
+      Bindings[I].BandTolerancePercent:=5;
+      Bindings[I].GradientEnabled:=True;
+      Bindings[I].Color:=clRed;
+    end;
+    Adapter.Configure(Provider,Scene,Bindings);
+    Adapter.Update(100);
+    Check(Adapter.Marker(0).Color=clRed,'Configured sphere color at maximum');
+    Check(Adapter.Marker(1).Color=clRed,'Vertex gradient does not change sphere color');
+    Check(SameValue(Adapter.Marker(1).SizePixels,10),'Band RMS controls marker size');
+    Bindings[0].PointLabel:='Маршрут A';
+    Bindings[0].HideAnchors:=True;
+    Adapter.Configure(Provider,Scene,Bindings);
+    Adapter.Update(100);
+    Check(Adapter.Marker(0).PointLabel='Маршрут A','Custom point caption reaches marker');
+    Check(Adapter.Marker(0).Visible and Adapter.Marker(0).DrawSymbol,
+      'Hidden anchors do not hide the intensity sphere');
+    Demo := Default(TRecorderModelPointBinding);
+    Demo.ModifierTargetNodeId := 77;
+    Demo.PointNumber := 2;
+    Demo.MarkerSizePixels := 11;
+    Adapter.Demonstrate(Scene, Demo);
+    Check(Adapter.Marker(0).Visible, 'Demo is visible without FRF provider');
+    Check(SameValue(Adapter.Marker(0).SizePixels, 11), 'Demo uses exact edited pixels');
+    SetRecorderGeometryPreview('scene-preview', Demo);
+    Check(GetRecorderGeometryPreview('scene-preview', Retrieved, PreviewRevision),
+      'Preview is available while editing');
+    ClearRecorderGeometryPreview;
+    Check(not GetRecorderGeometryPreview('scene-preview', Retrieved, PreviewRevision),
+      'Closing editor clears demonstration');
+  finally
+    Adapter.Free;
+    Scene.Free;
+    Provider := nil;
+  end;
 end;
 
 procedure CheckChartLayout(AView: TRecorderImpactHammerView;
@@ -151,6 +271,134 @@ begin
         Values[I]);
 end;
 
+procedure CheckMdbModelPath;
+var
+  Page: TRecorderFormPage;
+  Model: TRecorderMeraBaseComponent;
+  Repository: TRecorderMdbRepository;
+  Root, Id, Expected: string;
+begin
+  Root := IncludeTrailingPathDelimiter(GetTempDir) + 'mdb-model-path-' + IntToStr(GetTickCount64);
+  Repository := TRecorderMdbRepository.Create(Root);
+  try
+    Repository.Open;
+    Id := Repository.CreateObject('Object on another page', '', '');
+    Expected := IncludeTrailingPathDelimiter(Repository.BasePath + Repository.FindNode(Id).RelativePath);
+  finally
+    Repository.Free;
+  end;
+  Page := TRecorderFormPage.Create('other-mdb-page', 'mdb', 'MDB');
+  try
+    Model := TRecorderMeraBaseComponent.Create;
+    Page.AddComponent(Model);
+    Model.BasePath := Root;
+    Model.ObjectId := Id;
+    Check(RecorderMeraObjectDirectory = Expected,
+      'Resolve database component on inactive page without constructing its view');
+  finally
+    Page.Free;
+  end;
+  Check(RecorderMeraObjectDirectory = '', 'Destroyed model must not leave stale database context');
+end;
+
+procedure CheckRouteSpinner;
+var
+  Bus: TRecorderEventBus;
+  Registry: TRecorderTagRegistry;
+  Model: TRecorderImpactHammerComponent;
+  View: TRecorderImpactHammerView;
+  Port: IRecorderFrfRouteService;
+  Entry: TRecorderFrfRouteEntry;
+begin
+  Bus := TRecorderEventBus.Create;
+  Registry := TRecorderTagRegistry.Create(Bus);
+  Model := TRecorderImpactHammerComponent.Create;
+  View := TRecorderImpactHammerView.Create(nil);
+  try
+    Registry.CreateTag('hammer', 64).PollFrequencyHz := 1000;
+    Registry.CreateTag('response', 64).PollFrequencyHz := 1000;
+    Model.HammerTagId := Registry.FindByName('hammer').Id;
+    Model.HammerTagName := 'hammer';
+    Model.SampleRateHz := 1000;
+    Model.AddResponse.TagId := Registry.FindByName('response').Id;
+    Model.Responses[0].TagName := 'response';
+    Model.ExportPath := IncludeTrailingPathDelimiter(GetTempDir) +
+      'route-spinner-' + IntToStr(GetTickCount64);
+    View.Configure(Model, Registry);
+    Check(Supports(View.ApplicationService, IRecorderFrfRouteService, Port), 'Route service');
+    Entry := Default(TRecorderFrfRouteEntry);
+    Entry.PointNumber := 1;
+    Entry.PointLabel := 'A';
+    Port.Route.Add(Entry);
+    Entry.PointNumber := 2;
+    Entry.PointLabel := 'B';
+    Port.Route.Add(Entry);
+    Check(not View.seRoutePoint.Enabled, 'Route spinner disabled outside scenario');
+    View.chkScenario.Checked := True;
+    View.ScenarioChange(nil);
+    Check(View.seRoutePoint.Enabled, 'Route spinner enabled in scenario');
+    View.seRoutePoint.Value := 2;
+    Check(Port.Route.CurrentIndex = 1, 'Spinner selects second route point');
+    Check(Pos('B', View.lblRoutePoint.Caption) > 0, 'Spinner displays point label');
+    View.chkScenario.Checked := False;
+    View.ScenarioChange(nil);
+    Check(not View.seRoutePoint.Enabled, 'Scenario off disables spinner');
+  finally
+    Port := nil;
+    View.Free;
+    Model.Free;
+    Registry.Free;
+    Bus.Free;
+  end;
+end;
+
+procedure CheckMultiTagDrag;
+var
+  Bus: TRecorderEventBus;
+  Registry: TRecorderTagRegistry;
+  Model: TRecorderImpactHammerComponent;
+  Dialog: TRecorderImpactHammerSettingsDialog;
+  I: Integer;
+  Rect: TRect;
+begin
+  Bus := TRecorderEventBus.Create;
+  Registry := TRecorderTagRegistry.Create(Bus);
+  Model := TRecorderImpactHammerComponent.Create;
+  try
+    Registry.CreateTag('hammer', 64).PollFrequencyHz := 1000;
+    for I := 1 to 3 do
+      Registry.CreateTag('response' + IntToStr(I), 64).PollFrequencyHz := 1000;
+    Model.HammerTagId := Registry.FindByName('hammer').Id;
+    Model.HammerTagName := 'hammer';
+    Dialog := TRecorderImpactHammerSettingsDialog.CreateDialog(nil, Model, Registry);
+    try
+      Dialog.Show;
+      Application.ProcessMessages;
+      for I := 0 to Dialog.lbAvailableTags.Count - 1 do
+        Dialog.lbAvailableTags.Selected[I] := Dialog.lbAvailableTags.Items[I] <> 'hammer';
+      Check(Dialog.lbAvailableTags.SelCount = 3, 'Select three response tags');
+      for I := 0 to Dialog.lbAvailableTags.Count - 1 do
+        if Dialog.lbAvailableTags.Selected[I] then
+        begin
+          Rect := Dialog.lbAvailableTags.ItemRect(I);
+          Dialog.lbAvailableTags.Perform(LM_LBUTTONDOWN, MK_LBUTTON,
+            ((Rect.Top + 2) shl 16) or (Rect.Left + 2));
+          Break;
+        end;
+      Check(Dialog.lbAvailableTags.SelCount = 3, 'Drag start must preserve group selection');
+      Dialog.tvChannelsDragDrop(Dialog.tvChannels, Dialog.lbAvailableTags, 0, 0);
+      Dialog.lbAvailableTags.EndDrag(False);
+      Check(Dialog.tvChannels.Items.Count = 4, 'Group drop must add all three response tags');
+    finally
+      Dialog.Free;
+    end;
+  finally
+    Model.Free;
+    Registry.Free;
+    Bus.Free;
+  end;
+end;
+
 var
   Factory: TRecorderComponentFactory;
   Model: TRecorderImpactHammerComponent;
@@ -191,11 +439,76 @@ var
   CursorRenderer: TOpenGLChartRenderer;
   CursorPage: TChartPage;
   CursorRect: TChartPixelRect;
+  FrfCursor:TChartCursor;
+  RoutePort:IRecorderFrfRouteService;
+  RouteEntry:TRecorderFrfRouteEntry;
+  RouteError,RouteFolder:string;
+  SavedCurves:TRecorderRouteCurveArray;
+  SearchRoute: TRecorderFrfRoute;
 begin
   DeleteFile(IncludeTrailingPathDelimiter(GetTempDir) +
     'ImpactHammerUiSmoke.stage.log');
   Stage('initialize');
   Application.Initialize;
+  if (ParamCount > 0) and (ParamStr(1) = '--route-spinner-only') then
+  begin
+    CheckRouteSpinner;
+    WriteLn('RESULT route spinner passed');
+    Halt(0);
+  end;
+  if (ParamCount > 0) and (ParamStr(1) = '--mdb-model-path-only') then
+  begin
+    CheckMdbModelPath;
+    WriteLn('RESULT MDB model path passed');
+    Halt(0);
+  end;
+  if (ParamCount > 0) and (ParamStr(1) = '--multi-tag-drag-only') then
+  begin
+    CheckMultiTagDrag;
+    WriteLn('RESULT multi tag drag passed');
+    Halt(0);
+  end;
+  try
+    CheckSceneFontDialog;
+  except
+    on E:Exception do
+    begin WriteLn('RESULT scene font dialog failed: '+E.Message); Halt(3); end;
+  end;
+  with TRecorderFrfRouteDialog.Create(nil) do
+  try
+    Check(FindComponent('gridRoute') <> nil, 'Route dialog resource grid missing');
+    Check(FindComponent('btnApply') <> nil, 'Route dialog edit command missing');
+    Check(FindComponent('btnStart') = nil, 'Route dialog must not start acquisition');
+  finally
+    Free;
+  end;
+  Model := TRecorderImpactHammerComponent.Create;
+  SearchRoute := TRecorderFrfRoute.Create;
+  try
+    Model.AddResponse.TagName := 'sensor_X';
+    Model.AddResponse.TagName := 'sensor_Y';
+    with TRecorderFrfRouteDialog.ShowRoute(nil, Model, SearchRoute, nil, nil, nil) do
+    try
+      Check(cbChannel.Items.Count = 2, 'Empty route search must list all channels');
+      edSearch.Text := 'sensor_y';
+      Check(cbChannel.Items.Count = 1, 'Route search must match substring without case');
+      edSearch.Text := '';
+      Check(cbChannel.Items.Count = 2, 'Cleared route search must restore all channels');
+    finally
+      Free;
+    end;
+  finally
+    SearchRoute.Free;
+    Model.Free;
+  end;
+  if (ParamCount > 0) and (ParamStr(1) = '--route-search-only') then
+  begin
+    WriteLn('RESULT route search passed');
+    Halt(0);
+  end;
+  CheckIntensityMarkers;
+  with TRecorder3dFrfModifierFrame.Create(nil) do
+    Free;
   Stage('initialized');
   Factory := TRecorderComponentFactory.Create;
   Bus := TRecorderEventBus.Create;
@@ -305,6 +618,12 @@ begin
       'FRF settings button is clipped in a compact widget');
     Check(View.FindComponent('NavigationPan') is TScrollBox,
       'navigation commands are not protected by a scrollable host');
+    Check(View.FindComponent('btnGeometryBindings') is TButton,
+      'FRF geometry binding editor button is missing');
+    Check(View.FindComponent('btnPlayModel') = nil,
+      'legacy model animation button remains');
+    Check(View.FindComponent('btnStopModel') = nil,
+      'legacy model stop button remains');
     Check(View.FindComponent('RightPan') is TScrollBox,
       'right-side controls are not in a responsive scroll box');
     Check(TControl(View.FindComponent('RightPan')).Width >= 260,
@@ -728,7 +1047,29 @@ begin
       Sleep(5);
     end;
     Check(Snapshot.ImpactCount = 2, 'second impact not captured');
+    Check(Supports(View.ApplicationService,IRecorderFrfRouteService,RoutePort),
+      'Route service exposed');
+    RouteEntry:=Default(TRecorderFrfRouteEntry);
+    RouteEntry.TargetNodeId:=77;
+    RouteEntry.ChannelIndex:=0;
+    RouteEntry.PointNumber:=1;
+    RoutePort.Route.Add(RouteEntry);
+    RouteEntry.PointNumber:=2;
+    RoutePort.Route.Add(RouteEntry);
+    RouteFolder:=IncludeTrailingPathDelimiter(GetTempDir)+'frf-route-ui-'+IntToStr(GetTickCount64);
+    RoutePort.Route.Save(RouteFolder);
+    Check(RoutePort.CaptureRouteStep(RouteError),'Capture single realization: '+RouteError);
+    Check(not RoutePort.CaptureRouteStep(RouteError),'Repeated realization rejected');
     View.btnPreviousImpactClick(nil);
+    Check(RoutePort.CaptureRouteStep(RouteError),'Capture second route realization: '+RouteError);
+    Check(RoutePort.Route.LoadSavedCurves(SavedCurves),'Reload route curves from disk');
+    Check(Length(SavedCurves)=2,'Both route point realizations saved');
+    for I:=0 to RoutePort.Route.Count-1 do
+      DeleteFile(IncludeTrailingPathDelimiter(RouteFolder)+'curve-'+
+        UIntToStr(RoutePort.Route.Entries[I].CurveId)+'.frf');
+    DeleteFile(IncludeTrailingPathDelimiter(RouteFolder)+'route.ini');
+    RemoveDir(RouteFolder);
+    RoutePort:=nil;
     Check(TLabel(View.FindComponent('lblImpactPosition')).Caption = '1 из 2',
       'previous impact did not refresh the view immediately');
     View.btnNextImpactClick(nil);
@@ -736,6 +1077,16 @@ begin
       'next impact did not refresh the view immediately');
     View.ApplicationService.FillSnapshot(Snapshot);
     ChangedSnapshot := Snapshot;
+    FrfCursor:=TChartCursor.Create;
+    FrequencyPage.AddChild(FrfCursor);
+    FrfCursor.Visible:=True;
+    FrfCursor.CursorType:=cctDouble;
+    FrfCursor.X2:=2.5;
+    View.chartCursorChanged(nil,FrfCursor);
+    Check(SameValue(RecorderSelectedFrfFrequency,2.5),'Alt3 frequency cursor controls intensity');
+    View.chartMouseMove(nil,[],200,200);
+    Check(SameValue(RecorderSelectedFrfFrequency,2.5),'Mouse hover preserves pinned frequency');
+    FrfCursor.Free;
     ChangedSnapshot.ImpactIndex := Snapshot.ImpactIndex + 1;
     ChangedSnapshot.ImpactCount := Snapshot.ImpactCount + 1;
     for I := 0 to High(ChangedSnapshot.Results[irtTime].Curves) do

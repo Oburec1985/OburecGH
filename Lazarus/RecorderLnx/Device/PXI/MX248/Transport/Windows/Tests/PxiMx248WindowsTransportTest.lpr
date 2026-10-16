@@ -12,7 +12,7 @@ begin
   if not ACondition then raise Exception.Create(AMessage);
 end;
 
-procedure CheckOk(const AResult: TRecorderOperationResult; const AMessage: string);
+procedure CheckOk(const AResult: TRcOperationResult; const AMessage: string);
 begin
   Check(AResult.IsSuccess, AMessage + ': ' + AResult.MessageText);
 end;
@@ -21,9 +21,10 @@ procedure TestCursorAndPoison(const ABridge: string);
 var
   lTransport: TRecorderPxiMx248WindowsTransport;
   lConfiguration: TPxiMx248Configuration;
-  lBlock: TRecorderAcquisitionBlock;
+  lBlock: TRcAcquisitionBlock;
   lDevices: TPxiMx248DiscoveredDevices;
-  lResult: TRecorderOperationResult;
+  lResult: TRcOperationResult;
+  lProperties,lBalance: string;
 begin
   lTransport := TRecorderPxiMx248WindowsTransport.Create(1, 3, ABridge, 1000);
   try
@@ -31,6 +32,18 @@ begin
     lConfiguration.SampleRateHz := 1000;
     lConfiguration.BlockSamples := 2;
     CheckOk(lTransport.Connect, 'connect');
+    CheckOk(lTransport.ReadLiveProperties(lProperties),'read live properties');
+    Check(Pos('schema=mx248.live.v1',lProperties)=1,
+      'live property schema must be preserved');
+    Check(Pos('ch1.sensitivity=26370.54',lProperties)>0,
+      'live channel sensitivity must be preserved');
+    CheckOk(lTransport.ConfigurePxi(0,1,0,0,0,0),'configure PXI');
+    CheckOk(lTransport.ZeroBalance($81,lBalance),'zero balance');
+    Check(lBalance='ch1=0.125;ch8=-0.25',
+      'zero balance values must be preserved');
+    lResult:=lTransport.ZeroBalance($100,lBalance);
+    Check((not lResult.IsSuccess) and (lResult.Code=rocInvalidArgument),
+      'invalid zero balance mask must fail before IPC');
     CheckOk(lTransport.Discover(lDevices), 'discover');
     Check((Length(lDevices) = 1) and
       (lDevices[0].SerialNumber = 3253) and

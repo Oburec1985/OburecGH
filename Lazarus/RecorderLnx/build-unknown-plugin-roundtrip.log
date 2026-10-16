@@ -1,0 +1,113 @@
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) Build Project: nothing to do.
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\RecorderFormModelTest.exe"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-MObjFPC"
+Info: (lazarus) Param[1]="-Scghi"
+Info: (lazarus) Param[2]="-O1"
+Info: (lazarus) Param[3]="-gw3"
+Info: (lazarus) Param[4]="-gl"
+Info: (lazarus) Param[5]="-l"
+Info: (lazarus) Param[6]="-vewnhibq"
+Info: (lazarus) Param[7]="-FuD:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\"
+Info: (lazarus) Param[8]="-FuD:\works\OburecGH\Lazarus\RecorderLnx"
+Info: (lazarus) Param[9]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Core"
+Info: (lazarus) Param[10]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\UI"
+Info: (lazarus) Param[11]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Algs"
+Info: (lazarus) Param[12]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Mdb"
+Info: (lazarus) Param[13]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\SQLdb"
+Info: (lazarus) Param[14]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\SQLdb\SqlTrend"
+Info: (lazarus) Param[15]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\SDB"
+Info: (lazarus) Param[16]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Calibrations"
+Info: (lazarus) Param[17]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Calibrations\Strains"
+Info: (lazarus) Param[18]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Common"
+Info: (lazarus) Param[19]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Donut"
+Info: (lazarus) Param[20]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Editor"
+Info: (lazarus) Param[21]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\ThreeD"
+Info: (lazarus) Param[22]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\ImpactHammer"
+Info: (lazarus) Param[23]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\FrequencyResponse"
+Info: (lazarus) Param[24]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Lissajous"
+Info: (lazarus) Param[25]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\MeasurementSection"
+Info: (lazarus) Param[26]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram"
+Info: (lazarus) Param[27]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\SignalGenerator"
+Info: (lazarus) Param[28]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum"
+Info: (lazarus) Param[29]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\SqlTrend"
+Info: (lazarus) Param[30]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Standard"
+Info: (lazarus) Param[31]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend"
+Info: (lazarus) Param[32]="-FuD:\works\OburecGH\Lazarus\SharedUtils"
+Info: (lazarus) Param[33]="-FuD:\works\OburecGH\Lazarus\SharedUtils\math"
+Info: (lazarus) Param[34]="-FuD:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr"
+Info: (lazarus) Param[35]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\core"
+Info: (lazarus) Param[36]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\contracts"
+Info: (lazarus) Param[37]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\interaction"
+Info: (lazarus) Param[38]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\lcl"
+Info: (lazarus) Param[39]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\motion"
+Info: (lazarus) Param[40]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\render\opengl"
+Info: (lazarus) Param[41]="-FuC:\lazarus\components\tachart\lib\x86_64-win64\win32"
+Info: (lazarus) Param[42]="-FuD:\works\OburecGH\Lazarus\third_party\bgracontrols\lib\x86_64-win64-win32-3.2.2"
+Info: (lazarus) Param[43]="-FuD:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64"
+Info: (lazarus) Param[44]="-FuC:\lazarus\components\ideintf\units\x86_64-win64\win32"
+Info: (lazarus) Param[45]="-FuC:\lazarus\components\opengl\lib\x86_64-win64\win32"
+Info: (lazarus) Param[46]="-FuC:\lazarus\components\mouseandkeyinput\lib\x86_64-win64\win32"
+Info: (lazarus) Param[47]="-FuC:\lazarus\components\lazcontrols\lib\x86_64-win64\win32"
+Info: (lazarus) Param[48]="-FuD:\works\OburecGH\Lazarus\third_party\bgrabitmap\bgrabitmap\lib\x86_64-win64-win32-3.2.2"
+Info: (lazarus) Param[49]="-FuC:\lazarus\lcl\units\x86_64-win64\win32"
+Info: (lazarus) Param[50]="-FuC:\lazarus\components\datetimectrls\lib\x86_64-win64\win32"
+Info: (lazarus) Param[51]="-FuC:\lazarus\lcl\units\x86_64-win64"
+Info: (lazarus) Param[52]="-FuC:\lazarus\components\freetype\lib\x86_64-win64"
+Info: (lazarus) Param[53]="-FuC:\lazarus\components\debuggerintf\lib\x86_64-win64"
+Info: (lazarus) Param[54]="-FuC:\lazarus\components\buildintf\units\x86_64-win64"
+Info: (lazarus) Param[55]="-FuC:\lazarus\components\lazutils\lib\x86_64-win64"
+Info: (lazarus) Param[56]="-FuC:\lazarus\components\lazdebuggers\lazdebuggerintf\lib\x86_64-win64"
+Info: (lazarus) Param[57]="-FuC:\lazarus\packager\units\x86_64-win64"
+Info: (lazarus) Param[58]="-FED:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\"
+Info: (lazarus) Param[59]="-oD:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\RecorderFormModelTest.exe"
+Info: (lazarus) Param[60]="-dLCL"
+Info: (lazarus) Param[61]="-dLCLwin32"
+Info: (lazarus) Param[62]="RecorderFormModelTest.lpr"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling RecorderFormModelTest.lpr
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderProjectFiles.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderProjectFiles.pas(266,19) Hint: (5094) Function result variable of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderProjectFiles.pas(282,19) Hint: (5092) Variable "ABytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderProjectFiles.pas(828,3) Note: (5025) Local variable "lTerm" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderProjectFiles.pas(1232,3) Note: (5025) Local variable "lGeneratedSignal" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderProjectFiles.pas(3144,51) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderProjectFiles.pas(3144,66) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderProjectFiles.pas(89,55) Hint: (5023) Unit "uRecorderPluginApi" not used in uRecorderProjectFiles
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(52,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(60,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(61,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(62,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(516,63) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(517,13) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(517,30) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(63,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(538,65) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(539,17) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(539,34) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(65,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(66,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(64,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(602,65) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(603,17) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(603,34) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(71,7) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(72,30) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(73,7) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(49,15) Error: (5005) Forward declaration not solved "CreateEnteredBranch;"
+D:\works\OburecGH\Lazarus\RecorderLnx\Mdb\uRecorderMeraBaseView.pas(82,13) Hint: (5023) Unit "FileCtrl" not used in uRecorderMeraBaseView
+uRecorderMeraBaseView.pas(627) Fatal: (10026) There were 1 errors compiling module, stopping
+Fatal: (1018) Compilation aborted
+Error: C:\lazarus\fpc\3.2.2\bin\x86_64-win64\ppcx64.exe returned an error exitcode
+Error: (lazarus) Компиляция проекта, цель: D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\RecorderFormModelTest.exe: stopped with exit code 1
+Info: (lazarus) [TCompiler.Compile] end
+Error: (lazbuild) Failed compiling of project "D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\RecorderFormModelTest.lpi"

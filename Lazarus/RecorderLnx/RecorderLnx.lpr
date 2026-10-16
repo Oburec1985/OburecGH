@@ -26,6 +26,8 @@ uses
   uRecorderImpactHammerContracts,
   uRecorderSignalGeneratorModel, uRecorderSignalGeneratorView,
   uRecorderSignalGeneratorSettingsDialog,
+  uRecorderDacComponentModel, uRecorderDacComponentView,
+  uRecorderDacSettingsDialog,
   uRecorderSqlTrendSettingsDialog,
   uRecorderMeasurementSectionModel, uRecorderMeasurementSectionView,
   uRecorderMeasurementSectionSettingsDialog,
@@ -45,7 +47,8 @@ uses
   uRecorderUserGuideCapture,
   uMc201ProtocolTypes, uMc201FirmwareResources, uMc201LegacyMdpClient,
   uMc032Device, uRecorderMcbusDevice,
-  uRecorderOpcUaSourceEditor;
+  uRecorderOpcUaSourceEditor,
+  uRecorderModbusSourceEditor;
 
 const
   CUserGuideDirectoryName: UTF8String = 'Руководство пользователя';
@@ -189,6 +192,13 @@ begin
 
   RequireDerivedFormResource := True;
   Application.Initialize;
+  if HasSwitch('--capture-modbus-editor') then
+  begin
+    RecorderModbusEditorCapture(SwitchValue('--capture-modbus-editor',
+      ExpandFileName('modbus-editor.png')),
+      SwitchValue('--modbus-transport', 'tcp'));
+    Halt(0);
+  end;
   if Assigned(lSingleInstance) and not lSingleInstance.Acquired then
   begin
     RecorderDebugLog('Повторный запуск RecorderLnx отклонён: приложение уже запущено.');

@@ -40,7 +40,7 @@ type
     fHardwarePrepareAttempted: Boolean;
     fIoLock: TRTLCriticalSection;
     procedure BuildChannelMap;
-    procedure PublishBlock(const ABlock: TRecorderAcquisitionBlock);
+    procedure PublishBlock(const ABlock: TRcAcquisitionBlock);
     procedure StoreBalanceDac(ASlot, AChannel: Integer; ACode: Word;
       AApplyRuntime: Boolean = True);
   protected
@@ -595,7 +595,7 @@ begin
 end;
 
 procedure TRecorderMcbusDataSource.PublishBlock(
-  const ABlock: TRecorderAcquisitionBlock);
+  const ABlock: TRcAcquisitionBlock);
 var
   I, J, lCount: Integer;
   lFirstTime, lSampleRate: Double;
@@ -622,7 +622,7 @@ end;
 
 procedure TRecorderMcbusDataSource.DoTick;
 var
-  lBlock: TRecorderAcquisitionBlock;
+  lBlock: TRcAcquisitionBlock;
   lHasBlock: Boolean;
 begin
   if RecorderHardwareIsSourceOffline(SourceId) then

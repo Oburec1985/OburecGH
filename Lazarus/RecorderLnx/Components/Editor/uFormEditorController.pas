@@ -67,7 +67,8 @@ uses
   uRecorderAlarms, uComponentSettingsDialog, uRecorderVisualControl, uOglChart,
   uOglChartColors, uRecorderDebugLog, uRecorderSqlTrendModel,
   uRecorderMeasurementSectionModel, uRecorderMeasurementSectionView,
-  uRecorderMeraBaseView;
+  uRecorderMeraBaseView, uRecorderSignalGeneratorModel,
+  uRecorderDacComponentModel;
 
 
 type
@@ -802,6 +803,16 @@ begin
   if (ASource = nil) or (ADest = nil) then
     Exit;
 
+  if (ASource is TRecorderPluginVisualComponent) and
+    (ADest is TRecorderPluginVisualComponent) then
+  begin
+    { Undo/clipboard snapshots preserve the full opaque state through the same
+      factory callback as a live clone; the editor never inspects plugin data. }
+    TRecorderPluginVisualComponent(ADest).AssignPluginVisual(
+      TRecorderPluginVisualComponent(ASource));
+    Exit;
+  end;
+
   ADest.NamedFontName := ASource.NamedFontName;
   ADest.Id := ASource.Id;
   ADest.Name := ASource.Name;
@@ -907,6 +918,13 @@ begin
   else if (ASource is TRecorderDonutComponent) and
     (ADest is TRecorderDonutComponent) then
     TRecorderDonutComponent(ADest).AssignDonut(TRecorderDonutComponent(ASource))
+  else if (ASource is TRecorderSignalGeneratorComponent) and
+    (ADest is TRecorderSignalGeneratorComponent) then
+    TRecorderSignalGeneratorComponent(ADest).AssignGenerator(
+      TRecorderSignalGeneratorComponent(ASource))
+  else if (ASource is TRecorderDacComponent) and
+    (ADest is TRecorderDacComponent) then
+    TRecorderDacComponent(ADest).AssignDac(TRecorderDacComponent(ASource))
   else if (ASource is TRecorder3dComponent) and
     (ADest is TRecorder3dComponent) then
     TRecorder3dComponent(ADest).Assign(TRecorder3dComponent(ASource));
@@ -1097,9 +1115,7 @@ end;
 
 
 procedure TFormEditorController.Render;
-
 var
-
   I: Integer;
   J: Integer;
   lPage: TRecorderFormPage;
@@ -1128,10 +1144,7 @@ var
   lConfigureMs: QWord;
   lRefreshMs: QWord;
   lSelectionContainsImage: Boolean;
-
-
   procedure AddHandle(AOperation: TFormEditorOperation; ALeft, ATop: Integer);
-
   begin
     lHandle := TPanel.Create(lPagePanel);
     lHandle.Parent := lPagePanel;
@@ -1283,21 +1296,14 @@ begin
           end;
 
         end;
-
       end;
-
       if not lFound or lRebuildNeeded then
       begin
         lRebuildNeeded := True;
         Break;
       end;
-
     end;
-
   end;
-
-
-
   if lRebuildNeeded then
   begin
     while lPagePanel.ControlCount > 0 do
@@ -1351,6 +1357,8 @@ begin
           TRecorderInputFieldView(lControl).EditMode := fEnabled;
         if lControl is TRecorderButtonView then
           TRecorderButtonView(lControl).EditMode := fEnabled;
+        if lControl is TRecorderPluginVisualHostControl then
+          TRecorderPluginVisualHostControl(lControl).EditMode := fEnabled;
         if lControl is TRecorderMeasurementSectionView then
           TRecorderMeasurementSectionView(lControl).EditMode := fEnabled;
         if lControl is TRecorderMeraBaseView then
@@ -1405,8 +1413,14 @@ begin
           lPanel.Caption := TRecorderInputFieldView(lControl).Text;
           lControl.Visible := False;
         end;
-
-        lPanel.Hint := lComponent.Factory.TypeName + ': ' + lComponent.Name;
+        { A missing plugin retains its model without a factory. Rendering this
+          placeholder must not depend on the DLL being available. }
+        if lComponent.Factory <> nil then
+          lPanel.Hint := lComponent.Factory.TypeName + ': ' + lComponent.Name
+        else if lComponent is TRecorderPluginVisualComponent then
+          lPanel.Hint := TRecorderPluginVisualComponent(lComponent).PluginTypeId +': ' + lComponent.Name
+        else
+          lPanel.Hint := lComponent.TypeId + ': ' + lComponent.Name;
       end
       else
       begin
@@ -1414,13 +1428,9 @@ begin
         lPanel.Color := clWhite;
         lPanel.Hint := lComponent.TypeId;
       end;
-
-
-
       if fEnabled and IsSelected(I) then
         lPanel.BevelOuter := bvRaised;
     end;
-
   end
   else
   begin
@@ -1471,6 +1481,8 @@ begin
           end;
           if lCtrl is TRecorderButtonView then
             TRecorderButtonView(lCtrl).EditMode := fEnabled;
+          if lCtrl is TRecorderPluginVisualHostControl then
+            TRecorderPluginVisualHostControl(lCtrl).EditMode := fEnabled;
           if lCtrl is TRecorderInputFieldView then
             TRecorderInputFieldView(lCtrl).EditMode := fEnabled;
           if lCtrl is TRecorderMeasurementSectionView then
@@ -2964,9 +2976,19 @@ begin
   Result.Id := AComponent.Id;
   Result.Name := AComponent.Name;
   Result.TagName := AComponent.TagName;
-  Result.TypeId := AComponent.TypeId;
-  Result.Snapshot := fComponentFactory.CreateComponent(AComponent.TypeId);
-  CopyComponentState(AComponent, Result.Snapshot);
+  if AComponent.Factory <> nil then
+    Result.TypeId := AComponent.Factory.TypeId
+  else if AComponent is TRecorderPluginVisualComponent then
+    Result.TypeId := TRecorderPluginVisualComponent(AComponent).PluginTypeId
+  else
+    Result.TypeId := AComponent.TypeId;
+  try
+    Result.Snapshot := fComponentFactory.CreateComponent(Result.TypeId);
+    CopyComponentState(AComponent, Result.Snapshot);
+  except
+    Result.Free;
+    raise;
+  end;
 
 
   if AComponent is TRecorderStaticTextComponent then

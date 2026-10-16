@@ -13,6 +13,8 @@ end;
 var M: TMemoryStream; InHeader, OutHeader: TBridgeHeader; Payload: TBytes;
   ErrorText: string; Config, Decoded: TMx248ConfigureV1; I: Integer;
   ReadHeader,DecodedReadHeader: TMx248ReadChannelHeader;
+  PxiConfig,DecodedPxiConfig: TMx248PxiConfigV1;
+  ChannelMask,DecodedChannelMask: Cardinal;
 begin
   M := TMemoryStream.Create;
   try
@@ -63,6 +65,51 @@ begin
     Check(DecodeReadChannelHeader(Payload,SizeOf(ReadHeader),DecodedReadHeader),'channel 8 header rejected');
     Check((DecodedReadHeader.LogicalChannel=8) and
       (DecodedReadHeader.SampleType=MX248_SAMPLE_VT_R4),'disabled 1/8 mapping changed');
+
+    FillChar(PxiConfig,SizeOf(PxiConfig),0);
+    PxiConfig.RtsiSev:=0;
+    PxiConfig.RtsiClock:=1;
+    PxiConfig.RtsiSync:=2;
+    PxiConfig.TriggerMode:=1;
+    PxiConfig.TriggerSource:=7;
+    PxiConfig.TriggerLevel:=1;
+    SetLength(Payload,SizeOf(PxiConfig));
+    Move(PxiConfig,Payload[0],SizeOf(PxiConfig));
+    Check(DecodePxiConfigV1(Payload,DecodedPxiConfig,ErrorText),
+      'CONFIGURE_PXI rejected: '+ErrorText);
+    Check(CompareMem(@PxiConfig,@DecodedPxiConfig,SizeOf(PxiConfig)),
+      'CONFIGURE_PXI round trip changed bytes');
+    PxiConfig.Reserved[1]:=1;
+    Move(PxiConfig,Payload[0],SizeOf(PxiConfig));
+    Check(not DecodePxiConfigV1(Payload,DecodedPxiConfig,ErrorText),
+      'CONFIGURE_PXI accepted nonzero reserved field');
+    PxiConfig.Reserved[1]:=0;
+    PxiConfig.RtsiSync:=4;
+    Move(PxiConfig,Payload[0],SizeOf(PxiConfig));
+    Check(not DecodePxiConfigV1(Payload,DecodedPxiConfig,ErrorText),
+      'CONFIGURE_PXI accepted invalid RTSI mode');
+    PxiConfig.RtsiSync:=2;
+    PxiConfig.TriggerLevel:=2;
+    Move(PxiConfig,Payload[0],SizeOf(PxiConfig));
+    Check(not DecodePxiConfigV1(Payload,DecodedPxiConfig,ErrorText),
+      'CONFIGURE_PXI accepted invalid trigger level');
+
+    ChannelMask:=$81;
+    SetLength(Payload,SizeOf(ChannelMask));
+    Move(ChannelMask,Payload[0],SizeOf(ChannelMask));
+    Check(DecodeChannelMask(Payload,DecodedChannelMask,ErrorText),
+      'ZERO_BALANCE valid mask rejected: '+ErrorText);
+    Check(DecodedChannelMask=$81,'ZERO_BALANCE mask changed');
+    ChannelMask:=0;
+    Move(ChannelMask,Payload[0],SizeOf(ChannelMask));
+    Check(not DecodeChannelMask(Payload,DecodedChannelMask,ErrorText),
+      'ZERO_BALANCE accepted empty mask');
+    ChannelMask:=$100;
+    Move(ChannelMask,Payload[0],SizeOf(ChannelMask));
+    Check(not DecodeChannelMask(Payload,DecodedChannelMask,ErrorText),
+      'ZERO_BALANCE accepted channel 9');
+    Check(4+8*(12+MX248_MAX_BLOCK_SAMPLES*4)+64<=BRIDGE_MAX_PAYLOAD,
+      'MX-248 maximum block does not fit the IPC response payload');
     Writeln('RESULT PXI MX-248 bridge protocol passed');
   finally M.Free end;
 end.

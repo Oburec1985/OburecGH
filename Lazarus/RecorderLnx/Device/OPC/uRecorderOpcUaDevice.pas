@@ -12,7 +12,7 @@ uses
 type
   { Protocol/session layer. It owns the Pascal protocol handle and knows nothing about
     Recorder tags or the data-source worker. }
-  TRecorderOpcUaDevice = class(TRecorderDevice)
+  TRecorderOpcUaDevice = class(TRcDevice)
   private
     fConfig: TRecorderOpcUaConfig;
     fHandle: TRecorderOpcUaHandle;

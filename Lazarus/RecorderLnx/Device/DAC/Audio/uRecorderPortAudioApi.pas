@@ -13,6 +13,30 @@ type
   TPaStream = Pointer;
   PPaStream = ^TPaStream;
   TPaSampleFormat = CULong;
+  TPaDeviceIndex = CInt;
+
+  PPaDeviceInfo = ^TPaDeviceInfo;
+  TPaDeviceInfo = record
+    StructVersion: CInt;
+    Name: PChar;
+    HostApi: CInt;
+    MaxInputChannels: CInt;
+    MaxOutputChannels: CInt;
+    DefaultLowInputLatency: CDouble;
+    DefaultLowOutputLatency: CDouble;
+    DefaultHighInputLatency: CDouble;
+    DefaultHighOutputLatency: CDouble;
+    DefaultSampleRate: CDouble;
+  end;
+
+  PPaStreamParameters = ^TPaStreamParameters;
+  TPaStreamParameters = record
+    Device: TPaDeviceIndex;
+    ChannelCount: CInt;
+    SampleFormat: TPaSampleFormat;
+    SuggestedLatency: CDouble;
+    HostApiSpecificStreamInfo: Pointer;
+  end;
 
   TPaInitialize = function: TPaError; cdecl;
   TPaTerminate = function: TPaError; cdecl;
@@ -20,6 +44,13 @@ type
     AOutputChannels: CInt; ASampleFormat: TPaSampleFormat;
     ASampleRate: CDouble; AFramesPerBuffer: CULong; ACallback,
     AUserData: Pointer): TPaError; cdecl;
+  TPaOpenStream = function(AStream: PPaStream;
+    AInputParameters, AOutputParameters: PPaStreamParameters;
+    ASampleRate: CDouble; AFramesPerBuffer: CULong; AStreamFlags: CULong;
+    ACallback, AUserData: Pointer): TPaError; cdecl;
+  TPaGetDeviceCount = function: TPaDeviceIndex; cdecl;
+  TPaGetDefaultOutputDevice = function: TPaDeviceIndex; cdecl;
+  TPaGetDeviceInfo = function(ADevice: TPaDeviceIndex): PPaDeviceInfo; cdecl;
   TPaCloseStream = function(AStream: TPaStream): TPaError; cdecl;
   TPaStartStream = function(AStream: TPaStream): TPaError; cdecl;
   TPaStopStream = function(AStream: TPaStream): TPaError; cdecl;
@@ -36,6 +67,10 @@ type
     Initialize: TPaInitialize;
     Terminate: TPaTerminate;
     OpenDefaultStream: TPaOpenDefaultStream;
+    OpenStream: TPaOpenStream;
+    GetDeviceCount: TPaGetDeviceCount;
+    GetDefaultOutputDevice: TPaGetDefaultOutputDevice;
+    GetDeviceInfo: TPaGetDeviceInfo;
     CloseStream: TPaCloseStream;
     StartStream: TPaStartStream;
     StopStream: TPaStopStream;
@@ -50,6 +85,8 @@ type
 
 const
   CPaNoError = 0;
+  CPaNoDevice = -1;
+  CPaNoFlag: CULong = 0;
   CPaFloat32: TPaSampleFormat = $00000001;
 
 implementation
@@ -96,6 +133,10 @@ begin
   Result := LoadProc('Pa_Initialize', Initialize) and
     LoadProc('Pa_Terminate', Terminate) and
     LoadProc('Pa_OpenDefaultStream', OpenDefaultStream) and
+    LoadProc('Pa_OpenStream', OpenStream) and
+    LoadProc('Pa_GetDeviceCount', GetDeviceCount) and
+    LoadProc('Pa_GetDefaultOutputDevice', GetDefaultOutputDevice) and
+    LoadProc('Pa_GetDeviceInfo', GetDeviceInfo) and
     LoadProc('Pa_CloseStream', CloseStream) and
     LoadProc('Pa_StartStream', StartStream) and
     LoadProc('Pa_StopStream', StopStream) and
@@ -116,6 +157,10 @@ begin
   Pointer(Initialize) := nil;
   Pointer(Terminate) := nil;
   Pointer(OpenDefaultStream) := nil;
+  Pointer(OpenStream) := nil;
+  Pointer(GetDeviceCount) := nil;
+  Pointer(GetDefaultOutputDevice) := nil;
+  Pointer(GetDeviceInfo) := nil;
   Pointer(CloseStream) := nil;
   Pointer(StartStream) := nil;
   Pointer(StopStream) := nil;

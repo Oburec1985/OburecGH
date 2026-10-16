@@ -9,6 +9,31 @@ uses
   Math, SysUtils, uRecorderTags, uRecorderDacTypes, uRecorderDacContracts;
 
 type
+  TRecorderDacWaveMode = (rdwmSine, rdwmAccurateSine, rdwmSweepSine);
+
+  TRecorderDacWaveProvider = class(TInterfacedObject,
+    IRecorderDacSampleProvider)
+  private
+    fMode: TRecorderDacWaveMode;
+    fFrequencyHz: Double;
+    fAmplitude: Double;
+    fSweepStartHz: Double;
+    fSweepEndHz: Double;
+    fSweepTimeSec: Double;
+    fPhase: Double;
+    fElapsedSec: Double;
+    fConfig: TRecorderDacConfig;
+    function CurrentFrequency: Double;
+  public
+    constructor Create(AMode: TRecorderDacWaveMode; AFrequencyHz,
+      AAmplitude, ASweepStartHz, ASweepEndHz, ASweepTimeSec: Double);
+    function Configure(const AConfig: TRecorderDacConfig;
+      out AResult: TRecorderDacResult): Boolean;
+    procedure Reset;
+    function FillBlock(ABuffer: PDouble; AFrameCapacity: Integer;
+      out AFrameCount: Integer; out AResult: TRecorderDacResult): Boolean;
+  end;
+
   TRecorderDacSineProvider = class(TInterfacedObject,
     IRecorderDacSampleProvider)
   private
@@ -48,6 +73,74 @@ type
   end;
 
 implementation
+
+constructor TRecorderDacWaveProvider.Create(AMode: TRecorderDacWaveMode;
+  AFrequencyHz, AAmplitude, ASweepStartHz, ASweepEndHz,
+  ASweepTimeSec: Double);
+begin
+  inherited Create;
+  fMode := AMode;
+  fFrequencyHz := AFrequencyHz;
+  fAmplitude := AAmplitude;
+  fSweepStartHz := ASweepStartHz;
+  fSweepEndHz := ASweepEndHz;
+  fSweepTimeSec := ASweepTimeSec;
+end;
+
+function TRecorderDacWaveProvider.Configure(const AConfig: TRecorderDacConfig;
+  out AResult: TRecorderDacResult): Boolean;
+var
+  lMaxFrequency: Double;
+begin
+  fConfig := AConfig;
+  if fMode = rdwmSweepSine then lMaxFrequency := Max(fSweepStartHz, fSweepEndHz)
+  else lMaxFrequency := fFrequencyHz;
+  Result := (fAmplitude >= 0) and (lMaxFrequency >= 0) and
+    (lMaxFrequency <= AConfig.SampleRateHz / 2) and
+    ((fMode <> rdwmSweepSine) or (fSweepTimeSec > 0));
+  if Result then AResult := RecorderDacOk
+  else AResult := RecorderDacFailed(rdeInvalidConfig, rdsgConfigure,
+    'DAC signal parameters are outside the sample-rate range');
+end;
+
+procedure TRecorderDacWaveProvider.Reset;
+begin
+  fPhase := 0;
+  fElapsedSec := 0;
+end;
+
+function TRecorderDacWaveProvider.CurrentFrequency: Double;
+var
+  lFraction: Double;
+begin
+  if fMode <> rdwmSweepSine then Exit(fFrequencyHz);
+  lFraction := Frac(fElapsedSec / fSweepTimeSec);
+  Result := fSweepStartHz + (fSweepEndHz - fSweepStartHz) * lFraction;
+end;
+
+function TRecorderDacWaveProvider.FillBlock(ABuffer: PDouble;
+  AFrameCapacity: Integer; out AFrameCount: Integer;
+  out AResult: TRecorderDacResult): Boolean;
+var
+  I, lChannel: Integer;
+  lValue: Double;
+begin
+  AFrameCount := AFrameCapacity;
+  for I := 0 to AFrameCount - 1 do
+  begin
+    lValue := fAmplitude * Sin(fPhase);
+    for lChannel := 0 to fConfig.ChannelCount - 1 do
+    begin
+      ABuffer^ := lValue;
+      Inc(ABuffer);
+    end;
+    fPhase := fPhase + 2 * Pi * CurrentFrequency / fConfig.SampleRateHz;
+    fPhase := fPhase - Floor(fPhase / (2 * Pi)) * 2 * Pi;
+    fElapsedSec := fElapsedSec + 1 / fConfig.SampleRateHz;
+  end;
+  AResult := RecorderDacOk;
+  Result := True;
+end;
 
 constructor TRecorderDacSineProvider.Create(AFrequencyHz, AAmplitude: Double;
   AOffset: Double);

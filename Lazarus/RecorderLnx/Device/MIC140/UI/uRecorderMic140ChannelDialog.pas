@@ -13,7 +13,7 @@ uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls,
   uRecorderMic140DataSource, uRecorderMeraSdbThermocouples, uRecorderMeraPaths,
   uRecorderSdbSelectDialog, uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig,
-  uRecorderMic140Utils, uRecorderMic140Thermocouple;
+  uRecorderMic140Utils;
 
 function ShowRecorderMic140ChannelDialog(AOwner: TComponent; AChannelNumber: Integer;
   ADeviceSerial, ADevSubRev: Integer;

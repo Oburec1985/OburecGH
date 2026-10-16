@@ -99,6 +99,13 @@ if not exist "%REMOTE_INSTALLER%" (
   exit /b 2
 )
 
+echo Stopping RecorderLnx processes before replacing installed files...
+for %%P in (RecorderLnx.exe PxiMx248Bridge.exe RecorderHostAgent.exe) do (
+  taskkill.exe /F /IM "%%P" >nul 2>&1
+)
+rem Allow Windows to release mapped executable/CHM sections before Inno Setup.
+ping.exe 127.0.0.1 -n 2 >nul
+
 "%REMOTE_INSTALLER%" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /MERAFILES="C:\Mera Files" /LOG="%REMOTE_LOG%"
 set "INSTALL_EXIT=%ERRORLEVEL%"
 if not "%INSTALL_EXIT%"=="0" (

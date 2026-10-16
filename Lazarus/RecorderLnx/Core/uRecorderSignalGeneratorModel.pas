@@ -100,7 +100,7 @@ type
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
       const AContext: TRecorderComponentCreateContext); override;
   public
-    constructor Create;
+    constructor Create; reintroduce;
   end;
 
 procedure RegisterRecorderSignalGeneratorFactory(
@@ -277,7 +277,7 @@ begin
   inherited Create(TRecorderSignalGeneratorComponent.TypeId,
     'Signal generator', TRecorderSignalGeneratorComponent, 360, 170, False);
   ConfigurePalette('Генератор сигналов', 'Добавить генератор сигналов',
-    'digital-indicator', 60);
+    'digital-indicator', 60, rppGroup, CRecorderPaletteGroupSignals);
 end;
 
 procedure TRecorderSignalGeneratorFactory.ConfigureNewComponent(

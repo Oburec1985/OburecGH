@@ -9,7 +9,9 @@ unit uRecorder3dSettingsDialog;
 interface
 uses Classes,SysUtils,Forms,Controls,StdCtrls,ExtCtrls,ComCtrls,Dialogs,Grids,
   Graphics,Spin,ColorBox,uRecorder3dModel,uRecorderTags,u3dScene,u3dMeshTopology,
-  uRecorder3dSkinModifierFrame, uRecorder3dVertexColorModifierFrame;
+  uRecorder3dSkinModifierFrame, uRecorder3dVertexColorModifierFrame,
+  uRecorder3dFrfModifierFrame, uRecorderImpactHammerContracts,
+  uRecorder3dPrimitivePropertiesFrame;
 
 type
   TRecorder3dCornerIndices = array of LongWord;
@@ -32,6 +34,8 @@ type
     chkObjectPoints: TCheckBox;
     chkObjectWireframe: TCheckBox;
     chkShowAxes: TCheckBox;
+    lblLabelFontSize: TLabel;
+    seLabelFontSize: TSpinEdit;
     cbPointColor:TColorBox;
     edNormalLength: TEdit;
     edSceneFile: TEdit;
@@ -57,6 +61,13 @@ type
     splDetailsBottom,splModifiers,splModifierEditor:TSplitter;
     lblModifiers:TLabel;
     lbModifiers:TListBox;
+    objectPages:TPageControl;
+    propertiesTab,bindingsTab,sceneTab:TTabSheet;
+    lblObjectName,lblObjectColor:TLabel;
+    objectNameEdit:TEdit;
+    objectColorBox:TColorBox;
+    specificHost:TGroupBox;
+    primitiveFrame:TRecorder3dPrimitivePropertiesFrame;
     btnOk:TButton;
     btnCancel:TButton;
     procedure BrowseClick(Sender:TObject);
@@ -64,6 +75,7 @@ type
     procedure BindingComboChange(Sender:TObject);
     procedure ObjectRenderSettingsChange(Sender:TObject);
     procedure PointColorSelect(Sender:TObject);
+    procedure LabelFontSizeChange(Sender:TObject);
     procedure SceneTreeSelectionChanged(Sender:TObject);
     procedure VerticesSelectCell(Sender:TObject; ACol,ARow:Integer;
       var CanSelect:Boolean);
@@ -74,6 +86,7 @@ type
     procedure OkClick(Sender:TObject);
     procedure CancelClick(Sender:TObject);
     procedure ModifierSelectionChange(Sender:TObject);
+    procedure ObjectPropertiesChanged(Sender:TObject);
   private
     fComponent:TRecorder3dComponent;
     fRegistry:TRecorderTagRegistry;
@@ -93,11 +106,14 @@ type
     fOnNodeSelected:TRecorder3dNodeSelectedEvent;
     fOnVertexSelected:TRecorder3dVertexSelectedEvent;
     fOnSettingsApplied:TNotifyEvent;
+    fOnGeometryChanged:TNotifyEvent;
     fOnSkinChanged:TNotifyEvent;
     fOnVertexColorChanged:TNotifyEvent;
     fSynchronizingSelection:Boolean;
     fSkinFrame:TRecorder3dSkinModifierFrame;
     fVertexColorFrame:TRecorder3dVertexColorModifierFrame;
+    fIntensityFrame:TRecorder3dFrfModifierFrame;
+    fOscillationFrame:TRecorder3dFrfModifierFrame;
     fModifierScroll:TScrollBox;
     fOnAddSkinHelper:TRecorder3dAddSkinBoneEvent;
     fOnDeleteSkinHelper:TRecorder3dDeleteSkinBoneEvent;
@@ -105,6 +121,8 @@ type
     fOnRenameSkinHelper:TRecorder3dRenameSkinBoneEvent;
     fOnSetSkinInfluence:TRecorder3dSetSkinInfluenceEvent;
     fOnRemoveSkinInfluence:TRecorder3dRemoveSkinInfluenceEvent;
+    procedure CreateObjectPages;
+    procedure ApplyPrimitiveProperties;
     function SelectedLogicalVertexId:LongWord;
     procedure CreateModifierFrames;
     procedure ShowSelectedModifier;
@@ -138,37 +156,25 @@ type
     function ResolveMesh(ANode:T3dNode):T3dMeshData;
     function Matches(ATag:TRecorderTag; const AFilter:string):Boolean;
   public
-    constructor CreateDialog(AOwner:TComponent; AComponent:TRecorder3dComponent;
-      ARegistry:TRecorderTagRegistry; ASelectedNodeId:QWord=0);
+    constructor CreateDialog(AOwner:TComponent; AComponent:TRecorder3dComponent; ARegistry:TRecorderTagRegistry; ASelectedNodeId:QWord=0);
     destructor Destroy; override;
     procedure ShowEditor(ASelectedNodeId:QWord);
     procedure AttachLiveScene(AScene:T3dScene; ASelectedNodeId:QWord);
-    procedure UpdateContext(AComponent:TRecorder3dComponent;
-      ARegistry:TRecorderTagRegistry);
+    procedure UpdateContext(AComponent:TRecorder3dComponent; ARegistry:TRecorderTagRegistry);
     procedure SelectNodeFromView(ANodeId:QWord);
     procedure SelectVertexFromView(ANodeId:QWord; ALogicalVertex:Integer);
-    property OnNodeSelected:TRecorder3dNodeSelectedEvent
-      read fOnNodeSelected write fOnNodeSelected;
-    property OnVertexSelected:TRecorder3dVertexSelectedEvent
-      read fOnVertexSelected write fOnVertexSelected;
-    property OnSettingsApplied:TNotifyEvent read fOnSettingsApplied
-      write fOnSettingsApplied;
-    property OnSkinChanged:TNotifyEvent read fOnSkinChanged
-      write fOnSkinChanged;
-    property OnVertexColorChanged:TNotifyEvent read fOnVertexColorChanged
-      write fOnVertexColorChanged;
-    property OnAddSkinHelper:TRecorder3dAddSkinBoneEvent
-      read fOnAddSkinHelper write fOnAddSkinHelper;
-    property OnDeleteSkinHelper:TRecorder3dDeleteSkinBoneEvent
-      read fOnDeleteSkinHelper write fOnDeleteSkinHelper;
-    property OnResetSkinHelpers:TNotifyEvent
-      read fOnResetSkinHelpers write fOnResetSkinHelpers;
-    property OnRenameSkinHelper:TRecorder3dRenameSkinBoneEvent
-      read fOnRenameSkinHelper write fOnRenameSkinHelper;
-    property OnSetSkinInfluence:TRecorder3dSetSkinInfluenceEvent
-      read fOnSetSkinInfluence write fOnSetSkinInfluence;
-    property OnRemoveSkinInfluence:TRecorder3dRemoveSkinInfluenceEvent
-      read fOnRemoveSkinInfluence write fOnRemoveSkinInfluence;
+    property OnNodeSelected:TRecorder3dNodeSelectedEvent read fOnNodeSelected write fOnNodeSelected;
+    property OnVertexSelected:TRecorder3dVertexSelectedEvent read fOnVertexSelected write fOnVertexSelected;
+    property OnSettingsApplied:TNotifyEvent read fOnSettingsApplied write fOnSettingsApplied;
+    property OnGeometryChanged:TNotifyEvent read fOnGeometryChanged write fOnGeometryChanged;
+    property OnSkinChanged:TNotifyEvent read fOnSkinChanged write fOnSkinChanged;
+    property OnVertexColorChanged:TNotifyEvent read fOnVertexColorChanged write fOnVertexColorChanged;
+    property OnAddSkinHelper:TRecorder3dAddSkinBoneEvent read fOnAddSkinHelper write fOnAddSkinHelper;
+    property OnDeleteSkinHelper:TRecorder3dDeleteSkinBoneEvent read fOnDeleteSkinHelper write fOnDeleteSkinHelper;
+    property OnResetSkinHelpers:TNotifyEvent read fOnResetSkinHelpers write fOnResetSkinHelpers;
+    property OnRenameSkinHelper:TRecorder3dRenameSkinBoneEvent read fOnRenameSkinHelper write fOnRenameSkinHelper;
+    property OnSetSkinInfluence:TRecorder3dSetSkinInfluenceEvent read fOnSetSkinInfluence write fOnSetSkinInfluence;
+    property OnRemoveSkinInfluence:TRecorder3dRemoveSkinInfluenceEvent read fOnRemoveSkinInfluence write fOnRemoveSkinInfluence;
   end;
 
 function ShowRecorder3dSettingsDialog(AOwner:TComponent;
@@ -186,6 +192,7 @@ begin
   fComponent:=AComponent;
   fRegistry:=ARegistry;
   fInitialSelectedNodeId:=ASelectedNodeId;
+  CreateObjectPages;
   cbBindX.Tag:=Ord(r3bPointX);
   cbBindY.Tag:=Ord(r3bPointY);
   cbBindZ.Tag:=Ord(r3bPointZ);
@@ -214,14 +221,68 @@ begin
   LoadModel;
 end;
 
+procedure TRecorder3dSettingsDialog.CreateObjectPages;
+  procedure Move(AControl:TControl; AParent:TWinControl; ATop:Integer);
+  begin
+    AControl.Parent:=AParent; AControl.Top:=ATop;
+  end;
+begin
+  Move(lblSelectedObjectSettings,propertiesTab,76);
+  Move(chkObjectFill,propertiesTab,99); Move(chkObjectWireframe,propertiesTab,99);
+  Move(chkObjectPoints,propertiesTab,99); Move(chkObjectNormals,propertiesTab,99);
+  Move(chkShowAxes,sceneTab,16); Move(lblNormalLength,propertiesTab,136);
+  Move(edNormalLength,propertiesTab,132); Move(lblPointColor,propertiesTab,168);
+  Move(cbPointColor,propertiesTab,164);
+  Move(lblTagSearch,bindingsTab,16); Move(edTagSearch,bindingsTab,12);
+  Move(lblBindX,bindingsTab,52); Move(cbBindX,bindingsTab,48);
+  Move(lblBindY,bindingsTab,84); Move(cbBindY,bindingsTab,80);
+  Move(lblBindZ,bindingsTab,116); Move(cbBindZ,bindingsTab,112);
+  Move(lblBindColor,bindingsTab,148); Move(cbBindColor,bindingsTab,144);
+  Move(lblBindNormalLength,bindingsTab,180); Move(cbBindNormalLength,bindingsTab,176);
+  primitiveFrame.OnChanged:=@ObjectPropertiesChanged;
+end;
+
+procedure TRecorder3dSettingsDialog.ObjectPropertiesChanged(Sender:TObject);
+begin
+  if fPopulating then Exit;
+  ApplyPrimitiveProperties;
+end;
+
+procedure TRecorder3dSettingsDialog.ApplyPrimitiveProperties;
+var Index,lUpdated:Integer; Spec:T3dPrimitiveSpec;
+begin
+  if (fComponent=nil) or (fScene=nil) or (fSelectedNode=nil) then Exit;
+  Index:=fComponent.FindPrimitiveIndex(fSelectedNode.Id);
+  if Index<0 then Exit;
+  Spec:=fComponent.Primitives[Index];
+  Spec.Name:=Trim(objectNameEdit.Text);
+  if Spec.Name='' then Spec.Name:='Object';
+  Spec.Color:=LongInt(objectColorBox.Selected);
+  primitiveFrame.StoreSpec(Spec);
+  NormalizePrimitiveSpec(Spec);
+  fComponent.UpdatePrimitive(Spec);
+  fSelectedNode.Name:=Spec.Name;
+  RebuildPrimitiveNodeGeometry(fSelectedNode,Spec);
+  fScene.RebuildWorldTransforms(lUpdated); fScene.MarkBoundsDirty;
+  if tvScene.Selected<>nil then tvScene.Selected.Text:=Spec.Name;
+  FillVertexGrid;
+  if Assigned(fOnGeometryChanged) then fOnGeometryChanged(Self);
+end;
+
 procedure TRecorder3dSettingsDialog.CreateModifierFrames;
 begin
   lbModifiers.Items.Clear;
   lbModifiers.Items.Add('Skin');
   lbModifiers.Items.Add('Цвета вершин');
+  lbModifiers.Items.Add('Интенсивность');
+  lbModifiers.Items.Add('Колебания');
   lbModifiers.ItemIndex:=0;
   fSkinFrame:=TRecorder3dSkinModifierFrame.Create(Self);
   fVertexColorFrame:=TRecorder3dVertexColorModifierFrame.Create(Self);
+  fIntensityFrame:=TRecorder3dFrfModifierFrame.Create(Self);
+  fIntensityFrame.Name:='frIntensity';
+  fOscillationFrame:=TRecorder3dFrfModifierFrame.Create(Self);
+  fOscillationFrame.Name:='frOscillation';
   fModifierScroll:=TScrollBox.Create(Self);
   fModifierScroll.Parent:=pnlModifierHost;
   fModifierScroll.Align:=alClient;
@@ -243,6 +304,12 @@ begin
   fVertexColorFrame.Width:=fModifierScroll.ClientWidth;
   fVertexColorFrame.OnChanged:=@VertexColorFrameChanged;
   fVertexColorFrame.Configure(fComponent,fRegistry);
+  fIntensityFrame.Parent:=fModifierScroll;
+  fIntensityFrame.Align:=alClient;
+  fIntensityFrame.Configure(fComponent,rgbmIntensity);
+  fOscillationFrame.Parent:=fModifierScroll;
+  fOscillationFrame.Align:=alClient;
+  fOscillationFrame.Configure(fComponent,rgbmOscillation);
   ShowSelectedModifier;
 end;
 
@@ -253,6 +320,10 @@ begin
   fSkinFrame.Visible:=lbModifiers.ItemIndex=0;
   if fVertexColorFrame<>nil then
     fVertexColorFrame.Visible:=lbModifiers.ItemIndex=1;
+  if fIntensityFrame<>nil then
+    fIntensityFrame.Visible:=lbModifiers.ItemIndex=2;
+  if fOscillationFrame<>nil then
+    fOscillationFrame.Visible:=lbModifiers.ItemIndex=3;
 end;
 
 procedure TRecorder3dSettingsDialog.VertexColorFrameChanged(Sender:TObject);
@@ -551,6 +622,13 @@ begin
   PopulateBindings(edTagSearch.Text);
 end;
 
+procedure TRecorder3dSettingsDialog.LabelFontSizeChange(Sender:TObject);
+begin
+  if fPopulating or (fComponent=nil) then Exit;
+  fComponent.LabelFontSize:=seLabelFontSize.Value;
+  if Assigned(fOnSettingsApplied) then fOnSettingsApplied(Self);
+end;
+
 procedure TRecorder3dSettingsDialog.BrowseClick(Sender:TObject);
 var
   Dialog:TOpenDialog;
@@ -671,6 +749,7 @@ procedure TRecorder3dSettingsDialog.ClearLiveHighlight;
 var
   Empty:TRecorder3dCornerIndices;
 begin
+  SetLength(Empty,0);
   if Assigned(fOnVertexSelected) then
     fOnVertexSelected(0,Empty,Empty);
 end;
@@ -688,15 +767,36 @@ end;
 
 procedure TRecorder3dSettingsDialog.LoadSelectedNode;
 var
-  I:Integer;
+  I,PrimitiveIndex:Integer;
   lWasPopulating:Boolean;
+  Spec:T3dPrimitiveSpec;
 begin
   lWasPopulating:=fPopulating;
   fPopulating:=True;
   try
   for I:=0 to 3 do
     ObjectRenderCheck(I).Enabled:=fSelectedNode<>nil;
-  if fSelectedNode=nil then Exit;
+  if fSelectedNode=nil then
+  begin
+    objectNameEdit.Enabled:=False; objectColorBox.Enabled:=False;
+    specificHost.Visible:=False;
+    Exit;
+  end;
+  objectNameEdit.Text:=fSelectedNode.Name;
+  PrimitiveIndex:=fComponent.FindPrimitiveIndex(fSelectedNode.Id);
+  objectNameEdit.Enabled:=PrimitiveIndex>=0;
+  specificHost.Visible:=PrimitiveIndex>=0;
+  objectColorBox.Enabled:=(fSelectedNode.Mesh<>nil);
+  if fSelectedNode.Mesh<>nil then
+    objectColorBox.Selected:=TColor(fSelectedNode.Mesh.Color.R or
+      (LongInt(fSelectedNode.Mesh.Color.G) shl 8) or
+      (LongInt(fSelectedNode.Mesh.Color.B) shl 16));
+  if PrimitiveIndex>=0 then
+  begin
+    Spec:=fComponent.Primitives[PrimitiveIndex];
+    NormalizePrimitiveSpec(Spec);
+    primitiveFrame.LoadSpec(Spec);
+  end;
   if fSelectedNode.HasRenderOverride then
   begin
     chkObjectFill.Checked:=fSelectedNode.DrawFillOverride;
@@ -807,7 +907,7 @@ begin
   for I:=0 to High(fTopology.Vertices) do
   begin
     Vertex:=fTopology.Vertices[I];
-    sgVertices.Cells[0,I+1]:=IntToStr(I);
+    sgVertices.Cells[0,I+1]:=IntToStr(I+1);
     sgVertices.Cells[1,I+1]:=IntToStr(Vertex.StableId);
     sgVertices.Cells[2,I+1]:=FloatToStr(Vertex.Position.X);
     sgVertices.Cells[3,I+1]:=FloatToStr(Vertex.Position.Y);
@@ -871,6 +971,8 @@ var
   PrimaryCorners:TRecorder3dCornerIndices;
   AdjacentCorners:TRecorder3dCornerIndices;
 begin
+  SetLength(PrimaryCorners,0);
+  SetLength(AdjacentCorners,0);
   if not Assigned(fOnVertexSelected) or (fSelectedNode=nil) then
     Exit;
   if (ALogicalVertex<0) or
@@ -901,6 +1003,9 @@ var
 begin
   edSceneFile.Text:=fComponent.SceneFileName;
   chkShowAxes.Checked:=fComponent.ShowAxes;
+  seLabelFontSize.OnChange:=nil;
+  seLabelFontSize.Value:=EnsureRange(fComponent.LabelFontSize,4,48);
+  seLabelFontSize.OnChange:=@LabelFontSizeChange;
   edNormalLength.Text:=FloatToStr(fComponent.NormalLength);
   cbPointColor.Selected:=TColor(fComponent.PointColor);
   for Slot:=Low(Slot) to High(Slot) do
@@ -931,6 +1036,7 @@ procedure TRecorder3dSettingsDialog.SaveGlobalSettings;
 begin
   fComponent.SceneFileName:=edSceneFile.Text;
   fComponent.ShowAxes:=chkShowAxes.Checked;
+  fComponent.LabelFontSize:=seLabelFontSize.Value;
   fComponent.NormalLength:=StrToFloatDef(edNormalLength.Text,0.25);
   fComponent.PointColor:=LongInt(cbPointColor.Selected);
   if tvScene.Selected<>nil then

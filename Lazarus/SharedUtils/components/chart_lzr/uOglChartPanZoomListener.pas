@@ -221,15 +221,24 @@ begin
 end;
 
 function ResolveSelectedAxis(APage: TChartPage; ASelected: TChartBaseObject): TChartAxis;
+var
+  I: Integer;
 begin
   Result := nil;
-  if (not Assigned(APage)) or (not Assigned(ASelected)) then
+  if not Assigned(APage) then
     Exit;
-  if (ASelected is TChartAxis) and (ASelected.Parent = APage) then
-    Exit(TChartAxis(ASelected));
-  if (ASelected is cBaseTrend) and Assigned(ASelected.Parent) and
-    (ASelected.Parent is TChartAxis) and (ASelected.Parent.Parent = APage) then
-    Exit(TChartAxis(ASelected.Parent));
+  if Assigned(ASelected) then
+  begin
+    if (ASelected is TChartAxis) and (ASelected.Parent = APage) then
+      Exit(TChartAxis(ASelected));
+    if (ASelected is cBaseTrend) and Assigned(ASelected.Parent) and
+      (ASelected.Parent is TChartAxis) and (ASelected.Parent.Parent = APage) then
+      Exit(TChartAxis(ASelected.Parent));
+  end;
+  if APage.SelectedYAxisOnly then
+    for I := 0 to APage.ChildCount - 1 do
+      if APage.Children[I] is TChartAxis then
+        Exit(TChartAxis(APage.Children[I]));
 end;
 
 procedure MarkAxisUserZoomY(AAxis: TChartAxis);
@@ -718,6 +727,7 @@ var
   lPage: TChartPage;
   lPageRect, lContentRect: TChartPixelRect;
   lTextHit: TChartTextHit;
+  lSelectedAxis: TChartAxis;
   lIndex: Integer;
 begin
   if not Enabled then Exit;
@@ -775,7 +785,23 @@ begin
                   Continue;
               end
               else if IsOnYAxisBand(lRenderer, lPage, X, Y) then
-                fZoomSelectMode := zsmYOnly
+              begin
+                { Let the selection listener handle tick/title clicks so it
+                  can preserve its existing text-edit behavior. }
+                if lPage.SelectedYAxisOnly and
+                  lRenderer.GetTextHitAt(X, Y, lTextHit) and
+                  (lTextHit.Axis <> nil) then
+                  Continue;
+                fZoomSelectMode := zsmYOnly;
+                { Pan/zoom receives the click before the selection listener.
+                  Select the exact axis here so the same gesture can both
+                  activate it and start a Y-only drag zoom. }
+                if lRenderer.GetAxisHitAt(lModel, X, Y, lSelectedAxis) then
+                begin
+                  lRenderer.SelectedObject := lSelectedAxis;
+                  lControl.Redraw;
+                end;
+              end
               else if IsOnXAxisBand(lRenderer, lPage, X, Y) then
                 fZoomSelectMode := zsmXOnly
               else
@@ -873,15 +899,8 @@ begin
       ClampPageXToPreset(fActivePage);
       fActivePage.ZoomedX := True;
       
-      // Определяем выбранную ось (Y) для изоляции панорамирования
-      lSelectedAxis := nil;
-      if Assigned(lRenderer.SelectedObject) then
-      begin
-        if lRenderer.SelectedObject is TChartAxis then
-          lSelectedAxis := TChartAxis(lRenderer.SelectedObject)
-        else if (lRenderer.SelectedObject is cBaseTrend) and Assigned(lRenderer.SelectedObject.Parent) and (lRenderer.SelectedObject.Parent is TChartAxis) then
-          lSelectedAxis := TChartAxis(lRenderer.SelectedObject.Parent);
-      end;
+      lSelectedAxis := ResolveSelectedAxis(fActivePage,
+        lRenderer.SelectedObject);
 
       for lIndex := 0 to fActivePage.ChildCount - 1 do
         if fActivePage.Children[lIndex] is TChartAxis then
@@ -1041,15 +1060,8 @@ begin
             ClampPageXToPreset(fActivePage);
             fActivePage.ZoomedX := True;
           end;
-          // Определяем выбранную ось (Y) для изоляции рамки зума
-          lSelectedAxis := nil;
-          if Assigned(lRenderer.SelectedObject) then
-          begin
-            if lRenderer.SelectedObject is TChartAxis then
-              lSelectedAxis := TChartAxis(lRenderer.SelectedObject)
-            else if (lRenderer.SelectedObject is cBaseTrend) and Assigned(lRenderer.SelectedObject.Parent) and (lRenderer.SelectedObject.Parent is TChartAxis) then
-              lSelectedAxis := TChartAxis(lRenderer.SelectedObject.Parent);
-          end;
+          lSelectedAxis := ResolveSelectedAxis(fActivePage,
+            lRenderer.SelectedObject);
 
           // Зум по осям Y
           for lIndex := 0 to fActivePage.ChildCount - 1 do
@@ -1159,15 +1171,7 @@ begin
       ClampPageXToPreset(lPage);
       lPage.ZoomedX := True;
       
-      // Определяем выбранную ось (Y) для изоляции зума
-      lSelectedAxis := nil;
-      if Assigned(lRenderer.SelectedObject) then
-      begin
-        if lRenderer.SelectedObject is TChartAxis then
-          lSelectedAxis := TChartAxis(lRenderer.SelectedObject)
-        else if (lRenderer.SelectedObject is cBaseTrend) and Assigned(lRenderer.SelectedObject.Parent) and (lRenderer.SelectedObject.Parent is TChartAxis) then
-          lSelectedAxis := TChartAxis(lRenderer.SelectedObject.Parent);
-      end;
+      lSelectedAxis := ResolveSelectedAxis(lPage, lRenderer.SelectedObject);
 
       // Масштабирование по осям Y относительно курсора мыши
       for lIndex := 0 to lPage.ChildCount - 1 do

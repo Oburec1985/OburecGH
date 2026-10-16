@@ -40,6 +40,8 @@ type
   TRecorderNullDacFactory = class(TRecorderDacBackendFactory)
   public
     function BackendId: string; override;
+    function DiscoverEndpoints(out AEndpoints: TRecorderDacEndpoints;
+      out AResult: TRecorderDacResult): Boolean; override;
     function CreateBackend(const AEndpoint: string): IRecorderDacBackend; override;
   end;
 
@@ -162,6 +164,18 @@ end;
 function TRecorderNullDacFactory.BackendId: string;
 begin
   Result := 'null';
+end;
+
+function TRecorderNullDacFactory.DiscoverEndpoints(
+  out AEndpoints: TRecorderDacEndpoints;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  SetLength(AEndpoints, 1);
+  AEndpoints[0].BackendId := BackendId;
+  AEndpoints[0].Endpoint := 'default';
+  AEndpoints[0].DisplayName := 'Без аппаратного вывода (тест)';
+  AResult := RecorderDacOk;
+  Result := True;
 end;
 
 function TRecorderNullDacFactory.CreateBackend(

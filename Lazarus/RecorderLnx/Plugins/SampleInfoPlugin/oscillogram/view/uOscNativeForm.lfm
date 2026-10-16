@@ -1,0 +1,19 @@
+object OscNativeForm: TOscNativeForm
+  Left = 0
+  Height = 350
+  Top = 0
+  Width = 650
+  BorderStyle = bsNone
+  Caption = 'Oscillogram plugin view'
+  ClientHeight = 350
+  ClientWidth = 650
+  Position = poDesigned
+  object View: TOscView
+    Left = 0
+    Height = 350
+    Top = 0
+    Width = 650
+    Align = alClient
+    ParentBackground = False
+  end
+end

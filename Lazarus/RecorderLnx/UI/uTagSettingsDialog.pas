@@ -12,7 +12,7 @@ unit uTagSettingsDialog;
     - При сохранении изменения применяются ко всем выбранным тегам.
 
   Кодировка (2026-06):
-    Файл в UTF-8, {$codepage UTF8}. Строки для LCL — обычные string-литералы.
+    Файл в UTF-8 с соответствующей директивой codepage. Строки для LCL — обычные string-литералы.
     См. Docs/source-encoding.md.
 }
 
@@ -30,7 +30,7 @@ uses
   uRecorderStrainCalibrationDialog,
   uRecorderCommandImages, uRcIconIds,
   uRecorderFrequencyGrids, uRecorderUnitManager,
-  uRecorderTagCalibrationDialog;
+  uRecorderTagCalibrationDialog, uRecorderConfiguredDataSources;
 
 type
   TTagHardwareSourceSetupEvent = procedure(Sender: TObject; ATag: TRecorderTag) of object;
@@ -1168,7 +1168,8 @@ var
 begin
   lSourceId := Trim(ASourceId);
   Result := (lSourceId <> '') and (not SameText(lSourceId, 'manual')) and
-    (not SameText(lSourceId, 'debug.diagnostics'));
+    (not SameText(lSourceId, 'debug.diagnostics')) and
+    (RecorderConfiguredDataSourcesFind(fTagRegistry, lSourceId) = nil);
 end;
 
 function TTagSettingsDialog.IsSignalAlreadyLinked(const ASourceId: string;
@@ -1611,7 +1612,18 @@ begin
     fDescriptionEdit.Text := '';
 
   fFrequencyCombo.Items.Clear;
-  if AllSourceId(lSourceId) and
+  { Аппаратный provider является первичным источником допустимой сетки.
+    Это важно для драйверов, которые не регистрируют глобальную сетку, а
+    получают/задают её в рамках собственного контракта настроек. Старый
+    реестр оставляем fallback для legacy-источников. }
+  if (fTags.Count = 1) and ResolveSettingsProvider(TagAt(0), lProvider) then
+  begin
+    RecorderInitTagSettingsState(lState);
+    if lProvider.ReadState(fTagRegistry, TagAt(0), lState) then
+      for I := 0 to High(lState.FrequencyNames) do
+        fFrequencyCombo.Items.Add(lState.FrequencyNames[I]);
+  end;
+  if (fFrequencyCombo.Items.Count = 0) and AllSourceId(lSourceId) and
     RecorderFrequencyGridForSource(lSourceId, lFrequencyGrid) then
     for I := 0 to High(lFrequencyGrid) do
       fFrequencyCombo.Items.Add(FormatFloat('0.######', lFrequencyGrid[I]));
@@ -2600,6 +2612,12 @@ begin
 
   if Trim(TagAt(0).HardwareCalibrationName) = '' then
   begin
+    if SameText(Copy(RecorderNormalizeTagSourceId(TagAt(0).SourceId), 1,
+      Length('pxi-mx248:')), 'pxi-mx248:') then
+    begin
+      DownloadHardwareCalibrationFromDeviceClick(Sender);
+      Exit;
+    end;
     MessageDlg('Аппаратная ГХ',
       'У выбранного тега нет назначенной аппаратной ГХ. Сначала выполните вычитку ГХ из модуля.',
       mtInformation, [mbOK], 0);
@@ -2751,7 +2769,9 @@ end;
 procedure TTagSettingsDialog.DownloadHardwareCalibrationFromDeviceClick(Sender: TObject);
 const
   sGhDownloadTitle = 'Выгрузка ГХ';
-  sGhDownloadOk = 'Градуировки успешно выгружены из памяти устройства.';
+  sGhDownloadOk = 'Градуировки считаны и привязаны к тегам.';
+  sGhReadOnly = 'Параметры ГХ считаны из устройства, но ГХ не была создана ' +
+    'или привязана к тегу.';
   sGhDownloadNoSupported =
     'Среди выбранных тегов нет источников с поддержкой выгрузки аппаратной ГХ.';
 var
@@ -2760,6 +2780,7 @@ var
   lI: Integer;
   lMessageText: string;
   lMessages: TStringList;
+  lLinkedCount: Integer;
   lOkCount: Integer;
   lProvider: IRecorderTagSettingsProvider;
   lResult: TRecorderHardwareCalibrationResult;
@@ -2772,6 +2793,7 @@ begin
   lMessages := TStringList.Create;
   try
     lOkCount := 0;
+    lLinkedCount := 0;
     for lI := 0 to fTags.Count - 1 do
     begin
       if not ResolveSettingsProvider(TagAt(lI), lProvider) then
@@ -2783,12 +2805,23 @@ begin
         lResult, lErrorMessage) then
       begin
         Inc(lOkCount);
-        if Trim(lResult.MessageText) <> '' then
+        { Успех вызова provider означает успешное чтение устройства, но не
+          обязательно создание TRecorderCalibration. Не обещаем пользователю
+          привязку, пока она не подтверждена моделью тега и registry. }
+        if (Trim(TagAt(lI).HardwareCalibrationName) <> '') and
+          (fTagRegistry.FindCalibrationByName(
+            TagAt(lI).HardwareCalibrationName) <> nil) then
+          Inc(lLinkedCount);
+        lMessageText := Trim(lResult.MessageText);
+        if Trim(lResult.PresentationText) <> '' then
+        begin
+          if lMessageText <> '' then
+            lMessageText := lMessageText + LineEnding;
+          lMessageText := lMessageText + Trim(lResult.PresentationText);
+        end;
+        if lMessageText <> '' then
           lMessages.Add(Format('%s (%s): %s', [TagAt(lI).Name,
-            TagAt(lI).Address, lResult.MessageText]))
-        else if Trim(lResult.PresentationText) <> '' then
-          lMessages.Add(Format('%s (%s): %s', [TagAt(lI).Name,
-            TagAt(lI).Address, lResult.PresentationText]));
+            TagAt(lI).Address, lMessageText]));
       end
       else
         lErrors.Add(Format('%s (%s): %s', [TagAt(lI).Name, TagAt(lI).Address,
@@ -2803,11 +2836,17 @@ begin
         lMessageText := lMessages[0];
         if lMessages.Count > 1 then
           lMessageText := lMessageText + LineEnding + '...';
-        MessageDlg(sGhDownloadTitle, sGhDownloadOk + LineEnding +
+        if lLinkedCount = lOkCount then
+          lErrorMessage := sGhDownloadOk
+        else
+          lErrorMessage := sGhReadOnly;
+        MessageDlg(sGhDownloadTitle, lErrorMessage + LineEnding +
           lMessageText, mtInformation, [mbOK], 0);
       end
+      else if lLinkedCount = lOkCount then
+        MessageDlg(sGhDownloadTitle, sGhDownloadOk, mtInformation, [mbOK], 0)
       else
-        MessageDlg(sGhDownloadTitle, sGhDownloadOk, mtInformation, [mbOK], 0);
+        MessageDlg(sGhDownloadTitle, sGhReadOnly, mtInformation, [mbOK], 0);
     end
     else if lErrors.Count > 0 then
       MessageDlg(sGhDownloadTitle, lErrors.Text, mtError, [mbOK], 0)

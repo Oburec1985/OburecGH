@@ -1,0 +1,4 @@
+interface:
+  display_name: "Centralized Deployment Config"
+  short_description: "Use one environment-aware deployment config."
+  default_prompt: "Use $centralized-deployment-config to centralize URLs and environment settings for local and cloud deployments."

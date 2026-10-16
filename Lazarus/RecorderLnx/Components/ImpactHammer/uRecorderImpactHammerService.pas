@@ -13,7 +13,7 @@ uses
   uRecorderStateMachine,
   u3dMotionContracts,
   uRecorderImpactHammerModel, uRecorderImpactHammer, uRecorderImpactDsp,
-  uRecorderFrfContracts, uRecorderFrfRepository,
+  uRecorderFrfContracts, uRecorderFrfRepository, uRecorderFrfRoute,
   uRecorderImpactHammerContracts, uRecorderImpactSessionContracts;
 
 type
@@ -44,7 +44,7 @@ type
   end;
 
   TRecorderImpactHammerService = class(TInterfacedObject,
-    IRecorderImpactHammerApplicationService)
+    IRecorderImpactHammerApplicationService, IRecorderFrfRouteService)
   private
     fModel: TRecorderImpactHammerComponent;
     fRegistry: TRecorderTagRegistry;
@@ -82,6 +82,16 @@ type
     fRecorderRunning: Boolean;
     fRecorderFaulted: Boolean;
     fFilterWindow: TRecorderImpactFilterWindow;
+    fRoute: TRecorderFrfRoute;
+    fRouteRepository: TRecorderFrfRepository;
+    fRouteProvider: IRecorderFrfProvider;
+    fLastRouteSequence: QWord;
+    // Disk navigation owns a separate presentation; it never replaces captures.
+    fHasUnsavedRuntime: Boolean;
+    fShowingStoredPoint: Boolean;
+    fStoredPoint: TRecorderImpactSessionSnapshot;
+    function StoreRoutePoint(AAdvance: Boolean; out AError: string): Boolean;
+    procedure FillStoredPresentation(var ASnapshot: TRecorderImpactHammerSnapshot);
     procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
     procedure ProcessSample(ATag: TRecorderTag; AChannel: Integer;
       ATime, AValue: Double);
@@ -111,6 +121,8 @@ type
     function EstimateCurves(const AIncluded: TRecorderImpactMomentsMatrix;
       out ACurves: TRecorderFrfCurveArray;
       out AQualityOk: Boolean): Boolean;
+    procedure ApplyGeometryDisplay(var ABinding:TRecorderModelPointBinding;
+      AResponse:TImpactResponseBinding; const ALabel:string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -130,6 +142,13 @@ type
       const ACatalog: IRecorderModelPointCatalog;
       const ASink: IRecorderModelPointBindingSink);
     function Provider: IRecorderFrfProvider;
+    function Route: TRecorderFrfRoute;
+    function CaptureRouteStep(out AError: string): Boolean;
+    function SelectRoutePoint(AIndex: Integer; out AError: string): Boolean;
+    function SaveRoutePoint(out AError: string): Boolean;
+    function RoutePointHasData: Boolean;
+    function ShowSavedRoute(out AError: string): Boolean;
+    procedure UseLiveRoute;
     function Revision: QWord;
     function TryUpdateProcessingSettings(
       const ASettings: TRecorderImpactProcessingSettings;
@@ -156,6 +175,26 @@ type
   end;
 
 implementation
+
+uses uRecorderFrfPointStore;
+
+procedure FillAmplitude(var ACurve: TRecorderFrfCurveData;
+  const AImpacts: TRecorderImpactMomentsArray);
+var
+  Bin, Impact: Integer;
+  Power: Double;
+begin
+  if Length(AImpacts) = 0 then Exit;
+  SetLength(ACurve.Amplitude, Length(ACurve.FrequencyHz));
+  for Bin := 0 to High(ACurve.Amplitude) do
+  begin
+    Power := 0;
+    for Impact := 0 to High(AImpacts) do
+      Power := Power + AImpacts[Impact].ResponsePower[Bin];
+    ACurve.Amplitude[Bin] := Sqrt(Max(0, Power / Length(AImpacts))) *
+      Sqrt(2.0) / Max(1, AImpacts[0].Metadata.FftSize);
+  end;
+end;
 
 procedure TRecorderImpactHammerService.SetRecorderLifecycle(
   ARunning, AFaulted: Boolean);
@@ -217,6 +256,9 @@ begin
   fQualityOk := True;
   Inc(fRevision);
   fCurrentImpact := -1;
+  fRoute := TRecorderFrfRoute.Create;
+  fRouteRepository := TRecorderFrfRepository.Create;
+  fRouteProvider := fRouteRepository;
 end;
 
 destructor TRecorderImpactHammerService.Destroy;
@@ -226,6 +268,9 @@ begin
     fRegistry.EventBus.Unsubscribe(fSubscription);
   fWorker.Free;
   UnregisterRecorderFrfProvider(Self);
+  UnregisterRecorderFrfProvider(fRoute);
+  fRouteProvider := nil;
+  fRoute.Free;
   ClearPrepared;
   fPrepared.Free;
   fDsp.Free;
@@ -419,6 +464,9 @@ begin
     fLastError := '';
     fCaptureToken := 0;
     fCurrentImpact := -1;
+    fHasUnsavedRuntime := False;
+    fShowingStoredPoint := False;
+    fStoredPoint := Default(TRecorderImpactSessionSnapshot);
     fCompletionPending := False;
     fStopDeferred := False;
     fFilterWindow := Default(TRecorderImpactFilterWindow);
@@ -936,6 +984,7 @@ begin
     ACurves[ResponseIndex].Magnitude := Estimate.Magnitude;
     ACurves[ResponseIndex].PhaseRadians := Estimate.PhaseRadians;
     ACurves[ResponseIndex].Coherence := Estimate.Coherence;
+    FillAmplitude(ACurves[ResponseIndex], EstimateInput);
     for J := 0 to High(Estimate.Coherence) do
       if Estimate.Coherence[J] < fModel.CoherenceThreshold then
         AQualityOk := False;
@@ -1021,6 +1070,8 @@ begin
     fPublishedCurves := Copy(Curves);
     fQualityOk := QualityOk;
     fCurrentImpact := ImpactIndex;
+    fHasUnsavedRuntime := True;
+    fShowingStoredPoint := False;
   finally
     fLock.Leave;
   end;
@@ -1106,6 +1157,7 @@ begin
     Curves[ResponseIndex].Magnitude := Estimate.Magnitude;
     Curves[ResponseIndex].PhaseRadians := Estimate.PhaseRadians;
     Curves[ResponseIndex].Coherence := Estimate.Coherence;
+    FillAmplitude(Curves[ResponseIndex], EstimateInput);
     for J := 0 to High(Estimate.Coherence) do
       if Estimate.Coherence[J] < fModel.CoherenceThreshold then
         fQualityOk := False;
@@ -1341,6 +1393,96 @@ begin
   end;
 end;
 
+procedure TRecorderImpactHammerService.FillStoredPresentation(
+  var ASnapshot: TRecorderImpactHammerSnapshot);
+var
+  lType: TRecorderImpactResultType;
+  lIndex: Integer;
+  lStart: Double;
+
+  procedure SetCurve(AType: TRecorderImpactResultType; AIndex: Integer;
+    AId: QWord; const AName, AUnit: string; const AX, AY: array of Double);
+  var
+    lCurve: ^TRecorderImpactPresentationCurve;
+    lSample, lResponse: Integer;
+  begin
+    if Length(ASnapshot.Results[AType].Curves) <= AIndex then
+      SetLength(ASnapshot.Results[AType].Curves, AIndex + 1);
+    lCurve := @ASnapshot.Results[AType].Curves[AIndex];
+    lCurve^.CurveId := AId;
+    lCurve^.Name := AName;
+    lCurve^.UnitName := AUnit;
+    lCurve^.Color := $0000FF;
+    lCurve^.Visible := (AType = irtTime) or fModel.ExcitationVisible;
+    lCurve^.ReadOnly := True;
+    lCurve^.Quality := icqGood;
+    for lResponse := 0 to fModel.ResponseCount - 1 do
+      if fModel.Responses[lResponse].CurveId = AId then
+      begin
+        lCurve^.Color := fModel.Responses[lResponse].Color;
+        lCurve^.Visible := fModel.Responses[lResponse].Visible;
+        Break;
+      end;
+    SetLength(lCurve^.X, Length(AX));
+    SetLength(lCurve^.Y, Length(AY));
+    for lSample := 0 to High(AX) do lCurve^.X[lSample] := AX[lSample];
+    for lSample := 0 to High(AY) do lCurve^.Y[lSample] := AY[lSample];
+  end;
+
+  procedure SetTime(AIndex: Integer; const ASeries: TRecorderImpactSessionSeries);
+  var
+    lX, lY: array of Double;
+    lSample: Integer;
+  begin
+    SetLength(lX, Length(ASeries.Samples));
+    SetLength(lY, Length(ASeries.Samples));
+    for lSample := 0 to High(ASeries.Samples) do
+    begin
+      lX[lSample] := ASeries.Samples[lSample].TimeSeconds - lStart;
+      lY[lSample] := ASeries.Samples[lSample].Value;
+    end;
+    SetCurve(irtTime, AIndex, ASeries.CurveId, ASeries.Name,
+      ASeries.UnitName, lX, lY);
+  end;
+
+begin
+  for lType := Low(TRecorderImpactResultType) to High(TRecorderImpactResultType) do
+  begin
+    ASnapshot.Results[lType].ResultType := lType;
+    ASnapshot.Results[lType].XUnitName := 'Hz';
+    ASnapshot.Results[lType].Curves := nil;
+  end;
+  ASnapshot.Results[irtTime].XUnitName := 's';
+  ASnapshot.CanHide := False;
+  ASnapshot.CanDelete := False;
+  ASnapshot.CanNavigatePrevious := False;
+  ASnapshot.CanNavigateNext := False;
+  ASnapshot.ImpactCount := Length(fStoredPoint.Impacts);
+  ASnapshot.ImpactIndex := ASnapshot.ImpactCount - 1;
+  if Length(fStoredPoint.Impacts) > 0 then
+  begin
+    lStart := 0;
+    if Length(fStoredPoint.Impacts[0].Excitation.Samples) > 0 then
+      lStart := fStoredPoint.Impacts[0].Excitation.Samples[0].TimeSeconds;
+    SetTime(0, fStoredPoint.Impacts[0].Excitation);
+    for lIndex := 0 to High(fStoredPoint.Impacts[0].Responses) do
+      SetTime(lIndex + 1, fStoredPoint.Impacts[0].Responses[lIndex]);
+  end;
+  for lIndex := 0 to High(fStoredPoint.Curves) do
+    with fStoredPoint.Curves[lIndex] do
+    begin
+      if lIndex = 0 then
+        SetCurve(irtSpectrum, 0, 0, fModel.HammerTagName,
+          ExcitationUnitName, FrequencyHz, ExcitationSpectrum);
+      SetCurve(irtSpectrum, lIndex + 1, CurveId, Name,
+        ResponseUnitName, FrequencyHz, ResponseSpectrum);
+      SetCurve(irtFrfMagnitude, lIndex, CurveId, Name,
+        ResponseUnitName + '/' + ExcitationUnitName, FrequencyHz, Magnitude);
+      SetCurve(irtPhase, lIndex, CurveId, Name, 'rad', FrequencyHz, PhaseRadians);
+      SetCurve(irtCoherence, lIndex, CurveId, Name, '', FrequencyHz, Coherence);
+    end;
+end;
+
 procedure TRecorderImpactHammerService.AppendComparison(
   var ASnapshot: TRecorderImpactHammerSnapshot);
 var
@@ -1532,6 +1674,223 @@ begin
   end;
 end;
 
+procedure TRecorderImpactHammerService.ApplyGeometryDisplay(
+  var ABinding:TRecorderModelPointBinding; AResponse:TImpactResponseBinding;
+  const ALabel:string);
+begin
+  ABinding.PointLabel:=ALabel;
+  if Trim(ABinding.PointLabel)='' then
+    ABinding.PointLabel:=IntToStr(ABinding.PointNumber);
+  ABinding.Color:=fModel.MarkerColor;
+  ABinding.Visualization:=fModel.MarkerVisualization;
+  ABinding.MarkerSizePixels:=fModel.MarkerSizePixels;
+  ABinding.GradientEnabled:=fModel.MarkerGradientEnabled;
+  ABinding.CreateColorModifier:=fModel.CreateColorModifier;
+  ABinding.HideAnchors:=not fModel.ShowAnchorMarkers;
+  ABinding.OnlySensors:=fModel.OnlySensors;
+  ABinding.EnvelopeXEnabled:=AResponse.EnvelopeXEnabled;
+  ABinding.EnvelopeYEnabled:=AResponse.EnvelopeYEnabled;
+  ABinding.EnvelopeZEnabled:=AResponse.EnvelopeZEnabled;
+  ABinding.EnvelopeX:=AResponse.EnvelopeX;
+  ABinding.EnvelopeY:=AResponse.EnvelopeY;
+  ABinding.EnvelopeZ:=AResponse.EnvelopeZ;
+end;
+
+function TRecorderImpactHammerService.Route: TRecorderFrfRoute;
+begin
+  Result := fRoute;
+end;
+
+function TRecorderImpactHammerService.CaptureRouteStep(out AError: string): Boolean;
+begin
+  Result := StoreRoutePoint(True, AError);
+end;
+
+function TRecorderImpactHammerService.SaveRoutePoint(out AError: string): Boolean;
+begin
+  Result := StoreRoutePoint(False, AError);
+end;
+
+function TRecorderImpactHammerService.RoutePointHasData: Boolean;
+begin
+  Result := (fRoute.CurrentIndex >= 0) and
+    (fRoute.CurrentIndex < fRoute.Count) and
+    TRecorderFrfPointStore.Exists(fRoute.PointDirectory(fRoute.CurrentIndex));
+end;
+
+function TRecorderImpactHammerService.SelectRoutePoint(AIndex: Integer;
+  out AError: string): Boolean;
+var
+  lStored: TRecorderImpactSessionSnapshot;
+  lDirectory: string;
+begin
+  AError := '';
+  Result := False;
+  fLock.Enter;
+  try
+    if (AIndex < 0) or (AIndex >= fRoute.Count) then
+    begin AError := 'Нет такой точки маршрута.'; Exit; end;
+    fRoute.CurrentIndex := AIndex;
+    // Even a point without disk data must not discard a newly measured impact.
+    if fHasUnsavedRuntime or fCompletionPending or
+      (fRuntime.State = isCapturing) then
+    begin
+      fShowingStoredPoint := False;
+      Inc(fRevision);
+      Exit(True);
+    end;
+    lDirectory := fRoute.PointDirectory(AIndex);
+    lStored := Default(TRecorderImpactSessionSnapshot);
+    if TRecorderFrfPointStore.Exists(lDirectory) then
+      if not TRecorderFrfPointStore.Load(lDirectory, lStored, AError) then Exit;
+    fStoredPoint := lStored;
+    fShowingStoredPoint := True;
+    Inc(fRevision);
+    Result := True;
+  finally
+    fLock.Leave;
+  end;
+end;
+
+function TRecorderImpactHammerService.StoreRoutePoint(AAdvance: Boolean;
+  out AError: string): Boolean;
+var
+  lEntry: TRecorderFrfRouteEntry;
+  lPrepared: TRecorderPreparedImpact;
+  lIncluded: TRecorderImpactMomentsMatrix;
+  lCurves: TRecorderFrfCurveArray;
+  lCurve: TRecorderFrfCurveData;
+  lSequence: QWord;
+  lQuality: Boolean;
+  lSnapshot: TRecorderImpactSessionSnapshot;
+  lImpact: TRecorderImpactSessionImpact;
+  lIndex: Integer;
+begin
+  Result := False;
+  AError := '';
+  fLock.Enter;
+  try
+    if (fRoute.CurrentIndex < 0) or (fRoute.CurrentIndex >= fRoute.Count) then
+    begin AError := 'Нет текущей точки маршрута.'; Exit; end;
+    if Trim(fRoute.Directory) = '' then
+    begin AError := 'Сначала задайте каталог и сохраните маршрут.'; Exit; end;
+    if fShowingStoredPoint then
+    begin AError := 'Для сохранения получите новую реализацию FRF.'; Exit; end;
+    if fCurrentImpact < 0 then
+    begin AError := 'Для этой точки сначала получите FRF реализацию.'; Exit; end;
+    lSequence := fRuntime.Impacts.Item(fCurrentImpact).Sequence;
+    if AAdvance and (lSequence = fLastRouteSequence) then
+    begin AError := 'Эта реализация уже сохранена. Получите новый удар для следующей точки.'; Exit; end;
+    lEntry := fRoute.Entries[fRoute.CurrentIndex];
+    if (lEntry.ChannelIndex < 0) or (lEntry.ChannelIndex >= fModel.ResponseCount) then
+    begin AError := 'Канал маршрута отсутствует в настройках FRF.'; Exit; end;
+    lPrepared := FindPrepared(lSequence);
+    if lPrepared = nil then
+    begin AError := 'Дождитесь завершения обработки удара.'; Exit; end;
+    SetLength(lIncluded,1);
+    lIncluded[0] := lPrepared.Responses;
+    if not EstimateCurves(lIncluded,lCurves,lQuality) then
+    begin AError := 'Не удалось вычислить отдельную FRF реализацию.'; Exit; end;
+    lCurve := lCurves[lEntry.ChannelIndex];
+    BuildSessionSnapshot(lSnapshot);
+    if Length(lSnapshot.Curves) <> Length(lCurves) then
+    begin AError := 'Дождитесь публикации кривых всех каналов.'; Exit; end;
+    lImpact := lSnapshot.Impacts[fCurrentImpact];
+    SetLength(lSnapshot.Impacts, 1);
+    lSnapshot.Impacts[0] := lImpact;
+    // A route point is one acquisition, not the accumulated session average.
+    for lIndex := 0 to High(lCurves) do
+    begin
+      lSnapshot.Curves[lIndex].FrequencyHz := Copy(lCurves[lIndex].FrequencyHz);
+      lSnapshot.Curves[lIndex].Magnitude := Copy(lCurves[lIndex].Magnitude);
+      lSnapshot.Curves[lIndex].PhaseRadians := Copy(lCurves[lIndex].PhaseRadians);
+      lSnapshot.Curves[lIndex].Coherence := Copy(lCurves[lIndex].Coherence);
+    end;
+  finally fLock.Leave; end;
+  try
+    if not TRecorderFrfPointStore.Save(fRoute.PointDirectory(fRoute.CurrentIndex),
+      lSnapshot, AError) then Exit;
+    if AAdvance then fRoute.CaptureCurrent(lCurve)
+    else fRoute.CaptureEntry(fRoute.CurrentIndex, lCurve);
+    Result := True;
+  except
+    on E: Exception do AError := E.Message;
+  end;
+  if Result then
+  begin
+    fLock.Enter;
+    try
+      fLastRouteSequence := lSequence;
+      // A capture completed during disk I/O remains unsaved and protected.
+      if ImpactSequence = lSequence then fHasUnsavedRuntime := False;
+      Inc(fRevision);
+    finally fLock.Leave; end;
+  end;
+end;
+
+function TRecorderImpactHammerService.ShowSavedRoute(out AError: string): Boolean;
+var
+  lCurves: TRecorderRouteCurveArray;
+  lBindings: array of TRecorderModelPointBinding;
+  lEntry: TRecorderFrfRouteEntry;
+  lResponse: TImpactResponseBinding;
+  lCatalog: IRecorderModelPointCatalog;
+  lSink: IRecorderModelPointBindingSink;
+  lIndex: Integer;
+begin
+  Result := False;
+  AError := '';
+  if not fRoute.LoadSavedCurves(lCurves) then
+  begin AError := 'Пройдите весь маршрут и сохраните FRF для каждой точки. Проверьте файлы слепков.'; Exit; end;
+  if not FindRecorderModelPointTarget(fModel.Target3dComponentId,lCatalog,lSink) then
+  begin AError := 'Не найден 3D-компонент для маршрута.'; Exit; end;
+  SetLength(lBindings,fRoute.Count);
+  for lIndex:=0 to fRoute.Count-1 do
+  begin
+    lEntry:=fRoute.Entries[lIndex];
+    if (lEntry.ChannelIndex<0) or (lEntry.ChannelIndex>=fModel.ResponseCount) then
+    begin AError:='В маршруте указан отсутствующий канал.'; Exit; end;
+    lResponse:=fModel.Responses[lEntry.ChannelIndex];
+    lBindings[lIndex]:=Default(TRecorderModelPointBinding);
+    lBindings[lIndex].CurveId:=lEntry.CurveId;
+    lBindings[lIndex].PointNumber:=lEntry.PointNumber;
+    lBindings[lIndex].TargetNodeId:=lEntry.TargetNodeId;
+    lBindings[lIndex].ModifierTargetNodeId:=lEntry.TargetNodeId;
+    lBindings[lIndex].Mode:=rgbmIntensity;
+    lBindings[lIndex].Enabled:=True;
+    lBindings[lIndex].IntensityOnly:=True;
+    lBindings[lIndex].Gain:=lResponse.Gain;
+    lBindings[lIndex].Axis:=T3dMotionAxis(Ord(lResponse.Axis));
+    lBindings[lIndex].Space:=T3dMotionSpace(Ord(lResponse.Space));
+    lBindings[lIndex].Color:=lResponse.DisplayColor;
+    lBindings[lIndex].Visualization:=lResponse.Visualization;
+    lBindings[lIndex].MarkerSizePixels:=lResponse.MarkerSizePixels;
+    lBindings[lIndex].IntensitySource:=lResponse.IntensitySource;
+    lBindings[lIndex].BandRms:=lResponse.BandRms;
+    lBindings[lIndex].BandTolerancePercent:=lResponse.BandTolerancePercent;
+    ApplyGeometryDisplay(lBindings[lIndex],lResponse,lEntry.PointLabel);
+  end;
+  if not fRouteRepository.Publish(lCurves) then
+  begin AError:='Сохранённые FRF реализации повреждены.'; Exit; end;
+  RegisterRecorderFrfProvider(fRoute,fRouteProvider);
+  NotifyRecorderFrfProviderChanged(fRouteProvider);
+  lSink.PublishBindings(fModel.Id,fModel.Target3dComponentId,lBindings);
+  Result:=True;
+end;
+
+procedure TRecorderImpactHammerService.UseLiveRoute;
+begin
+  fLock.Enter;
+  try
+    fShowingStoredPoint := False;
+    Inc(fRevision);
+  finally fLock.Leave; end;
+  UnregisterRecorderFrfProvider(fRoute);
+  fRouteRepository.Clear;
+  fLastRouteSequence:=0;
+  SavePointBindings;
+end;
+
 function TRecorderImpactHammerService.Provider: IRecorderFrfProvider;
 begin
   Result := fRuntime.Provider;
@@ -1696,9 +2055,19 @@ begin
     Response := fModel.Responses[I];
     Bindings[I].CurveId := Response.CurveId;
     Bindings[I].PointGroup := Response.PointGroup;
-    Bindings[I].PointNumber := ABasePointNumber +
-      Response.PointIncrement + 1;
-    if not ACatalog.ResolvePoint(Bindings[I].PointGroup,
+    Bindings[I].PointNumber := Response.PointNumber;
+    if Bindings[I].PointNumber < 1 then
+      Bindings[I].PointNumber := ABasePointNumber +
+        Response.PointIncrement + 1;
+    Bindings[I].Mode := fModel.GeometryBindingMode;
+    if Response.IntensityOnly then
+      Bindings[I].Mode := rgbmIntensity;
+    Bindings[I].ModifierTargetNodeId := Response.Target3dNodeId;
+    if Bindings[I].ModifierTargetNodeId = 0 then
+      Bindings[I].ModifierTargetNodeId := fModel.Target3dNodeId;
+    if Bindings[I].Mode = rgbmIntensity then
+      NodeId := Bindings[I].ModifierTargetNodeId
+    else if not ACatalog.ResolvePoint(Bindings[I].PointGroup,
       Bindings[I].PointNumber, NodeId) then
     begin
       AError := Format('Не найден helper точки %s:%d.',
@@ -1710,6 +2079,14 @@ begin
     Bindings[I].Space := T3dMotionSpace(Ord(Response.Space));
     Bindings[I].Gain := Response.Gain;
     Bindings[I].Enabled := Response.Enabled;
+    Bindings[I].IntensityOnly := Response.IntensityOnly;
+    Bindings[I].Visualization := Response.Visualization;
+    Bindings[I].Color := Response.DisplayColor;
+    Bindings[I].MarkerSizePixels := Response.MarkerSizePixels;
+    Bindings[I].IntensitySource := Response.IntensitySource;
+    Bindings[I].BandRms := Response.BandRms;
+    Bindings[I].BandTolerancePercent := Response.BandTolerancePercent;
+    ApplyGeometryDisplay(Bindings[I],Response,Response.PointLabel);
   end;
   ASink.PublishBindings(fModel.Id, fModel.Target3dComponentId, Bindings);
   Result := True;
@@ -1990,6 +2367,7 @@ begin
     ASnapshot.ImpactHidden := Item.Hidden;
   end;
   FillPresentation(ASnapshot);
+  if fShowingStoredPoint then FillStoredPresentation(ASnapshot);
   AppendComparison(ASnapshot);
   finally
     fLock.Leave;

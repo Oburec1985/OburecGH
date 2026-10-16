@@ -15,7 +15,8 @@ uses
   u3dScene, u3dCoreTypes;
 
 type
-  T3dPrimitiveKind = (pkCube, pkBeam, pkPlane, pkLine);
+  T3dPrimitiveKind = (pkCube, pkBeam, pkPlane, pkLine, pkPointCloud);
+  T3dPointCloudShape = (pcsBox, pcsSphere, pcsCylinder);
 
   T3dPrimitiveSpec = record
     NodeId: QWord;
@@ -24,6 +25,11 @@ type
     Position: T3dVector;
     Iterations: Integer;
     CrossSectionIterations: Integer;
+    SizeX, SizeY, SizeZ: Single;
+    IterationsX, IterationsY, IterationsZ: Integer;
+    PointCloudShape: T3dPointCloudShape;
+    DrawPointNumbers: Boolean;
+    Color: LongInt;
   end;
 
 function CreateDefaultCubeScene: T3dScene;
@@ -62,7 +68,20 @@ begin
     ASpec.CrossSectionIterations := 1;
   if ASpec.CrossSectionIterations > CMaxPrimitiveIterations then
     ASpec.CrossSectionIterations := CMaxPrimitiveIterations;
+  if ASpec.SizeX <= 0 then
+    if ASpec.Kind=pkBeam then ASpec.SizeX:=3 else ASpec.SizeX:=2;
+  if ASpec.SizeY <= 0 then
+    if ASpec.Kind=pkBeam then ASpec.SizeY:=0.5 else ASpec.SizeY:=2;
+  if ASpec.SizeZ <= 0 then
+    if ASpec.Kind=pkBeam then ASpec.SizeZ:=0.5 else ASpec.SizeZ:=2;
+  if ASpec.IterationsX < 1 then ASpec.IterationsX := ASpec.Iterations;
+  if ASpec.IterationsY < 1 then ASpec.IterationsY := ASpec.Iterations;
+  if ASpec.IterationsZ < 1 then ASpec.IterationsZ := ASpec.Iterations;
+  ASpec.IterationsX := EnsureRange(ASpec.IterationsX, 1, CMaxPrimitiveIterations);
+  ASpec.IterationsY := EnsureRange(ASpec.IterationsY, 1, CMaxPrimitiveIterations);
+  ASpec.IterationsZ := EnsureRange(ASpec.IterationsZ, 1, CMaxPrimitiveIterations);
 end;
+
 
 procedure AddVertex(AMesh: T3dMeshData; const APosition: T3dVector;
   out AIndex: LongWord);
@@ -245,25 +264,112 @@ begin
     ACrossSectionDivisions, True);
 end;
 
+procedure BuildPointCloud(AMesh:T3dMeshData; const ASpec:T3dPrimitiveSpec);
+var
+  X,Y,Z,R,A,Index,PointCount:Integer;
+  PX,PY,PZ,Radius,Angle:Single;
+
+  procedure StorePoint(const APoint:T3dVector);
+  begin
+    AMesh.Positions[Index]:=APoint;
+    Inc(Index);
+  end;
+
+begin
+  case ASpec.PointCloudShape of
+    pcsBox:
+      PointCount:=(ASpec.IterationsX+1)*(ASpec.IterationsY+1)*
+        (ASpec.IterationsZ+1);
+    pcsSphere:
+      PointCount:=1+ASpec.IterationsX*(ASpec.IterationsZ+1)*ASpec.IterationsY;
+    pcsCylinder:
+      PointCount:=(ASpec.IterationsZ+1)*(1+ASpec.IterationsX*ASpec.IterationsY);
+  end;
+  SetLength(AMesh.Positions,PointCount);
+  Index:=0;
+  case ASpec.PointCloudShape of
+    pcsBox:
+      for Z:=0 to ASpec.IterationsZ do
+        for Y:=0 to ASpec.IterationsY do
+          for X:=0 to ASpec.IterationsX do
+            StorePoint(Vector3d(
+              -ASpec.SizeX/2+ASpec.SizeX*X/ASpec.IterationsX,
+              -ASpec.SizeY/2+ASpec.SizeY*Y/ASpec.IterationsY,
+              -ASpec.SizeZ/2+ASpec.SizeZ*Z/ASpec.IterationsZ));
+    pcsSphere:
+      begin
+        StorePoint(Vector3d(0,0,0));
+        for R:=1 to ASpec.IterationsX do
+        begin
+          Radius:=R/ASpec.IterationsX;
+          for Z:=0 to ASpec.IterationsZ do
+          begin
+            PZ:=Cos(Pi*Z/ASpec.IterationsZ);
+            for A:=0 to ASpec.IterationsY-1 do
+            begin
+              Angle:=2*Pi*A/ASpec.IterationsY;
+              PX:=Sin(Pi*Z/ASpec.IterationsZ)*Cos(Angle);
+              PY:=Sin(Pi*Z/ASpec.IterationsZ)*Sin(Angle);
+              StorePoint(Vector3d(PX*Radius*ASpec.SizeX/2,
+                PY*Radius*ASpec.SizeY/2,PZ*Radius*ASpec.SizeZ/2));
+            end;
+          end;
+        end;
+      end;
+    pcsCylinder:
+      for Z:=0 to ASpec.IterationsZ do
+      begin
+        PZ:=-ASpec.SizeZ/2+ASpec.SizeZ*Z/ASpec.IterationsZ;
+        for R:=0 to ASpec.IterationsX do
+        begin
+          Radius:=R/ASpec.IterationsX;
+          if R=0 then
+            StorePoint(Vector3d(0,0,PZ))
+          else
+            for A:=0 to ASpec.IterationsY-1 do
+            begin
+              Angle:=2*Pi*A/ASpec.IterationsY;
+              StorePoint(Vector3d(Cos(Angle)*Radius*ASpec.SizeX/2,
+                Sin(Angle)*Radius*ASpec.SizeY/2,PZ));
+            end;
+        end;
+      end;
+  end;
+end;
+
+procedure ScaleMesh(AMesh:T3dMeshData; const AScale:T3dVector);
+var I:Integer;
+begin
+  for I:=0 to High(AMesh.Positions) do
+  begin
+    AMesh.Positions[I].X:=AMesh.Positions[I].X*AScale.X;
+    AMesh.Positions[I].Y:=AMesh.Positions[I].Y*AScale.Y;
+    AMesh.Positions[I].Z:=AMesh.Positions[I].Z*AScale.Z;
+  end;
+end;
+
 function CreatePrimitiveNode(const ASpec: T3dPrimitiveSpec): T3dNode;
 var
   I, Count: Integer;
+  Spec:T3dPrimitiveSpec;
 begin
   Count := ASpec.Iterations;
   if (Count < PrimitiveIterationMinimum(ASpec.Kind)) or
      (Count > CMaxPrimitiveIterations) then
     raise ERangeError.CreateFmt('Primitive iterations must be in %d..%d',
       [PrimitiveIterationMinimum(ASpec.Kind), CMaxPrimitiveIterations]);
+  Spec:=ASpec;
+  NormalizePrimitiveSpec(Spec);
   Result := T3dNode.Create;
   try
-    Result.Id := ASpec.NodeId;
-    Result.Name := ASpec.Name;
+    Result.Id := Spec.NodeId;
+    Result.Name := Spec.Name;
     SetIdentity(Result.LocalTransform);
-    Result.LocalTransform[12] := ASpec.Position.X;
-    Result.LocalTransform[13] := ASpec.Position.Y;
-    Result.LocalTransform[14] := ASpec.Position.Z;
+    Result.LocalTransform[12] := Spec.Position.X;
+    Result.LocalTransform[13] := Spec.Position.Y;
+    Result.LocalTransform[14] := Spec.Position.Z;
     Result.WorldTransform := Result.LocalTransform;
-    if ASpec.Kind = pkLine then
+    if Spec.Kind = pkLine then
     begin
       Result.Kind := nkShape;
       SetLength(Result.ShapeLines, 1);
@@ -278,32 +384,48 @@ begin
     begin
       Result.Kind := nkMesh;
       Result.Mesh := T3dMeshData.Create;
-      case ASpec.Kind of
+      case Spec.Kind of
         pkCube:
           begin
             BuildBox(Result.Mesh, Vector3d(1, 1, 1), Count);
-            Result.Bounds.Min := Vector3d(-1, -1, -1);
-            Result.Bounds.Max := Vector3d(1, 1, 1);
+            ScaleMesh(Result.Mesh,Vector3d(Spec.SizeX/2,Spec.SizeY/2,Spec.SizeZ/2));
+            Result.Bounds.Min:=Vector3d(-Spec.SizeX/2,-Spec.SizeY/2,-Spec.SizeZ/2);
+            Result.Bounds.Max:=Vector3d(Spec.SizeX/2,Spec.SizeY/2,Spec.SizeZ/2);
           end;
         pkBeam:
           begin
-            BuildBeam(Result.Mesh,Count,Max(1,ASpec.CrossSectionIterations));
-            Result.Bounds.Min := Vector3d(-1.5, -0.25, -0.25);
-            Result.Bounds.Max := Vector3d(1.5, 0.25, 0.25);
+            BuildBeam(Result.Mesh,Count,Max(1,Spec.CrossSectionIterations));
+            ScaleMesh(Result.Mesh,Vector3d(Spec.SizeX/3,Spec.SizeY/0.5,Spec.SizeZ/0.5));
+            Result.Bounds.Min:=Vector3d(-Spec.SizeX/2,-Spec.SizeY/2,-Spec.SizeZ/2);
+            Result.Bounds.Max:=Vector3d(Spec.SizeX/2,Spec.SizeY/2,Spec.SizeZ/2);
           end;
         pkPlane:
           begin
             AddGridFace(Result.Mesh, Vector3d(-1, -1, 0), Vector3d(2, 0, 0),
               Vector3d(0, 2, 0), Count, Count, False);
-            Result.Bounds.Min := Vector3d(-1, -1, 0);
-            Result.Bounds.Max := Vector3d(1, 1, 0);
+            ScaleMesh(Result.Mesh,Vector3d(Spec.SizeX/2,Spec.SizeY/2,1));
+            Result.Bounds.Min:=Vector3d(-Spec.SizeX/2,-Spec.SizeY/2,0);
+            Result.Bounds.Max:=Vector3d(Spec.SizeX/2,Spec.SizeY/2,0);
+          end;
+        pkPointCloud:
+          begin
+            BuildPointCloud(Result.Mesh,Spec);
+            Result.Bounds.Min:=Vector3d(-Spec.SizeX/2,-Spec.SizeY/2,-Spec.SizeZ/2);
+            Result.Bounds.Max:=Vector3d(Spec.SizeX/2,Spec.SizeY/2,Spec.SizeZ/2);
+            Result.HasRenderOverride:=True;
+            Result.DrawFillOverride:=False;
+            Result.DrawWireframeOverride:=True;
+            Result.DrawPointsOverride:=True;
+            Result.DrawNormalsOverride:=False;
+            Result.DrawBoundsOverride:=True;
           end;
       end;
       Result.Bounds.Valid := True;
-      Result.Mesh.Color.R := 190;
-      Result.Mesh.Color.G := 205;
-      Result.Mesh.Color.B := 220;
-      RebuildMeshNormals(Result.Mesh);
+      Result.Mesh.Color.R := Byte(Spec.Color and $FF);
+      Result.Mesh.Color.G := Byte((Spec.Color shr 8) and $FF);
+      Result.Mesh.Color.B := Byte((Spec.Color shr 16) and $FF);
+      if Spec.Kind<>pkPointCloud then
+        RebuildMeshNormals(Result.Mesh);
       BuildLogicalVerticesByPosition(Result.Mesh);
       Result.Mesh.BasePositions := Copy(Result.Mesh.Positions);
     end;
@@ -346,6 +468,10 @@ begin
   Spec.Position:=Vector3d(0,0,0);
   Spec.Iterations:=1;
   Spec.CrossSectionIterations:=1;
+  Spec.SizeX:=2; Spec.SizeY:=2; Spec.SizeZ:=2;
+  Spec.IterationsX:=1; Spec.IterationsY:=1; Spec.IterationsZ:=1;
+  Spec.PointCloudShape:=pcsBox;
+  Spec.Color:=$00DCCDBE;
   Node := nil;
   Result := T3dScene.Create;
   try

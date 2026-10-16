@@ -51,6 +51,7 @@ Source: "{#FilesRoot}\app\RecorderLnx.exe"; DestDir: "{app}"; Flags: ignoreversi
 Source: "{#FilesRoot}\app\RecorderHostAgent.exe"; DestDir: "{app}"; Flags: ignoreversion; \
   AfterInstall: EnsureHostAgentConfig
 Source: "{#FilesRoot}\app\lua54.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#FilesRoot}\app\portaudio.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#FilesRoot}\app\help\RecorderLnxLua.chm"; DestDir: "{app}\help"; Flags: ignoreversion
 Source: "{#FilesRoot}\app\plugins\LuaCalcPlugin.dll"; DestDir: "{app}\plugins"; \
   Flags: ignoreversion

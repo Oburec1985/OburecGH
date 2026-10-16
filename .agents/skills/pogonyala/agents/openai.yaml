@@ -1,0 +1,4 @@
+interface:
+  display_name: "Погоняла"
+  short_description: "Доводит командную разработку до проверенной цели"
+  default_prompt: "Use $pogonyala to keep this development task moving until its explicit readiness criteria are verified."

@@ -12,8 +12,14 @@ unit uRecorderSettingsDialog;
     - Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls: стандартные модули LCL.
     - ComCtrls, ImgList, Grids, Buttons: компоненты UI (дерево устройств, списки каналов).
     - uRecorderStateMachine, uRecorderRunControlSettings, uRecorderTags: бизнес-логика рекордера.
+
     - uMeraFile: парсинг файлов конфигурации сигналов Mera.
     - uRecorderCommandImages: константы индексов иконок UI.
+
+  Ограничение для расширений:
+    Не добавлять новые ветви, распознающие конкретный plugin по имени файла или
+    класса (включая существующий переход к настройкам Lua). Настройки плагина
+    должны открываться через общий SDK/UI контракт и принадлежать плагину.
 }
 
 {$mode objfpc}{$H+}
@@ -192,6 +198,11 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure fHardwareTreeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure fHardwareTreeEditing(Sender: TObject; Node: TTreeNode;
+      var AllowEdit: Boolean);
+    procedure fHardwareTreeEdited(Sender: TObject; Node: TTreeNode;
+      var S: string);
+    procedure HardwareRenameAliasClick(Sender: TObject);
     procedure fAlgorithmsTreeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure fCfgKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -443,7 +454,7 @@ uses
   uRecorderPxiMx248ConfiguredEditor, uRecorderPxiMx248DiscoveryWorker,
   uRecorderDriverContractsV2,
   uRecorderDebugLog,
-  uRecorderTagTableExchange, uRecorderOpcUaTypes,
+  uRecorderTagTableExchange, uRecorderOpcUaTypes, uModbusCoreTypes,
   uRecorderSqlDbSettingsDialog, uRecorderSqlDataSource;
 
 {$R *.lfm}
@@ -3813,6 +3824,7 @@ begin
     lCombo.Items.Add('MC-032');
     lCombo.Items.Add('PXI MX-248');
     lCombo.Items.Add('OPC UA');
+    lCombo.Items.Add(CRecorderModbusModuleType);
     lCombo.Items.Add('SQL database');
     lCombo.Items.Add('Mera file');
     lCombo.ItemIndex := 0;
@@ -3849,6 +3861,8 @@ begin
       EditHardwareSource('', 'PXI MX-248')
     else if SameText(lCombo.Text, 'OPC UA') then
       EditHardwareSource('', 'OPC UA')
+    else if SameText(lCombo.Text, CRecorderModbusModuleType) then
+      EditHardwareSource('', CRecorderModbusModuleType)
     else if SameText(lCombo.Text, 'SQL database') then
       EditSqlDataSource
     else
@@ -3948,7 +3962,7 @@ var
   lProbeKind: string;
   lProbeSerial: string;
   lMx248Devices: TPxiMx248DiscoveredDevices;
-  lMx248Result: TRecorderOperationResult;
+  lMx248Result: TRcOperationResult;
   lBroadcastThread: TRecorderHardwareBroadcastSearchThread;
   lSerial: LongWord;
   lPort: Word;
@@ -4260,8 +4274,8 @@ begin
           lDisplay := Format('MX-248 — %s, SN=%d, шасси=%d, слот=%d',
             [lMx248Devices[I].DeviceName, lMx248Devices[I].SerialNumber,
              lMx248Devices[I].Chassis, lMx248Devices[I].Slot]);
-          AddFound(CRecorderPxiMx248ModuleType,
-            RecorderPxiMx248SourceId(lMx248Devices[I].Chassis,
+          AddFound(CRcMx248ModuleType,
+            RcMx248SourceId(lMx248Devices[I].Chassis,
               lMx248Devices[I].Slot), lDisplay,
             lMx248Devices[I].SerialNumber);
         end;
@@ -4439,9 +4453,9 @@ begin
       else if SameText(lDevice.DeviceType, 'MC-032') then
         RecorderConfiguredDataSourcesEnsure(fRecorder.TagRegistry,
           lDevice.SourceId, 'MC-032', 0)
-      else if SameText(lDevice.DeviceType, CRecorderPxiMx248ModuleType) then
+      else if SameText(lDevice.DeviceType, CRcMx248ModuleType) then
         RecorderConfiguredDataSourcesEnsure(fRecorder.TagRegistry,
-          lDevice.SourceId, CRecorderPxiMx248ModuleType, 0)
+          lDevice.SourceId, CRcMx248ModuleType, 0)
       else
         Continue;
       { Broadcast/protocol discovery already proved that this endpoint is alive.
@@ -4694,6 +4708,8 @@ var
   I: Integer;
   lConfig: TRecorderMic140SourceConfig;
   lHost: string;
+  lMxChassis: Integer;
+  lMxSlot: Integer;
   lPort: Word;
   lSourceConfig: TRecorderConfiguredDataSource;
   lTag: TRecorderTag;
@@ -4760,11 +4776,23 @@ begin
       fSourceProbe.BuildMcbus(ANewSourceId,
         lSourceConfig.SpecificConfigText,
         lSourceConfig.DefaultPollFrequencyHz);
+  end
+  else if TryParseRcMx248SourceId(ANewSourceId, lMxChassis,
+    lMxSlot) then
+  begin
+    if (AOldSourceId <> '') and not SameText(AOldSourceId, ANewSourceId) then
+      fRecorder.TagRegistry.UnregisterActiveSource(AOldSourceId);
+    fRecorder.TagRegistry.RegisterActiveSource(ANewSourceId);
   end;
 
   if ARefreshUi then
   begin
     PopulateHardwareTree;
+    { Tree reconstruction re-evaluates link state before the outer
+      configuration service has replaced the runtime source. The settings
+      transaction already linked this MX route, so keep its tags visible. }
+    if TryParseRcMx248SourceId(ANewSourceId, lMxChassis, lMxSlot) then
+      fRecorder.TagRegistry.RegisterActiveSource(ANewSourceId);
     PopulateChannelGrids;
     if fSelectedChannelsGrid <> nil then
       fSelectedChannelsGrid.Invalidate;
@@ -5356,6 +5384,9 @@ begin
   if not RecorderConfiguredDataSourceEnabled(fRecorder.TagRegistry,
     lSourceId) then
     fHardwareTree.Hint := 'Источник отключён пользователем'
+  else if not RecorderHardwareSourceHasLinkedTags(fRecorder.TagRegistry,
+    lSourceId) then
+    fHardwareTree.Hint := 'Сбой datasource: источник не привязан к каналам'
   else if lReason <> '' then
     fHardwareTree.Hint := UTF8Encode('Ошибка устройства: ') + lReason
   else if (lNode <> nil) and (lNode.ImageIndex = CDeviceControllerImageIndex) then
@@ -5405,8 +5436,18 @@ begin
       for I := 0 to High(lEntries) do
       begin
         lEntry := lEntries[I];
-        lNodeCaption := lEntry.NodeCaption;
-        if not RecorderIsVirtualTagSource(lEntry.SourceId) then
+        lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
+          lEntry.SourceId);
+        if (lConfig <> nil) and SameText(lConfig.ModuleType, 'PXI MX-248') then
+          { MX-248 source identity remains in node data. The editable caption
+            is intentionally only the operator alias. }
+          lNodeCaption := RecorderConfiguredSourceAddress(
+            fRecorder.TagRegistry, lEntry.SourceId)
+        else
+          lNodeCaption := lEntry.NodeCaption;
+        if not RecorderIsVirtualTagSource(lEntry.SourceId) and
+          not ((lConfig <> nil) and SameText(lConfig.ModuleType,
+            'PXI MX-248')) then
           lNodeCaption := lNodeCaption + UTF8Encode(' [адрес: ') +
             RecorderConfiguredSourceAddress(fRecorder.TagRegistry,
               lEntry.SourceId) + ']';
@@ -5432,7 +5473,8 @@ begin
           fRecorder.TagRegistry.RegisterActiveSource(lEntry.SourceId)
         else
           fRecorder.TagRegistry.UnregisterActiveSource(lEntry.SourceId);
-      if lEntry.Enabled and lEntry.LinkOk then
+      { A configured node without channel bindings is not a usable datasource. }
+      if lEntry.Enabled and lEntry.LinkOk and lEntry.HasLinkedTags then
       begin
         lSourceNode.ImageIndex := CDeviceControllerImageIndex;
         lSourceNode.SelectedIndex := CDeviceControllerImageIndex;
@@ -5443,8 +5485,6 @@ begin
         lSourceNode.SelectedIndex := CDeviceDisabledImageIndex;
         end;
 
-        lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
-          lEntry.SourceId);
         if (lConfig <> nil) and SameText(lConfig.ModuleType, 'MC-032') then
         begin
           RecorderMc032ModuleCaptions(lConfig.SpecificConfigText,
@@ -5671,6 +5711,8 @@ begin
   fHardwareTree.OnChange := @fHardwareTreeChange;
   fHardwareTree.OnMouseMove := @fHardwareTreeMouseMove;
   fHardwareTree.OnMouseDown := @fHardwareTreeMouseDown;
+  fHardwareTree.OnEditing := @fHardwareTreeEditing;
+  fHardwareTree.OnEdited := @fHardwareTreeEdited;
   fHardwareTree.ShowHint := True;
   fHardwareTree.ParentShowHint := False;
   if fHardwareTree.PopupMenu = nil then
@@ -5693,6 +5735,11 @@ begin
     lPopup.Items.Add(lItem);
 
     lItem := TMenuItem.Create(lPopup);
+    lItem.Caption := 'Переименовать алиас';
+    lItem.OnClick := @HardwareRenameAliasClick;
+    lPopup.Items.Add(lItem);
+
+    lItem := TMenuItem.Create(lPopup);
     lItem.Caption := 'Сбросить состояние устройства';
     lItem.OnClick := @HardwareResetSourceClick;
     lPopup.Items.Add(lItem);
@@ -5712,8 +5759,9 @@ begin
 
   fHardwareTree.Items.BeginUpdate;
   try
-    fHardwareTree.ReadOnly := True;
-    fHardwareTree.Options := fHardwareTree.Options + [tvoAllowMultiselect,
+    fHardwareTree.ReadOnly := False;
+    fHardwareTree.Options := (fHardwareTree.Options - [tvoReadOnly]) +
+      [tvoAllowMultiselect,
       tvoShowButtons, tvoShowLines, tvoShowRoot];
     fHardwareTree.MultiSelectStyle := [msControlSelect, msShiftSelect,
       msVisibleOnly];
@@ -7580,11 +7628,69 @@ end;
 procedure TRecorderSettingsDialog.fHardwareTreeKeyDown(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
-  if Key <> VK_DELETE then
-    Exit;
+  if Key = VK_F2 then
+  begin
+    HardwareRenameAliasClick(Sender);
+    Key := 0;
+  end
+  else if Key = VK_DELETE then
+  begin
+    DeleteSelectedHardwareSources;
+    Key := 0;
+  end;
+end;
 
-  DeleteSelectedHardwareSources;
-  Key := 0;
+procedure TRecorderSettingsDialog.fHardwareTreeEditing(Sender: TObject;
+  Node: TTreeNode; var AllowEdit: Boolean);
+var
+  lConfig: TRecorderConfiguredDataSource;
+  lSourceId: string;
+begin
+  AllowEdit := False;
+  if (Node = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then Exit;
+  lSourceId := RecorderHardwareTreeSourceId(Node);
+  if lSourceId = '' then Exit;
+  lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
+    lSourceId);
+  AllowEdit := (lConfig <> nil) and SameText(lConfig.ModuleType,
+    'PXI MX-248');
+end;
+
+procedure TRecorderSettingsDialog.fHardwareTreeEdited(Sender: TObject;
+  Node: TTreeNode; var S: string);
+var
+  lError, lOldAlias, lSourceId: string;
+begin
+  if (Node = nil) or (fRecorder = nil) or
+    (fRecorder.TagRegistry = nil) then Exit;
+  lSourceId := RecorderHardwareTreeSourceId(Node);
+  if lSourceId = '' then Exit;
+  lOldAlias := RecorderConfiguredSourceAddress(fRecorder.TagRegistry,
+    lSourceId);
+  if not RecorderSetConfiguredSourceAddress(fRecorder.TagRegistry, lSourceId,
+    Trim(S), lError) then
+  begin
+    S := lOldAlias;
+    MessageDlg('Алиас MX-248', lError, mtError, [mbOK], 0);
+    Exit;
+  end;
+  S := RecorderConfiguredSourceAddress(fRecorder.TagRegistry, lSourceId);
+  fDataSourcesChanged := True;
+  PopulateChannelGrids;
+  ShowSelectedHardwareSourceAddress;
+end;
+
+procedure TRecorderSettingsDialog.HardwareRenameAliasClick(Sender: TObject);
+var
+  lAllowEdit: Boolean;
+  lNode: TTreeNode;
+begin
+  if fHardwareTree = nil then Exit;
+  lNode := fHardwareTree.Selected;
+  lAllowEdit := False;
+  fHardwareTreeEditing(fHardwareTree, lNode, lAllowEdit);
+  if lAllowEdit then lNode.EditText;
 end;
 
 initialization

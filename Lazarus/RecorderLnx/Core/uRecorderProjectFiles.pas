@@ -11,6 +11,13 @@ unit uRecorderProjectFiles;
       <base>.gui.ini     - страницы формуляров и компоненты мнемосхем;
       <base>.run-control.ini сохраняется существующей моделью запуска.
 
+  Ограничение границы компонентов:
+    Общие поля страницы/компонента хранятся хостом. Для plugin-компонентов
+    специфическое состояние должно быть непрозрачным и сериализоваться через
+    SDK, без ветвления по имени плагина или чтения его полей. Старые Osc* ключи
+    разрешены только для чтения/миграции legacy-проектов; новые Osc* ключи не
+    добавлять. Неизвестные TypeId/payload нельзя молча отбрасывать.
+
   JSON пока не пытается быть бинарно совместимым с rcfg оригинального Recorder:
   он повторяет смысловые разделы, но остается человекочитаемым.
 }
@@ -23,7 +30,7 @@ interface
 uses
   Classes, SysUtils, DateUtils, Math, fpjson,
   uRecorderFormModel, uRecorderTags, uRecorderNetworkBinding,
-  uRecorderVibrationEstimate;
+  uRecorderVibrationEstimate, uRecorderRunControlSettings;
 
 type
   TRecorderProjectConfigExtensionProc = procedure(AJson: TJSONObject;
@@ -76,12 +83,17 @@ uses
   uOglChartColors, uRecorderConfiguredDataSources, uRecorderSqlTrendModel,
   uRecorderMeasurementSectionModel, uRecorderFrequencyResponseModel,
   uRecorder3dModel, uRecorderSignalGeneratorModel, uRecorderImpactHammerModel,
+  uRecorderDacComponentModel, uRecorderDacTypes,
+  uRecorderImpactHammerContracts,
+  uRecorderMeraBaseModel,
   u3dPrimitives, u3dSkin, u3dVertexColors,
   uRecorderFrequencyResponse, uRecorderSdbStore, uRecorderDebugLog,
-  uRecorderStrainCalibration;
+  uRecorderStrainCalibration, uRecorderPluginRuntime, uRecorderPluginApi,
+  uRecorderVisualComponentApiV2;
 
 const
   CRecorderProjectConfigExtensionMax = 32;
+  CMaxPluginConfigBlobSize = 16 * 1024 * 1024;
 
 type
   TRecorderProjectConfigExtension = record
@@ -214,6 +226,8 @@ function ComponentTypeOf(AComponent: TRecorderVisualComponent): string;
 begin
   if AComponent.Factory <> nil then
     Result := AComponent.Factory.TypeId
+  else if AComponent is TRecorderPluginVisualComponent then
+    Result := TRecorderPluginVisualComponent(AComponent).PluginTypeId
   else if AComponent is TRecorderStaticTextComponent then
     Result := TRecorderStaticTextComponent.TypeId
   else if AComponent is TRecorderButtonComponent then
@@ -244,6 +258,98 @@ begin
     Result := TRecorder3dComponent.TypeId
   else
     Result := AComponent.ClassName;
+end;
+
+function BytesToHex(const ABytes: TRecorderPluginConfigBytes): string;
+const
+  CHex: array[0..15] of Char = '0123456789ABCDEF';
+var
+  I: Integer;
+begin
+  SetLength(Result, Length(ABytes) * 2);
+  for I := 0 to Length(ABytes) - 1 do
+  begin
+    Result[I * 2 + 1] := CHex[ABytes[I] shr 4];
+    Result[I * 2 + 2] := CHex[ABytes[I] and $0F];
+  end;
+end;
+
+function TryHexToBytes(const AHex: string;
+  out ABytes: TRecorderPluginConfigBytes): Boolean;
+var
+  I, LValue: Integer;
+begin
+  Result := False;
+  if Length(AHex) > CMaxPluginConfigBlobSize * 2 then
+    Exit;
+  SetLength(ABytes, 0);
+  if (Length(AHex) mod 2) <> 0 then
+    Exit;
+  SetLength(ABytes, Length(AHex) div 2);
+  for I := 0 to Length(ABytes) - 1 do
+  begin
+    if not TryStrToInt('$' + Copy(AHex, I * 2 + 1, 2), LValue) then
+    begin
+      SetLength(ABytes, 0);
+      Exit;
+    end;
+    ABytes[I] := Byte(LValue);
+  end;
+  Result := True;
+end;
+
+function IsPluginEnvelopeKey(const AName: string;
+  AIncludeEncodedState: Boolean): Boolean;
+const
+  CCommonKeys: array[0..13] of string = (
+    'Type', 'Id', 'Name', 'TagName', 'TagId', 'UseInactiveTag',
+    'Left', 'Top', 'Width', 'Height', 'NamedFont', 'PluginTypeId',
+    'ConfigSchemaId', 'ConfigSchemaVersion');
+var
+  I: Integer;
+begin
+  for I := Low(CCommonKeys) to High(CCommonKeys) do
+    if SameText(AName, CCommonKeys[I]) then
+      Exit(True);
+  if not AIncludeEncodedState and
+    (SameText(AName, 'PluginStateEncoding') or
+     SameText(AName, 'PluginStateData') or
+     SameText(AName, 'ConfigEncoding') or
+     SameText(AName, 'ConfigData') or
+     SameText(AName, 'ConfigVersion')) then
+    Exit(True);
+  Result := False;
+end;
+
+function CaptureLegacyPluginProperties(AIni: TIniFile;
+  const ASection: string; AIncludeEncodedState: Boolean = False;
+  ACompleteSection: Boolean = False):
+  TRecorderPluginConfigBytes;
+var
+  I: Integer;
+  LKeys: TStringList;
+  LObject: TJSONObject;
+  LText: UTF8String;
+begin
+  Result := nil;
+  LKeys := TStringList.Create;
+  LObject := TJSONObject.Create;
+  try
+    AIni.ReadSection(ASection, LKeys);
+    for I := 0 to LKeys.Count - 1 do
+      if ACompleteSection or not IsPluginEnvelopeKey(LKeys[I], AIncludeEncodedState) then
+        LObject.Add(LKeys[I], AIni.ReadString(ASection, LKeys[I], ''));
+    if LObject.Count = 0 then
+      Exit;
+    { fpjson.AsJSON already returns UTF8String. Preserve its bytes verbatim. }
+    LText := LObject.AsJSON;
+    SetLength(Result, Length(LText));
+    if Length(LText) > 0 then
+      Move(LText[1], Result[0], Length(LText));
+  finally
+    LObject.Free;
+    LKeys.Free;
+  end;
 end;
 
 function JsonObject(AOwner: TJSONObject; const AName: string): TJSONObject;
@@ -1134,6 +1240,8 @@ var
   lImpactHammer: TRecorderImpactHammerComponent;
   lPrimitiveSpec: T3dPrimitiveSpec;
   lImpactValues: TStringList;
+  lPluginData: TRecorderPluginConfigBytes;
+  lOpaqueStateResult: TRecorderOpaqueStateResult;
 begin
   if AForms = nil then
     raise ERecorderFormError.Create('Form manager is not assigned');
@@ -1201,6 +1309,39 @@ begin
         lIni.WriteInteger(lSection, 'Width', lComponent.Bounds.Width);
         lIni.WriteInteger(lSection, 'Height', lComponent.Bounds.Height);
         lIni.WriteString(lSection, 'NamedFont', lComponent.NamedFontName);
+        if lComponent is TRecorderPluginVisualComponent then
+        begin
+          lOpaqueStateResult := rosNotHandled;
+          if lComponent.Factory <> nil then
+            lOpaqueStateResult := lComponent.Factory.SaveOpaqueComponentState(
+              lComponent);
+          if lOpaqueStateResult = rosFailure then
+            raise ERecorderFormError.CreateFmt(
+              'Plugin state save failed for %s',
+              [TRecorderPluginVisualComponent(lComponent).PluginTypeId]);
+          lPluginData := TRecorderPluginVisualComponent(lComponent).ConfigBlob;
+          if Length(lPluginData) > CMaxPluginConfigBlobSize then
+            raise ERecorderFormError.CreateFmt(
+              'Plugin config exceeds %d-byte persistence limit',
+              [CMaxPluginConfigBlobSize]);
+          lIni.WriteString(lSection, 'PluginTypeId',
+            TRecorderPluginVisualComponent(lComponent).PluginTypeId);
+          lIni.WriteString(lSection, 'ConfigSchemaId',
+            TRecorderPluginVisualComponent(lComponent).ConfigSchemaId);
+          lIni.WriteInt64(lSection, 'ConfigSchemaVersion',
+            TRecorderPluginVisualComponent(lComponent).ConfigSchemaVersion);
+          lIni.WriteString(lSection, 'PluginStateEncoding', 'hex-v1');
+          lIni.WriteString(lSection, 'PluginStateData', BytesToHex(lPluginData));
+        end;
+        if lComponent is TRecorderMeraBaseComponent then
+        begin
+          lIni.WriteString(lSection, 'MdbBasePath',
+            TRecorderMeraBaseComponent(lComponent).BasePath);
+          lIni.WriteString(lSection, 'MdbObjectId',
+            TRecorderMeraBaseComponent(lComponent).ObjectId);
+          lIni.WriteString(lSection, 'MdbTestId',
+            TRecorderMeraBaseComponent(lComponent).TestId);
+        end;
         if lComponent is TRecorder3dComponent then
         begin
           lIni.WriteString(lSection, 'SceneFileName',
@@ -1209,16 +1350,22 @@ begin
             TRecorder3dComponent(lComponent).ShowAxes);
           lIni.WriteInt64(lSection, 'BackgroundColor',
             TRecorder3dComponent(lComponent).BackgroundColor);
-          lIni.WriteFloat(lSection, 'CameraYaw',
-            TRecorder3dComponent(lComponent).CameraYaw);
-          lIni.WriteFloat(lSection, 'CameraPitch',
-            TRecorder3dComponent(lComponent).CameraPitch);
+          lIni.WriteInteger(lSection, 'LabelFontSize',
+            TRecorder3dComponent(lComponent).LabelFontSize);
           lIni.WriteFloat(lSection, 'CameraDistance',
             TRecorder3dComponent(lComponent).CameraDistance);
           lIni.WriteFloat(lSection,'CameraTargetX',TRecorder3dComponent(lComponent).CameraTargetX);
           lIni.WriteFloat(lSection,'CameraTargetY',TRecorder3dComponent(lComponent).CameraTargetY);
           lIni.WriteFloat(lSection,'CameraTargetZ',TRecorder3dComponent(lComponent).CameraTargetZ);
-          lIni.WriteFloat(lSection,'CameraRoll',TRecorder3dComponent(lComponent).CameraRoll);
+          lIni.WriteFloat(lSection,'CameraForwardX',TRecorder3dComponent(lComponent).CameraForwardX);
+          lIni.WriteFloat(lSection,'CameraForwardY',TRecorder3dComponent(lComponent).CameraForwardY);
+          lIni.WriteFloat(lSection,'CameraForwardZ',TRecorder3dComponent(lComponent).CameraForwardZ);
+          lIni.WriteFloat(lSection,'CameraRightX',TRecorder3dComponent(lComponent).CameraRightX);
+          lIni.WriteFloat(lSection,'CameraRightY',TRecorder3dComponent(lComponent).CameraRightY);
+          lIni.WriteFloat(lSection,'CameraRightZ',TRecorder3dComponent(lComponent).CameraRightZ);
+          lIni.WriteFloat(lSection,'CameraUpX',TRecorder3dComponent(lComponent).CameraUpX);
+          lIni.WriteFloat(lSection,'CameraUpY',TRecorder3dComponent(lComponent).CameraUpY);
+          lIni.WriteFloat(lSection,'CameraUpZ',TRecorder3dComponent(lComponent).CameraUpZ);
           lIni.WriteFloat(lSection,'CameraFov',TRecorder3dComponent(lComponent).CameraFov);
           lIni.WriteBool(lSection, 'DrawFill',
             TRecorder3dComponent(lComponent).DrawFill);
@@ -1253,6 +1400,15 @@ begin
             lIni.WriteInteger(lSection,
               Format('Primitive%dCrossSectionIterations',[K]),
               lPrimitiveSpec.CrossSectionIterations);
+            lIni.WriteFloat(lSection,Format('Primitive%dSizeX',[K]),lPrimitiveSpec.SizeX);
+            lIni.WriteFloat(lSection,Format('Primitive%dSizeY',[K]),lPrimitiveSpec.SizeY);
+            lIni.WriteFloat(lSection,Format('Primitive%dSizeZ',[K]),lPrimitiveSpec.SizeZ);
+            lIni.WriteInteger(lSection,Format('Primitive%dIterationsX',[K]),lPrimitiveSpec.IterationsX);
+            lIni.WriteInteger(lSection,Format('Primitive%dIterationsY',[K]),lPrimitiveSpec.IterationsY);
+            lIni.WriteInteger(lSection,Format('Primitive%dIterationsZ',[K]),lPrimitiveSpec.IterationsZ);
+            lIni.WriteInteger(lSection,Format('Primitive%dPointCloudShape',[K]),Ord(lPrimitiveSpec.PointCloudShape));
+            lIni.WriteBool(lSection,Format('Primitive%dDrawPointNumbers',[K]),lPrimitiveSpec.DrawPointNumbers);
+            lIni.WriteInteger(lSection,Format('Primitive%dColor',[K]),lPrimitiveSpec.Color);
           end;
           lIni.WriteInteger(lSection, 'RemovedNodeCount',
             TRecorder3dComponent(lComponent).RemovedNodeCount);
@@ -1348,6 +1504,7 @@ begin
               lIni.WriteInteger(lSection,Format('Gradient%dRightColor',[K]),RightColor);
               lIni.WriteFloat(lSection,Format('Gradient%dLeftValue',[K]),LeftValue);
               lIni.WriteFloat(lSection,Format('Gradient%dRightValue',[K]),RightValue);
+              lIni.WriteBool(lSection,Format('Gradient%dCadGradient',[K]),CadGradient);
             end;
           end;
           lIni.WriteInteger(lSection,'VertexColorAnchorCount',
@@ -1374,6 +1531,18 @@ begin
               lIni.WriteBool(lSection,Format('ColorAnchor%dEnabled',[K]),Enabled);
               lIni.WriteBool(lSection,Format('ColorAnchor%dApplyColor',[K]),ApplyColor);
               lIni.WriteBool(lSection,Format('ColorAnchor%dShowValueLabel',[K]),ShowValueLabel);
+              lIni.WriteString(lSection,Format('ColorAnchor%dSourceBindingId',[K]),SourceBindingId);
+              lIni.WriteInt64(lSection,Format('ColorAnchor%dFrfCurveId',[K]),FrfCurveId);
+              lIni.WriteBool(lSection,Format('ColorAnchor%dFrfBandRms',[K]),FrfBandRms);
+              lIni.WriteFloat(lSection,Format('ColorAnchor%dFrfBandTolerancePercent',[K]),FrfBandTolerancePercent);
+              lIni.WriteFloat(lSection,Format('ColorAnchor%dFrfGain',[K]),FrfGain);
+              lIni.WriteBool(lSection,Format('ColorAnchor%dEnvelopeXEnabled',[K]),EnvelopeXEnabled);
+              lIni.WriteFloat(lSection,Format('ColorAnchor%dEnvelopeX',[K]),EnvelopeX);
+              lIni.WriteBool(lSection,Format('ColorAnchor%dEnvelopeYEnabled',[K]),EnvelopeYEnabled);
+              lIni.WriteFloat(lSection,Format('ColorAnchor%dEnvelopeY',[K]),EnvelopeY);
+              lIni.WriteBool(lSection,Format('ColorAnchor%dEnvelopeZEnabled',[K]),EnvelopeZEnabled);
+              lIni.WriteFloat(lSection,Format('ColorAnchor%dEnvelopeZ',[K]),EnvelopeZ);
+              lIni.WriteInteger(lSection,Format('ColorAnchor%dFrfIntensitySource',[K]),Ord(FrfIntensitySource));
             end;
           end;
           lIni.WriteFloat(lSection, 'FrfFrequencyHz', TRecorder3dComponent(lComponent).FrfFrequencyHz);
@@ -1396,6 +1565,27 @@ begin
             lIni.WriteString(lSection,Format('Frf%dPhaseTagName',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].PhaseTagName);
             lIni.WriteFloat(lSection,Format('Frf%dGain',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].Gain);
             lIni.WriteBool(lSection,Format('Frf%dEnabled',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].Enabled);
+            lIni.WriteInteger(lSection,Format('Frf%dMode',[K]),Ord(TRecorder3dComponent(lComponent).FrfBindings[K].Mode));
+            lIni.WriteInt64(lSection,Format('Frf%dModifierNodeId',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].ModifierTargetNodeId);
+            lIni.WriteBool(lSection,Format('Frf%dIntensityOnly',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].IntensityOnly);
+            lIni.WriteInteger(lSection,Format('Frf%dVisualization',[K]),Ord(TRecorder3dComponent(lComponent).FrfBindings[K].Visualization));
+            lIni.WriteInteger(lSection,Format('Frf%dPointNumber',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].PointNumber);
+            lIni.WriteFloat(lSection,Format('Frf%dMarkerSizePixels',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].MarkerSizePixels);
+            lIni.WriteInteger(lSection,Format('Frf%dIntensitySource',[K]),Ord(TRecorder3dComponent(lComponent).FrfBindings[K].IntensitySource));
+            lIni.WriteInt64(lSection,Format('Frf%dColor',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].Color);
+            lIni.WriteBool(lSection,Format('Frf%dBandRms',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].BandRms);
+            lIni.WriteFloat(lSection,Format('Frf%dBandTolerancePercent',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].BandTolerancePercent);
+            lIni.WriteBool(lSection,Format('Frf%dGradientEnabled',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].GradientEnabled);
+            lIni.WriteString(lSection,Format('Frf%dPointLabel',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].PointLabel);
+            lIni.WriteBool(lSection,Format('Frf%dCreateColorModifier',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].CreateColorModifier);
+            lIni.WriteBool(lSection,Format('Frf%dHideAnchors',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].HideAnchors);
+            lIni.WriteBool(lSection,Format('Frf%dOnlySensors',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].OnlySensors);
+            lIni.WriteBool(lSection,Format('Frf%dEnvelopeXEnabled',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].EnvelopeXEnabled);
+            lIni.WriteFloat(lSection,Format('Frf%dEnvelopeX',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].EnvelopeX);
+            lIni.WriteBool(lSection,Format('Frf%dEnvelopeYEnabled',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].EnvelopeYEnabled);
+            lIni.WriteFloat(lSection,Format('Frf%dEnvelopeY',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].EnvelopeY);
+            lIni.WriteBool(lSection,Format('Frf%dEnvelopeZEnabled',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].EnvelopeZEnabled);
+            lIni.WriteFloat(lSection,Format('Frf%dEnvelopeZ',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].EnvelopeZ);
           end;
         end;
         if lComponent is TRecorderStaticTextComponent then
@@ -1578,52 +1768,14 @@ begin
         end;
         if lComponent is TRecorderOscillogramComponent then
         begin
+          { Only the built-in simple chart is serialized here. Plugin state is
+            opaque and its advanced axes/trigger/cursors belong to its DLL. }
           lIni.WriteString(lSection, 'DisplayFormat',
             TRecorderOscillogramComponent(lComponent).DisplayFormat);
           lIni.WriteInteger(lSection, 'BindingMode',
             Ord(TRecorderOscillogramComponent(lComponent).BindingMode));
           lIni.WriteInteger(lSection, 'TagOffset',
             TRecorderOscillogramComponent(lComponent).TagOffset);
-          if RecorderIsPluginOscillograph(lComponent) then
-          begin
-          lIni.WriteFloat(lSection, 'OscXScale',
-            TRecorderOscillogramComponent(lComponent).XScale);
-          lIni.WriteFloat(lSection, 'OscYScale',
-            TRecorderOscillogramComponent(lComponent).YScale);
-          lIni.WriteFloat(lSection, 'OscYOffset',
-            TRecorderOscillogramComponent(lComponent).YOffset);
-          lIni.WriteBool(lSection, 'OscClosedInput',
-            TRecorderOscillogramComponent(lComponent).ClosedInput);
-          lIni.WriteBool(lSection, 'OscAutoRangeEnabled',
-            TRecorderOscillogramComponent(lComponent).AutoRangeEnabled);
-          lIni.WriteBool(lSection, 'OscXCursorEnabled',
-            TRecorderOscillogramComponent(lComponent).XCursorEnabled);
-          lIni.WriteInteger(lSection, 'OscXCursorCount',
-            TRecorderOscillogramComponent(lComponent).XCursorCount);
-          lIni.WriteBool(lSection, 'OscLegendVisible',
-            TRecorderOscillogramComponent(lComponent).LegendVisible);
-          lIni.WriteBool(lSection, 'OscLevelCursorVisible',
-            TRecorderOscillogramComponent(lComponent).LevelCursorVisible);
-          lIni.WriteInteger(lSection, 'OscPrimaryAxisIndex',
-            TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex);
-          lIni.WriteInteger(lSection, 'OscAxisCount',
-            TRecorderOscillogramComponent(lComponent).AxisCount);
-          for K := 0 to TRecorderOscillogramComponent(lComponent).AxisCount - 1 do
-          begin
-            lAxis := TRecorderOscillogramComponent(lComponent).Axes[K];
-            lIni.WriteString(lSection, Format('OscAxis%dName', [K]), lAxis.Name);
-            lIni.WriteFloat(lSection, Format('OscAxis%dYScale', [K]), lAxis.YScale);
-            lIni.WriteFloat(lSection, Format('OscAxis%dYOffset', [K]), lAxis.YOffset);
-          end;
-          lIni.WriteString(lSection, 'OscTriggerTag',
-            TRecorderOscillogramComponent(lComponent).TriggerTagName);
-          lIni.WriteBool(lSection, 'OscTriggerEnabled',
-            TRecorderOscillogramComponent(lComponent).TriggerEnabled);
-          lIni.WriteFloat(lSection, 'OscTriggerLevel',
-            TRecorderOscillogramComponent(lComponent).TriggerLevel);
-          lIni.WriteFloat(lSection, 'OscTriggerPreRollPercent',
-            TRecorderOscillogramComponent(lComponent).TriggerPreRollPercent);
-          end;
           lIni.WriteInteger(lSection, 'OscLineCount',
             TRecorderOscillogramComponent(lComponent).LineCount);
           for K := 0 to TRecorderOscillogramComponent(lComponent).LineCount - 1 do
@@ -1634,8 +1786,50 @@ begin
             lIni.WriteInt64(lSection, Format('OscLine%dTagId', [K]), lLine.TagId);
             lIni.WriteInteger(lSection, Format('OscLine%dColor', [K]), lLine.Color);
             lIni.WriteBool(lSection, Format('OscLine%dVisible', [K]), lLine.Visible);
-            lIni.WriteInteger(lSection, Format('OscLine%dAxisIndex', [K]), lLine.AxisIndex);
           end;
+        end;
+        if lComponent is TRecorderDacComponent then
+        begin
+          lIni.WriteBool(lSection, 'DacEnabled',
+            TRecorderDacComponent(lComponent).Enabled);
+          lIni.WriteString(lSection, 'DacBackendId',
+            TRecorderDacComponent(lComponent).BackendId);
+          lIni.WriteString(lSection, 'DacEndpoint',
+            TRecorderDacComponent(lComponent).Endpoint);
+          lIni.WriteInteger(lSection, 'DacSourceMode',
+            Ord(TRecorderDacComponent(lComponent).SourceMode));
+          lIni.WriteInt64(lSection, 'DacInputTagId',
+            TRecorderDacComponent(lComponent).InputTagId);
+          lIni.WriteString(lSection, 'DacInputTagName',
+            TRecorderDacComponent(lComponent).InputTagName);
+          lIni.WriteBool(lSection, 'DacMirrorEnabled',
+            TRecorderDacComponent(lComponent).MirrorEnabled);
+          lIni.WriteInt64(lSection, 'DacMirrorTagId',
+            TRecorderDacComponent(lComponent).MirrorTagId);
+          lIni.WriteString(lSection, 'DacMirrorTagName',
+            TRecorderDacComponent(lComponent).MirrorTagName);
+          lIni.WriteFloat(lSection, 'DacSampleRateHz',
+            TRecorderDacComponent(lComponent).SampleRateHz);
+          lIni.WriteInteger(lSection, 'DacFramesPerBlock',
+            TRecorderDacComponent(lComponent).FramesPerBlock);
+          lIni.WriteFloat(lSection, 'DacMinimumValue',
+            TRecorderDacComponent(lComponent).MinimumValue);
+          lIni.WriteFloat(lSection, 'DacMaximumValue',
+            TRecorderDacComponent(lComponent).MaximumValue);
+          lIni.WriteFloat(lSection, 'DacSafeValue',
+            TRecorderDacComponent(lComponent).SafeValue);
+          lIni.WriteInteger(lSection, 'DacUnderrunPolicy',
+            Ord(TRecorderDacComponent(lComponent).UnderrunPolicy));
+          lIni.WriteFloat(lSection, 'DacFrequencyHz',
+            TRecorderDacComponent(lComponent).FrequencyHz);
+          lIni.WriteFloat(lSection, 'DacAmplitude',
+            TRecorderDacComponent(lComponent).Amplitude);
+          lIni.WriteFloat(lSection, 'DacSweepStartHz',
+            TRecorderDacComponent(lComponent).SweepStartHz);
+          lIni.WriteFloat(lSection, 'DacSweepEndHz',
+            TRecorderDacComponent(lComponent).SweepEndHz);
+          lIni.WriteFloat(lSection, 'DacSweepTimeSec',
+            TRecorderDacComponent(lComponent).SweepTimeSec);
         end;
         if lComponent is TRecorderDonutComponent then
         begin
@@ -1711,9 +1905,25 @@ begin
           lIni.WriteString(lSection, 'ProfileName', lSpectrum.ProfileName);
           lIni.WriteInteger(lSection, 'TagCount', lSpectrum.TagNames.Count);
           for K := 0 to lSpectrum.TagNames.Count - 1 do
+          begin
             lIni.WriteString(lSection, Format('Tag%d', [K]), lSpectrum.TagNames[K]);
             if lSpectrum.TagIdAt(K) <> 0 then
               lIni.WriteInt64(lSection, Format('Tag%dId', [K]), lSpectrum.TagIdAt(K));
+            lIni.WriteInteger(lSection, Format('Tag%dAxisIndex', [K]),
+              lSpectrum.TagAxisIndexAt(K));
+          end;
+          lIni.WriteInteger(lSection, 'SpectrumAxisCount', lSpectrum.AxisCount);
+          for K := 0 to lSpectrum.AxisCount - 1 do
+          begin
+            lIni.WriteString(lSection, Format('SpectrumAxis%dName', [K]),
+              lSpectrum.Axes[K].Name);
+            lIni.WriteFloat(lSection, Format('SpectrumAxis%dMin', [K]),
+              lSpectrum.Axes[K].RangeMin);
+            lIni.WriteFloat(lSection, Format('SpectrumAxis%dMax', [K]),
+              lSpectrum.Axes[K].RangeMax);
+            lIni.WriteInt64(lSection, Format('SpectrumAxis%dColor', [K]),
+              lSpectrum.Axes[K].Color);
+          end;
         end;
         if lComponent is TRecorderLissajousComponent then
         begin
@@ -1929,6 +2139,10 @@ var
   lImpactHammer: TRecorderImpactHammerComponent;
   lImpactValues: TStringList;
   lImpactError: string;
+  lPluginData: TRecorderPluginConfigBytes;
+  lPluginSchemaVersion: Int64;
+  lPluginStateEncoding: string;
+  lOpaqueStateResult: TRecorderOpaqueStateResult;
 begin
   if not FileExists(AFileName) then
     Exit;
@@ -1992,10 +2206,22 @@ begin
       begin
         lSection := Format('Page.%d.Component.%d', [I, J]);
         lTypeId := lIni.ReadString(lSection, 'Type', '');
-        if not AFactory.IsComponentRegistered(lTypeId) then
+        if lTypeId = '' then
           Continue;
-
-        lComponent := AFactory.CreateComponent(lTypeId);
+        lPluginStateEncoding := lIni.ReadString(lSection,'PluginStateEncoding','');
+        { Unknown native envelopes remain transport-only placeholders even if
+          a matching plugin is installed. Never reinterpret them as old INI. }
+        if AFactory.IsComponentRegistered(lTypeId) and
+          ((lPluginStateEncoding = '') or SameText(lPluginStateEncoding,'hex-v1')) and
+          (lIni.ReadString(lSection,'ConfigSchemaId','') <> REC_VISUAL_STATE_UNKNOWN_ENVELOPE_V1) then
+          lComponent := AFactory.CreateComponent(lTypeId)
+        else
+        begin
+          { Keep unavailable plugin components as opaque placeholders. Dropping
+            them here would make a save from an older host destructive. }
+          lComponent := TRecorderPluginVisualComponent.Create;
+          TRecorderPluginVisualComponent(lComponent).PluginTypeId := lTypeId;
+        end;
         try
           lComponent.Id := lIni.ReadString(lSection, 'Id', '');
           lComponent.Name := lIni.ReadString(lSection, 'Name', '');
@@ -2009,6 +2235,53 @@ begin
             lIni.ReadInteger(lSection, 'Width', 0),
             lIni.ReadInteger(lSection, 'Height', 0));
           lComponent.NamedFontName := lIni.ReadString(lSection, 'NamedFont', '');
+          if lComponent is TRecorderPluginVisualComponent then
+          begin
+            with TRecorderPluginVisualComponent(lComponent) do
+            begin
+              PluginTypeId := lIni.ReadString(lSection, 'PluginTypeId', lTypeId);
+              ConfigSchemaId := lIni.ReadString(lSection, 'ConfigSchemaId', '');
+              lPluginSchemaVersion := lIni.ReadInt64(lSection,
+                'ConfigSchemaVersion', 0);
+              if lPluginSchemaVersion < 0 then
+                lPluginSchemaVersion := 0
+              else if lPluginSchemaVersion > High(LongWord) then
+                lPluginSchemaVersion := High(LongWord);
+              ConfigSchemaVersion := lPluginSchemaVersion;
+              lPluginStateEncoding := lIni.ReadString(lSection,
+                'PluginStateEncoding', '');
+              if SameText(lPluginStateEncoding, 'hex-v1') then
+              begin
+                if not lIni.ValueExists(lSection,'PluginStateData') or
+                  not TryHexToBytes(lIni.ReadString(lSection,'PluginStateData',''),lPluginData) then
+                  raise ERecorderFormError.CreateFmt('Invalid plugin state encoding in %s',[lSection]);
+                ConfigBlob := lPluginData;
+                ConfigStatePresent := lIni.ValueExists(lSection,
+                  'PluginStateData');
+              end
+              else
+              begin
+                ConfigBlob := CaptureLegacyPluginProperties(lIni, lSection,
+                  (lPluginStateEncoding <> '') or
+                  lIni.ValueExists(lSection, 'PluginStateData'), True);
+                if (lPluginStateEncoding <> '') or lIni.ValueExists(lSection,'PluginStateData') then
+                  ConfigSchemaId := REC_VISUAL_STATE_UNKNOWN_ENVELOPE_V1
+                else ConfigSchemaId := REC_VISUAL_STATE_INI_SECTION_V1;
+                ConfigSchemaVersion := 1;
+                ConfigStatePresent := (Length(ConfigBlob) > 0) or
+                  lIni.ValueExists(lSection, 'PluginStateData');
+              end;
+            end;
+          end;
+          if lComponent is TRecorderMeraBaseComponent then
+          begin
+            TRecorderMeraBaseComponent(lComponent).BasePath :=
+              lIni.ReadString(lSection, 'MdbBasePath', '');
+            TRecorderMeraBaseComponent(lComponent).ObjectId :=
+              lIni.ReadString(lSection, 'MdbObjectId', '');
+            TRecorderMeraBaseComponent(lComponent).TestId :=
+              lIni.ReadString(lSection, 'MdbTestId', '');
+          end;
           if lComponent is TRecorder3dComponent then
           begin
             TRecorder3dComponent(lComponent).SceneFileName :=
@@ -2017,16 +2290,22 @@ begin
               lIni.ReadBool(lSection, 'ShowAxes', True);
             TRecorder3dComponent(lComponent).BackgroundColor :=
               lIni.ReadInt64(lSection, 'BackgroundColor', $0033291F);
-            TRecorder3dComponent(lComponent).CameraYaw :=
-              lIni.ReadFloat(lSection, 'CameraYaw', 35);
-            TRecorder3dComponent(lComponent).CameraPitch :=
-              lIni.ReadFloat(lSection, 'CameraPitch', -25);
+            TRecorder3dComponent(lComponent).LabelFontSize :=
+              EnsureRange(lIni.ReadInteger(lSection, 'LabelFontSize', 8), 4, 48);
             TRecorder3dComponent(lComponent).CameraDistance :=
               lIni.ReadFloat(lSection, 'CameraDistance', 6);
             TRecorder3dComponent(lComponent).CameraTargetX:=lIni.ReadFloat(lSection,'CameraTargetX',0);
             TRecorder3dComponent(lComponent).CameraTargetY:=lIni.ReadFloat(lSection,'CameraTargetY',0);
             TRecorder3dComponent(lComponent).CameraTargetZ:=lIni.ReadFloat(lSection,'CameraTargetZ',0);
-            TRecorder3dComponent(lComponent).CameraRoll:=lIni.ReadFloat(lSection,'CameraRoll',0);
+            TRecorder3dComponent(lComponent).CameraForwardX:=lIni.ReadFloat(lSection,'CameraForwardX',-0.519);
+            TRecorder3dComponent(lComponent).CameraForwardY:=lIni.ReadFloat(lSection,'CameraForwardY',-0.423);
+            TRecorder3dComponent(lComponent).CameraForwardZ:=lIni.ReadFloat(lSection,'CameraForwardZ',-0.742);
+            TRecorder3dComponent(lComponent).CameraRightX:=lIni.ReadFloat(lSection,'CameraRightX',0.819);
+            TRecorder3dComponent(lComponent).CameraRightY:=lIni.ReadFloat(lSection,'CameraRightY',0);
+            TRecorder3dComponent(lComponent).CameraRightZ:=lIni.ReadFloat(lSection,'CameraRightZ',-0.574);
+            TRecorder3dComponent(lComponent).CameraUpX:=lIni.ReadFloat(lSection,'CameraUpX',-0.243);
+            TRecorder3dComponent(lComponent).CameraUpY:=lIni.ReadFloat(lSection,'CameraUpY',0.906);
+            TRecorder3dComponent(lComponent).CameraUpZ:=lIni.ReadFloat(lSection,'CameraUpZ',-0.347);
             TRecorder3dComponent(lComponent).CameraFov:=lIni.ReadFloat(lSection,'CameraFov',45);
             TRecorder3dComponent(lComponent).DrawFill :=
               lIni.ReadBool(lSection, 'DrawFill', True);
@@ -2072,6 +2351,17 @@ begin
                 PrimitiveIterationMinimum(lPrimitiveSpec.Kind));
               lPrimitiveSpec.CrossSectionIterations:=lIni.ReadInteger(lSection,
                 Format('Primitive%dCrossSectionIterations',[K]),1);
+              lPrimitiveSpec.SizeX:=lIni.ReadFloat(lSection,Format('Primitive%dSizeX',[K]),2);
+              lPrimitiveSpec.SizeY:=lIni.ReadFloat(lSection,Format('Primitive%dSizeY',[K]),2);
+              lPrimitiveSpec.SizeZ:=lIni.ReadFloat(lSection,Format('Primitive%dSizeZ',[K]),2);
+              lPrimitiveSpec.IterationsX:=lIni.ReadInteger(lSection,Format('Primitive%dIterationsX',[K]),lPrimitiveSpec.Iterations);
+              lPrimitiveSpec.IterationsY:=lIni.ReadInteger(lSection,Format('Primitive%dIterationsY',[K]),lPrimitiveSpec.Iterations);
+              lPrimitiveSpec.IterationsZ:=lIni.ReadInteger(lSection,Format('Primitive%dIterationsZ',[K]),lPrimitiveSpec.Iterations);
+              L:=lIni.ReadInteger(lSection,Format('Primitive%dPointCloudShape',[K]),0);
+              L:=EnsureRange(L,Ord(Low(T3dPointCloudShape)),Ord(High(T3dPointCloudShape)));
+              lPrimitiveSpec.PointCloudShape:=T3dPointCloudShape(L);
+              lPrimitiveSpec.DrawPointNumbers:=lIni.ReadBool(lSection,Format('Primitive%dDrawPointNumbers',[K]),False);
+              lPrimitiveSpec.Color:=lIni.ReadInteger(lSection,Format('Primitive%dColor',[K]),$00DCCDBE);
               if lPrimitiveSpec.NodeId <> 0 then
                 TRecorder3dComponent(lComponent).AddPrimitive(lPrimitiveSpec);
             end;
@@ -2186,6 +2476,7 @@ begin
                 RightColor:=lIni.ReadInteger(lSection,Format('Gradient%dRightColor',[K]),$00FF0000);
                 LeftValue:=lIni.ReadFloat(lSection,Format('Gradient%dLeftValue',[K]),0);
                 RightValue:=lIni.ReadFloat(lSection,Format('Gradient%dRightValue',[K]),1);
+                CadGradient:=lIni.ReadBool(lSection,Format('Gradient%dCadGradient',[K]),False);
               end;
             TRecorder3dComponent(lComponent).ClearVertexColorAnchors;
             lCount:=EnsureRange(lIni.ReadInteger(lSection,
@@ -2223,6 +2514,21 @@ begin
                 ApplyColor:=lIni.ReadBool(lSection,Format('ColorAnchor%dApplyColor',[K]),True);
                 ShowValueLabel:=lIni.ReadBool(lSection,
                   Format('ColorAnchor%dShowValueLabel',[K]),False);
+                SourceBindingId:=lIni.ReadString(lSection,Format('ColorAnchor%dSourceBindingId',[K]),'');
+                FrfCurveId:=lIni.ReadInt64(lSection,Format('ColorAnchor%dFrfCurveId',[K]),0);
+                FrfBandRms:=lIni.ReadBool(lSection,Format('ColorAnchor%dFrfBandRms',[K]),False);
+                FrfBandTolerancePercent:=lIni.ReadFloat(lSection,Format('ColorAnchor%dFrfBandTolerancePercent',[K]),5);
+                FrfGain:=lIni.ReadFloat(lSection,Format('ColorAnchor%dFrfGain',[K]),1);
+                EnvelopeXEnabled:=lIni.ReadBool(lSection,Format('ColorAnchor%dEnvelopeXEnabled',[K]),False);
+                EnvelopeX:=lIni.ReadFloat(lSection,Format('ColorAnchor%dEnvelopeX',[K]),1);
+                EnvelopeYEnabled:=lIni.ReadBool(lSection,Format('ColorAnchor%dEnvelopeYEnabled',[K]),False);
+                EnvelopeY:=lIni.ReadFloat(lSection,Format('ColorAnchor%dEnvelopeY',[K]),1);
+                EnvelopeZEnabled:=lIni.ReadBool(lSection,Format('ColorAnchor%dEnvelopeZEnabled',[K]),False);
+                EnvelopeZ:=lIni.ReadFloat(lSection,Format('ColorAnchor%dEnvelopeZ',[K]),1);
+                L:=EnsureRange(lIni.ReadInteger(lSection,
+                  Format('ColorAnchor%dFrfIntensitySource',[K]),0),
+                  Ord(Low(TRecorderIntensitySource)),Ord(High(TRecorderIntensitySource)));
+                FrfIntensitySource:=TRecorderIntensitySource(L);
               end;
             TRecorder3dComponent(lComponent).FrfFrequencyHz:=lIni.ReadFloat(lSection,'FrfFrequencyHz',100);
             TRecorder3dComponent(lComponent).FrfAnimationPhaseRadians:=lIni.ReadFloat(lSection,'FrfAnimationPhase',0);
@@ -2245,6 +2551,34 @@ begin
               PhaseTagName:=lIni.ReadString(lSection,Format('Frf%dPhaseTagName',[K]),'');
               Gain:=lIni.ReadFloat(lSection,Format('Frf%dGain',[K]),1);
               Enabled:=lIni.ReadBool(lSection,Format('Frf%dEnabled',[K]),True);
+              Mode:=TRecorderGeometryBindingMode(EnsureRange(lIni.ReadInteger(lSection,
+                Format('Frf%dMode',[K]),Ord(rgbmOscillation)),
+                Ord(Low(TRecorderGeometryBindingMode)),Ord(High(TRecorderGeometryBindingMode))));
+              ModifierTargetNodeId:=lIni.ReadInt64(lSection,
+                Format('Frf%dModifierNodeId',[K]),0);
+              IntensityOnly:=lIni.ReadBool(lSection,
+                Format('Frf%dIntensityOnly',[K]),False);
+              Visualization:=TRecorderPointVisualization(EnsureRange(
+                lIni.ReadInteger(lSection,Format('Frf%dVisualization',[K]),
+                Ord(rpvVector)),Ord(Low(TRecorderPointVisualization)),
+                Ord(High(TRecorderPointVisualization))));
+              Color:=lIni.ReadInt64(lSection,Format('Frf%dColor',[K]),$000000FF);
+              BandRms:=lIni.ReadBool(lSection,Format('Frf%dBandRms',[K]),False);
+              BandTolerancePercent:=EnsureRange(lIni.ReadFloat(lSection,Format('Frf%dBandTolerancePercent',[K]),5),0,100);
+              GradientEnabled:=lIni.ReadBool(lSection,Format('Frf%dGradientEnabled',[K]),False);
+              PointLabel:=lIni.ReadString(lSection,Format('Frf%dPointLabel',[K]),IntToStr(PointNumber));
+              CreateColorModifier:=lIni.ReadBool(lSection,Format('Frf%dCreateColorModifier',[K]),False);
+              HideAnchors:=lIni.ReadBool(lSection,Format('Frf%dHideAnchors',[K]),False);
+              OnlySensors:=lIni.ReadBool(lSection,Format('Frf%dOnlySensors',[K]),False);
+              EnvelopeXEnabled:=lIni.ReadBool(lSection,Format('Frf%dEnvelopeXEnabled',[K]),False);
+              EnvelopeX:=lIni.ReadFloat(lSection,Format('Frf%dEnvelopeX',[K]),1);
+              EnvelopeYEnabled:=lIni.ReadBool(lSection,Format('Frf%dEnvelopeYEnabled',[K]),False);
+              EnvelopeY:=lIni.ReadFloat(lSection,Format('Frf%dEnvelopeY',[K]),1);
+              EnvelopeZEnabled:=lIni.ReadBool(lSection,Format('Frf%dEnvelopeZEnabled',[K]),False);
+              EnvelopeZ:=lIni.ReadFloat(lSection,Format('Frf%dEnvelopeZ',[K]),1);
+              PointNumber:=lIni.ReadInteger(lSection,Format('Frf%dPointNumber',[K]),1);
+              MarkerSizePixels:=EnsureRange(lIni.ReadFloat(lSection,Format('Frf%dMarkerSizePixels',[K]),10),0.1,1000);
+              IntensitySource:=TRecorderIntensitySource(EnsureRange(lIni.ReadInteger(lSection,Format('Frf%dIntensitySource',[K]),0),0,Ord(High(TRecorderIntensitySource))));
             end;
           end;
           if lComponent is TRecorderStaticTextComponent then
@@ -2468,111 +2802,73 @@ begin
                 Ord(rtbmRelativeSelectedTag)));
             TRecorderOscillogramComponent(lComponent).TagOffset :=
               lIni.ReadInteger(lSection, 'TagOffset', 0);
-            if RecorderIsPluginOscillograph(lComponent) then
-            begin
-            TRecorderOscillogramComponent(lComponent).XScale :=
-              lIni.ReadFloat(lSection, 'OscXScale', 0.0);
-            if TRecorderOscillogramComponent(lComponent).XScale < 0 then
-              TRecorderOscillogramComponent(lComponent).XScale := 0.0;
-            TRecorderOscillogramComponent(lComponent).YScale :=
-              lIni.ReadFloat(lSection, 'OscYScale', 1.0);
-            if TRecorderOscillogramComponent(lComponent).YScale <= 0 then
-              TRecorderOscillogramComponent(lComponent).YScale := 1.0;
-            TRecorderOscillogramComponent(lComponent).YOffset :=
-              lIni.ReadFloat(lSection, 'OscYOffset', 0.0);
-            TRecorderOscillogramComponent(lComponent).ClosedInput :=
-              lIni.ReadBool(lSection, 'OscClosedInput', False);
-            TRecorderOscillogramComponent(lComponent).AutoRangeEnabled :=
-              lIni.ReadBool(lSection, 'OscAutoRangeEnabled', False);
-            TRecorderOscillogramComponent(lComponent).XCursorEnabled :=
-              lIni.ReadBool(lSection, 'OscXCursorEnabled', False);
-            TRecorderOscillogramComponent(lComponent).XCursorCount :=
-              lIni.ReadInteger(lSection, 'OscXCursorCount', 1);
-            if (TRecorderOscillogramComponent(lComponent).XCursorCount < 1) or
-              (TRecorderOscillogramComponent(lComponent).XCursorCount > 2) then
-              TRecorderOscillogramComponent(lComponent).XCursorCount := 1;
-            TRecorderOscillogramComponent(lComponent).LegendVisible :=
-              lIni.ReadBool(lSection, 'OscLegendVisible', True);
-            TRecorderOscillogramComponent(lComponent).LevelCursorVisible :=
-              lIni.ReadBool(lSection, 'OscLevelCursorVisible', False);
-            lItemCount := lIni.ReadInteger(lSection, 'OscAxisCount', 1);
-            if lItemCount < 1 then
-              lItemCount := 1;
-            if lItemCount > 16 then
-              lItemCount := 16;
-            TRecorderOscillogramComponent(lComponent).ClearAxes;
-            for K := 0 to lItemCount - 1 do
-            begin
-              lAxis := TRecorderOscillogramComponent(lComponent).AddAxis;
-              lAxis.Name := lIni.ReadString(lSection,
-                Format('OscAxis%dName', [K]), lAxis.Name);
-              lAxis.YScale := lIni.ReadFloat(lSection,
-                Format('OscAxis%dYScale', [K]),
-                TRecorderOscillogramComponent(lComponent).YScale);
-              if lAxis.YScale <= 0 then
-                lAxis.YScale := 1;
-              lAxis.YOffset := lIni.ReadFloat(lSection,
-                Format('OscAxis%dYOffset', [K]),
-                TRecorderOscillogramComponent(lComponent).YOffset);
-            end;
-            TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex :=
-              lIni.ReadInteger(lSection, 'OscPrimaryAxisIndex', 0);
-            if (TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex < 0) or
-              (TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex >= lItemCount) then
-              TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex := 0;
-            TRecorderOscillogramComponent(lComponent).TriggerTagName :=
-              lIni.ReadString(lSection, 'OscTriggerTag', '');
-            TRecorderOscillogramComponent(lComponent).TriggerEnabled :=
-              lIni.ReadBool(lSection, 'OscTriggerEnabled', False);
-            TRecorderOscillogramComponent(lComponent).TriggerLevel :=
-              lIni.ReadFloat(lSection, 'OscTriggerLevel', 0.0);
-            TRecorderOscillogramComponent(lComponent).TriggerPreRollPercent :=
-              lIni.ReadFloat(lSection, 'OscTriggerPreRollPercent', 25.0);
-            end
-            else
-            begin
-              { Advanced axes, trigger and cursor state belongs to the plugin
-                Oscillograph. Ignore keys accidentally written by affected
-                versions when loading the built-in simple Oscillogram. }
-              TRecorderOscillogramComponent(lComponent).XScale := 0.0;
-              TRecorderOscillogramComponent(lComponent).YScale := 1.0;
-              TRecorderOscillogramComponent(lComponent).YOffset := 0.0;
-              TRecorderOscillogramComponent(lComponent).ClosedInput := False;
-              TRecorderOscillogramComponent(lComponent).AutoRangeEnabled := False;
-              TRecorderOscillogramComponent(lComponent).XCursorEnabled := False;
-              TRecorderOscillogramComponent(lComponent).LegendVisible := True;
-              TRecorderOscillogramComponent(lComponent).LevelCursorVisible := False;
-              TRecorderOscillogramComponent(lComponent).TriggerTagName := '';
-              TRecorderOscillogramComponent(lComponent).TriggerEnabled := False;
-              TRecorderOscillogramComponent(lComponent).ClearAxes;
-              TRecorderOscillogramComponent(lComponent).AddAxis;
-              TRecorderOscillogramComponent(lComponent).PrimaryAxisIndex := 0;
-            end;
-            lItemCount := lIni.ReadInteger(lSection, 'OscLineCount', 0);
             TRecorderOscillogramComponent(lComponent).ClearLines;
+            lItemCount := lIni.ReadInteger(lSection, 'OscLineCount', 0);
             for K := 0 to lItemCount - 1 do
             begin
               lLine := TRecorderOscillogramComponent(lComponent).AddLine;
-              lLine.TagName := lIni.ReadString(lSection, Format('OscLine%dTagName', [K]), '');
-              lLine.TagId := lIni.ReadInt64(lSection, Format('OscLine%dTagId', [K]), 0);
-              lLine.Color := lIni.ReadInteger(lSection, Format('OscLine%dColor', [K]),
-                lLine.Color);
+              lLine.TagName := lIni.ReadString(lSection,
+                Format('OscLine%dTagName', [K]), '');
+              lLine.TagId := lIni.ReadInt64(lSection,
+                Format('OscLine%dTagId', [K]), 0);
+              lLine.Color := lIni.ReadInteger(lSection,
+                Format('OscLine%dColor', [K]), lLine.Color);
               lLine.Name := OglChartLinePaletteNameForColor(TColor(lLine.Color));
               if lLine.Name = '' then
-                lLine.Name := lIni.ReadString(lSection, Format('OscLine%dName', [K]), '');
-              if lLine.Name = '' then
-              begin
-                OglChartLineAppearance(K + 1, lPaletteName, lPaletteColor);
-                lLine.Name := lPaletteName;
-                lLine.Color := lPaletteColor;
-              end;
-              lLine.Visible := lIni.ReadBool(lSection, Format('OscLine%dVisible', [K]), True);
-              lLine.AxisIndex := lIni.ReadInteger(lSection,
-                Format('OscLine%dAxisIndex', [K]), 0);
-              if (lLine.AxisIndex < 0) or (lLine.AxisIndex >=
-                TRecorderOscillogramComponent(lComponent).AxisCount) then
-                lLine.AxisIndex := 0;
+                lLine.Name := lIni.ReadString(lSection,
+                  Format('OscLine%dName', [K]), '');
+              lLine.Visible := lIni.ReadBool(lSection,
+                Format('OscLine%dVisible', [K]), True);
+              lLine.AxisIndex := 0;
             end;
+          end;
+          if lComponent is TRecorderDacComponent then
+          begin
+            TRecorderDacComponent(lComponent).Enabled :=
+              lIni.ReadBool(lSection, 'DacEnabled', True);
+            TRecorderDacComponent(lComponent).BackendId :=
+              lIni.ReadString(lSection, 'DacBackendId', 'audio.portaudio');
+            TRecorderDacComponent(lComponent).Endpoint :=
+              lIni.ReadString(lSection, 'DacEndpoint', 'default');
+            TRecorderDacComponent(lComponent).SourceMode :=
+              TRecorderDacSourceMode(EnsureRange(lIni.ReadInteger(lSection,
+                'DacSourceMode', Ord(rdsmTag)), Ord(Low(TRecorderDacSourceMode)),
+                Ord(High(TRecorderDacSourceMode))));
+            TRecorderDacComponent(lComponent).InputTagId :=
+              lIni.ReadInt64(lSection, 'DacInputTagId', 0);
+            TRecorderDacComponent(lComponent).InputTagName :=
+              lIni.ReadString(lSection, 'DacInputTagName', '');
+            TRecorderDacComponent(lComponent).MirrorEnabled :=
+              lIni.ReadBool(lSection, 'DacMirrorEnabled', False);
+            TRecorderDacComponent(lComponent).MirrorTagId :=
+              lIni.ReadInt64(lSection, 'DacMirrorTagId', 0);
+            TRecorderDacComponent(lComponent).MirrorTagName :=
+              lIni.ReadString(lSection, 'DacMirrorTagName', '');
+            TRecorderDacComponent(lComponent).SampleRateHz := Max(1.0,
+              lIni.ReadFloat(lSection, 'DacSampleRateHz', 1000));
+            TRecorderDacComponent(lComponent).FramesPerBlock := Max(1,
+              lIni.ReadInteger(lSection, 'DacFramesPerBlock', 200));
+            TRecorderDacComponent(lComponent).MinimumValue :=
+              lIni.ReadFloat(lSection, 'DacMinimumValue', -1);
+            TRecorderDacComponent(lComponent).MaximumValue :=
+              lIni.ReadFloat(lSection, 'DacMaximumValue', 1);
+            TRecorderDacComponent(lComponent).SafeValue :=
+              lIni.ReadFloat(lSection, 'DacSafeValue', 0);
+            TRecorderDacComponent(lComponent).UnderrunPolicy :=
+              TRecorderDacUnderrunPolicy(EnsureRange(lIni.ReadInteger(lSection,
+                'DacUnderrunPolicy', Ord(rdupZero)),
+                Ord(Low(TRecorderDacUnderrunPolicy)),
+                Ord(High(TRecorderDacUnderrunPolicy))));
+            TRecorderDacComponent(lComponent).FrequencyHz :=
+              lIni.ReadFloat(lSection, 'DacFrequencyHz', 440);
+            TRecorderDacComponent(lComponent).Amplitude :=
+              lIni.ReadFloat(lSection, 'DacAmplitude', 0.5);
+            TRecorderDacComponent(lComponent).SweepStartHz :=
+              lIni.ReadFloat(lSection, 'DacSweepStartHz', 100);
+            TRecorderDacComponent(lComponent).SweepEndHz :=
+              lIni.ReadFloat(lSection, 'DacSweepEndHz', 10000);
+            TRecorderDacComponent(lComponent).SweepTimeSec :=
+              lIni.ReadFloat(lSection, 'DacSweepTimeSec', 10);
           end;
           if lComponent is TRecorderDonutComponent then
           begin
@@ -2651,6 +2947,22 @@ begin
             lSpectrum.TahoTagName := lIni.ReadString(lSection, 'TahoTagName', lSpectrum.TahoTagName);
             lSpectrum.TahoTagId := lIni.ReadInt64(lSection, 'TahoTagId', 0);
             lSpectrum.ProfileName := lIni.ReadString(lSection, 'ProfileName', lSpectrum.ProfileName);
+            lCount := lIni.ReadInteger(lSection, 'SpectrumAxisCount', 0);
+            lSpectrum.ClearAxes;
+            if lCount <= 0 then
+              lCount := 1;
+            for K := 0 to lCount - 1 do
+            begin
+              lAxis := lSpectrum.AddAxis;
+              lAxis.Name := lIni.ReadString(lSection,
+                Format('SpectrumAxis%dName', [K]), 'Y' + IntToStr(K + 1));
+              lAxis.RangeMin := lIni.ReadFloat(lSection,
+                Format('SpectrumAxis%dMin', [K]), lSpectrum.RangeMinY);
+              lAxis.RangeMax := lIni.ReadFloat(lSection,
+                Format('SpectrumAxis%dMax', [K]), lSpectrum.RangeMaxY);
+              lAxis.Color := lIni.ReadInt64(lSection,
+                Format('SpectrumAxis%dColor', [K]), $00000000);
+            end;
             lSpectrum.TagNames.Clear;
             lItemCount := lIni.ReadInteger(lSection, 'TagCount', 0);
             for K := 0 to lItemCount - 1 do
@@ -2658,6 +2970,8 @@ begin
               lSpectrum.TagNames.Add(lIni.ReadString(lSection, Format('Tag%d', [K]), ''));
               lSpectrum.SetTagIdAt(lSpectrum.TagNames.Count - 1,
                 lIni.ReadInt64(lSection, Format('Tag%dId', [K]), 0));
+              lSpectrum.SetTagAxisIndexAt(lSpectrum.TagNames.Count - 1,
+                lIni.ReadInteger(lSection, Format('Tag%dAxisIndex', [K]), 0));
             end;
           end;
           if lComponent is TRecorderLissajousComponent then
@@ -2944,7 +3258,19 @@ begin
                 TRecorderSqlTrendComponent(lComponent).ActiveDisplayIndex := lIni.ReadInteger(lSection, 'SqlActiveDisplay', 0);
               end;
             end;
-          end;          lPage.AddComponent(lComponent);
+          end;
+          if (lComponent is TRecorderPluginVisualComponent) and
+            TRecorderPluginVisualComponent(lComponent).ConfigStatePresent and
+            (lComponent.Factory <> nil) then
+          begin
+            lOpaqueStateResult := lComponent.Factory.LoadOpaqueComponentState(
+              lComponent);
+            if lOpaqueStateResult = rosFailure then
+              raise ERecorderFormError.CreateFmt(
+                'Plugin state load failed for %s',
+                [TRecorderPluginVisualComponent(lComponent).PluginTypeId]);
+          end;
+          lPage.AddComponent(lComponent);
           lComponent := nil;
         finally
           lComponent.Free;

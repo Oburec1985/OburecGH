@@ -1,0 +1,568 @@
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) Project needs building: Src has changed Project D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\StatefulVisualProbePlugin.lpr
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\StatefulVisualProbePlugin.dll"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-MObjFPC"
+Info: (lazarus) Param[1]="-Scghi"
+Info: (lazarus) Param[2]="-WR"
+Info: (lazarus) Param[3]="-O1"
+Info: (lazarus) Param[4]="-g"
+Info: (lazarus) Param[5]="-gl"
+Info: (lazarus) Param[6]="-l"
+Info: (lazarus) Param[7]="-vewnhibq"
+Info: (lazarus) Param[8]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\"
+Info: (lazarus) Param[9]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK"
+Info: (lazarus) Param[10]="-FuC:\lazarus\lcl\units\x86_64-win64\win32"
+Info: (lazarus) Param[11]="-FuC:\lazarus\lcl\units\x86_64-win64"
+Info: (lazarus) Param[12]="-FuC:\lazarus\components\freetype\lib\x86_64-win64"
+Info: (lazarus) Param[13]="-FuC:\lazarus\components\lazutils\lib\x86_64-win64"
+Info: (lazarus) Param[14]="-FuC:\lazarus\packager\units\x86_64-win64"
+Info: (lazarus) Param[15]="-FUD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\plugin\"
+Info: (lazarus) Param[16]="-FED:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\"
+Info: (lazarus) Param[17]="-oD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\StatefulVisualProbePlugin.dll"
+Info: (lazarus) Param[18]="-dLCL"
+Info: (lazarus) Param[19]="-dLCLwin32"
+Info: (lazarus) Param[20]="StatefulVisualProbePlugin.lpr"
+Info: (lazarus) Param[21]="-B"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling StatefulVisualProbePlugin.lpr
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\uRecorderVisualComponentApiV2.pas
+(3104) Compiling uProbeNativeView.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\uProbeNativeView.pas(13,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\uProbeNativeView.pas(13,46) Hint: (5024) Parameter "Button" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\uProbeNativeView.pas(14,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\uProbeNativeView.pas(14,27) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\uProbeNativeView.pas(14,30) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\uProbeNativeView.pas(15,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\uProbeNativeView.pas(15,48) Hint: (5024) Parameter "Key" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\uProbeNativeView.pas(15,59) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\StatefulVisualProbePlugin.lpr(75,22) Hint: (5057) Local variable "lTagInfo" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\StatefulVisualProbePlugin.lpr(273,31) Hint: (5057) Local variable "lCandidate" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\StatefulVisualProbePlugin.lpr(280,35) Hint: (5024) Parameter "AHostContext" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\StatefulVisualProbePlugin.lpr(299,42) Hint: (5024) Parameter "AOutput" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\StatefulVisualProbePlugin.lpr(300,3) Hint: (5024) Parameter "AOutputCapacity" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\StatefulVisualProbePlugin.lpr(371,30) Hint: (5024) Parameter "AHostContext" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\StatefulVisualProbePlugin.lpr(380,32) Hint: (5024) Parameter "AInstance" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\StatefulVisualProbePlugin.lpr(384,45) Hint: (5024) Parameter "ABuffer" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\StatefulVisualProbePlugin.lpr(385,3) Hint: (5024) Parameter "ACapacity" not used
+(9022) Compiling resource D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\plugin\StatefulVisualProbePlugin.obj
+(9015) Linking D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\StatefulVisualProbePlugin.dll
+(1008) 868 lines compiled, 0.5 sec, 1633312 bytes code, 126276 bytes data
+(1022) 19 hint(s) issued
+Info: (lazarus) [TCompiler.Compile] end
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) Build Project: nothing to do.
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\VisualComponentAbiV2StateRoundTrip.exe"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-MObjFPC"
+Info: (lazarus) Param[1]="-Scghi"
+Info: (lazarus) Param[2]="-O1"
+Info: (lazarus) Param[3]="-g"
+Info: (lazarus) Param[4]="-gl"
+Info: (lazarus) Param[5]="-l"
+Info: (lazarus) Param[6]="-vewnhibq"
+Info: (lazarus) Param[7]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\"
+Info: (lazarus) Param[8]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK"
+Info: (lazarus) Param[9]="-FUD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\host\"
+Info: (lazarus) Param[10]="-FED:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\"
+Info: (lazarus) Param[11]="-oD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\VisualComponentAbiV2StateRoundTrip.exe"
+Info: (lazarus) Param[12]="VisualComponentAbiV2StateRoundTrip.lpr"
+Info: (lazarus) Param[13]="-B"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling VisualComponentAbiV2StateRoundTrip.lpr
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\uRecorderVisualComponentApiV2.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2StateRoundTrip.lpr(82,25) Hint: (5057) Local variable "lDescriptor" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2StateRoundTrip.lpr(95,31) Hint: (5057) Local variable "lSecondDescriptor" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2StateRoundTrip.lpr(100,32) Hint: (5057) Local variable "lGuardedDescriptor" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2StateRoundTrip.lpr(107,30) Hint: (5057) Local variable "lEmptyDescriptor" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2StateRoundTrip.lpr(129,37) Hint: (5057) Local variable "lShortState" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2StateRoundTrip.lpr(133,26) Hint: (5057) Local variable "lSmallBuffer" does not seem to be initialized
+(9015) Linking D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\VisualComponentAbiV2StateRoundTrip.exe
+(1008) 462 lines compiled, 0.1 sec, 88864 bytes code, 5316 bytes data
+(1022) 8 hint(s) issued
+Info: (lazarus) [TCompiler.Compile] end
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) Build Project: nothing to do.
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\VisualComponentAbiV2Probe.exe"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-MObjFPC"
+Info: (lazarus) Param[1]="-Scghi"
+Info: (lazarus) Param[2]="-O1"
+Info: (lazarus) Param[3]="-g"
+Info: (lazarus) Param[4]="-gl"
+Info: (lazarus) Param[5]="-l"
+Info: (lazarus) Param[6]="-vewnhibq"
+Info: (lazarus) Param[7]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\"
+Info: (lazarus) Param[8]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK"
+Info: (lazarus) Param[9]="-FED:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\"
+Info: (lazarus) Param[10]="-oD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\VisualComponentAbiV2Probe.exe"
+Info: (lazarus) Param[11]="VisualComponentAbiV2Probe.lpr"
+Info: (lazarus) Param[12]="-B"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling VisualComponentAbiV2Probe.lpr
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\uRecorderVisualComponentApiV2.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(25,22) Hint: (5024) Parameter "AHostContext" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(25,45) Hint: (5024) Parameter "AConfigData" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(26,3) Hint: (5024) Parameter "AConfigSize" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(34,13) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(34,32) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(35,4) Hint: (3123) "formal parameter" not yet supported inside inline procedure/function
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(35,4) Hint: (3124) Inlining disabled
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(47,23) Hint: (5057) Local variable "lDescriptor" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(65,32) Warning: (5036) Local variable "lServices" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(80,28) Warning: (5036) Local variable "lEdit" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(82,31) Warning: (5036) Local variable "lSurface" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(107,28) Hint: (5057) Local variable "lPrefix" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(52,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(54,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(56,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(58,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(61,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(65,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(66,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(68,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(70,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(72,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(80,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(82,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(83,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(84,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(85,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(87,9) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(111,57) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\VisualComponentAbiV2Probe.lpr(114,57) Note: (6058) Call to subroutine "function FieldOffset(const ABase:<Formal type>;const AField:<Formal type>):QWord;" marked as inline is not inlined
+(9015) Linking D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\Tests\VisualComponentAbiV2\lib\x86_64-win64\VisualComponentAbiV2Probe.exe
+(1008) 404 lines compiled, 0.1 sec, 87200 bytes code, 5300 bytes data
+(1021) 3 warning(s) issued
+(1022) 11 hint(s) issued
+(1023) 18 note(s) issued
+Info: (lazarus) [TCompiler.Compile] end
+ABI pointer size: 8
+ABI descriptor size: 384
+ABI stable prefix size: 336
+RESULT VisualComponentAbiV2 passed
+RESULT VisualComponentAbiV2StateRoundTrip passed
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) Project needs building: Src has changed Project D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\PluginVisualModelTest.lpr
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\plugin-visual-model-test\PluginVisualModelTest.exe"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-MObjFPC"
+Info: (lazarus) Param[1]="-Scghi"
+Info: (lazarus) Param[2]="-O1"
+Info: (lazarus) Param[3]="-gw3"
+Info: (lazarus) Param[4]="-gl"
+Info: (lazarus) Param[5]="-l"
+Info: (lazarus) Param[6]="-vewnhibq"
+Info: (lazarus) Param[7]="-FuD:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\"
+Info: (lazarus) Param[8]="-FuD:\works\OburecGH\Lazarus\RecorderLnx"
+Info: (lazarus) Param[9]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Core"
+Info: (lazarus) Param[10]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\UI"
+Info: (lazarus) Param[11]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Algs"
+Info: (lazarus) Param[12]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Mdb"
+Info: (lazarus) Param[13]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\SQLdb"
+Info: (lazarus) Param[14]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\SQLdb\SqlTrend"
+Info: (lazarus) Param[15]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\SDB"
+Info: (lazarus) Param[16]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Calibrations"
+Info: (lazarus) Param[17]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Calibrations\Strains"
+Info: (lazarus) Param[18]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Common"
+Info: (lazarus) Param[19]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Donut"
+Info: (lazarus) Param[20]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Editor"
+Info: (lazarus) Param[21]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\ThreeD"
+Info: (lazarus) Param[22]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\ImpactHammer"
+Info: (lazarus) Param[23]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\FrequencyResponse"
+Info: (lazarus) Param[24]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Lissajous"
+Info: (lazarus) Param[25]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\MeasurementSection"
+Info: (lazarus) Param[26]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram"
+Info: (lazarus) Param[27]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\SignalGenerator"
+Info: (lazarus) Param[28]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum"
+Info: (lazarus) Param[29]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\SqlTrend"
+Info: (lazarus) Param[30]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Standard"
+Info: (lazarus) Param[31]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend"
+Info: (lazarus) Param[32]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK"
+Info: (lazarus) Param[33]="-FuD:\works\OburecGH\Lazarus\SharedUtils"
+Info: (lazarus) Param[34]="-FuD:\works\OburecGH\Lazarus\SharedUtils\math"
+Info: (lazarus) Param[35]="-FuD:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr"
+Info: (lazarus) Param[36]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\core"
+Info: (lazarus) Param[37]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\contracts"
+Info: (lazarus) Param[38]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\interaction"
+Info: (lazarus) Param[39]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\lcl"
+Info: (lazarus) Param[40]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\motion"
+Info: (lazarus) Param[41]="-FuD:\works\OburecGH\Lazarus\SharedUtils\3d\render\opengl"
+Info: (lazarus) Param[42]="-FuC:\lazarus\components\tachart\lib\x86_64-win64\win32"
+Info: (lazarus) Param[43]="-FuD:\works\OburecGH\Lazarus\third_party\bgracontrols\lib\x86_64-win64-win32-3.2.2"
+Info: (lazarus) Param[44]="-FuD:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64"
+Info: (lazarus) Param[45]="-FuC:\lazarus\components\ideintf\units\x86_64-win64\win32"
+Info: (lazarus) Param[46]="-FuC:\lazarus\components\opengl\lib\x86_64-win64\win32"
+Info: (lazarus) Param[47]="-FuC:\lazarus\components\mouseandkeyinput\lib\x86_64-win64\win32"
+Info: (lazarus) Param[48]="-FuC:\lazarus\components\lazcontrols\lib\x86_64-win64\win32"
+Info: (lazarus) Param[49]="-FuD:\works\OburecGH\Lazarus\third_party\bgrabitmap\bgrabitmap\lib\x86_64-win64-win32-3.2.2"
+Info: (lazarus) Param[50]="-FuC:\lazarus\lcl\units\x86_64-win64\win32"
+Info: (lazarus) Param[51]="-FuC:\lazarus\components\datetimectrls\lib\x86_64-win64\win32"
+Info: (lazarus) Param[52]="-FuC:\lazarus\lcl\units\x86_64-win64"
+Info: (lazarus) Param[53]="-FuC:\lazarus\components\freetype\lib\x86_64-win64"
+Info: (lazarus) Param[54]="-FuC:\lazarus\components\debuggerintf\lib\x86_64-win64"
+Info: (lazarus) Param[55]="-FuC:\lazarus\components\buildintf\units\x86_64-win64"
+Info: (lazarus) Param[56]="-FuC:\lazarus\components\lazutils\lib\x86_64-win64"
+Info: (lazarus) Param[57]="-FuC:\lazarus\components\lazdebuggers\lazdebuggerintf\lib\x86_64-win64"
+Info: (lazarus) Param[58]="-FuC:\lazarus\packager\units\x86_64-win64"
+Info: (lazarus) Param[59]="-FED:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\plugin-visual-model-test\"
+Info: (lazarus) Param[60]="-oD:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\plugin-visual-model-test\PluginVisualModelTest.exe"
+Info: (lazarus) Param[61]="-dLCL"
+Info: (lazarus) Param[62]="-dLCLwin32"
+Info: (lazarus) Param[63]="PluginVisualModelTest.lpr"
+Info: (lazarus) Param[64]="-B"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling PluginVisualModelTest.lpr
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderFormModel.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderCoreServices.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderStateMachine.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDebugLog.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uSharedFileLogger.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\uRecorderMeraPaths.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\uRecorderMeraPaths.pas(160,22) Hint: (5057) Local variable "lSystemDir" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderCoreServices.pas(563,23) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderCoreServices.pas(570,42) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderCoreServices.pas(277,27) Hint: (5024) Parameter "ASender" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderSpectrumEngine.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uCommonTypes.pas
+D:\works\OburecGH\Lazarus\SharedUtils\uCommonTypes.pas(14,22) Hint: (5023) Unit "Types" not used in uCommonTypes
+D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderSpectrumEngine.pas(317,13) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderSpectrumEngine.pas(318,13) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderSpectrumEngine.pas(344,35) Hint: (5057) Local variable "lCounter" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderSpectrumEngine.pas(345,39) Hint: (5057) Local variable "lFrequency" does not seem to be initialized
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderFrequencyBands.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTimeSystem.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderUnitManager.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(840,18) Hint: (5060) Function result variable does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(995,19) Hint: (5091) Local variable "lNames" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(1291,21) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(1292,22) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(2522,14) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(2522,44) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(2522,62) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(3091,13) Note: (5027) Local variable "s" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(3208,22) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(3401,22) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartColors.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderVibrationEstimate.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderRunControlSettings.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderFormModel.pas(769,7) Hint: (5024) Parameter "AComponent" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderFormModel.pas(771,7) Hint: (5024) Parameter "AComponent" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderFormModel.pas(772,39) Hint: (5024) Parameter "ASource" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderFormModel.pas(772,48) Hint: (5024) Parameter "ATarget" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginRuntime.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\uRecorderPluginApi.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderAlarms.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\uRecorderVisualComponentApiV2.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginInfo.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginConfig.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginRuntime.pas(369,34) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginRuntime.pas(368,80) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginRuntime.pas(406,14) Warning: (3057) An inherited method is hidden by "Dispatch(TRecorderPluginVisualComponent;LongWord):Boolean;"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginRuntime.pas(412,17) Warning: (3057) An inherited method is hidden by "constructor Create(const AnsiString;const AnsiString;const AnsiString;const TRecorderVisualComponentDescriptorV2;Pointer;TLoadedPlugin);"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginRuntime.pas(582,20) Hint: (5057) Local variable "lContext" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginRuntime.pas(689,23) Hint: (5091) Local variable "lState" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginRuntime.pas(1439,27) Hint: (5057) Local variable "lDescriptor" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginRuntime.pas(1450,11) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginRuntime.pas(1450,45) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderPluginRuntime.pas(1468,38) Warning: (5089) Local variable "lDescriptors" of a managed type does not seem to be initialized
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uoglchart.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartTypes.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartChart.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLog.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartBaseObj.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartBaseObj.pas(63,34) Hint: (5024) Parameter "AJson" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartBaseObj.pas(65,34) Hint: (5024) Parameter "AJson" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartDrawObj.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPage.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartAxis.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartMng.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartTrend.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uSharedQueue.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uSharedQueue.pas(72,22) Hint: (5091) Local variable "lOldItems" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uSharedQueue.pas(72,22) Hint: (5091) Local variable "lOldItems" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartTrend.pas(17,28) Hint: (5023) Unit "uOglChartTypes" not used in uOglChartTrend
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartTrend.pas(17,62) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartTrend
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFontMng.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFontMng.pas(285,3) Note: (5025) Local variable "lWidth" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFontMng.pas(288,7) Note: (5025) Local variable "lY" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFontMng.pas(62,5) Note: (5029) Private field "cOglFont.fPageCaptionFontSize" is never used
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLineHelper.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLineHelper.pas(114,3) Warning: (6018) unreachable code
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLineHelper.pas(12,46) Hint: (5023) Unit "uOglChartBaseObj" not used in uOglChartLineHelper
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartTextLabel.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartCursor.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uSharedNumberFormat.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas(385,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas(414,19) Hint: (5091) Local variable "lLog" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas(105,33) Hint: (5024) Parameter "AStep" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas(1128,20) Hint: (5092) Variable "AColors" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas(1392,9) Note: (5025) Local variable "K" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas(1910,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas(1910,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas(1922,3) Note: (5025) Local variable "lOldUseTextureAtlas" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas(155,79) Hint: (5024) Parameter "ARect" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartRenderer.pas(2213,22) Hint: (5091) Local variable "lPlaced" of a managed type does not seem to be initialized
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(27,28) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(28,26) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(30,25) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(30,43) Hint: (5024) Parameter "Button" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(30,65) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(30,85) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(30,88) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(30,104) Hint: (5024) Parameter "Handled" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(31,25) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(31,43) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(31,63) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(31,66) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(31,82) Hint: (5024) Parameter "Handled" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(32,23) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(32,41) Hint: (5024) Parameter "Button" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(32,63) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(32,83) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(32,86) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(32,102) Hint: (5024) Parameter "Handled" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(33,26) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(33,44) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(33,64) Hint: (5024) Parameter "WheelDelta" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(33,85) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(33,88) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(33,104) Hint: (5024) Parameter "Handled" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(35,23) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(35,45) Hint: (5024) Parameter "Key" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(35,56) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(35,80) Hint: (5024) Parameter "Handled" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(36,24) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(36,46) Hint: (5024) Parameter "Key" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartFrameListener.pas(36,61) Hint: (5024) Parameter "Handled" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartSelectListener.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartSelectListener.pas(27,65) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartSelectListener.pas(31,43) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartSelectListener.pas(31,82) Hint: (5024) Parameter "Handled" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartSelectListener.pas(9,32) Hint: (5023) Unit "Math" not used in uOglChartSelectListener
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPanZoomListener.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPanZoomListener.pas(290,3) Note: (5025) Local variable "lAxis" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPanZoomListener.pas(517,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPanZoomListener.pas(564,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPanZoomListener.pas(619,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPanZoomListener.pas(662,24) Hint: (5091) Local variable "lAxisBounds" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPanZoomListener.pas(49,43) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPanZoomListener.pas(54,63) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPanZoomListener.pas(59,44) Hint: (5024) Parameter "Shift" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPageGeometryListener.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPageGeometryListener.pas(34,41) Hint: (5024) Parameter "Button" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPageGeometryListener.pas(34,63) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPageGeometryListener.pas(34,83) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPageGeometryListener.pas(34,86) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartPageGeometryListener.pas(15,3) Hint: (5023) Unit "uOglChartAxis" not used in uOglChartPageGeometryListener
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas(72,3) Note: (5025) Local variable "lInnerIndex" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas(43,65) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas(44,43) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas(45,23) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas(45,63) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas(45,83) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas(45,86) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas(46,56) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas(11,32) Hint: (5023) Unit "Math" not used in uOglChartVertexEditListener
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartVertexEditListener.pas(14,3) Hint: (5023) Unit "uOglChartLineHelper" not used in uOglChartVertexEditListener
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas(52,3) Note: (5027) Local variable "lPageWidth" is assigned but never used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas(52,15) Note: (5027) Local variable "lPageHeight" is assigned but never used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas(34,65) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas(36,43) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas(38,63) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas(38,83) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas(38,86) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartLabelEditListener.pas(11,33) Hint: (5023) Unit "uOglChartTrend" not used in uOglChartLabelEditListener
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartCursorListener.pas
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartCursorListener.pas(34,67) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartCursorListener.pas(36,19) Hint: (5024) Parameter "ASender" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartCursorListener.pas(36,37) Hint: (5024) Parameter "Button" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartCursorListener.pas(36,59) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartCursorListener.pas(36,79) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\uOglChartCursorListener.pas(36,82) Hint: (5024) Parameter "Y" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\UI\uRecorderSvgRenderer.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTagRefs.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderFrequencyResponseModel.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderFrequencyResponse.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(140,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(141,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(1004,29) Hint: (5091) Local variable "lTagColors" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(166,36) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(166,53) Hint: (5024) Parameter "ACol" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(152,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(151,41) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(146,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(147,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(147,52) Hint: (5024) Parameter "Button" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(148,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(148,27) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(148,30) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(149,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(149,50) Hint: (5024) Parameter "Button" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(150,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(150,27) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(150,30) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(154,7) Hint: (5024) Parameter "AState" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(156,20) Hint: (5024) Parameter "State" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(160,52) Hint: (5024) Parameter "State" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(181,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(182,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(184,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(186,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(187,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(188,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(3337,3) Note: (5027) Local variable "lAxis" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(280,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Oscillogram\uRecorderOglOscillogramView.pas(32,19) Hint: (5023) Unit "uOglChartTypes" not used in uRecorderOglOscillogramView
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend\uRecorderTrendView.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uSharedAlgorithms.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend\uRecorderTrendView.pas(162,23) Hint: (5091) Local variable "lOglAxes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend\uRecorderTrendView.pas(261,19) Hint: (5091) Local variable "lPages" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend\uRecorderTrendView.pas(151,3) Note: (5027) Local variable "lAxisCount" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend\uRecorderTrendView.pas(62,32) Hint: (5024) Parameter "ALineIndex" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend\uRecorderTrendView.pas(68,27) Hint: (5024) Parameter "ALineIndex" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend\uRecorderTrendView.pas(611,3) Note: (5027) Local variable "lLagSec" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend\uRecorderTrendView.pas(84,30) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend\uRecorderTrendView.pas(84,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend\uRecorderTrendView.pas(73,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Trend\uRecorderTrendView.pas(18,19) Hint: (5023) Unit "uOglChartTypes" not used in uRecorderTrendView
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderSpectrumRuntime.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderSpectrumRuntime.pas(969,25) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderSpectrumRuntime.pas(969,67) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderSpectrumRuntime.pas(969,60) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Algs\uRecorderSpectrumRuntime.pas(98,34) Hint: (5024) Parameter "ASender" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uComponentServices.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uEventList.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uEventTypes.pas
+D:\works\OburecGH\Lazarus\SharedUtils\uEventList.pas(164,97) Warning: (4110) range check error while evaluating constants (4096 must be between 0 and 255)
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas(24,25) Hint: (5024) Parameter "ABaseObj" not used
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas(24,46) Hint: (5024) Parameter "Root" not used
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas(107,25) Hint: (5024) Parameter "ABaseObj" not used
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas(107,46) Hint: (5024) Parameter "Root" not used
+D:\works\OburecGH\Lazarus\SharedUtils\uBaseClass.pas(75,41) Hint: (5024) Parameter "AName" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(52,52) Hint: (5024) Parameter "ACol" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(53,7) Hint: (5024) Parameter "AState" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(54,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(54,49) Hint: (5024) Parameter "ACol" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(764,18) Hint: (5091) Local variable "lAxes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(79,30) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(79,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(49,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(49,47) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(50,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(50,49) Hint: (5024) Parameter "ARenderTimeMs" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(51,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(51,51) Hint: (5024) Parameter "ACursor" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Spectrum\uRecorderSpectrumView.pas(48,27) Hint: (5024) Parameter "ASender" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Components\Lissajous\uRecorderLissajousView.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderLissajousMath.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\math\u2DMath.pas
+D:\works\OburecGH\Lazarus\SharedUtils\math\u2DMath.pas(190,43) Hint: (5057) Local variable "roots" does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\math\u2DMath.pas(337,14) Hint: (5091) Local variable "a" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\math\u2DMath.pas(338,14) Hint: (5091) Local variable "b" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\math\u2DMath.pas(695,20) Hint: (5058) Variable "Diameter" does not seem to be initialized
+D:\works\OburecGH\Lazarus\SharedUtils\math\u2DMath.pas(709,20) Hint: (5058) Variable "Diameter" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderLissajousMath.pas(64,20) Hint: (5091) Local variable "lPoints" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Lissajous\uRecorderLissajousView.pas(50,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Lissajous\uRecorderLissajousView.pas(50,49) Hint: (5024) Parameter "ARenderTimeMs" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Lissajous\uRecorderLissajousView.pas(51,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Lissajous\uRecorderLissajousView.pas(49,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Lissajous\uRecorderLissajousView.pas(60,7) Hint: (5024) Parameter "ADisplaySeconds" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Components\Donut\uRecorderDonutView.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Donut\uRecorderDonutView.pas(22,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Donut\uRecorderDonutView.pas(24,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Donut\uRecorderDonutView.pas(26,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Donut\uRecorderDonutView.pas(20,25) Hint: (5024) Parameter "Sender" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\UI\uRecorderSvgParameters.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\UI\uRecorderSvgParameters.pas(60,21) Hint: (5091) Local variable "lBytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(316,18) Hint: (5060) Function result variable does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(69,7) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(70,30) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(71,7) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(424,3) Note: (5025) Local variable "I" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(133,26) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(132,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(139,7) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(106,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(107,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(108,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(108,27) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(108,30) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(109,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(110,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(110,27) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(110,30) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(111,31) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(119,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(86,63) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(87,30) Hint: (5024) Parameter "ATagRegistry" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(87,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(160,66) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(178,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(179,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(180,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(181,25) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(1194,49) Hint: (5091) Local variable "lFrame" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(191,7) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(1388,8) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(1402,32) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(1427,40) Hint: (5057) Local variable "lBits" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(243,7) Hint: (5024) Parameter "ADisplaySeconds" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Components\Common\uRecorderVisualControl.pas(252,3) Hint: (5023) Unit "uOglChartTrend" not used in uRecorderVisualControl
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\PluginVisualModelTest.lpr(26,17) Warning: (3057) An inherited method is hidden by "constructor Create;"
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\PluginVisualModelTest.lpr(74,21) Hint: (5091) Local variable "lInput" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\PluginVisualModelTest.lpr(241,28) Hint: (5091) Local variable "lCreateContext" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\PluginVisualModelTest.lpr(254,39) Hint: (5057) Local variable "lState" does not seem to be initialized
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\PluginVisualModelTest.lpr(281,21) Hint: (5091) Local variable "lBytes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\PluginVisualModelTest.lpr(307,26) Hint: (5057) Local variable "lEditRequest" does not seem to be initialized
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\PluginVisualModelTest.lpr(323,22) Hint: (5057) Local variable "lSurface" does not seem to be initialized
+D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\PluginVisualModelTest.lpr(393,44) Hint: (5057) Local variable "lNativeRect" does not seem to be initialized
+(9022) Compiling resource D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\plugin-visual-model-test\PluginVisualModelTest.obj
+(9015) Linking D:\works\OburecGH\Lazarus\Tests\RecorderTests\FormModel\lib\plugin-visual-model-test\PluginVisualModelTest.exe
+(1008) 41190 lines compiled, 2.0 sec, 3794848 bytes code, 157092 bytes data
+(1021) 14 warning(s) issued
+(1022) 221 hint(s) issued
+(1023) 16 note(s) issued
+Info: (lazarus) [TCompiler.Compile] end
+RESULT PluginVisualModelTest runtime cycle passed
+RESULT PluginVisualModelTest runtime cycle passed
+RESULT PluginVisualModelTest pinned fallback passed
+RESULT PluginVisualModelTest runtime passed

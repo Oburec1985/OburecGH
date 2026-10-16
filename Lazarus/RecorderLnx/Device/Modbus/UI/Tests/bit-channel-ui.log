@@ -1,0 +1,191 @@
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) Project needs building: Src has changed Project D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\Tests\lib\x86_64-win64\ModbusEditorSmoke.exe"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\Tests\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-MObjFPC"
+Info: (lazarus) Param[1]="-Scghi"
+Info: (lazarus) Param[2]="-O1"
+Info: (lazarus) Param[3]="-g"
+Info: (lazarus) Param[4]="-gl"
+Info: (lazarus) Param[5]="-l"
+Info: (lazarus) Param[6]="-vewnhibq"
+Info: (lazarus) Param[7]="-FiD:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI"
+Info: (lazarus) Param[8]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\Tests\"
+Info: (lazarus) Param[9]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\lib\x86_64-win64"
+Info: (lazarus) Param[10]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI"
+Info: (lazarus) Param[11]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Core"
+Info: (lazarus) Param[12]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Runtime"
+Info: (lazarus) Param[13]="-FuD:\works\OburecGH\Lazarus\RecorderLnx"
+Info: (lazarus) Param[14]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Core"
+Info: (lazarus) Param[15]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device"
+Info: (lazarus) Param[16]="-FuD:\works\OburecGH\Lazarus\SharedUtils"
+Info: (lazarus) Param[17]="-FuC:\lazarus\lcl\units\x86_64-win64\win32"
+Info: (lazarus) Param[18]="-FuC:\lazarus\lcl\units\x86_64-win64"
+Info: (lazarus) Param[19]="-FuC:\lazarus\components\freetype\lib\x86_64-win64"
+Info: (lazarus) Param[20]="-FuC:\lazarus\components\lazutils\lib\x86_64-win64"
+Info: (lazarus) Param[21]="-FuC:\lazarus\packager\units\x86_64-win64"
+Info: (lazarus) Param[22]="-FED:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\Tests\lib\x86_64-win64\"
+Info: (lazarus) Param[23]="-oD:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\Tests\lib\x86_64-win64\ModbusEditorSmoke.exe"
+Info: (lazarus) Param[24]="-dLCL"
+Info: (lazarus) Param[25]="-dLCLwin32"
+Info: (lazarus) Param[26]="ModbusEditorSmoke.lpr"
+Info: (lazarus) Param[27]="-B"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling ModbusEditorSmoke.lpr
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderCoreServices.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderStateMachine.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDebugLog.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uSharedFileLogger.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\uRecorderMeraPaths.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\uRecorderMeraPaths.pas(160,22) Hint: (5057) Local variable "lSystemDir" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderCoreServices.pas(563,23) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderCoreServices.pas(570,42) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderCoreServices.pas(277,27) Hint: (5024) Parameter "ASender" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uCommonTypes.pas
+D:\works\OburecGH\Lazarus\SharedUtils\uCommonTypes.pas(14,22) Hint: (5023) Unit "Types" not used in uCommonTypes
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTimeSystem.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderUnitManager.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(840,18) Hint: (5060) Function result variable does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(995,19) Hint: (5091) Local variable "lNames" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(1291,21) Hint: (5091) Local variable "lTimes" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(1292,22) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(2522,14) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(2522,44) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(2522,62) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(3091,13) Note: (5027) Local variable "s" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(3208,22) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderTags.pas(3401,22) Hint: (5091) Local variable "lValues" of a managed type does not seem to be initialized
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderMessages.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uMeraFile.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderConfiguredDataSources.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderConfiguredDataSources.pas(352,71) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderConfiguredDataSources.pas(352,69) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderConfiguredDataSources.pas(380,63) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderConfiguredDataSources.pas(380,61) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uSharedAsync.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderHardwareLiveDevices.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderAcquisitionTypes.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(157,7) Hint: (5024) Parameter "AIndex" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(313,24) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(314,24) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(315,24) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(316,35) Note: (6058) Call to subroutine "operator :=(const source:Double):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(317,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(318,32) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(319,40) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(320,29) Note: (6058) Call to subroutine "operator :=(const source:ShortInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(321,29) Note: (6058) Call to subroutine "operator :=(const source:ShortString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(159,30) Hint: (5024) Parameter "AIndex" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(335,38) Note: (6058) Call to subroutine "operator :=(const source:Variant):LongInt;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(336,45) Note: (6058) Call to subroutine "operator :=(const source:Variant):Double;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(337,54) Note: (6058) Call to subroutine "operator :=(const source:Variant):LongInt;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(338,54) Note: (6058) Call to subroutine "operator :=(const source:Variant):LongInt;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(160,43) Hint: (5024) Parameter "AIndex" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(374,51) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(376,51) Note: (6058) Call to subroutine "operator :=(const source:AnsiString):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(378,49) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(381,62) Note: (6058) Call to subroutine "operator :=(const source:Double):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(384,62) Note: (6058) Call to subroutine "operator :=(const source:Double):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(387,57) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(390,57) Note: (6058) Call to subroutine "operator :=(const source:LongInt):Variant;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(175,24) Hint: (5024) Parameter "ATimeoutMs" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(179,35) Hint: (5024) Parameter "AAction" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(180,34) Hint: (5024) Parameter "AAction" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderDeviceInterfaces.pas(181,13) Hint: (5024) Parameter "AChannelIndices" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(623,3) Note: (5025) Local variable "lTag" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(785,21) Hint: (5057) Local variable "lCounters" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(846,14) Hint: (5057) Local variable "lUserTime" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(845,82) Hint: (5057) Local variable "lKernelTime" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(845,69) Hint: (5057) Local variable "lExitTime" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(845,58) Hint: (5057) Local variable "lCreationTime" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(864,28) Hint: (5057) Local variable "lSystemInfo" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(1102,39) Hint: (5057) Local variable "lDouble" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(1107,39) Hint: (5057) Local variable "lSingle" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(1112,38) Hint: (5057) Local variable "lInt32" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(1117,39) Hint: (5057) Local variable "lUInt32" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(1122,38) Hint: (5057) Local variable "lInt16" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(1127,39) Hint: (5057) Local variable "lUInt16" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(1641,3) Note: (5027) Local variable "lElapsed" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(1953,24) Hint: (5091) Local variable "lProcedures" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderDataSources.pas(1985,24) Hint: (5091) Local variable "lProcedures" of a managed type does not seem to be initialized
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderConfiguredSourceEditor.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Core\uModbusCoreTypes.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Runtime\uRecorderModbusTransport.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Runtime\uRecorderModbusTcpTransport.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(565,28) Hint: (5057) Local variable "lWsa" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(576,24) Hint: (5057) Local variable "lLocal" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(586,23) Hint: (5057) Local variable "lRemote" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(595,24) Hint: (5057) Local variable "lTimeVal" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(598,24) Hint: (5057) Local variable "lWriteSet" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(876,20) Hint: (5057) Local variable "lLocal" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(927,20) Hint: (5057) Local variable "lLocal" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(1063,22) Hint: (5057) Local variable "lLocal" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(1139,28) Hint: (5057) Local variable "lWsa" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(1174,23) Hint: (5057) Local variable "lReadSet" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(1234,11) Note: (6058) Call to subroutine "function CompareMem(P1:Pointer;P2:Pointer;Length:QWord):Boolean;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(1765,28) Hint: (5057) Local variable "lWsa" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(1773,20) Hint: (5057) Local variable "lLocal" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(1802,21) Hint: (5057) Local variable "lRemote" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(1821,23) Hint: (5057) Local variable "lReadSet" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(1834,23) Hint: (5057) Local variable "lBuffer" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(1840,30) Note: (6058) Call to subroutine "function CompareMem(P1:Pointer;P2:Pointer;Length:QWord):Boolean;" marked as inline is not inlined
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(2097,22) Hint: (5057) Local variable "lLocal" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(2100,33) Warning: (5043) Symbol "HostToNet" is deprecated
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(2118,21) Hint: (5057) Local variable "lRemote" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(2120,25) Warning: (5043) Symbol "ShortHostToNet" is deprecated
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(2121,32) Warning: (5043) Symbol "HostToNet" is deprecated
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(2124,20) Hint: (5057) Local variable "lFds" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Core\uRecorderNetworkBinding.pas(9,22) Hint: (5023) Unit "ctypes" not used in uRecorderNetworkBinding
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Runtime\uRecorderModbusRtuTransport.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(517,73) Warning: (4104) Implicit string type conversion from "TTranslateString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(517,78) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(646,65) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(646,85) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(651,5) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(651,65) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "TTranslateString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(132,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(133,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(708,30) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(708,36) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(715,36) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(715,42) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(138,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(136,27) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(135,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(134,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(143,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(144,36) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(141,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(142,25) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(164,29) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(951,87) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(951,78) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(977,95) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(977,89) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(991,36) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(991,42) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(140,23) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(139,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(1136,84) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(1136,92) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\uRecorderModbusSourceEditor.pas(188,7) Hint: (5024) Parameter "ADataSources" not used
+(9022) Compiling resource D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\Tests\lib\x86_64-win64\ModbusEditorSmoke.obj
+(9015) Linking D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\UI\Tests\lib\x86_64-win64\ModbusEditorSmoke.exe
+(1008) 16285 lines compiled, 0.9 sec, 1787216 bytes code, 127876 bytes data
+(1021) 28 warning(s) issued
+(1022) 67 hint(s) issued
+(1023) 25 note(s) issued
+Info: (lazarus) [TCompiler.Compile] end

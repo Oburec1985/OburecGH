@@ -250,9 +250,9 @@ begin
   if fSingleModeCheck.Checked then
   begin
     if (not TryStrToFloat(StringReplace(Trim(fRangeMinEdit.Text), '.',
-      DecimalSeparator, [rfReplaceAll]), lMin)) or
+      DefaultFormatSettings.DecimalSeparator, [rfReplaceAll]), lMin)) or
       (not TryStrToFloat(StringReplace(Trim(fRangeMaxEdit.Text), '.',
-      DecimalSeparator, [rfReplaceAll]), lMax)) then
+      DefaultFormatSettings.DecimalSeparator, [rfReplaceAll]), lMax)) then
     begin
       MessageDlg('Введите числовой минимум и максимум.', mtError, [mbOK], 0);
       Exit;

@@ -24,7 +24,8 @@ type
     cbInputMode: TComboBox;
     cbLpf: TComboBox;
     chkAmplifier: TCheckBox;
-    chkEnabled: TCheckBox;
+    chkCalibration: TCheckBox;
+    chkFloating: TCheckBox;
     lblGain: TLabel;
     lblIeee: TLabel;
     lblInputMode: TLabel;
@@ -34,8 +35,8 @@ type
   end;
 
 function EditPxiMx248Channel(AOwner: TComponent; AChannel: Integer;
-  var AEnabled, AAmplifier, AInputMode, ARangeIndex, ALpfIndex,
-  AIeeeCurrent: string): Boolean;
+  var AAmplifier, AInputMode, ARangeIndex, ALpfIndex,
+  AIeeeCurrent, ACalibrationEnabled, AInputFloating: string): Boolean;
 
 implementation
 
@@ -48,9 +49,12 @@ procedure TPxiMx248ChannelDialog.FormCreate(Sender: TObject);
 begin
   cbInputMode.Items.Add('Дифференциальный');
   cbInputMode.Items.Add('Однопроводный');
-  cbGain.Items.Add('±1000 пКл → ±10 В (0.01 В/пКл, 20 дБ)');
-  cbGain.Items.Add('±100 пКл → ±10 В (0.1 В/пКл, 40 дБ)');
-  cbGain.Items.Add('±10 пКл → ±10 В (1 В/пКл, 60 дБ)');
+  { mx248flash.cpp defines indices as 100/10/1 nC. The original Recorder
+    displays charge in pC, therefore the same indices are 100000/10000/1000
+    pC. Keep item order identical to the DevAPI range index. }
+  cbGain.Items.Add('±100000 пКл → ±10 В (0.0001 В/пКл)');
+  cbGain.Items.Add('±10000 пКл → ±10 В (0.001 В/пКл)');
+  cbGain.Items.Add('±1000 пКл → ±10 В (0.01 В/пКл)');
   cbLpf.Items.Add('Выключено');
   cbLpf.Items.Add('10 кГц');
   cbIeee.Items.Add('Выключено');
@@ -59,16 +63,17 @@ begin
 end;
 
 function EditPxiMx248Channel(AOwner: TComponent; AChannel: Integer;
-  var AEnabled, AAmplifier, AInputMode, ARangeIndex, ALpfIndex,
-  AIeeeCurrent: string): Boolean;
+  var AAmplifier, AInputMode, ARangeIndex, ALpfIndex,
+  AIeeeCurrent, ACalibrationEnabled, AInputFloating: string): Boolean;
 var
   lDialog: TPxiMx248ChannelDialog;
 begin
   lDialog := TPxiMx248ChannelDialog.Create(AOwner);
   try
     lDialog.Caption := Format('MX-248 — канал %d', [AChannel]);
-    lDialog.chkEnabled.Checked := SameText(AEnabled, 'True');
     lDialog.chkAmplifier.Checked := SameText(AAmplifier, 'True');
+    lDialog.chkCalibration.Checked := SameText(ACalibrationEnabled, 'True');
+    lDialog.chkFloating.Checked := SameText(AInputFloating, 'True');
     if SameText(AInputMode, 'single-ended') then
       lDialog.cbInputMode.ItemIndex := 1
     else
@@ -80,8 +85,9 @@ begin
     else lDialog.cbIeee.ItemIndex := 0;
     Result := lDialog.ShowModal = mrOk;
     if not Result then Exit;
-    AEnabled := BoolToStr(lDialog.chkEnabled.Checked, True);
     AAmplifier := BoolToStr(lDialog.chkAmplifier.Checked, True);
+    ACalibrationEnabled := BoolToStr(lDialog.chkCalibration.Checked, True);
+    AInputFloating := BoolToStr(lDialog.chkFloating.Checked, True);
     if lDialog.cbInputMode.ItemIndex = 1 then AInputMode := 'single-ended'
     else AInputMode := 'differential';
     ARangeIndex := IntToStr(lDialog.cbGain.ItemIndex);

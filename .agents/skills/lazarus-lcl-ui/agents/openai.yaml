@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lazarus LCL UI"
+  short_description: "Design robust native LCL forms and controls."
+  default_prompt: "Use $lazarus-lcl-ui to design or fix Lazarus LCL forms, controls, layouts, and events."

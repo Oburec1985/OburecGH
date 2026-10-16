@@ -273,10 +273,6 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Components/Editor/uRecorderOscillogramPageView.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
         <Filename Value="UI/uRecorderSettingsDialog.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="RecorderSettingsDialog"/>

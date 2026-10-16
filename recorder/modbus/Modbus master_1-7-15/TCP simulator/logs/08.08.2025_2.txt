@@ -1,0 +1,60 @@
+08.08.2025 14:14:55.378 - Запуск Modbus TCP/RTU Эмулятор
+08.08.2025 14:15:16.233 - TModbusTCPServer.Create
+08.08.2025 14:16:32.872 - TModbusTCPServer.Start
+08.08.2025 14:16:32.872 - TTCPAccept.Create IN, Port = 502
+08.08.2025 14:16:32.874 - TTCPAccept.Create OUT
+08.08.2025 14:16:32.874 - TTCPAccept.Execute IN
+08.08.2025 14:16:32.874 - TTCPAccept.InitSocket IN
+08.08.2025 14:16:32.877 - TTCPAccept.InitSocket - OUT
+08.08.2025 14:16:33.133 - TModbusTCPServer.ClientConnectEvent
+08.08.2025 14:16:33.134 - TModbusTCPServer.AddClient
+08.08.2025 14:16:33.134 - TModbusTCPClient.Start
+08.08.2025 14:16:33.134 - TTCPAccept.InitSocket IN
+08.08.2025 14:53:27.883 - TModbusTCPServer.Stop
+08.08.2025 14:53:27.883 - TTCPAccept.StopThread IN
+08.08.2025 14:53:27.883 - TTCPAccept.Execute OUT
+08.08.2025 14:53:27.883 - TTCPAccept.StopThread OUT
+08.08.2025 14:53:27.883 - TTCPAccept.Destroy IN
+08.08.2025 14:53:27.883 - TTCPAccept.Destroy OUT
+08.08.2025 14:53:30.455 - TModbusTCPServer.Start
+08.08.2025 14:53:30.455 - TTCPAccept.Create IN, Port = 502
+08.08.2025 14:53:30.458 - TTCPAccept.Create OUT
+08.08.2025 14:53:30.458 - TTCPAccept.Execute IN
+08.08.2025 14:53:30.458 - TTCPAccept.InitSocket IN
+08.08.2025 14:53:30.458 - TTCPAccept.InitSocket - OUT
+08.08.2025 14:53:30.873 - TModbusTCPServer.ClientConnectEvent
+08.08.2025 14:53:30.875 - TModbusTCPServer.AddClient
+08.08.2025 14:53:30.875 - TModbusTCPClient.Start
+08.08.2025 14:53:30.875 - TTCPAccept.InitSocket IN
+08.08.2025 14:54:01.670 - TModbusTCPServer.Stop
+08.08.2025 14:54:01.670 - TTCPAccept.StopThread IN
+08.08.2025 14:54:01.670 - TTCPAccept.Execute OUT
+08.08.2025 14:54:01.670 - TTCPAccept.StopThread OUT
+08.08.2025 14:54:01.670 - TTCPAccept.Destroy IN
+08.08.2025 14:54:01.670 - TTCPAccept.Destroy OUT
+08.08.2025 14:55:29.209 - TModbusTCPServer.Start
+08.08.2025 14:55:29.209 - TTCPAccept.Create IN, Port = 502
+08.08.2025 14:55:29.212 - TTCPAccept.Create OUT
+08.08.2025 14:55:29.212 - TTCPAccept.Execute IN
+08.08.2025 14:55:29.212 - TTCPAccept.InitSocket IN
+08.08.2025 14:55:29.212 - TTCPAccept.InitSocket - OUT
+08.08.2025 14:55:29.688 - TModbusTCPServer.ClientConnectEvent
+08.08.2025 14:55:29.689 - TModbusTCPServer.AddClient
+08.08.2025 14:55:29.689 - TModbusTCPClient.Start
+08.08.2025 14:55:29.689 - TTCPAccept.InitSocket IN
+08.08.2025 14:55:48.819 - TModbusTCPServer.Stop
+08.08.2025 14:55:48.819 - TTCPAccept.StopThread IN
+08.08.2025 14:55:48.819 - TTCPAccept.Execute OUT
+08.08.2025 14:55:48.819 - TTCPAccept.StopThread OUT
+08.08.2025 14:55:48.819 - TTCPAccept.Destroy IN
+08.08.2025 14:55:48.819 - TTCPAccept.Destroy OUT
+08.08.2025 14:56:19.913 - TModbusTCPServer.Start
+08.08.2025 14:56:19.913 - TTCPAccept.Create IN, Port = 502
+08.08.2025 14:56:19.917 - TTCPAccept.Create OUT
+08.08.2025 14:56:19.917 - TTCPAccept.Execute IN
+08.08.2025 14:56:19.917 - TTCPAccept.InitSocket IN
+08.08.2025 14:56:19.918 - TTCPAccept.InitSocket - OUT
+08.08.2025 14:56:20.302 - TModbusTCPServer.ClientConnectEvent
+08.08.2025 14:56:20.303 - TModbusTCPServer.AddClient
+08.08.2025 14:56:20.303 - TModbusTCPClient.Start
+08.08.2025 14:56:20.303 - TTCPAccept.InitSocket IN

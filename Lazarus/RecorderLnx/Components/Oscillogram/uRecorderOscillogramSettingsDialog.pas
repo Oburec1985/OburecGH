@@ -11,7 +11,7 @@ unit uRecorderOscillogramSettingsDialog;
   опции «Основной канал» быть не должно. При удалении первой линии следующая
   дополнительная линия повышается до первой.
   Кодировка (2026-06):
-  Файл в UTF-8, {$codepage UTF8}. Строки для LCL — обычные string-литералы.
+  Файл в UTF-8 с соответствующей директивой codepage. Строки для LCL — обычные string-литералы.
   См. Docs/source-encoding.md.
 }
 
@@ -23,7 +23,7 @@ interface
 uses
   Classes, SysUtils, Math, Forms, Controls, Graphics, StdCtrls, Dialogs,
   uRecorderColorSwatch, uRecorderFormModel, uRecorderTags, uOglChartColors,
-  uRecorderTagRefs;
+  uRecorderTagRefs, uRecorderRunControlSettings;
 
 function ShowRecorderOscillogramSettingsDialog(AOwner: TComponent;
   AComponent: TRecorderOscillogramComponent;
@@ -58,6 +58,7 @@ type
     fYScaleEdit: TEdit;
     fYOffsetEdit: TEdit;
     fTriggerCombo: TComboBox;
+    fTriggerEdgeCombo: TComboBox;
     fTriggerCheck: TCheckBox;
     fTriggerLevelEdit: TEdit;
     fOkButton: TButton;
@@ -115,7 +116,9 @@ begin
   inherited CreateNew(AOwner, 1);
   fComponent := AComponent;
   fTagRegistry := ATagRegistry;
-  fExtended := RecorderIsPluginOscillograph(AComponent);
+  { The builtin Oscillogram has only its simple editor. The independent
+    Oscillograph plugin owns its advanced editor and never reaches this form. }
+  fExtended := False;
   fDraft := TRecorderOscillogramComponent.Create;
   fSelectedLine := -1;
   fSelectedAxis := 0;
@@ -304,6 +307,17 @@ begin
   fTriggerCombo.Anchors := [akLeft, akTop, akRight];
   fTriggerCombo.Style := csDropDownList;
   Inc(lTop, 32);
+  lLabel := TLabel.Create(Self);
+  lLabel.Parent := Self;
+  lLabel.SetBounds(12, lTop + 4, 120, 16);
+  lLabel.Caption := 'Фронт триггера:';
+  fTriggerEdgeCombo := TComboBox.Create(Self);
+  fTriggerEdgeCombo.Parent := Self;
+  fTriggerEdgeCombo.SetBounds(130, lTop, 160, 23);
+  fTriggerEdgeCombo.Style := csDropDownList;
+  fTriggerEdgeCombo.Items.Add('По фронту ↑');
+  fTriggerEdgeCombo.Items.Add('По спаду ↓');
+  Inc(lTop, 32);
 
   lLabel := TLabel.Create(Self);
   lLabel.Parent := Self;
@@ -439,6 +453,7 @@ begin
   begin
     fXScaleEdit.Text := FloatToStr(fDraft.XScale);
     fTriggerCheck.Checked := fDraft.TriggerEnabled;
+    fTriggerEdgeCombo.ItemIndex := Ord(fDraft.TriggerEdge);
     fTriggerLevelEdit.Text := FloatToStr(fDraft.TriggerLevel);
     fTriggerCombo.Items.Clear;
     fTriggerCombo.Items.Add('');
@@ -654,6 +669,8 @@ begin
     fDraft.XScale := StrToFloat(fXScaleEdit.Text);
     fDraft.TriggerTagName := fTriggerCombo.Text;
     fDraft.TriggerEnabled := fTriggerCheck.Checked;
+    if fTriggerEdgeCombo.ItemIndex >= 0 then
+      fDraft.TriggerEdge := TRecorderSignalEdge(fTriggerEdgeCombo.ItemIndex);
     fDraft.TriggerLevel := StrToFloat(fTriggerLevelEdit.Text);
   end;
   StoreLineControls;

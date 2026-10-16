@@ -16,7 +16,7 @@ function ShowRecorderSpectrumSettingsDialog(AOwner: TComponent;
 implementation
 
 uses
-  StrUtils;
+  StrUtils, Math;
 
 type
   TRecorderSpectrumSettingsDialog = class(TForm)
@@ -26,11 +26,16 @@ type
     fTagRegistry: TRecorderTagRegistry;
 
     fAllAvailableTags: TStringList;
+    fUsedAxisIndexes: TStringList;
+    fEditingAxisIndex: Integer;
     fFilterEdit: TEdit;
     fAvailableList: TListBox;
     fUsedList: TListBox;
     fAddButton: TButton;
+    fApplyButton: TButton;
     fRemoveButton: TButton;
+    fNewAxisButton: TButton;
+    fAxisCombo: TComboBox;
 
     fMinXEdit: TEdit;
     fMaxXEdit: TEdit;
@@ -63,10 +68,17 @@ type
 
     procedure FilterEditChange(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
+    procedure ApplyButtonClick(Sender: TObject);
+    procedure NewAxisButtonClick(Sender: TObject);
+    procedure AxisComboChange(Sender: TObject);
     procedure RemoveButtonClick(Sender: TObject);
     procedure AvailableListDblClick(Sender: TObject);
     procedure UsedListDblClick(Sender: TObject);
+    procedure UsedSelectionChange(Sender: TObject; User: Boolean);
     procedure UpdateAvailableList;
+    procedure RefreshAxisCombo;
+    procedure LoadAxisRange;
+    procedure StoreAxisRange;
   public
     constructor CreateDialog(AOwner: TComponent;
       AComponent: TRecorderSpectrumComponent; ATagRegistry: TRecorderTagRegistry); reintroduce;
@@ -96,6 +108,8 @@ begin
   fAllAvailableTags := TStringList.Create;
   fAllAvailableTags.Sorted := True;
   fAllAvailableTags.Duplicates := dupIgnore;
+  fUsedAxisIndexes := TStringList.Create;
+  fEditingAxisIndex := -1;
 
   fDraft := TRecorderSpectrumComponent.Create;
   fDraft.Assign(fComponent);
@@ -114,6 +128,7 @@ end;
 
 destructor TRecorderSpectrumSettingsDialog.Destroy;
 begin
+  fUsedAxisIndexes.Free;
   fAllAvailableTags.Free;
   fDraft.Free;
   inherited Destroy;
@@ -125,8 +140,8 @@ var
   lText: string;
 begin
   lText := Trim(AText);
-  lText := StringReplace(lText, '.', DecimalSeparator, [rfReplaceAll]);
-  lText := StringReplace(lText, ',', DecimalSeparator, [rfReplaceAll]);
+  lText := StringReplace(lText, '.', DefaultFormatSettings.DecimalSeparator, [rfReplaceAll]);
+  lText := StringReplace(lText, ',', DefaultFormatSettings.DecimalSeparator, [rfReplaceAll]);
   Result := StrToFloatDef(lText, ADefault);
 end;
 
@@ -221,7 +236,9 @@ begin
   fAddButton.Parent := Self;
   fAddButton.SetBounds(220, 180, 36, 25);
   fAddButton.Anchors := [akTop, akRight];
-  fAddButton.Caption := '>>';
+  fAddButton.Caption := '+';
+  fAddButton.Hint := 'Добавить выбранный тег как новую линию';
+  fAddButton.ShowHint := True;
   fAddButton.OnClick := @AddButtonClick;
 
   fRemoveButton := TButton.Create(Self);
@@ -239,10 +256,38 @@ begin
 
   fUsedList := TListBox.Create(Self);
   fUsedList.Parent := Self;
-  fUsedList.SetBounds(262, 60, 200, 400);
+  fUsedList.SetBounds(262, 60, 200, 335);
   fUsedList.Anchors := [akTop, akRight, akBottom];
-  fUsedList.MultiSelect := True;
+  fUsedList.MultiSelect := False;
   fUsedList.OnDblClick := @UsedListDblClick;
+  fUsedList.OnSelectionChange := @UsedSelectionChange;
+
+  lLabel := TLabel.Create(Self);
+  lLabel.Parent := Self;
+  lLabel.SetBounds(262, 402, 75, 15);
+  lLabel.Caption := 'Ось линии:';
+
+  fAxisCombo := TComboBox.Create(Self);
+  fAxisCombo.Parent := Self;
+  fAxisCombo.SetBounds(337, 398, 125, 23);
+  fAxisCombo.Style := csDropDownList;
+  fAxisCombo.OnChange := @AxisComboChange;
+
+  fApplyButton := TButton.Create(Self);
+  fApplyButton.Parent := Self;
+  fApplyButton.SetBounds(262, 428, 95, 27);
+  fApplyButton.Caption := 'Применить';
+  fApplyButton.Hint := 'Заменить тег и ось выбранной линии';
+  fApplyButton.ShowHint := True;
+  fApplyButton.OnClick := @ApplyButtonClick;
+
+  fNewAxisButton := TButton.Create(Self);
+  fNewAxisButton.Parent := Self;
+  fNewAxisButton.SetBounds(365, 428, 97, 27);
+  fNewAxisButton.Caption := 'Новая ось';
+  fNewAxisButton.Hint := 'Создать новую Y-ось и выбрать её для линии';
+  fNewAxisButton.ShowHint := True;
+  fNewAxisButton.OnClick := @NewAxisButtonClick;
 
   // 4. Параметры осей
   lGroupBox := TGroupBox.Create(Self);
@@ -385,10 +430,12 @@ procedure TRecorderSpectrumSettingsDialog.LoadFromComponent;
 var
   I: Integer;
 begin
+  RefreshAxisCombo;
   fMinXEdit.Text := FloatToStr(fDraft.RangeMinX);
   fMaxXEdit.Text := FloatToStr(fDraft.RangeMaxX);
   fMinYEdit.Text := FloatToStr(fDraft.RangeMinY);
   fMaxYEdit.Text := FloatToStr(fDraft.RangeMaxY);
+  LoadAxisRange;
 
   fLgXCheck.Checked := fDraft.LgX;
   fLgYCheck.Checked := fDraft.LgY;
@@ -418,10 +465,20 @@ begin
 
   // Заполняем список используемых
   fUsedList.Items.Clear;
+  fUsedAxisIndexes.Clear;
   for I := 0 to fDraft.TagNames.Count - 1 do
     if IsSpectrumTagSelectable(fDraft.TagNames[I]) then
+    begin
       fUsedList.Items.AddObject(TagDisplayText(fDraft.TagNames[I]),
         fTagRegistry.FindByName(fDraft.TagNames[I]));
+      fUsedAxisIndexes.Add(IntToStr(fDraft.TagAxisIndexAt(I)));
+    end;
+
+  if fUsedList.Count > 0 then
+  begin
+    fUsedList.ItemIndex := 0;
+    UsedSelectionChange(fUsedList, False);
+  end;
 
   UpdateAvailableList;
 end;
@@ -431,10 +488,14 @@ var
   I: Integer;
   lTag: TRecorderTag;
 begin
+  StoreAxisRange;
   fDraft.RangeMinX := ParseFloatText(fMinXEdit.Text, fDraft.RangeMinX);
   fDraft.RangeMaxX := ParseFloatText(fMaxXEdit.Text, fDraft.RangeMaxX);
-  fDraft.RangeMinY := ParseFloatText(fMinYEdit.Text, fDraft.RangeMinY);
-  fDraft.RangeMaxY := ParseFloatText(fMaxYEdit.Text, fDraft.RangeMaxY);
+  if fDraft.AxisCount > 0 then
+  begin
+    fDraft.RangeMinY := fDraft.Axes[0].RangeMin;
+    fDraft.RangeMaxY := fDraft.Axes[0].RangeMax;
+  end;
 
   fDraft.LgX := fLgXCheck.Checked;
   fDraft.LgY := fLgYCheck.Checked;
@@ -462,7 +523,12 @@ begin
     if (lTag = nil) and (fTagRegistry <> nil) then
       lTag := fTagRegistry.FindByName(DisplayItemTagName(fUsedList, I));
     if lTag <> nil then
+    begin
       fDraft.SetTagRefAt(fDraft.TagNames.Count, lTag);
+      if I < fUsedAxisIndexes.Count then
+        fDraft.SetTagAxisIndexAt(fDraft.TagNames.Count - 1,
+          StrToIntDef(fUsedAxisIndexes[I], 0));
+    end;
   end;
 end;
 
@@ -480,11 +546,15 @@ end;
 
 procedure TRecorderSpectrumSettingsDialog.AddButtonClick(Sender: TObject);
 var
-  I: Integer;
+  I, lAxisIndex, lLastAddedIndex: Integer;
   lTagName: string;
   lChanged: Boolean;
 begin
   lChanged := False;
+  lLastAddedIndex := -1;
+  lAxisIndex := fAxisCombo.ItemIndex;
+  if lAxisIndex < 0 then
+    lAxisIndex := 0;
   for I := 0 to fAvailableList.Count - 1 do
   begin
     if fAvailableList.Selected[I] then
@@ -493,12 +563,18 @@ begin
       if not UsedContainsTag(lTagName) then
       begin
         fUsedList.Items.AddObject(TagDisplayText(lTagName), fTagRegistry.FindByName(lTagName));
+        fUsedAxisIndexes.Add(IntToStr(lAxisIndex));
+        lLastAddedIndex := fUsedList.Count - 1;
         lChanged := True;
       end;
     end;
   end;
   if lChanged then
+  begin
+    fUsedList.ItemIndex := lLastAddedIndex;
+    UsedSelectionChange(fUsedList, False);
     UpdateAvailableList;
+  end;
 end;
 
 procedure TRecorderSpectrumSettingsDialog.RemoveButtonClick(Sender: TObject);
@@ -512,6 +588,8 @@ begin
     if fUsedList.Selected[I] then
     begin
       fUsedList.Items.Delete(I);
+      if I < fUsedAxisIndexes.Count then
+        fUsedAxisIndexes.Delete(I);
       lChanged := True;
     end;
   end;
@@ -520,20 +598,8 @@ begin
 end;
 
 procedure TRecorderSpectrumSettingsDialog.AvailableListDblClick(Sender: TObject);
-var
-  lIdx: Integer;
-  lTagName: string;
 begin
-  lIdx := fAvailableList.ItemIndex;
-  if lIdx >= 0 then
-  begin
-    lTagName := DisplayItemTagName(fAvailableList, lIdx);
-    if not UsedContainsTag(lTagName) then
-    begin
-      fUsedList.Items.AddObject(TagDisplayText(lTagName), fTagRegistry.FindByName(lTagName));
-      UpdateAvailableList;
-    end;
-  end;
+  { Выбор — только черновик. Изменение списка выполняют явные кнопки. }
 end;
 
 procedure TRecorderSpectrumSettingsDialog.UsedListDblClick(Sender: TObject);
@@ -541,10 +607,112 @@ var
   lIdx: Integer;
 begin
   lIdx := fUsedList.ItemIndex;
-  if lIdx >= 0 then
+  if (lIdx >= 0) and (lIdx < fUsedAxisIndexes.Count) then
   begin
-    fUsedList.Items.Delete(lIdx);
-    UpdateAvailableList;
+    fAxisCombo.ItemIndex := StrToIntDef(fUsedAxisIndexes[lIdx], 0);
+    LoadAxisRange;
+  end;
+end;
+
+procedure TRecorderSpectrumSettingsDialog.UsedSelectionChange(Sender: TObject;
+  User: Boolean);
+begin
+  UsedListDblClick(Sender);
+end;
+
+procedure TRecorderSpectrumSettingsDialog.ApplyButtonClick(Sender: TObject);
+var
+  lLineIndex, lTagIndex: Integer;
+  lTagName: string;
+begin
+  lLineIndex := fUsedList.ItemIndex;
+  lTagIndex := fAvailableList.ItemIndex;
+  if lLineIndex < 0 then
+    Exit;
+  if lTagIndex >= 0 then
+  begin
+    lTagName := DisplayItemTagName(fAvailableList, lTagIndex);
+    fUsedList.Items[lLineIndex] := TagDisplayText(lTagName);
+    fUsedList.Items.Objects[lLineIndex] := fTagRegistry.FindByName(lTagName);
+  end;
+  if lLineIndex < fUsedAxisIndexes.Count then
+    fUsedAxisIndexes[lLineIndex] := IntToStr(Max(0, fAxisCombo.ItemIndex));
+  UpdateAvailableList;
+end;
+
+procedure TRecorderSpectrumSettingsDialog.NewAxisButtonClick(Sender: TObject);
+var
+  lAxis: TRecorderTrendAxis;
+  lLineIndex, lSourceAxisIndex: Integer;
+  lRangeMin, lRangeMax: Double;
+begin
+  StoreAxisRange;
+  lSourceAxisIndex := fEditingAxisIndex;
+  if (lSourceAxisIndex < 0) or (lSourceAxisIndex >= fDraft.AxisCount) then
+    lSourceAxisIndex := 0;
+  lRangeMin := fDraft.Axes[lSourceAxisIndex].RangeMin;
+  lRangeMax := fDraft.Axes[lSourceAxisIndex].RangeMax;
+  lAxis := fDraft.AddAxis;
+  lAxis.Name := 'Y' + IntToStr(fDraft.AxisCount);
+  lAxis.RangeMin := lRangeMin;
+  lAxis.RangeMax := lRangeMax;
+  RefreshAxisCombo;
+  fAxisCombo.ItemIndex := fDraft.AxisCount - 1;
+  lLineIndex := fUsedList.ItemIndex;
+  if (lLineIndex >= 0) and (lLineIndex < fUsedAxisIndexes.Count) then
+    fUsedAxisIndexes[lLineIndex] := IntToStr(fAxisCombo.ItemIndex);
+  LoadAxisRange;
+end;
+
+procedure TRecorderSpectrumSettingsDialog.AxisComboChange(Sender: TObject);
+begin
+  LoadAxisRange;
+end;
+
+procedure TRecorderSpectrumSettingsDialog.RefreshAxisCombo;
+var
+  I, lOldIndex: Integer;
+begin
+  lOldIndex := fAxisCombo.ItemIndex;
+  fAxisCombo.Items.Clear;
+  for I := 0 to fDraft.AxisCount - 1 do
+    fAxisCombo.Items.Add(fDraft.Axes[I].Name);
+  if fAxisCombo.Items.Count = 0 then
+    fDraft.AddAxis;
+  if (lOldIndex < 0) or (lOldIndex >= fAxisCombo.Items.Count) then
+    lOldIndex := 0;
+  fAxisCombo.ItemIndex := lOldIndex;
+end;
+
+procedure TRecorderSpectrumSettingsDialog.LoadAxisRange;
+var
+  lIndex: Integer;
+begin
+  lIndex := fAxisCombo.ItemIndex;
+  if (lIndex < 0) or (lIndex >= fDraft.AxisCount) then
+    Exit;
+  if lIndex <> fEditingAxisIndex then
+    StoreAxisRange;
+  fEditingAxisIndex := lIndex;
+  fMinYEdit.Text := FloatToStr(fDraft.Axes[lIndex].RangeMin);
+  fMaxYEdit.Text := FloatToStr(fDraft.Axes[lIndex].RangeMax);
+end;
+
+procedure TRecorderSpectrumSettingsDialog.StoreAxisRange;
+var
+  lIndex: Integer;
+begin
+  lIndex := fEditingAxisIndex;
+  if (lIndex < 0) or (lIndex >= fDraft.AxisCount) then
+    Exit;
+  fDraft.Axes[lIndex].RangeMin := ParseFloatText(fMinYEdit.Text,
+    fDraft.Axes[lIndex].RangeMin);
+  fDraft.Axes[lIndex].RangeMax := ParseFloatText(fMaxYEdit.Text,
+    fDraft.Axes[lIndex].RangeMax);
+  if lIndex = 0 then
+  begin
+    fDraft.RangeMinY := fDraft.Axes[0].RangeMin;
+    fDraft.RangeMaxY := fDraft.Axes[0].RangeMax;
   end;
 end;
 

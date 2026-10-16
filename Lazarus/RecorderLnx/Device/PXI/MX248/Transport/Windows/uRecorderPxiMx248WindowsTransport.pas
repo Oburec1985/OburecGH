@@ -29,7 +29,7 @@ uses
 
 type
   TRecorderPxiMx248WindowsTransport = class(TInterfacedObject,
-    IPxiMx248BlockTransport)
+    IPxiMx248BlockTransport, IPxiMx248MaintenanceTransport)
   private
     fBridgeExecutable: string;
     fConfiguration: TPxiMx248Configuration;
@@ -41,16 +41,16 @@ type
     fRequestId: Cardinal;
     fSampleCursor: QWord;
     fSessionPoisoned: Boolean;
-    function Unsupported(const AStage: string): TRecorderOperationResult;
-    function StartChild: TRecorderOperationResult;
+    function Unsupported(const AStage: string): TRcOperationResult;
+    function StartChild: TRcOperationResult;
     function ReadExact(var ABuffer; ACount, ATimeoutMs: Cardinal):
-      TRecorderOperationResult;
+      TRcOperationResult;
     function ExchangeStarted(ACommand: Word; const APayload;
       APayloadSize, ATimeoutMs: Cardinal; out ADataOffset,
-      ADataSize: Cardinal): TRecorderOperationResult;
+      ADataSize: Cardinal): TRcOperationResult;
     function Exchange(ACommand: Word; const APayload; APayloadSize,
       ATimeoutMs: Cardinal; out ADataOffset, ADataSize: Cardinal):
-      TRecorderOperationResult;
+      TRcOperationResult;
     procedure PoisonChild;
     procedure StopChild;
   public
@@ -59,30 +59,38 @@ type
     destructor Destroy; override;
     { Installer/startup smoke entry: starts the child and validates HELLO plus
       STATUS without opening hardware. }
-    function CheckBridge: TRecorderOperationResult;
+    function CheckBridge: TRcOperationResult;
     function Discover(out ADevices: TPxiMx248DiscoveredDevices):
-      TRecorderOperationResult;
-    function Connect: TRecorderOperationResult;
+      TRcOperationResult;
+    function Connect: TRcOperationResult;
     function Initialize(out ASerialNumber, AVersion: string):
-      TRecorderOperationResult;
-    function TestLink: TRecorderOperationResult;
+      TRcOperationResult;
+    function TestLink: TRcOperationResult;
+    { Explicit control-plane calls. They share the session owner with the
+      lifecycle methods and must never be invoked from the acquisition callback. }
+    function ReadLiveProperties(out AProperties: string):
+      TRcOperationResult;
+    function ConfigurePxi(ARtsiSev, ARtsiClock, ARtsiSync, ATriggerMode,
+      ATriggerSource, ATriggerLevel: Integer): TRcOperationResult;
+    function ZeroBalance(AChannelMask: Cardinal; out AValues: string):
+      TRcOperationResult;
     function SetModuleProperties(const AConfiguration: TPxiMx248Configuration):
-      TRecorderOperationResult;
+      TRcOperationResult;
     function ProgramAcquisition(const AConfiguration: TPxiMx248Configuration):
-      TRecorderOperationResult;
-    function Start: TRecorderOperationResult;
-    function Stop: TRecorderOperationResult;
+      TRcOperationResult;
+    function Start: TRcOperationResult;
+    function Stop: TRcOperationResult;
     procedure Disconnect;
     function ReadBlock(ATimeoutMs: Cardinal;
-      var ABlock: TRecorderAcquisitionBlock): TRecorderOperationResult;
+      var ABlock: TRcAcquisitionBlock): TRcOperationResult;
   end;
 
 function RecorderDiscoverPxiMx248(out ADevices: TPxiMx248DiscoveredDevices;
-  const ABridgeExecutable: string = ''): TRecorderOperationResult;
+  const ABridgeExecutable: string = ''): TRcOperationResult;
 
 implementation
 
-function ResultCode(ACode: Cardinal): TRecorderOperationCode;
+function ResultCode(ACode: Cardinal): TRcOperationCode;
 begin
   case ACode of
     1, 2: Result := rocProtocol;
@@ -117,7 +125,7 @@ begin
 end;
 
 function TRecorderPxiMx248WindowsTransport.CheckBridge:
-  TRecorderOperationResult;
+  TRcOperationResult;
 begin
   Result := StartChild;
 end;
@@ -188,7 +196,7 @@ begin
 end;
 
 function TRecorderPxiMx248WindowsTransport.Discover(
-  out ADevices: TPxiMx248DiscoveredDevices): TRecorderOperationResult;
+  out ADevices: TPxiMx248DiscoveredDevices): TRcOperationResult;
 const
   { DevAPI performs a synchronous PCI scan. On the reference MIC-315 this
     normally takes about five seconds, so the regular command timeout is not
@@ -211,12 +219,12 @@ begin
   if lSize > 0 then
     SetString(lText, PChar(@fPayloadBuffer[lOffset]), lSize);
   if not ParseDiscoveryText(lText, ADevices, lError) then
-    Result := TRecorderOperationResult.Failure(rocProtocol,
+    Result := TRcOperationResult.Failure(rocProtocol,
       'mx248.discover.decode', lError);
 end;
 
 function RecorderDiscoverPxiMx248(out ADevices: TPxiMx248DiscoveredDevices;
-  const ABridgeExecutable: string): TRecorderOperationResult;
+  const ABridgeExecutable: string): TRcOperationResult;
 var
   lTransport: TRecorderPxiMx248WindowsTransport;
 begin
@@ -231,14 +239,14 @@ begin
 end;
 
 function TRecorderPxiMx248WindowsTransport.Unsupported(
-  const AStage: string): TRecorderOperationResult;
+  const AStage: string): TRcOperationResult;
 begin
-  Result := TRecorderOperationResult.Failure(rocUnsupported, AStage,
+  Result := TRcOperationResult.Failure(rocUnsupported, AStage,
     'PXI MX-248 DevAPI bridge transport is available only on Windows');
 end;
 
 function TRecorderPxiMx248WindowsTransport.StartChild:
-  TRecorderOperationResult;
+  TRcOperationResult;
 var
   lOffset, lSize: Cardinal;
   lEmpty: Byte;
@@ -247,13 +255,13 @@ begin
   Exit(Unsupported('mx248.bridge.start'));
   {$else}
   if fSessionPoisoned then
-    Exit(TRecorderOperationResult.Failure(rocTransport, 'mx248.bridge.start',
+    Exit(TRcOperationResult.Failure(rocTransport, 'mx248.bridge.start',
       'IPC session is lost; disconnect and reconnect'));
   if Assigned(fProcess) and fProcess.Running then
-    Exit(TRecorderOperationResult.Success);
+    Exit(TRcOperationResult.Success);
   FreeAndNil(fProcess);
   if not FileExists(fBridgeExecutable) then
-    Exit(TRecorderOperationResult.Failure(rocTransport, 'mx248.bridge.start',
+    Exit(TRcOperationResult.Failure(rocTransport, 'mx248.bridge.start',
       'Bridge executable not found: ' + fBridgeExecutable));
   fProcess := TProcess.Create(nil);
   fProcess.Executable := fBridgeExecutable;
@@ -264,7 +272,7 @@ begin
     on E: Exception do
     begin
       FreeAndNil(fProcess);
-      Exit(TRecorderOperationResult.Failure(rocTransport,
+      Exit(TRcOperationResult.Failure(rocTransport,
         'mx248.bridge.start', E.Message));
     end;
   end;
@@ -279,7 +287,7 @@ begin
 end;
 
 function TRecorderPxiMx248WindowsTransport.ReadExact(var ABuffer;
-  ACount, ATimeoutMs: Cardinal): TRecorderOperationResult;
+  ACount, ATimeoutMs: Cardinal): TRcOperationResult;
 var
   lAvailable, lRead: LongInt;
   lBuffer: PByte;
@@ -294,7 +302,7 @@ begin
   while ACount > 0 do
   begin
     if not Assigned(fProcess) then
-      Exit(TRecorderOperationResult.Failure(rocTransport,
+      Exit(TRcOperationResult.Failure(rocTransport,
         'mx248.bridge.read', 'Bridge process is not running'));
     while fProcess.Stderr.NumBytesAvailable > 0 do
     begin
@@ -308,27 +316,27 @@ begin
       if Cardinal(lAvailable) > ACount then lAvailable := ACount;
       lRead := fProcess.Output.Read(lBuffer^, lAvailable);
       if lRead <= 0 then
-        Exit(TRecorderOperationResult.Failure(rocTransport,
+        Exit(TRcOperationResult.Failure(rocTransport,
           'mx248.bridge.read', 'Bridge pipe closed'));
       Inc(lBuffer, lRead);
       Dec(ACount, lRead);
       Continue;
     end;
     if not fProcess.Running then
-      Exit(TRecorderOperationResult.Failure(rocTransport,
+      Exit(TRcOperationResult.Failure(rocTransport,
         'mx248.bridge.read', 'Bridge process exited'));
     if GetTickCount64 >= lDeadline then
-      Exit(TRecorderOperationResult.Failure(rocTimeout,
+      Exit(TRcOperationResult.Failure(rocTimeout,
         'mx248.bridge.read', 'Bridge response timeout'));
     Sleep(1);
   end;
-  Result := TRecorderOperationResult.Success;
+  Result := TRcOperationResult.Success;
   {$endif}
 end;
 
 function TRecorderPxiMx248WindowsTransport.ExchangeStarted(ACommand: Word;
   const APayload; APayloadSize, ATimeoutMs: Cardinal; out ADataOffset,
-  ADataSize: Cardinal): TRecorderOperationResult;
+  ADataSize: Cardinal): TRcOperationResult;
 var
   lHeader, lReply: TPxiMx248BridgeHeader;
   lHeaderBytes: array[0..CPxiMx248BridgeHeaderSize - 1] of Byte;
@@ -338,7 +346,7 @@ begin
   ADataOffset := 0;
   ADataSize := 0;
   if APayloadSize > CPxiMx248BridgeMaxPayload then
-    Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+    Exit(TRcOperationResult.Failure(rocInvalidArgument,
       'mx248.bridge.write', 'Request payload exceeds 1 MiB'));
   Inc(fRequestId);
   if fRequestId = 0 then Inc(fRequestId);
@@ -354,7 +362,7 @@ begin
   except
     on E: Exception do
     begin
-      Result := TRecorderOperationResult.Failure(rocTransport,
+      Result := TRcOperationResult.Failure(rocTransport,
         'mx248.bridge.write', E.Message);
       PoisonChild;
       Exit;
@@ -368,7 +376,7 @@ begin
   end;
   if not PxiMx248DecodeHeader(lHeaderBytes, lReply, lError) then
   begin
-    Result := TRecorderOperationResult.Failure(rocProtocol,
+    Result := TRcOperationResult.Failure(rocProtocol,
       'mx248.bridge.header', lError);
     PoisonChild;
     Exit;
@@ -376,7 +384,7 @@ begin
   if (lReply.RequestId <> lHeader.RequestId) or
     (lReply.Command <> lHeader.Command) then
   begin
-    Result := TRecorderOperationResult.Failure(rocProtocol,
+    Result := TRcOperationResult.Failure(rocProtocol,
       'mx248.bridge.header', 'Response request id or command mismatch');
     PoisonChild;
     Exit;
@@ -393,17 +401,17 @@ begin
   if not PxiMx248DecodeResult(fPayloadBuffer, lReply.PayloadSize, lCode,
     lStage, lText, ADataOffset, ADataSize, lError) then
   begin
-    Result := TRecorderOperationResult.Failure(rocProtocol,
+    Result := TRcOperationResult.Failure(rocProtocol,
       'mx248.bridge.result', lError);
     PoisonChild;
     Exit;
   end;
   if lCode <> 0 then
   begin
-    Result := TRecorderOperationResult.Failure(ResultCode(lCode), lStage, lText);
+    Result := TRcOperationResult.Failure(ResultCode(lCode), lStage, lText);
     Exit;
   end;
-  Result := TRecorderOperationResult.Success;
+  Result := TRcOperationResult.Success;
 end;
 
 procedure TRecorderPxiMx248WindowsTransport.PoisonChild;
@@ -418,7 +426,7 @@ end;
 
 function TRecorderPxiMx248WindowsTransport.Exchange(ACommand: Word;
   const APayload; APayloadSize, ATimeoutMs: Cardinal; out ADataOffset,
-  ADataSize: Cardinal): TRecorderOperationResult;
+  ADataSize: Cardinal): TRcOperationResult;
 begin
   {$ifndef windows}
   Result := Unsupported('mx248.bridge');
@@ -452,7 +460,7 @@ begin
   {$endif}
 end;
 
-function TRecorderPxiMx248WindowsTransport.Connect: TRecorderOperationResult;
+function TRecorderPxiMx248WindowsTransport.Connect: TRcOperationResult;
 var
   lPayload: array[0..7] of Byte;
   lSlotPayload: array[0..3] of Byte;
@@ -489,7 +497,7 @@ begin
 end;
 
 function TRecorderPxiMx248WindowsTransport.Initialize(out ASerialNumber,
-  AVersion: string): TRecorderOperationResult;
+  AVersion: string): TRcOperationResult;
 var
   lEmpty: Byte;
   lOffset, lSize: Cardinal;
@@ -507,7 +515,7 @@ begin
 end;
 
 function TRecorderPxiMx248WindowsTransport.TestLink:
-  TRecorderOperationResult;
+  TRcOperationResult;
 var
   lEmpty: Byte;
   lOffset, lSize: Cardinal;
@@ -517,18 +525,61 @@ begin
     lOffset, lSize);
 end;
 
+function TRecorderPxiMx248WindowsTransport.ReadLiveProperties(
+  out AProperties: string): TRcOperationResult;
+var
+  lEmpty: Byte;
+  lOffset,lSize: Cardinal;
+begin
+  AProperties:='';
+  lEmpty:=0;
+  Result:=Exchange(CPxiMx248CommandReadProperties,lEmpty,0,fIoTimeoutMs,
+    lOffset,lSize);
+  if Result.IsSuccess then
+    AProperties:=DataText(fPayloadBuffer,lOffset,lSize)
+end;
+
+function TRecorderPxiMx248WindowsTransport.ConfigurePxi(ARtsiSev,
+  ARtsiClock, ARtsiSync, ATriggerMode, ATriggerSource, ATriggerLevel: Integer):
+  TRcOperationResult;
+var
+  lPayload: array[0..31] of Byte;
+  lOffset,lSize: Cardinal;
+begin
+  PxiMx248EncodePxiConfiguration(ARtsiSev,ARtsiClock,ARtsiSync,
+    ATriggerMode,ATriggerSource,ATriggerLevel,lPayload);
+  Result:=Exchange(CPxiMx248CommandConfigurePxi,lPayload[0],SizeOf(lPayload),
+    fIoTimeoutMs,lOffset,lSize)
+end;
+
+function TRecorderPxiMx248WindowsTransport.ZeroBalance(
+  AChannelMask: Cardinal; out AValues: string): TRcOperationResult;
+var
+  lPayload: array[0..3] of Byte;
+  lOffset,lSize: Cardinal;
+begin
+  AValues:='';
+  if (AChannelMask=0) or ((AChannelMask and not Cardinal($FF))<>0) then
+    Exit(TRcOperationResult.Failure(rocInvalidArgument,
+      'mx248.zero-balance','Channel mask must select channels 1..8'));
+  PxiMx248EncodeChannelMask(AChannelMask,lPayload);
+  Result:=Exchange(CPxiMx248CommandZeroBalance,lPayload[0],SizeOf(lPayload),
+    fIoTimeoutMs,lOffset,lSize);
+  if Result.IsSuccess then AValues:=DataText(fPayloadBuffer,lOffset,lSize)
+end;
+
 function TRecorderPxiMx248WindowsTransport.SetModuleProperties(
-  const AConfiguration: TPxiMx248Configuration): TRecorderOperationResult;
+  const AConfiguration: TPxiMx248Configuration): TRcOperationResult;
 begin
   {$ifndef windows}
   Exit(Unsupported('mx248.configure.cache'));
   {$endif}
   fConfiguration := AConfiguration;
-  Result := TRecorderOperationResult.Success;
+  Result := TRcOperationResult.Success;
 end;
 
 function TRecorderPxiMx248WindowsTransport.ProgramAcquisition(
-  const AConfiguration: TPxiMx248Configuration): TRecorderOperationResult;
+  const AConfiguration: TPxiMx248Configuration): TRcOperationResult;
 var
   lPayload: array[0..79] of Byte;
   lOffset, lSize: Cardinal;
@@ -539,7 +590,7 @@ begin
     fIoTimeoutMs, lOffset, lSize);
 end;
 
-function TRecorderPxiMx248WindowsTransport.Start: TRecorderOperationResult;
+function TRecorderPxiMx248WindowsTransport.Start: TRcOperationResult;
 var
   lEmpty: Byte;
   lOffset, lSize: Cardinal;
@@ -550,7 +601,7 @@ begin
   if Result.IsSuccess then fSampleCursor := 0;
 end;
 
-function TRecorderPxiMx248WindowsTransport.Stop: TRecorderOperationResult;
+function TRecorderPxiMx248WindowsTransport.Stop: TRcOperationResult;
 var
   lEmpty: Byte;
   lOffset, lSize: Cardinal;
@@ -576,7 +627,7 @@ begin
 end;
 
 function TRecorderPxiMx248WindowsTransport.ReadBlock(ATimeoutMs: Cardinal;
-  var ABlock: TRecorderAcquisitionBlock): TRecorderOperationResult;
+  var ABlock: TRcAcquisitionBlock): TRcOperationResult;
 var
   lPayload: array[0..3] of Byte;
   lOffset, lSize: Cardinal;
@@ -589,7 +640,7 @@ begin
   if not PxiMx248DecodeBlock(fPayloadBuffer, lOffset, lSize,
     fConfiguration.SampleRateHz, ABlock, lError) then
   begin
-    Result := TRecorderOperationResult.Failure(rocProtocol,
+    Result := TRcOperationResult.Failure(rocProtocol,
       'mx248.read.decode', lError);
     PoisonChild;
   end

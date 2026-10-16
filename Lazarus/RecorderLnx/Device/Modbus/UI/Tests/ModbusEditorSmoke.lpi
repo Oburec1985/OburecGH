@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="ModbusEditorSmoke"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <BuildModes Count="1">
+      <Item1 Name="Default" Default="True"/>
+    </BuildModes>
+    <Units Count="2">
+      <Unit0>
+        <Filename Value="ModbusEditorSmoke.lpr"/>
+        <IsPartOfProject Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="..\uRecorderModbusSourceEditor.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit1>
+    </Units>
+    <RequiredPackages>
+      <Item><PackageName Value="LCL"/></Item>
+    </RequiredPackages>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <SearchPaths>
+      <IncludeFiles Value=".."/>
+      <OtherUnitFiles Value="..\..\..\..\lib\x86_64-win64;..;..\..\Core;..\..\Runtime;..\..\..\..;..\..\..\..\Core;..\..\..;..\..\..\..\..\SharedUtils"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Linking>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="False"/>
+        </Win32>
+      </Options>
+    </Linking>
+  </CompilerOptions>
+</CONFIG>

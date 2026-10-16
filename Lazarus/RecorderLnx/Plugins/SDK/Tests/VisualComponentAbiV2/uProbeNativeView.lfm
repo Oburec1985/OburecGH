@@ -1,0 +1,24 @@
+object ProbeNativeView: TProbeNativeView
+  Left = 0
+  Height = 180
+  Top = 0
+  Width = 320
+  BorderStyle = bsNone
+  Caption = 'ABI native probe'
+  ClientHeight = 180
+  ClientWidth = 320
+  Color = clFuchsia
+  KeyPreview = True
+  OnKeyDown = ViewKeyDown
+  OnMouseDown = ViewMouseDown
+  Position = poDesigned
+  object TitleLabel: TLabel
+    Left = 0
+    Height = 24
+    Top = 0
+    Width = 320
+    Align = alTop
+    AutoSize = False
+    Caption = 'Plugin-owned native view'
+  end
+end

@@ -325,6 +325,7 @@ end;
 
 function Mic185MakeChannelQuery(AChannelIndex: Integer): TRecorderByteArray;
 begin
+  Result := nil;
   SetLength(Result, 1);
   Result[0] := Byte(AChannelIndex);
 end;

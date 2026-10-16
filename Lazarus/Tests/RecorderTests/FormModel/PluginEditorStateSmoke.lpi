@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags><MainUnitHasTitleStatement Value="False"/></Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="PluginEditorStateSmoke"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <BuildModes><Item Name="Default" Default="True"/></BuildModes>
+    <Units>
+      <Unit><Filename Value="PluginEditorStateSmoke.lpr"/><IsPartOfProject Value="True"/></Unit>
+    </Units>
+    <RequiredPackages>
+      <Item><PackageName Value="bgracontrols"/></Item>
+      <Item><PackageName Value="DateTimeCtrls"/></Item>
+      <Item><PackageName Value="LzrObrPack"/></Item>
+      <Item><PackageName Value="TAChartLazarusPkg"/></Item>
+      <Item><PackageName Value="LazOpenGLContext"/></Item>
+      <Item><PackageName Value="LCL"/></Item>
+    </RequiredPackages>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <SearchPaths>
+      <OtherUnitFiles Value="../../../RecorderLnx;../../../RecorderLnx/Core;../../../RecorderLnx/Device/DAC/Component;../../../RecorderLnx/Device/DAC/Core;../../../RecorderLnx/Device/DAC/Audio;../../../RecorderLnx/Device/DAC/Null;../../../RecorderLnx/Device/DAC/PXIe;../../../RecorderLnx/UI;../../../RecorderLnx/Algs;../../../RecorderLnx/Mdb;../../../RecorderLnx/SQLdb;../../../RecorderLnx/SQLdb/SqlTrend;../../../RecorderLnx/SDB;../../../RecorderLnx/Calibrations;../../../RecorderLnx/Calibrations/Strains;../../../RecorderLnx/Components/Common;../../../RecorderLnx/Components/Donut;../../../RecorderLnx/Components/Editor;../../../RecorderLnx/Components/ThreeD;../../../RecorderLnx/Components/ImpactHammer;../../../RecorderLnx/Components/FrequencyResponse;../../../RecorderLnx/Components/Lissajous;../../../RecorderLnx/Components/MeasurementSection;../../../RecorderLnx/Components/Oscillogram;../../../RecorderLnx/Components/SignalGenerator;../../../RecorderLnx/Components/Spectrum;../../../RecorderLnx/Components/SqlTrend;../../../RecorderLnx/Components/Standard;../../../RecorderLnx/Components/Trend;../../../RecorderLnx/Plugins/SDK;../../../SharedUtils;../../../SharedUtils/math;../../../SharedUtils/components/chart_lzr;../../../SharedUtils/3d/core;../../../SharedUtils/3d/io;../../../SharedUtils/3d/contracts;../../../SharedUtils/3d/interaction;../../../SharedUtils/3d/lcl;../../../SharedUtils/3d/motion;../../../SharedUtils/3d/render/opengl"/>
+      <UnitOutputDirectory Value="lib/plugin-editor-state-smoke"/>
+    </SearchPaths>
+    <Linking><Debugging><DebugInfoType Value="dsDwarf3"/></Debugging></Linking>
+  </CompilerOptions>
+</CONFIG>

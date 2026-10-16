@@ -1,0 +1,165 @@
+inherited Frm_Bus: TFrm_Bus
+  Height = 592
+  Width = 856
+  ClientHeight = 592
+  ClientWidth = 856
+  Font.CharSet = RUSSIAN_CHARSET
+  Font.Height = -16
+  Font.Pitch = fpVariable
+  Font.Quality = fqDraft
+  ParentFont = False
+  OnClick = FrameClick
+  OnResize = FrameResize
+  DesignLeft = 285
+  DesignTop = 155
+  object Label1: TLabel[0]
+    Left = 16
+    Height = 21
+    Top = 32
+    Width = 142
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'Наименование:'
+  end
+  object Label2: TLabel[1]
+    Left = 16
+    Height = 21
+    Top = 79
+    Width = 142
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'Описание:'
+  end
+  object edName: TEdit[2]
+    Left = 164
+    Height = 29
+    Hint = 'Наименование шины'
+    Top = 24
+    Width = 638
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 0
+    Text = 'edName'
+  end
+  object memDescr: TMemo[3]
+    Left = 164
+    Height = 298
+    Hint = 'Описание шины'
+    Top = 71
+    Width = 638
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Lines.Strings = (
+      'memDescr'
+    )
+    TabOrder = 1
+  end
+  object gbType: TGroupBox[4]
+    Left = 168
+    Height = 64
+    Hint = 'Выбор типа шины (последовательный порт или TCP)'
+    Top = 393
+    Width = 638
+    Anchors = [akLeft, akRight, akBottom]
+    Caption = 'Тип шины'
+    ClientHeight = 38
+    ClientWidth = 634
+    TabOrder = 2
+    object rbRTU: TRadioButton
+      Left = 16
+      Height = 25
+      Hint = 'Разновидность протокола, работающая по последовательлным интерфейсам, таким как RS-232, RS-485 и др.'
+      Top = 8
+      Width = 108
+      Caption = 'Modbus RTU'
+      Checked = True
+      TabOrder = 1
+      TabStop = True
+      OnClick = rbClick
+    end
+    object rbTCP: TRadioButton
+      Left = 144
+      Height = 25
+      Hint = 'Разновидность протокола работающая поверх TCP IP в сетях Ethernet'
+      Top = 8
+      Width = 106
+      Caption = 'Modbus TCP'
+      TabOrder = 0
+      OnClick = rbClick
+    end
+  end
+  object chbInterchange: TCheckBox[5]
+    Left = 168
+    Height = 25
+    Hint = 'Если флаг установлен, то на вкладке "Обмен" отображаются кодограммы относящиеся к шине'
+    Top = 473
+    Width = 227
+    Anchors = [akLeft, akBottom]
+    Caption = 'Отображать обмен данными'
+    Checked = True
+    State = cbChecked
+    TabOrder = 3
+  end
+  object Label3: TLabel[6]
+    Left = 408
+    Height = 21
+    Top = 473
+    Width = 170
+    Alignment = taRightJustify
+    Anchors = [akLeft, akBottom]
+    AutoSize = False
+    Caption = 'Задержка опроса, мс:'
+  end
+  object edPauseDelay: TEdit[7]
+    Left = 584
+    Height = 29
+    Hint = ' Установите задержку между опросами одного и того же устройства'
+    Top = 465
+    Width = 80
+    Anchors = [akLeft, akBottom]
+    TabOrder = 4
+    Text = '50'
+    OnKeyPress = edPauseDelayKeyPress
+  end
+  inline frm_adr1: Tfrm_adr[8]
+    Left = 40
+    Top = 512
+    Width = 776
+    Align = alBottom
+    BorderSpacing.Left = 40
+    BorderSpacing.Right = 40
+    BorderSpacing.Bottom = 24
+    ClientWidth = 776
+    TabOrder = 5
+    inherited edAddress: TEdit
+      Width = 500
+    end
+    inherited Label2: TLabel
+      Left = 599
+    end
+    inherited edPort: TEdit
+      Left = 660
+    end
+  end
+  inline frm_port1: Tfrm_port[9]
+    Left = 40
+    Top = 432
+    Width = 776
+    Align = alBottom
+    BorderSpacing.Left = 40
+    BorderSpacing.Right = 40
+    BorderSpacing.Bottom = 24
+    ClientWidth = 776
+    TabOrder = 6
+    DesignLeft = 583
+    DesignTop = 432
+    inherited cbPort: TComboBox
+      Hint = ''
+    end
+    inherited cbParity: TComboBox
+      Hint = ''
+    end
+    inherited cbSpeed: TComboBox
+      Hint = ''
+      Width = 266
+    end
+  end
+end

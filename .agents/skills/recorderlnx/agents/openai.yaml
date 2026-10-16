@@ -1,0 +1,4 @@
+interface:
+  display_name: "RecorderLnx"
+  short_description: "Cross-platform Lazarus Recorder app in OburecGH."
+  default_prompt: "Use $recorderlnx to work on the RecorderLnx Lazarus project, build with lazbuild, and compare with windev-v3.9 original Recorder."

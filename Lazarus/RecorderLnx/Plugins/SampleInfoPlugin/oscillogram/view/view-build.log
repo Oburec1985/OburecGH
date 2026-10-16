@@ -1,0 +1,92 @@
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) Build Project: nothing to do.
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\lib\OscViewSmoke.exe"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-MObjFPC"
+Info: (lazarus) Param[1]="-Scghi"
+Info: (lazarus) Param[2]="-O1"
+Info: (lazarus) Param[3]="-gw3"
+Info: (lazarus) Param[4]="-gl"
+Info: (lazarus) Param[5]="-l"
+Info: (lazarus) Param[6]="-vewnhibq"
+Info: (lazarus) Param[7]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\"
+Info: (lazarus) Param[8]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\model"
+Info: (lazarus) Param[9]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\data"
+Info: (lazarus) Param[10]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK"
+Info: (lazarus) Param[11]="-FuD:\works\OburecGH\Lazarus\SharedUtils"
+Info: (lazarus) Param[12]="-FuD:\works\OburecGH\Lazarus\SharedUtils\math"
+Info: (lazarus) Param[13]="-FuD:\works\OburecGH\Lazarus\SharedUtils\components\chart_lzr\lib\x86_64-win64"
+Info: (lazarus) Param[14]="-FuC:\lazarus\components\opengl\lib\x86_64-win64\win32"
+Info: (lazarus) Param[15]="-FuC:\lazarus\lcl\units\x86_64-win64\win32"
+Info: (lazarus) Param[16]="-FuC:\lazarus\lcl\units\x86_64-win64"
+Info: (lazarus) Param[17]="-FuC:\lazarus\components\freetype\lib\x86_64-win64"
+Info: (lazarus) Param[18]="-FuC:\lazarus\components\lazutils\lib\x86_64-win64"
+Info: (lazarus) Param[19]="-FuC:\lazarus\packager\units\x86_64-win64"
+Info: (lazarus) Param[20]="-FUD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\lib\units\"
+Info: (lazarus) Param[21]="-FED:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\lib\"
+Info: (lazarus) Param[22]="-oD:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\lib\OscViewSmoke.exe"
+Info: (lazarus) Param[23]="-dLCL"
+Info: (lazarus) Param[24]="-dLCLwin32"
+Info: (lazarus) Param[25]="OscViewSmoke.lpr"
+Info: (lazarus) Param[26]="-B"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling OscViewSmoke.lpr
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\model\uOscModel.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\data\uOscTags.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\data\uOscDataAdapter.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SDK\uRecorderVisualComponentApiV2.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\math\uSharedStatistics.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\data\uOscDataAdapter.pas(68,40) Hint: (4055) Conversion between ordinals and pointers is not portable
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\data\uOscDataAdapter.pas(69,5) Hint: (4055) Conversion between ordinals and pointers is not portable
+(3104) Compiling uOscView.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\SharedUtils\uSharedNumberFormat.pas
+(3104) Compiling uOscBehavior.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscBehavior.pas(91,34) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscBehavior.pas(95,48) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscBehavior.pas(51,28) Hint: (5024) Parameter "AModel" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscBehavior.pas(57,32) Hint: (5024) Parameter "ARegistry" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\data\uOscUnits.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(124,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(125,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(1030,29) Hint: (5091) Local variable "lTagColors" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(150,36) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(150,53) Hint: (5024) Parameter "ACol" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(136,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(135,41) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(130,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(131,35) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(131,52) Hint: (5024) Parameter "Button" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(132,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(132,27) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(132,30) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(133,33) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(133,50) Hint: (5024) Parameter "Button" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(134,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(134,27) Hint: (5024) Parameter "X" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(134,30) Hint: (5024) Parameter "Y" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(138,7) Hint: (5024) Parameter "AState" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(140,20) Hint: (5024) Parameter "State" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(144,52) Hint: (5024) Parameter "State" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(165,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(166,34) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(168,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(170,30) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(171,28) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(172,7) Hint: (5024) Parameter "Shift" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(3362,3) Note: (5027) Local variable "lAxis" is assigned but never used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(268,32) Hint: (5024) Parameter "Sender" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\uOscView.pas(16,19) Hint: (5023) Unit "uOglChartTypes" not used in uOscView
+(9022) Compiling resource D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\lib\units\OscViewSmoke.obj
+(9015) Linking D:\works\OburecGH\Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\oscillogram\view\lib\OscViewSmoke.exe
+(1008) 5689 lines compiled, 0.8 sec, 2291008 bytes code, 132420 bytes data
+(1021) 2 warning(s) issued
+(1022) 35 hint(s) issued
+(1023) 1 note(s) issued
+Info: (lazarus) [TCompiler.Compile] end

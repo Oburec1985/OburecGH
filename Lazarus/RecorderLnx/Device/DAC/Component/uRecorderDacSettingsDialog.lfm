@@ -1,0 +1,262 @@
+object RecorderDacSettingsDialog: TRecorderDacSettingsDialog
+  Left = 300
+  Height = 590
+  Top = 180
+  Width = 720
+  BorderIcons = [biSystemMenu]
+  Caption = 'Настройка ЦАП'
+  ClientHeight = 590
+  ClientWidth = 720
+  Constraints.MinHeight = 560
+  Constraints.MinWidth = 680
+  OnShow = FormShow
+  Position = poScreenCenter
+  LCLVersion = '3.0.0.4'
+  object cbEnabled: TCheckBox
+    Left = 16
+    Height = 23
+    Top = 12
+    Width = 160
+    Caption = 'Вывод ЦАП включён'
+    TabOrder = 0
+  end
+  object gbDevice: TGroupBox
+    Left = 12
+    Height = 174
+    Top = 42
+    Width = 696
+    Anchors = [akTop, akLeft, akRight]
+    Caption = 'Устройство и поток'
+    TabOrder = 1
+    object lblBackend: TLabel
+      Left = 12
+      Height = 15
+      Top = 28
+      Width = 48
+      Caption = 'Backend'
+    end
+    object cbBackend: TComboBox
+      Left = 12
+      Height = 23
+      Top = 47
+      Width = 200
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object lblEndpoint: TLabel
+      Left = 226
+      Height = 15
+      Top = 28
+      Width = 55
+      Caption = 'Endpoint'
+    end
+    object edEndpoint: TEdit
+      Left = 226
+      Height = 23
+      Top = 47
+      Width = 190
+      TabOrder = 1
+      Text = 'default'
+    end
+    object lblSampleRate: TLabel
+      Left = 12
+      Height = 15
+      Top = 83
+      Width = 70
+      Caption = 'Частота, Гц'
+    end
+    object edSampleRate: TFloatSpinEdit
+      Left = 12
+      Height = 23
+      Top = 102
+      Width = 110
+      DecimalPlaces = 3
+      MaxValue = 1000000
+      MinValue = 1
+      TabOrder = 2
+      Value = 1000
+    end
+    object lblBlockSize: TLabel
+      Left = 132
+      Height = 15
+      Top = 83
+      Width = 71
+      Caption = 'Блок, кадров'
+    end
+    object edBlockSize: TSpinEdit
+      Left = 132
+      Height = 23
+      Top = 102
+      Width = 90
+      MaxValue = 1048576
+      MinValue = 1
+      TabOrder = 3
+      Value = 200
+    end
+    object lblMin: TLabel
+      Left = 238
+      Height = 15
+      Top = 83
+      Width = 23
+      Caption = 'Min'
+    end
+    object edMin: TFloatSpinEdit
+      Left = 238
+      Height = 23
+      Top = 102
+      Width = 88
+      DecimalPlaces = 6
+      MaxValue = 1000000000
+      MinValue = -1000000000
+      TabOrder = 4
+      Value = -1
+    end
+    object lblMax: TLabel
+      Left = 336
+      Height = 15
+      Top = 83
+      Width = 26
+      Caption = 'Max'
+    end
+    object edMax: TFloatSpinEdit
+      Left = 336
+      Height = 23
+      Top = 102
+      Width = 88
+      DecimalPlaces = 6
+      MaxValue = 1000000000
+      MinValue = -1000000000
+      TabOrder = 5
+      Value = 1
+    end
+    object lblSafe: TLabel
+      Left = 434
+      Height = 15
+      Top = 83
+      Width = 86
+      Caption = 'Безопасное'
+    end
+    object edSafe: TFloatSpinEdit
+      Left = 434
+      Height = 23
+      Top = 102
+      Width = 88
+      DecimalPlaces = 6
+      MaxValue = 1000000000
+      MinValue = -1000000000
+      TabOrder = 6
+    end
+    object lblUnderrun: TLabel
+      Left = 532
+      Height = 15
+      Top = 83
+      Width = 98
+      Caption = 'При нехватке данных'
+    end
+    object cbUnderrun: TComboBox
+      Left = 532
+      Height = 23
+      Top = 102
+      Width = 145
+      ItemHeight = 15
+      ItemIndex = 0
+      Items.Strings = (
+        'Безопасное значение'
+        'Удерживать последнее'
+        'Остановить ЦАП'
+      )
+      Style = csDropDownList
+      TabOrder = 7
+      Text = 'Безопасное значение'
+    end
+  end
+  object gbInput: TGroupBox
+    Left = 12
+    Height = 146
+    Top = 224
+    Width = 696
+    Anchors = [akTop, akLeft, akRight]
+    Caption = 'Источник: тег генератора или измерительный тег'
+    TabOrder = 2
+    object edInputSearch: TEdit
+      Left = 12
+      Height = 23
+      Top = 25
+      Width = 672
+      Anchors = [akTop, akLeft, akRight]
+      OnChange = InputSearchChange
+      TabOrder = 0
+      TextHint = 'Поиск по имени, адресу или описанию'
+    end
+    object lbInput: TListBox
+      Left = 12
+      Height = 84
+      Top = 52
+      Width = 672
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      ItemHeight = 0
+      OnClick = InputTagClick
+      TabOrder = 1
+    end
+  end
+  object gbMirror: TGroupBox
+    Left = 12
+    Height = 146
+    Top = 378
+    Width = 696
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Caption = 'Зеркало фактического буфера ЦАП в тег'
+    TabOrder = 3
+    object cbMirror: TCheckBox
+      Left = 12
+      Height = 23
+      Top = 21
+      Width = 170
+      Caption = 'Публиковать зеркало'
+      OnClick = MirrorClick
+      TabOrder = 0
+    end
+    object edMirrorSearch: TEdit
+      Left = 190
+      Height = 23
+      Top = 21
+      Width = 494
+      Anchors = [akTop, akLeft, akRight]
+      OnChange = MirrorSearchChange
+      TabOrder = 1
+      TextHint = 'Поиск тега зеркала'
+    end
+    object lbMirror: TListBox
+      Left = 12
+      Height = 84
+      Top = 50
+      Width = 672
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      ItemHeight = 0
+      OnClick = MirrorTagClick
+      TabOrder = 2
+    end
+  end
+  object btnOk: TButton
+    Left = 536
+    Height = 30
+    Top = 544
+    Width = 82
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    OnClick = OkClick
+    TabOrder = 4
+  end
+  object btnCancel: TButton
+    Left = 626
+    Height = 30
+    Top = 544
+    Width = 82
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Отмена'
+    ModalResult = 2
+    TabOrder = 5
+  end
+end

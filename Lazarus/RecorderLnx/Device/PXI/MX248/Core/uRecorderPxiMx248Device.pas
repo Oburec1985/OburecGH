@@ -38,19 +38,19 @@ type
     её. Native handles никогда не покидают x86 bridge. }
   IPxiMx248Transport = interface
     ['{157709F3-115D-49A1-A67A-6E8FDB2F1038}']
-    function Connect: TRecorderOperationResult;
+    function Connect: TRcOperationResult;
     function Initialize(out ASerialNumber, AVersion: string):
-      TRecorderOperationResult;
-    function TestLink: TRecorderOperationResult;
+      TRcOperationResult;
+    function TestLink: TRcOperationResult;
     { Original MX-248 order: module properties first, acquisition programming
       second. Keeping the operations separate makes first-failure behavior
       explicit and testable. }
     function SetModuleProperties(const AConfiguration: TPxiMx248Configuration):
-      TRecorderOperationResult;
+      TRcOperationResult;
     function ProgramAcquisition(const AConfiguration: TPxiMx248Configuration):
-      TRecorderOperationResult;
-    function Start: TRecorderOperationResult;
-    function Stop: TRecorderOperationResult;
+      TRcOperationResult;
+    function Start: TRcOperationResult;
+    function Stop: TRcOperationResult;
     procedure Disconnect;
   end;
 
@@ -68,18 +68,18 @@ type
   public
     constructor Create(const ATransport: IPxiMx248Transport);
     destructor Destroy; override;
-    function Connect: TRecorderOperationResult;
-    function Initialize: TRecorderOperationResult;
-    function TestLink: TRecorderOperationResult;
+    function Connect: TRcOperationResult;
+    function Initialize: TRcOperationResult;
+    function TestLink: TRcOperationResult;
     function GetPropertyDescriptors: TRecorderPropertyDescriptorArray;
     function GetProperties(const ARequest: string; out AResponse: string):
-      TRecorderOperationResult;
+      TRcOperationResult;
     function CalcProperties(const AProperties: string; out AResponse: string):
-      TRecorderOperationResult;
-    function SetProperties(const AProperties: string): TRecorderOperationResult;
-    function Configure: TRecorderOperationResult;
-    function Start: TRecorderOperationResult;
-    function Stop: TRecorderOperationResult;
+      TRcOperationResult;
+    function SetProperties(const AProperties: string): TRcOperationResult;
+    function Configure: TRcOperationResult;
+    function Start: TRcOperationResult;
+    function Stop: TRcOperationResult;
     procedure Disconnect;
     property SerialNumber: string read fSerialNumber;
     property State: TPxiMx248State read fState;
@@ -89,9 +89,9 @@ type
 implementation
 
 function InvalidState(const AStage: string; AState: TPxiMx248State):
-  TRecorderOperationResult;
+  TRcOperationResult;
 begin
-  Result := TRecorderOperationResult.Failure(rocInvalidState, AStage,
+  Result := TRcOperationResult.Failure(rocInvalidState, AStage,
     Format('MX-248 state %d does not allow this operation', [Ord(AState)]));
 end;
 
@@ -123,26 +123,26 @@ begin
   if fState = pmsConfigured then fState := pmsInitialized;
 end;
 
-function TPxiMx248Device.Connect: TRecorderOperationResult;
+function TPxiMx248Device.Connect: TRcOperationResult;
 begin
   if fState in [pmsConnected, pmsInitialized, pmsConfigured, pmsRunning] then
-    Exit(TRecorderOperationResult.Success);
+    Exit(TRcOperationResult.Success);
   if fState <> pmsCreated then Exit(InvalidState('mx248.connect', fState));
   Result := fTransport.Connect;
   if Result.IsSuccess then fState := pmsConnected else fState := pmsOffline;
 end;
 
-function TPxiMx248Device.Initialize: TRecorderOperationResult;
+function TPxiMx248Device.Initialize: TRcOperationResult;
 begin
   if fState in [pmsInitialized, pmsConfigured, pmsRunning] then
-    Exit(TRecorderOperationResult.Success);
+    Exit(TRcOperationResult.Success);
   if fState <> pmsConnected then
     Exit(InvalidState('mx248.initialize', fState));
   Result := fTransport.Initialize(fSerialNumber, fVersion);
   if Result.IsSuccess then fState := pmsInitialized else fState := pmsOffline;
 end;
 
-function TPxiMx248Device.TestLink: TRecorderOperationResult;
+function TPxiMx248Device.TestLink: TRcOperationResult;
 begin
   if not (fState in [pmsConnected, pmsInitialized, pmsConfigured]) then
     Exit(InvalidState('mx248.test', fState));
@@ -156,28 +156,40 @@ begin
 end;
 
 function TPxiMx248Device.GetProperties(const ARequest: string;
-  out AResponse: string): TRecorderOperationResult;
+  out AResponse: string): TRcOperationResult;
 begin
   Result := fProperties.GetProperties(ARequest, AResponse);
 end;
 
 function TPxiMx248Device.CalcProperties(const AProperties: string;
-  out AResponse: string): TRecorderOperationResult;
+  out AResponse: string): TRcOperationResult;
 begin
   Result := fProperties.CalcProperties(AProperties, AResponse);
 end;
 
 function TPxiMx248Device.SetProperties(const AProperties: string):
-  TRecorderOperationResult;
+  TRcOperationResult;
 begin
   if fState = pmsRunning then
     Exit(InvalidState('mx248.properties.set', fState));
   Result := fProperties.SetProperties(AProperties);
 end;
 
-function TPxiMx248Device.Configure: TRecorderOperationResult;
+function TPxiMx248Device.Configure: TRcOperationResult;
 begin
-  if fState = pmsConfigured then Exit(TRecorderOperationResult.Success);
+  if (fState = pmsConfigured) and not fConfigurationDirty then
+    Exit(TRcOperationResult.Success);
+  { A stopped configured device may be edited repeatedly from the settings
+    dialog. Dirty configuration must be programmed through the existing
+    session; a successful no-op would leave Start permanently rejected. }
+  if (fState = pmsConfigured) and fConfigurationDirty then
+  begin
+    Result := fTransport.SetModuleProperties(fConfiguration);
+    if not Result.IsSuccess then Exit;
+    Result := fTransport.ProgramAcquisition(fConfiguration);
+    if Result.IsSuccess then fConfigurationDirty := False;
+    Exit;
+  end;
   if fState <> pmsInitialized then
     Exit(InvalidState('mx248.configure', fState));
   Result := fTransport.SetModuleProperties(fConfiguration);
@@ -190,7 +202,7 @@ begin
   end;
 end;
 
-function TPxiMx248Device.Start: TRecorderOperationResult;
+function TPxiMx248Device.Start: TRcOperationResult;
 begin
   if fState <> pmsConfigured then Exit(InvalidState('mx248.start', fState));
   if fConfigurationDirty then Exit(InvalidState('mx248.start.dirty', fState));
@@ -198,9 +210,9 @@ begin
   if Result.IsSuccess then fState := pmsRunning;
 end;
 
-function TPxiMx248Device.Stop: TRecorderOperationResult;
+function TPxiMx248Device.Stop: TRcOperationResult;
 begin
-  if fState <> pmsRunning then Exit(TRecorderOperationResult.Success);
+  if fState <> pmsRunning then Exit(TRcOperationResult.Success);
   Result := fTransport.Stop;
   if Result.IsSuccess then
     if fConfigurationDirty then fState := pmsInitialized

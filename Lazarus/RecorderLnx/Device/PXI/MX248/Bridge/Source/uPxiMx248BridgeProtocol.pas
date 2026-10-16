@@ -6,14 +6,19 @@ uses System.SysUtils, System.Classes, System.Math;
 
 const
   BRIDGE_MAGIC = $42383432; { "248B" }
-  BRIDGE_VERSION = 1;
+  BRIDGE_VERSION = 2;
   BRIDGE_MAX_PAYLOAD = 1024 * 1024;
   MX248_SAMPLE_VT_R4 = 4;
+  { 4-byte channel count + 8 * (12-byte header + N * Float32), with
+    response-envelope headroom inside BRIDGE_MAX_PAYLOAD. Mirrored by the
+    platform-neutral CPxiMx248MaxBlockSamples and guarded by tests. }
+  MX248_MAX_BLOCK_SAMPLES = 32760;
 
 type
   TBridgeCommand = (bcHello = 1, bcStatus = 2, bcDiscover = 10,
     bcConnect = 11, bcInitialize = 12, bcTest = 13, bcConfigure = 14,
     bcStart = 15, bcStop = 16, bcReadBlock = 17, bcDisconnect = 18,
+    bcReadProperties = 19, bcConfigurePxi = 20, bcZeroBalance = 21,
     bcShutdown = 255);
   TBridgeCode = (brOk, brBadFrame, brVersion, brUnsupported, brDevApi,
     brInternal);
@@ -40,6 +45,14 @@ type
     SampleType: Cardinal;
     SampleCount: Cardinal;
   end;
+  { CONFIGURE_PXI v1 keeps the PXI bus controls separate from acquisition
+    configuration. TriggerLevel is the DevAPI PROP_TRIG_LEVEL TTL value 0/1,
+    not a synthetic edge flag. Remaining Reserved fields must be zero. }
+  TMx248PxiConfigV1 = packed record
+    RtsiSev, RtsiClock, RtsiSync, TriggerMode, TriggerSource,
+      TriggerLevel: LongInt;
+    Reserved: array[0..1] of LongInt;
+  end;
 
 function ReadExact(AStream: TStream; var ABuffer; ASize: Integer): Boolean;
 function ReadFrame(AStream: TStream; out AHeader: TBridgeHeader;
@@ -50,8 +63,64 @@ function DecodeConfigureV1(const APayload: TBytes; out AConfig: TMx248ConfigureV
   out AError: string): Boolean;
 function DecodeReadChannelHeader(const APayload: TBytes; AOffset: Integer;
   out AHeader: TMx248ReadChannelHeader): Boolean;
+function DecodePxiConfigV1(const APayload: TBytes; out AConfig: TMx248PxiConfigV1;
+  out AError: string): Boolean;
+function DecodeChannelMask(const APayload: TBytes; out AMask: Cardinal;
+  out AError: string): Boolean;
 
 implementation
+
+function DecodeChannelMask(const APayload: TBytes; out AMask: Cardinal;
+  out AError: string): Boolean;
+begin
+  AMask:=0;
+  AError:='';
+  if Length(APayload)<>SizeOf(AMask) then begin
+    AError:='ZERO_BALANCE v1 payload must be a uint32 channel mask';
+    Exit(False)
+  end;
+  Move(APayload[0],AMask,SizeOf(AMask));
+  if (AMask=0) or ((AMask and not Cardinal($FF))<>0) then begin
+    AError:='ZERO_BALANCE channel mask must select channels 1..8';
+    Exit(False)
+  end;
+  Result:=True;
+end;
+
+function DecodePxiConfigV1(const APayload: TBytes; out AConfig: TMx248PxiConfigV1;
+  out AError: string): Boolean;
+var
+  I: Integer;
+begin
+  FillChar(AConfig,SizeOf(AConfig),0);
+  AError:='';
+  if Length(APayload)<>SizeOf(AConfig) then begin
+    AError:='CONFIGURE_PXI v1 payload must be 32 bytes';
+    Exit(False)
+  end;
+  Move(APayload[0],AConfig,SizeOf(AConfig));
+  for I:=Low(AConfig.Reserved) to High(AConfig.Reserved) do
+    if AConfig.Reserved[I]<>0 then begin
+      AError:='CONFIGURE_PXI reserved fields must be zero';
+      Exit(False)
+    end;
+  if (AConfig.RtsiSev<0) or (AConfig.RtsiSev>3) or
+     (AConfig.RtsiClock<0) or (AConfig.RtsiClock>3) or
+     (AConfig.RtsiSync<0) or (AConfig.RtsiSync>3) then begin
+    AError:='RTSI mode must be 0..3 (slave/master/hardwired/off)';
+    Exit(False)
+  end;
+  if (AConfig.TriggerMode<0) or (AConfig.TriggerMode>4) or
+     (AConfig.TriggerSource<0) or (AConfig.TriggerSource>31) then begin
+    AError:='trigger mode/source is outside the DevAPI v1 range';
+    Exit(False)
+  end;
+  if (AConfig.TriggerLevel<0) or (AConfig.TriggerLevel>1) then begin
+    AError:='trigger TTL level must be 0 or 1';
+    Exit(False)
+  end;
+  Result:=True;
+end;
 
 function DecodeReadChannelHeader(const APayload: TBytes; AOffset: Integer;
   out AHeader: TMx248ReadChannelHeader): Boolean;

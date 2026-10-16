@@ -34,15 +34,15 @@ type
   private
     fOnCommitted: TPxiMx248ConfigurationCommitted;
     function SnapshotConfiguration(AValues: TStrings;
-      out AConfiguration: TPxiMx248Configuration): TRecorderOperationResult;
+      out AConfiguration: TPxiMx248Configuration): TRcOperationResult;
   protected
     function ValidateCandidate(AValues: TStrings):
-      TRecorderOperationResult; override;
+      TRcOperationResult; override;
     procedure AfterCommit(const APreviousValues: string); override;
   public
     constructor Create(AOnCommitted: TPxiMx248ConfigurationCommitted);
     function CurrentConfiguration(out AConfiguration:
-      TPxiMx248Configuration): TRecorderOperationResult;
+      TPxiMx248Configuration): TRcOperationResult;
   end;
 
 implementation
@@ -74,9 +74,10 @@ begin
   Add(RecorderPropertyDescriptor('device.type', rpkInteger, rpaReadOnly,
     IntToStr(CPxiMx248DeviceType)));
   Add(RecorderPropertyDescriptor('sample-rate-hz', rpkFloat, rpaReadWrite,
-    '1000', rpsDevice, 'Hz', '1', '200000'));
+    '512000', rpsDevice, 'Hz', '422', '512000'));
   Add(RecorderPropertyDescriptor('block-samples', rpkInteger, rpaReadWrite,
-    '256', rpsDevice, 'samples', '1', '1048576'));
+    IntToStr(CPxiMx248DefaultBlockSamples), rpsDevice, 'samples', '1',
+    IntToStr(CPxiMx248MaxBlockSamples)));
   Add(RecorderPropertyDescriptor('calibration-mode', rpkEnum, rpaReadWrite,
     'reference', rpsDevice, '', '', '', '1', 'reference|pxi'));
   for I := 0 to CPxiMx248ChannelCount - 1 do
@@ -103,7 +104,7 @@ begin
 end;
 
 function TPxiMx248PropertyStore.SnapshotConfiguration(AValues: TStrings;
-  out AConfiguration: TPxiMx248Configuration): TRecorderOperationResult;
+  out AConfiguration: TPxiMx248Configuration): TRcOperationResult;
 var
   I: Integer;
   lFormat: TFormatSettings;
@@ -114,11 +115,11 @@ begin
   lFormat.ThousandSeparator := #0;
   if not TryStrToFloat(AValues.Values['sample-rate-hz'],
     AConfiguration.SampleRateHz, lFormat) then
-    Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+    Exit(TRcOperationResult.Failure(rocInvalidArgument,
       'mx248.properties', 'Invalid sample rate'));
   if not TryStrToInt(AValues.Values['block-samples'],
     AConfiguration.BlockSamples) then
-    Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+    Exit(TRcOperationResult.Failure(rocInvalidArgument,
       'mx248.properties', 'Invalid block size'));
   for I := 0 to CPxiMx248ChannelCount - 1 do
   begin
@@ -150,11 +151,11 @@ begin
     AConfiguration.CalibrationMode := pcmPxi
   else
     AConfiguration.CalibrationMode := pcmReference;
-  Result := TRecorderOperationResult.Success;
+  Result := TRcOperationResult.Success;
 end;
 
 function TPxiMx248PropertyStore.ValidateCandidate(AValues: TStrings):
-  TRecorderOperationResult;
+  TRcOperationResult;
 var
   I: Integer;
   lConfiguration: TPxiMx248Configuration;
@@ -162,18 +163,21 @@ var
 begin
   Result := SnapshotConfiguration(AValues, lConfiguration);
   if not Result.IsSuccess then Exit;
+  if not PxiMx248IsSupportedSampleRate(lConfiguration.SampleRateHz) then
+    Exit(TRcOperationResult.Failure(rocInvalidArgument,
+      'mx248.properties', 'Unsupported MX-248 sample rate'));
   lEnabled := False;
   for I := 0 to CPxiMx248ChannelCount - 1 do
     lEnabled := lEnabled or lConfiguration.Channels[I].Enabled;
   if not lEnabled then
-    Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+    Exit(TRcOperationResult.Failure(rocInvalidArgument,
       'mx248.properties', 'At least one channel must be enabled'));
 end;
 
 procedure TPxiMx248PropertyStore.AfterCommit(const APreviousValues: string);
 var
   lConfiguration: TPxiMx248Configuration;
-  lResult: TRecorderOperationResult;
+  lResult: TRcOperationResult;
 begin
   if not Assigned(fOnCommitted) then Exit;
   lResult := CurrentConfiguration(lConfiguration);
@@ -181,7 +185,7 @@ begin
 end;
 
 function TPxiMx248PropertyStore.CurrentConfiguration(
-  out AConfiguration: TPxiMx248Configuration): TRecorderOperationResult;
+  out AConfiguration: TPxiMx248Configuration): TRcOperationResult;
 var
   lText: string;
   lValues: TStringList;

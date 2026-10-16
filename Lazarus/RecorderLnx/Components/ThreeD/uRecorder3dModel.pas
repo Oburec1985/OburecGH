@@ -13,7 +13,7 @@ interface
 uses
   Classes, SysUtils, uRecorderFormModel, uRecorderTags, u3dMotionContracts,
   u3dPrimitives, u3dScene, u3dGeometryMath, u3dTransforms, u3dSkin,
-  u3dVertexColors;
+  u3dVertexColors, uRecorderImpactHammerContracts;
 
 type
   TRecorder3dBindingSlot = (r3bPointX, r3bPointY, r3bPointZ, r3bColor,
@@ -28,6 +28,21 @@ type
     Space: T3dMotionSpace;
     Gain: Double;
     Enabled: Boolean;
+    Mode: TRecorderGeometryBindingMode;
+    ModifierTargetNodeId: QWord;
+    IntensityOnly: Boolean;
+    Visualization: TRecorderPointVisualization;
+    PointNumber: Integer;
+    MarkerSizePixels: Double;
+    IntensitySource: TRecorderIntensitySource;
+    BandRms,GradientEnabled:Boolean;
+    BandTolerancePercent:Double;
+    Color: LongInt;
+    PointLabel:string;
+    CreateColorModifier,HideAnchors:Boolean;
+    OnlySensors:Boolean;
+    EnvelopeXEnabled,EnvelopeYEnabled,EnvelopeZEnabled:Boolean;
+    EnvelopeX,EnvelopeY,EnvelopeZ:Double;
   end;
   TRecorder3dFrfBindingSpecArray = array of TRecorder3dFrfBindingSpec;
   TRecorder3dFrfReplaceHook = procedure(AIndex: Integer) of object;
@@ -44,6 +59,21 @@ type
     AmplitudeTagName, PhaseTagName: string;
     Gain: Double;
     Enabled: Boolean;
+    Mode: TRecorderGeometryBindingMode;
+    ModifierTargetNodeId: QWord;
+    IntensityOnly: Boolean;
+    Visualization: TRecorderPointVisualization;
+    PointNumber: Integer;
+    MarkerSizePixels: Double;
+    IntensitySource: TRecorderIntensitySource;
+    BandRms,GradientEnabled:Boolean;
+    BandTolerancePercent:Double;
+    Color: LongInt;
+    PointLabel:string;
+    CreateColorModifier,HideAnchors:Boolean;
+    OnlySensors:Boolean;
+    EnvelopeXEnabled,EnvelopeYEnabled,EnvelopeZEnabled:Boolean;
+    EnvelopeX,EnvelopeY,EnvelopeZ:Double;
     constructor Create;
     procedure SetAxisOrdinal(AValue:Integer);
     procedure SetSpaceOrdinal(AValue:Integer);
@@ -107,6 +137,7 @@ type
     Name:string;
     LeftColor,RightColor:LongInt;
     LeftValue,RightValue:Double;
+    CadGradient:Boolean;
     constructor Create;
   end;
 
@@ -125,6 +156,14 @@ type
     EstimateKind:TRecorderTagEstimateKind;
     UseDefaultEstimate:Boolean;
     Enabled,ApplyColor,ShowValueLabel:Boolean;
+    SourceBindingId:string;
+    FrfCurveId:QWord;
+    FrfBandRms:Boolean;
+    FrfBandTolerancePercent:Double;
+    FrfGain:Double;
+    FrfIntensitySource:TRecorderIntensitySource;
+    EnvelopeXEnabled,EnvelopeYEnabled,EnvelopeZEnabled:Boolean;
+    EnvelopeX,EnvelopeY,EnvelopeZ:Double;
     constructor Create;
   end;
 
@@ -134,12 +173,14 @@ type
   private
     fSceneFileName: string;
     fShowAxes: Boolean;
+    fLabelFontSize: Integer;
     fBackgroundColor: LongInt;
-    fCameraYaw: Double;
-    fCameraPitch: Double;
     fCameraDistance: Double;
     fCameraTargetX,fCameraTargetY,fCameraTargetZ:Double;
-    fCameraRoll,fCameraFov:Double;
+    fCameraForwardX,fCameraForwardY,fCameraForwardZ:Double;
+    fCameraRightX,fCameraRightY,fCameraRightZ:Double;
+    fCameraUpX,fCameraUpY,fCameraUpZ:Double;
+    fCameraFov:Double;
     fDrawFill: Boolean;
     fDrawWireframe: Boolean;
     fDrawPoints: Boolean;
@@ -166,6 +207,7 @@ type
     function GetBindingTagName(AIndex:TRecorder3dBindingSlot):string;
     procedure SetBindingTagId(AIndex:TRecorder3dBindingSlot; AValue:TRecorderTagId);
     procedure SetBindingTagName(AIndex:TRecorder3dBindingSlot; const AValue:string);
+    procedure SetLabelFontSize(AValue:Integer);
     function GetFrfBinding(AIndex:Integer):TRecorder3dFrfBinding;
     function GetFrfBindingCount:Integer;
     function GetNodeRenderOverride(AIndex:Integer):TRecorder3dNodeRenderOverride;
@@ -218,6 +260,7 @@ type
     function UpdatePrimitiveIterations(ANodeId: QWord;
       AIterations,ACrossSectionIterations: Integer;
       out ASpec: T3dPrimitiveSpec): Boolean;
+    function UpdatePrimitive(const ASpec:T3dPrimitiveSpec):Boolean;
     function RenamePrimitive(ANodeId:QWord; const AName:string):Boolean;
     function DeletePrimitive(ANodeId: QWord): Boolean;
     procedure MarkNodeRemoved(ANodeId: QWord);
@@ -229,13 +272,20 @@ type
     property SceneFileName: string read fSceneFileName write fSceneFileName;
     property ShowAxes: Boolean read fShowAxes write fShowAxes;
     property BackgroundColor: LongInt read fBackgroundColor write fBackgroundColor;
-    property CameraYaw: Double read fCameraYaw write fCameraYaw;
-    property CameraPitch: Double read fCameraPitch write fCameraPitch;
+    property LabelFontSize: Integer read fLabelFontSize write SetLabelFontSize;
     property CameraDistance: Double read fCameraDistance write fCameraDistance;
     property CameraTargetX:Double read fCameraTargetX write fCameraTargetX;
     property CameraTargetY:Double read fCameraTargetY write fCameraTargetY;
     property CameraTargetZ:Double read fCameraTargetZ write fCameraTargetZ;
-    property CameraRoll:Double read fCameraRoll write fCameraRoll;
+    property CameraForwardX:Double read fCameraForwardX write fCameraForwardX;
+    property CameraForwardY:Double read fCameraForwardY write fCameraForwardY;
+    property CameraForwardZ:Double read fCameraForwardZ write fCameraForwardZ;
+    property CameraRightX:Double read fCameraRightX write fCameraRightX;
+    property CameraRightY:Double read fCameraRightY write fCameraRightY;
+    property CameraRightZ:Double read fCameraRightZ write fCameraRightZ;
+    property CameraUpX:Double read fCameraUpX write fCameraUpX;
+    property CameraUpY:Double read fCameraUpY write fCameraUpY;
+    property CameraUpZ:Double read fCameraUpZ write fCameraUpZ;
     property CameraFov:Double read fCameraFov write fCameraFov;
     property DrawFill: Boolean read fDrawFill write fDrawFill;
     property DrawWireframe: Boolean read fDrawWireframe write fDrawWireframe;
@@ -287,7 +337,7 @@ type
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
       const AContext: TRecorderComponentCreateContext); override;
   public
-    constructor Create;
+    constructor Create; reintroduce;
   end;
 
 procedure RegisterRecorder3dFactory(AFactory: TRecorderComponentFactory);
@@ -312,6 +362,7 @@ begin
   UseDefaultEstimate:=True;
   Enabled:=True;
   ApplyColor:=True;
+  FrfGain:=1;
 end;
 
 constructor TRecorder3dSkinBone.Create;
@@ -370,6 +421,11 @@ begin
   Space := msHelperLocal;
   Gain := 1;
   Enabled := True;
+  Mode := rgbmOscillation;
+  Visualization := rpvVector;
+  MarkerSizePixels := 10;
+  BandTolerancePercent:=5;
+  Color := $000000FF;
 end;
 
 procedure TRecorder3dFrfBinding.SetAxisOrdinal(AValue: Integer);
@@ -419,6 +475,13 @@ begin
   Result := 'ThreeDView';
 end;
 
+procedure TRecorder3dComponent.SetLabelFontSize(AValue:Integer);
+begin
+  if AValue<4 then AValue:=4;
+  if AValue>48 then AValue:=48;
+  fLabelFontSize:=AValue;
+end;
+
 constructor TRecorder3dComponent.Create;
 begin
   inherited Create;
@@ -430,13 +493,20 @@ begin
   fVertexColorAnchors:=TList.Create;
   fShowAxes := True;
   fBackgroundColor := $0033291F;
-  fCameraYaw := 35;
-  fCameraPitch := -25;
+  fLabelFontSize := 8;
   fCameraDistance := 6;
   fCameraTargetX := 0;
   fCameraTargetY := 0;
   fCameraTargetZ := 0;
-  fCameraRoll := 0;
+  fCameraForwardX := -0.519;
+  fCameraForwardY := -0.423;
+  fCameraForwardZ := -0.742;
+  fCameraRightX := 0.819;
+  fCameraRightY := 0;
+  fCameraRightZ := -0.574;
+  fCameraUpX := -0.243;
+  fCameraUpY := 0.906;
+  fCameraUpZ := -0.347;
   fCameraFov := 45;
   fDrawFill := True;
   fDrawWireframe := False;
@@ -485,13 +555,20 @@ begin
   fSceneFileName:=ASource.fSceneFileName;
   fShowAxes:=ASource.fShowAxes;
   fBackgroundColor:=ASource.fBackgroundColor;
-  fCameraYaw:=ASource.fCameraYaw;
-  fCameraPitch:=ASource.fCameraPitch;
+  fLabelFontSize:=ASource.fLabelFontSize;
   fCameraDistance:=ASource.fCameraDistance;
   fCameraTargetX:=ASource.fCameraTargetX;
   fCameraTargetY:=ASource.fCameraTargetY;
   fCameraTargetZ:=ASource.fCameraTargetZ;
-  fCameraRoll:=ASource.fCameraRoll;
+  fCameraForwardX:=ASource.fCameraForwardX;
+  fCameraForwardY:=ASource.fCameraForwardY;
+  fCameraForwardZ:=ASource.fCameraForwardZ;
+  fCameraRightX:=ASource.fCameraRightX;
+  fCameraRightY:=ASource.fCameraRightY;
+  fCameraRightZ:=ASource.fCameraRightZ;
+  fCameraUpX:=ASource.fCameraUpX;
+  fCameraUpY:=ASource.fCameraUpY;
+  fCameraUpZ:=ASource.fCameraUpZ;
   fCameraFov:=ASource.fCameraFov;
   fDrawFill:=ASource.fDrawFill;
   fDrawWireframe:=ASource.fDrawWireframe;
@@ -529,6 +606,27 @@ begin
     TargetFrf.PhaseTagName:=SourceFrf.PhaseTagName;
     TargetFrf.Gain:=SourceFrf.Gain;
     TargetFrf.Enabled:=SourceFrf.Enabled;
+    TargetFrf.Mode:=SourceFrf.Mode;
+    TargetFrf.ModifierTargetNodeId:=SourceFrf.ModifierTargetNodeId;
+    TargetFrf.IntensityOnly:=SourceFrf.IntensityOnly;
+    TargetFrf.Visualization:=SourceFrf.Visualization;
+    TargetFrf.PointNumber:=SourceFrf.PointNumber;
+    TargetFrf.MarkerSizePixels:=SourceFrf.MarkerSizePixels;
+    TargetFrf.IntensitySource:=SourceFrf.IntensitySource;
+    TargetFrf.BandRms:=SourceFrf.BandRms;
+    TargetFrf.BandTolerancePercent:=SourceFrf.BandTolerancePercent;
+    TargetFrf.GradientEnabled:=SourceFrf.GradientEnabled;
+    TargetFrf.Color:=SourceFrf.Color;
+    TargetFrf.PointLabel:=SourceFrf.PointLabel;
+    TargetFrf.CreateColorModifier:=SourceFrf.CreateColorModifier;
+    TargetFrf.HideAnchors:=SourceFrf.HideAnchors;
+    TargetFrf.OnlySensors:=SourceFrf.OnlySensors;
+    TargetFrf.EnvelopeXEnabled:=SourceFrf.EnvelopeXEnabled;
+    TargetFrf.EnvelopeYEnabled:=SourceFrf.EnvelopeYEnabled;
+    TargetFrf.EnvelopeZEnabled:=SourceFrf.EnvelopeZEnabled;
+    TargetFrf.EnvelopeX:=SourceFrf.EnvelopeX;
+    TargetFrf.EnvelopeY:=SourceFrf.EnvelopeY;
+    TargetFrf.EnvelopeZ:=SourceFrf.EnvelopeZ;
   end;
   ClearNodeRenderOverrides;
   for I:=0 to ASource.NodeRenderOverrideCount-1 do
@@ -586,6 +684,7 @@ begin
     TargetGradient.RightColor:=SourceGradient.RightColor;
     TargetGradient.LeftValue:=SourceGradient.LeftValue;
     TargetGradient.RightValue:=SourceGradient.RightValue;
+    TargetGradient.CadGradient:=SourceGradient.CadGradient;
   end;
   ClearVertexColorAnchors;
   for I:=0 to ASource.VertexColorAnchorCount-1 do
@@ -606,6 +705,18 @@ begin
     TargetAnchor.Enabled:=SourceAnchor.Enabled;
     TargetAnchor.ApplyColor:=SourceAnchor.ApplyColor;
     TargetAnchor.ShowValueLabel:=SourceAnchor.ShowValueLabel;
+    TargetAnchor.SourceBindingId:=SourceAnchor.SourceBindingId;
+    TargetAnchor.FrfCurveId:=SourceAnchor.FrfCurveId;
+    TargetAnchor.FrfBandRms:=SourceAnchor.FrfBandRms;
+    TargetAnchor.FrfBandTolerancePercent:=SourceAnchor.FrfBandTolerancePercent;
+    TargetAnchor.FrfGain:=SourceAnchor.FrfGain;
+    TargetAnchor.FrfIntensitySource:=SourceAnchor.FrfIntensitySource;
+    TargetAnchor.EnvelopeXEnabled:=SourceAnchor.EnvelopeXEnabled;
+    TargetAnchor.EnvelopeYEnabled:=SourceAnchor.EnvelopeYEnabled;
+    TargetAnchor.EnvelopeZEnabled:=SourceAnchor.EnvelopeZEnabled;
+    TargetAnchor.EnvelopeX:=SourceAnchor.EnvelopeX;
+    TargetAnchor.EnvelopeY:=SourceAnchor.EnvelopeY;
+    TargetAnchor.EnvelopeZ:=SourceAnchor.EnvelopeZ;
   end;
 end;
 
@@ -847,6 +958,21 @@ begin
   fPrimitives[Index] := ASpec;
 end;
 
+function TRecorder3dComponent.UpdatePrimitive(
+  const ASpec:T3dPrimitiveSpec):Boolean;
+var
+  Index:Integer;
+  Spec:T3dPrimitiveSpec;
+begin
+  Spec:=ASpec;
+  Result:=NormalizePrimitiveSpec(Spec);
+  if not Result then Exit;
+  Index:=FindPrimitiveIndex(Spec.NodeId);
+  Result:=Index>=0;
+  if Result then
+    fPrimitives[Index]:=Spec;
+end;
+
 function TRecorder3dComponent.RenamePrimitive(ANodeId:QWord;
   const AName:string):Boolean;
 var Index:Integer;
@@ -1044,6 +1170,27 @@ begin
       Binding.Space := ASpecs[I].Space;
       Binding.Gain := ASpecs[I].Gain;
       Binding.Enabled := ASpecs[I].Enabled;
+      Binding.Mode := ASpecs[I].Mode;
+      Binding.ModifierTargetNodeId := ASpecs[I].ModifierTargetNodeId;
+      Binding.IntensityOnly := ASpecs[I].IntensityOnly;
+      Binding.Visualization := ASpecs[I].Visualization;
+      Binding.PointNumber := ASpecs[I].PointNumber;
+      Binding.MarkerSizePixels := ASpecs[I].MarkerSizePixels;
+      Binding.IntensitySource := ASpecs[I].IntensitySource;
+      Binding.BandRms := ASpecs[I].BandRms;
+      Binding.BandTolerancePercent := ASpecs[I].BandTolerancePercent;
+      Binding.GradientEnabled := ASpecs[I].GradientEnabled;
+      Binding.Color := ASpecs[I].Color;
+      Binding.PointLabel:=ASpecs[I].PointLabel;
+      Binding.CreateColorModifier:=ASpecs[I].CreateColorModifier;
+      Binding.HideAnchors:=ASpecs[I].HideAnchors;
+      Binding.OnlySensors:=ASpecs[I].OnlySensors;
+      Binding.EnvelopeXEnabled:=ASpecs[I].EnvelopeXEnabled;
+      Binding.EnvelopeYEnabled:=ASpecs[I].EnvelopeYEnabled;
+      Binding.EnvelopeZEnabled:=ASpecs[I].EnvelopeZEnabled;
+      Binding.EnvelopeX:=ASpecs[I].EnvelopeX;
+      Binding.EnvelopeY:=ASpecs[I].EnvelopeY;
+      Binding.EnvelopeZ:=ASpecs[I].EnvelopeZ;
     end;
     Replacement.Capacity := fFrfBindings.Count + NewBindings.Count;
     for I := 0 to fFrfBindings.Count - 1 do

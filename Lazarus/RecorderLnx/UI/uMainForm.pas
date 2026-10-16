@@ -36,19 +36,19 @@ unit uMainForm;
 interface
 
 uses
-  Classes, SysUtils, Types, IniFiles, Contnrs, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Grids, Buttons, ImgList, ComCtrls, Spin, Math, Menus, LConvEncoding, LCLIntf,
+  Classes, SysUtils, Types, Contnrs, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  Grids, Buttons, ImgList, ComCtrls, Math, Menus, LConvEncoding, LCLIntf,
   StrUtils, DateUtils, fpjson, jsonparser, LMessages,
   {$IFDEF MSWINDOWS}Windows,{$ENDIF}
   uRecorderAppVersion, uRecorderStateMachine, uRecorderRunControlSettings,
   uRecorderFormModel, uRecorderPluginRuntime, uRecorderPluginConfig,
   uRecorderPluginApi,
-  uRecorderCoreServices, uRecorderTags, uRecorderMessages, uRecorderDataSources, uRecorder,
+  uRecorderCoreServices, uRecorderTags, uRecorderDataSources, uRecorder,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
   uFormEditorController, uDetachedMnemonicForm, uRecorderSettingsDialog, uTagSettingsDialog,
   uRecorderTagRefs,
-  uRecorderCommandImages, uRcIconIds, uRecorderProjectFiles, uRecorderDigitalPageView,
-  uRecorderOglOscillogramView, uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
+  uRecorderCommandImages, uRcIconIds, uRecorderProjectFiles,
+  uRecorderDebugLog, uRecorderAlarms, uRecorderDataStorage,
   uRecorderRuntimeSourceFactory, uRecorderTagDeviceServices,
   uRecorderDeviceConfigSignature, uRecorderConfiguredDataSources,
   uRecorderHardwareTree, uRecorderHardwareLiveDevices,
@@ -56,22 +56,16 @@ uses
   uRecorderRecordTimebase,
   uRecorderMeraPaths, uRecorderNetworkBinding, uOglChart, uRecorderSqlDbSettingsDialog,
   uRecorderSqlDbTypes, uRecorderSqlDbRuntime, uRecorderSqlDataSource,
-  uRecorderMeraBaseModel, uRecorderMeraBaseView,
-  uRecorderSqlTrendModel, uRecorderSqlTrendView,
-  uRecorderSqlDbProjectManager, uRecorderMeasurementSectionModel,
-  uRecorderMeasurementSectionView, uRecorderTrendView,
-  uRecorderFrequencyResponseModel, uRecorderFrequencyResponseView,
-  uRecorder3dModel, uRecorder3dView,
-  uRecorderImpactHammerModel, uRecorderImpactSessionCommands,
-  uRecorderSignalGeneratorModel, uRecorderSignalGeneratorView,
+  uRecorderSqlDbProjectManager,
+  uRecorderImpactSessionCommands,
   uRecorderApplicationController, uRecorderConfigurationService,
   uRecorderComponentToolGroup,
   uRecorderCoordinatorProtocol, uRecorderCoordinatorClient,
-  uRecorderWindowDragTrace;
+  uRecorderWindowDragTrace, uRecorderProjectConfiguration,
+  uRecorderBuiltInFormsUI, uRecorderComponentManager;
 
 type
   TRecorderLogKind = (rlkSystem, rlkData, rlkAlarm);
-  TRecorderDigitalViewMode = (rdvmTags, rdvmMessages);
 
   { TMainForm }
 
@@ -150,7 +144,7 @@ type
     {$ENDIF}
     // Фабрики и менеджеры управления графическими элементами мнемосхем
     fComponentFactory: TRecorderComponentFactory; // Фабрика регистрации и создания визуальных компонентов
-    fMeasurementSectionFactory: TRecorderComponentFactoryBase;
+    fComponentManager: TRecorderComponentManager;
     fPluginRuntime: TRecorderPluginRuntime;
     fFormFactory: TRecorderFormFactory;           // Фабрика создания шаблонов страниц
     fFormManager: TRecorderFormManager;           // Менеджер набора страниц/формуляров проекта
@@ -169,11 +163,11 @@ type
     fPendingFactory: TRecorderComponentFactoryBase;
     
     // Элементы базового формуляра графиков (Base Page)
-    fBaseToolbar: TPanel;                         // Тулбар управления графиками
-    fBaseChartsPanel: TPanel;                     // Область размещения графиков TChart
-    fOscillogramCountEdit: TSpinEdit;             // Поле количества одновременно отображаемых графиков
-    fBaseFpsLabel: TLabel;                        // Отдельный индикатор FPS базовой страницы
+    fBuiltInForms: TRecorderBuiltInFormsFrame;    // UI-контроллер встроенных формуляров
+    fLogPanel: TPanel;                            // Контейнер нижнего журнала и фильтров
     fLogFilterPanel: TPanel;                      // Панель фильтров нижнего журнала
+    fLogToggleButton: TSpeedButton;               // Свернуть/показать нижний журнал
+    fLogExpandedHeight: Integer;
     fLogShowSystemCheck: TCheckBox;               // Показывать системные события
     fLogShowDataCheck: TCheckBox;                 // Показывать диагностические/data события
     fLogShowAlarmsCheck: TCheckBox;               // Показывать события тревог
@@ -198,9 +192,6 @@ type
     fUiUpdateTimer: TTimer;                       // Таймер периодического обновления UI из очереди событий
     fDataConsumeTimer: TTimer;                    // Настраиваемый цикл чтения новых данных из колец тегов
     fLastUiDataRevisionSignature: QWord;          // Сводная ревизия колец тегов для защиты UI от холостого repaint
-    fDigitalViewMode: TRecorderDigitalViewMode;
-    fMessageRevision: QWord;
-    fMessageRows: TRecorderMessageSnapshotArray;
     fLastPluginInputRevision: QWord;              // Только входы источников; выходы расчётов не запускают Lua повторно
     fRuntimeViewDirty: Boolean;                   // Данные активной страницы изменились после последнего render
     fUpdatingSqlDbRecording: Boolean;
@@ -268,6 +259,10 @@ type
     function LastRecordedMeasureDir: string;
     { Создает галочки фильтрации нижнего журнала. }
     procedure EnsureLogFilterPanel;
+    procedure EnsureLogPanel;
+    procedure EnsureLogToggleButton;
+    procedure LogToggleClick(Sender: TObject);
+    procedure LogSplitterMoved(Sender: TObject);
     { Обработчик изменения фильтров нижнего журнала. }
     procedure LogFilterChanged(Sender: TObject);
     { Перестраивает видимый журнал по текущим галочкам. }
@@ -311,13 +306,9 @@ type
     function IsUserMnemonicPage(APage: TRecorderFormPage): Boolean;
     { Рисует встроенный цифровой формуляр. }
     procedure RenderDigitalPage(ARebuild: Boolean = True);
-    procedure RenderMessages(ARebuild: Boolean);
     { Рисует встроенную базовую страницу с осциллограммами. }
     procedure RenderBasePage;
     { Перестраивает набор осциллограмм на базовой странице. }
-    procedure RebuildBaseOscillograms(ACount: Integer);
-    { Обновляет графики осциллограмм свежими данными }
-    procedure RefreshBaseOscillograms;
     { Рисует пользовательскую мнемосхему и включает допустимые команды редактора. }
     procedure RenderMnemonicPage({%H-}APage: TRecorderFormPage);
     { Рисует прочую встроенную страницу без тулбара компонентов. }
@@ -325,9 +316,6 @@ type
     { Обновляет доступность редактора и его кнопок для текущей страницы. }
     procedure UpdateEditorAvailability(APage: TRecorderFormPage);
     { Обновляет таблицу осциллограмм при изменении спинбатона. }
-    procedure OscillogramCountChange(Sender: TObject);
-    { Пересчитывает габариты осциллограмм при изменении размера базовой страницы. }
-    procedure BaseChartsPanelResize(Sender: TObject);
     function PaletteIconIndex(const AIconId: string): Integer;
     procedure PaletteFactorySelected(AFactory: TRecorderComponentFactoryBase;
       AButton: TSpeedButton);
@@ -491,12 +479,8 @@ implementation
 
 const
   CProjectBaseName = 'default';
-  CAppConfigSection = 'Application';
-  CDefaultProjectConfigDirKey = 'DefaultProjectConfigDir';
-  CRightPanelWidthKey = 'RightPanelWidth';
   CRightPanelMinWidth = 160;
   CMainContentMinWidth = 200;
-  COldRunControlFileName = 'run-control.ini';
 
 { TMainForm }
 
@@ -512,10 +496,10 @@ begin
     fWindowDragPausedTimers := True;
     fWindowDragRedrawDisabled := True;
     SendMessage(Self.Handle, WM_SETREDRAW, 0, 0);
-    fWindowDragHiddenCharts := (fBaseChartsPanel <> nil) and
-      fBaseChartsPanel.Visible;
+    fWindowDragHiddenCharts := (fBuiltInForms <> nil) and
+      fBuiltInForms.BaseVisible;
     if fWindowDragHiddenCharts then
-      fBaseChartsPanel.Visible := False;
+      fBuiltInForms.SetChartsVisible(False);
     if fUiUpdateTimer <> nil then fUiUpdateTimer.Enabled := False;
     if fDataConsumeTimer <> nil then fDataConsumeTimer.Enabled := False;
     if fCoordinatorTimer <> nil then fCoordinatorTimer.Enabled := False;
@@ -537,10 +521,10 @@ begin
     end;
     if fCoordinatorTimer <> nil then fCoordinatorTimer.Enabled := True;
     if fAutoPreviewTimer <> nil then fAutoPreviewTimer.Enabled := True;
-    if fWindowDragHiddenCharts and (fBaseChartsPanel <> nil) then
+    if fWindowDragHiddenCharts and (fBuiltInForms <> nil) then
     begin
-      fBaseChartsPanel.Visible := True;
-      fBaseChartsPanel.Invalidate;
+      fBuiltInForms.SetChartsVisible(True);
+      fBuiltInForms.InvalidateBase;
       fWindowDragHiddenCharts := False;
     end;
     if fWindowDragRedrawDisabled then
@@ -591,24 +575,12 @@ begin
   fDataConsumeTimer.Interval := fRecorder.RunSettings.DataUpdateMs;
   fDataConsumeTimer.OnTimer := @ConsumeTagDataCycle;
 
-  fComponentFactory := TRecorderComponentFactory.Create;
-  fComponentFactory.RegisterDefaultComponents;
-  RegisterRecorderSignalGeneratorFactory(fComponentFactory);
-  RegisterRecorderFrequencyResponseFactory(fComponentFactory);
-  RegisterRecorder3dFactory(fComponentFactory);
-  RegisterRecorderImpactHammerFactory(fComponentFactory);
-  RegisterRecorderSqlTrendFactory(fComponentFactory);
-  RegisterRecorderMeraBaseFactory(fComponentFactory);
-  RegisterRecorderMeasurementSectionFactory(fComponentFactory);
-  fMeasurementSectionFactory := fComponentFactory.FindFactory(
-    TRecorderMeasurementSectionComponent.TypeId);
+  fComponentManager := TRecorderComponentManager.CreateComponents;
+  fComponentFactory := fComponentManager.Factory;
   fPluginRuntime := TRecorderPluginRuntime.Create(fComponentFactory,
     fRecorder.TagRegistry, fRecorder.AlarmEngine);
   fPluginRuntime.OnLogMessage := @AddPluginLog;
   fFormFactory := TRecorderFormFactory.Create(fComponentFactory);
-  TRecorderMeraBaseView.SetSqlDbManager(fRecorder.SqlDbManager);
-  sgFormular.OnPrepareCanvas := @sgFormularPrepareCanvas;
-  sgFormular.OnMouseDown := @sgFormularMouseDown;
   fFormManager := TRecorderFormManager.Create;
   fDetachedForms := TStringList.Create;
   fDetachedForms.Sorted := True;
@@ -620,12 +592,15 @@ begin
   fPluginRuntime.LoadConfigured(RecorderPluginConfigFileName);
   ConfigureCoordinatorClient;
 
-  RegenerateRecorderDesignerIcons(ilCommandButtons);
+  { ilCommandButtons is the authoritative designer resource. Its complete
+    image count is validated before any command uses an ImageIndex. }
   ValidateRecorderCommandImages(ilCommandButtons);
   SetupStatusBanner;
   SetupCommandButtons;
   EnsureWinposPopupMenu;
+  EnsureLogPanel;
   EnsureLogFilterPanel;
+  EnsureLogToggleButton;
   EnsurePageControl;
   EnsureEditorSurface;
   EnsureBaseToolbar;
@@ -846,17 +821,18 @@ begin
   ClearDetachedForms;
   FreeAndNil(fDetachedForms);
   FreeAndNil(fFormEditor);
+  FreeAndNil(fBuiltInForms);
   FreeAndNil(fFormManager);
   FreeAndNil(fFormFactory);
-  FreeAndNil(fComponentFactory);
+  fComponentFactory := nil;
   FreeAndNil(fPluginRuntime);
+  FreeAndNil(fComponentManager);
   CloseRecordFrame;
   FreeAndNil(fMeraWriter);
   FreeAndNil(fRecordFrameManager);
   FreeAndNil(fLatestTagValues);
   FreeAndNil(fLogLines);
   FreeAndNil(fHardwareStatusSourceIds);
-  TRecorderMeraBaseView.SetSqlDbManager(nil);
   FreeAndNil(fRecorder);
 end;
 
@@ -878,68 +854,17 @@ end;
 
 procedure TMainForm.sgFormularPrepareCanvas(sender: TObject; aCol, aRow: Integer;
   aState: TGridDrawState);
-var
-  lTagName: string;
-  lUnit: string;
-  lTag: TRecorderTag;
-  lColor: LongInt;
-  lRowIdx: Integer;
 begin
-  if (aRow > 0) and (gdSelected in aState) then Exit;
-  if aRow <= 0 then
-    Exit;
-
-  if fDigitalViewMode = rdvmMessages then
-  begin
-    if aRow <= Length(fMessageRows) then
-    begin
-      sgFormular.Canvas.Brush.Color := TColor(fMessageRows[aRow - 1].Color);
-      sgFormular.Canvas.Font.Color := clBlack;
-    end;
-    Exit;
-  end;
-
-  { Единица «код» — серый фон ячейки Unit. }
-  lUnit := Trim(sgFormular.Cells[3, aRow]);
-  if (aCol = 3) and
-    (SameText(lUnit, 'код') or SameText(lUnit, 'code')) then
-  begin
-    sgFormular.Canvas.Brush.Color := clSilver;
-    sgFormular.Canvas.Font.Color := clBlack;
-    Exit;
-  end;
-
-  if (fRecorder.TagRegistry <> nil) and (fRecorder.AlarmEngine <> nil) then
-  begin
-    lRowIdx := aRow;
-    while (lRowIdx > 0) and (sgFormular.Cells[0, lRowIdx] = '') do
-      Dec(lRowIdx);
-    if lRowIdx > 0 then
-    begin
-      lTagName := sgFormular.Cells[0, lRowIdx];
-      lTag := fRecorder.TagRegistry.FindByName(lTagName);
-      if lTag <> nil then
-      begin
-        if lTag.SignalBuffer.Count = 0 then
-          lColor := $808080
-        else
-          lColor := fRecorder.AlarmEngine.GetTagAlarmColor(lTag);
-        if lColor <> 0 then
-        begin
-          sgFormular.Canvas.Brush.Color := TColor(lColor);
-          sgFormular.Canvas.Font.Color := clBlack;
-        end;
-      end;
-    end;
-  end;
+  if fBuiltInForms <> nil then
+    fBuiltInForms.PrepareDigitalCanvas(aCol, aRow, aState);
 end;
 
 procedure TMainForm.lbTagsClick(Sender: TObject);
 begin
   UpdateSelectedTagFromList;
   if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
-    (fFormManager.ActivePage.Id = 'BasePage') then
-    RefreshBaseOscillograms
+    (fFormManager.ActivePage.Id = CRecorderBaseFormPageId) then
+    fBuiltInForms.RefreshBase
   else if (fFormEditor <> nil) and fFormEditor.Enabled then
     fFormEditor.Render;
 end;
@@ -1217,7 +1142,7 @@ begin
     lDir := LastRecordedMeasureDir;
   lMeasureName := ExtractFileName(ExcludeTrailingPathDelimiter(lDir));
   if lMeasureName <> '' then
-    lMera := IncludeTrailingPathDelimiter(lDir) + lMeasureName + '.mera'
+    lMera := RecorderMeraFileName(lDir)
   else
   begin
     lMera := '';
@@ -1228,7 +1153,7 @@ begin
   lHost := Trim(GetEnvironmentVariable('HOSTNAME'));
   if (lMera <> '') and (lHost <> '') and (lShareName <> '') then
     lMera := 'smb://' + lHost + '/' + lShareName + '/' +
-      lMeasureName + '/' + lMeasureName + '.mera';
+      RecorderMeraRelativeFileName(lMeasureName);
   {$ENDIF}
   if fCoordinatorRecordingStartedUtc > 0 then
     lStarted := DateToISO8601(fCoordinatorRecordingStartedUtc, True)
@@ -1612,26 +1537,21 @@ var
   lTagName: string;
 begin
   if (Button <> mbLeft) or not (ssDouble in Shift) or
-    (fDigitalViewMode <> rdvmTags) then
+    (fBuiltInForms = nil) then
     Exit;
   sgFormular.MouseToCell(X, Y, lCol, lRow);
-  if lRow <= 0 then
-    Exit;
-  while (lRow > 0) and (sgFormular.Cells[0, lRow] = '') do
-    Dec(lRow);
-  if lRow <= 0 then
-    Exit;
-  lTagName := Trim(sgFormular.Cells[0, lRow]);
+  lTagName := fBuiltInForms.DigitalTagNameAtRow(lRow);
+  if lTagName = '' then Exit;
   FocusTagInList(lTagName);
 end;
 
 procedure TMainForm.btnViewModeClick(Sender: TObject);
 begin
+  EnsureBaseToolbar;
   if Sender = btnViewMessages then
-    fDigitalViewMode := rdvmMessages
+    fBuiltInForms.SetDigitalViewMode(rdvmMessages)
   else
-    fDigitalViewMode := rdvmTags;
-  fMessageRevision := 0;
+    fBuiltInForms.SetDigitalViewMode(rdvmTags);
   RenderDigitalPage(True);
 end;
 
@@ -1639,7 +1559,7 @@ procedure TMainForm.btnSqlDbClick(Sender: TObject);
 var
   lFileName: string;
 begin
-  lFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) + 'sql-db.ini';
+  lFileName := RecorderProjectSqlConfigFileName(fProjectConfigDir);
   try
     if ShowRecorderSqlDbSettings(Self, lFileName, fRecorder.TagRegistry,
       @SqlDbSignalsDeleted) then
@@ -1661,7 +1581,6 @@ end;
 
 procedure TMainForm.SqlDbSignalsDeleted(ASignalNames: TStrings);
 var
-  lFiles: TRecorderProjectFileSet;
   lResult: TRecorderSqlDbProjectSyncResult;
 begin
   if (ASignalNames = nil) or (ASignalNames.Count = 0) or
@@ -1674,9 +1593,8 @@ begin
     fRecorder.SqlDbManager.SaveConfig;
   if lResult.TrendLineCount > 0 then
   begin
-    lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
     SaveDetachedFormPlacements;
-    SaveRecorderGuiConfig(lFiles.GuiFileName, fFormManager);
+    SaveRecorderProjectGui(fProjectConfigDir, fFormManager);
     RenderActivePage;
   end;
   if (lResult.ConfigSignalCount > 0) or (lResult.TrendLineCount > 0) then
@@ -1732,9 +1650,7 @@ begin
   Result := '';
   if fRecorder.RunSettings <> nil then
     Result := Trim(fRecorder.RunSettings.RecordRootDir);
-  if Result = '' then
-    Result := IncludeTrailingPathDelimiter(fProjectConfigDir) + 'records';
-  Result := IncludeTrailingPathDelimiter(ExpandFileName(Result));
+  Result := RecorderProjectRecordsDir(fProjectConfigDir, Result);
 end;
 
 procedure TMainForm.UpdateRecordFrameManager;
@@ -1756,8 +1672,7 @@ end;
 procedure TMainForm.LogStartupPaths;
 begin
   AddLog('Mera Files: ' + RecorderMeraFilesPath);
-  AddLog('Program directory: ' + IncludeTrailingPathDelimiter(
-    ExpandFileName(ExtractFilePath(Application.ExeName))));
+  AddLog('Program directory: ' + RecorderProgramDir);
   AddLog('USML directory: ' + CurrentRecordRootDir);
   AddLog('Log file: ' + RecorderDebugLogFileName);
 end;
@@ -1778,9 +1693,8 @@ begin
   end;
 
   lFrameNo := fRecordFrameManager.FindLastFrameNo + 1;
-  Result := IncludeTrailingPathDelimiter(fRecordFrameManager.RootDir) +
-    TRecorderRecordFrameManager.FormatFrameName(lFrameNo);
-  Result := IncludeTrailingPathDelimiter(Result);
+  Result := RecorderMeasureDir(fRecordFrameManager.RootDir,
+    TRecorderRecordFrameManager.FormatFrameName(lFrameNo));
 end;
 procedure TMainForm.UpdateMainCaption;
 var
@@ -1801,8 +1715,7 @@ begin
   lFrameDir := LastRecordedMeasureDir;
   if lFrameDir = '' then
     Exit;
-  Result := IncludeTrailingPathDelimiter(lFrameDir) +
-    ExtractFileName(ExcludeTrailingPathDelimiter(lFrameDir)) + '.mera';
+  Result := RecorderMeraFileName(lFrameDir);
   if not FileExists(Result) then
     Result := '';
 end;
@@ -1847,6 +1760,69 @@ begin
   SaveMainWindowLayout;
 end;
 
+procedure TMainForm.EnsureLogPanel;
+begin
+  if (fLogPanel <> nil) or (pnMain = nil) or (mmLog = nil) or
+    (SplitterLog = nil) then
+    Exit;
+
+  fLogPanel := TPanel.Create(Self);
+  fLogPanel.Parent := pnMain;
+  fLogPanel.Align := alBottom;
+  fLogPanel.BevelOuter := bvNone;
+  fLogPanel.Height := mmLog.Height + 26;
+  mmLog.Parent := fLogPanel;
+  mmLog.Align := alClient;
+  SplitterLog.ResizeControl := fLogPanel;
+  SplitterLog.MinSize := 40;
+  SplitterLog.AutoSnap := True;
+  SplitterLog.OnMoved := @LogSplitterMoved;
+  fLogExpandedHeight := fLogPanel.Height;
+end;
+
+procedure TMainForm.EnsureLogToggleButton;
+begin
+  if (fLogToggleButton <> nil) or (pnDataView = nil) then
+    Exit;
+  fLogToggleButton := TSpeedButton.Create(Self);
+  fLogToggleButton.Parent := pnDataView;
+  fLogToggleButton.Align := alRight;
+  fLogToggleButton.Width := 126;
+  fLogToggleButton.Caption := 'Свернуть журнал';
+  fLogToggleButton.Hint := 'Свернуть или показать нижний журнал';
+  fLogToggleButton.ShowHint := True;
+  fLogToggleButton.OnClick := @LogToggleClick;
+end;
+
+procedure TMainForm.LogToggleClick(Sender: TObject);
+var
+  lShowLog: Boolean;
+begin
+  if (fLogPanel = nil) or (SplitterLog = nil) then
+    Exit;
+  lShowLog := not fLogPanel.Visible;
+  if lShowLog then
+  begin
+    fLogPanel.Visible := True;
+    SplitterLog.Visible := True;
+    fLogPanel.Height := Max(66, fLogExpandedHeight);
+    fLogToggleButton.Caption := 'Свернуть журнал';
+  end
+  else
+  begin
+    fLogExpandedHeight := fLogPanel.Height;
+    fLogPanel.Visible := False;
+    SplitterLog.Visible := False;
+    fLogToggleButton.Caption := 'Показать журнал';
+  end;
+end;
+
+procedure TMainForm.LogSplitterMoved(Sender: TObject);
+begin
+  if fLogPanel <> nil then
+    fLogExpandedHeight := fLogPanel.Height;
+end;
+
 procedure TMainForm.AddPluginLog(const AMessage: string);
 begin
   AddLog(AMessage, rlkSystem);
@@ -1885,7 +1861,10 @@ begin
     Exit;
 
   fLogFilterPanel := TPanel.Create(Self);
-  fLogFilterPanel.Parent := pnMain;
+  if fLogPanel <> nil then
+    fLogFilterPanel.Parent := fLogPanel
+  else
+    fLogFilterPanel.Parent := pnMain;
   fLogFilterPanel.Align := alBottom;
   fLogFilterPanel.Height := 26;
   fLogFilterPanel.BevelOuter := bvNone;
@@ -1970,11 +1949,11 @@ begin
   fNextComponentNo := 0;
 
   Inc(fNextPageNo);
-  lPage := AddPageToModel('DigitalForm', 'Digital form');
+  lPage := AddPageToModel(CRecorderDigitalFormPageId, 'Digital form');
   fFormManager.SetActivePageById(lPage.Id);
 
   Inc(fNextPageNo);
-  AddPageToModel('BasePage', 'Base page');
+  AddPageToModel(CRecorderBaseFormPageId, 'Base page');
 
   RefreshPageButtons;
   RenderActivePage;
@@ -2078,9 +2057,9 @@ begin
   UpdateMainCaption;
   UpdateEditorAvailability(lPage);
 
-  if lPage.Id = 'DigitalForm' then
+  if lPage.Id = CRecorderDigitalFormPageId then
     RenderDigitalPage
-  else if lPage.Id = 'BasePage' then
+  else if lPage.Id = CRecorderBaseFormPageId then
     RenderBasePage
   else if IsUserMnemonicPage(lPage) then
   begin
@@ -2114,13 +2093,12 @@ begin
   if lPage = nil then
     Exit;
 
-  if lPage.Id = 'DigitalForm' then
+  if lPage.Id = CRecorderDigitalFormPageId then
     RenderDigitalPage(True)
-  else if lPage.Id = 'BasePage' then
+  else if lPage.Id = CRecorderBaseFormPageId then
   begin
-    RefreshBaseOscillograms;
-    if fBaseChartsPanel <> nil then
-      fBaseChartsPanel.Invalidate;
+    fBuiltInForms.RefreshBase;
+    fBuiltInForms.InvalidateBase;
   end
   else if IsUserMnemonicPage(lPage) and (fFormEditor <> nil) then
   begin
@@ -2304,6 +2282,8 @@ begin
     'Индикаторы', 'Индикаторы', 'digital-indicator');
   fComponentPalette.ConfigureGroup(CRecorderPaletteGroupImages,
     'Изображения', 'Изображения и 3D-сцены', '3d-view');
+  fComponentPalette.ConfigureGroup(CRecorderPaletteGroupSignals,
+    'Сигналы', 'Генератор сигналов и ЦАП', 'digital-indicator');
   lNextLeft := fComponentPalette.Build(38);
   for I := 0 to fEditorToolbar.ControlCount - 1 do
     if fEditorToolbar.Controls[I] is TSpeedButton then
@@ -2336,50 +2316,13 @@ begin
 end;
 
 procedure TMainForm.EnsureBaseToolbar;
-var
-  lLabel: TLabel;
 begin
-  if fBaseToolbar <> nil then
-    Exit;
-
-  fBaseToolbar := TPanel.Create(Self);
-  fBaseToolbar.Parent := pnMain;
-  fBaseToolbar.Align := alTop;
-  fBaseToolbar.Height := 36;
-  fBaseToolbar.BevelOuter := bvLowered;
-  fBaseToolbar.Visible := False;
-
-  lLabel := TLabel.Create(Self);
-  lLabel.Parent := fBaseToolbar;
-  lLabel.Left := 8;
-  lLabel.Top := 9;
-  lLabel.Caption := 'Oscillogram count';
-
-  fOscillogramCountEdit := TSpinEdit.Create(Self);
-  fOscillogramCountEdit.Parent := fBaseToolbar;
-  fOscillogramCountEdit.Left := 128;
-  fOscillogramCountEdit.Top := 4;
-  fOscillogramCountEdit.Width := 64;
-  fOscillogramCountEdit.MinValue := 1;
-  fOscillogramCountEdit.MaxValue := 16;
-  fOscillogramCountEdit.Value := 2;
-  fOscillogramCountEdit.OnChange := @OscillogramCountChange;
-
-  fBaseFpsLabel := TLabel.Create(Self);
-  fBaseFpsLabel.Parent := fBaseToolbar;
-  fBaseFpsLabel.Left := 208;
-  fBaseFpsLabel.Top := 9;
-  fBaseFpsLabel.AutoSize := True;
-  fBaseFpsLabel.Caption := 'FPS -';
-
-  fBaseChartsPanel := TPanel.Create(Self);
-  fBaseChartsPanel.Parent := pnMain;
-  fBaseChartsPanel.Align := alClient;
-  fBaseChartsPanel.BevelOuter := bvNone;
-  fBaseChartsPanel.Color := clWhite;
-  fBaseChartsPanel.ParentBackground := False;
-  fBaseChartsPanel.Visible := False;
-  fBaseChartsPanel.OnResize := @BaseChartsPanelResize;
+  if fBuiltInForms <> nil then Exit;
+  fBuiltInForms := TRecorderBuiltInFormsFrame.Create(Self);
+  fBuiltInForms.Parent := pnMain;
+  fBuiltInForms.Align := alClient;
+  fBuiltInForms.Visible := False;
+  fBuiltInForms.Configure(fRecorder, fFormManager, sgFormular);
 end;
 
 procedure TMainForm.ShowEditorSurface(AVisible: Boolean);
@@ -2408,24 +2351,13 @@ end;
 procedure TMainForm.ShowBaseToolbar(AVisible: Boolean);
 begin
   EnsureBaseToolbar;
-  fBaseToolbar.Visible := AVisible;
-  if fBaseChartsPanel <> nil then
-    fBaseChartsPanel.Visible := AVisible;
-  if AVisible then
-  begin
-    if fBaseChartsPanel <> nil then
-    begin
-      fBaseChartsPanel.BringToFront;
-      fBaseChartsPanel.Invalidate;
-    end;
-    fBaseToolbar.BringToFront;
-  end;
+  fBuiltInForms.SetBaseVisible(AVisible);
 end;
 
 function TMainForm.IsBuiltInPage(APage: TRecorderFormPage): Boolean;
 begin
-  Result := (APage <> nil) and
-    ((APage.Id = 'DigitalForm') or (APage.Id = 'BasePage'));
+  EnsureBaseToolbar;
+  Result := fBuiltInForms.IsBuiltInPage(APage);
 end;
 
 function TMainForm.IsUserMnemonicPage(APage: TRecorderFormPage): Boolean;
@@ -2436,138 +2368,32 @@ end;
 { Отрисовка цифрового формуляра со списком рассчитанных оценок }
 procedure TMainForm.RenderDigitalPage(ARebuild: Boolean);
 begin
+  EnsureBaseToolbar;
   ShowBaseToolbar(False);
+  fBuiltInForms.Visible := False;
   ShowEditorSurface(False);
   pnDataView.Visible := True;
   pnDataView.BringToFront;
   sgFormular.Visible := True;
   sgFormular.Align := alClient;
-  if fDigitalViewMode = rdvmMessages then
-    RenderMessages(ARebuild)
-  else if ARebuild then
-      RenderRecorderDigitalPage(sgFormular, fRecorder.TagRegistry,
-        fRecorder.AlarmEngine)
-    else
-      UpdateRecorderDigitalPage(sgFormular, fRecorder.TagRegistry,
-        fRecorder.AlarmEngine);
-end;
-
-procedure TMainForm.RenderMessages(ARebuild: Boolean);
-var
-  I: Integer;
-  lRevision: QWord;
-  lTimeText, lTypeText: string;
-begin
-  lRevision := fRecorder.Messages.CopySnapshot(fMessageRows,
-    fMessageRevision);
-  if (not ARebuild) and (lRevision = fMessageRevision) then Exit;
-  fMessageRevision := lRevision;
-
-  sgFormular.BeginUpdate;
-  try
-    sgFormular.ColCount := 6;
-    sgFormular.FixedRows := 1;
-    sgFormular.RowCount := Max(2, Length(fMessageRows) + 1);
-    sgFormular.Cells[0, 0] := 'Сообщение';
-    sgFormular.Cells[1, 0] := 'Источник';
-    sgFormular.Cells[2, 0] := 'Значение';
-    sgFormular.Cells[3, 0] := 'Время';
-    sgFormular.Cells[4, 0] := 'Тип';
-    sgFormular.Cells[5, 0] := 'Качество';
-    sgFormular.ColWidths[0] := 160;
-    sgFormular.ColWidths[1] := 190;
-    sgFormular.ColWidths[2] := 320;
-    sgFormular.ColWidths[3] := 170;
-    sgFormular.ColWidths[4] := 110;
-    sgFormular.ColWidths[5] := 90;
-    for I := 0 to High(fMessageRows) do
-    begin
-      if fMessageRows[I].TimestampSec > 0 then
-        lTimeText := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',
-          UnixToDateTime(Trunc(fMessageRows[I].TimestampSec), False) +
-          Frac(fMessageRows[I].TimestampSec) / 86400.0)
-      else
-        lTimeText := '';
-      case fMessageRows[I].Kind of
-        rmkWarning: lTypeText := 'Предупреждение';
-        rmkStatus: lTypeText := 'Статус';
-      else
-        lTypeText := 'Информация';
-      end;
-      sgFormular.Cells[0, I + 1] := fMessageRows[I].Name;
-      sgFormular.Cells[1, I + 1] := fMessageRows[I].SourceId;
-      sgFormular.Cells[2, I + 1] := fMessageRows[I].Value;
-      sgFormular.Cells[3, I + 1] := lTimeText;
-      sgFormular.Cells[4, I + 1] := lTypeText;
-      sgFormular.Cells[5, I + 1] := '0x' +
-        IntToHex(fMessageRows[I].Quality, 8);
-    end;
-    if Length(fMessageRows) = 0 then
-      for I := 0 to sgFormular.ColCount - 1 do
-        sgFormular.Cells[I, 1] := '';
-  finally
-    sgFormular.EndUpdate;
-  end;
+  fBuiltInForms.RenderDigital(ARebuild);
 end;
 
 procedure TMainForm.RenderBasePage;
-var
-  lCount: Integer;
-  lPage: TRecorderFormPage;
 begin
+  EnsureBaseToolbar;
   ShowEditorSurface(False);
   sgFormular.Visible := False;
   ShowBaseToolbar(True);
-
-  lPage := nil;
-  if fFormManager <> nil then
-    lPage := fFormManager.ActivePage;
-
-  if (lPage <> nil) and (lPage.Id = 'BasePage') then
-    lCount := lPage.BaseOscillogramCount
-  else
-    lCount := 2;
-  if lCount < 1 then
-    lCount := 1;
-  if lCount > 16 then
-    lCount := 16;
-
-  if fOscillogramCountEdit <> nil then
-  begin
-    fOscillogramCountEdit.OnChange := nil;
-    try
-      fOscillogramCountEdit.Value := lCount;
-    finally
-      fOscillogramCountEdit.OnChange := @OscillogramCountChange;
-    end;
-  end;
-
-  RebuildBaseOscillograms(lCount);
-  RefreshBaseOscillograms;
-  { Repaint синхронно ждёт тяжёлую OpenGL-отрисовку и блокировал обработчик
-    смены вкладки на сотни миллисекунд. Invalidate отдаёт кадр штатному циклу
-    сообщений, поэтому вкладка переключается сразу. }
-  fBaseChartsPanel.Invalidate;
-end;
-
-procedure TMainForm.RebuildBaseOscillograms(ACount: Integer);
-begin
-  EnsureBaseToolbar;
-  RebuildRecorderOglOscillograms(Self, fBaseChartsPanel, fRecorder.TagRegistry, ACount,
-    fRecorder.RunSettings.DisplayBufferMs / 1000);
-end;
-
-procedure TMainForm.RefreshBaseOscillograms;
-begin
-  RefreshRecorderOglOscillograms(fBaseChartsPanel, fRecorder.TagRegistry,
-    fRecorder.RunSettings.DisplayBufferMs / 1000, fRecorder.StateMachine.State = rsPreview);
-  if fBaseFpsLabel <> nil then
-    fBaseFpsLabel.Caption := RecorderOglOscillogramsFpsText(fBaseChartsPanel);
+  fBuiltInForms.Visible := True;
+  fBuiltInForms.BringToFront;
+  fBuiltInForms.RenderBase;
 end;
 
 procedure TMainForm.RenderMnemonicPage(APage: TRecorderFormPage);
 begin
   ShowBaseToolbar(False);
+  if fBuiltInForms <> nil then fBuiltInForms.Visible := False;
   ShowEditorSurface(True);
   if fFormEditor <> nil then
   begin
@@ -2609,68 +2435,10 @@ begin
       fEditModeButton.Down;
 end;
 
-procedure TMainForm.OscillogramCountChange(Sender: TObject);
-begin
-  if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
-    (fFormManager.ActivePage.Id = 'BasePage') then
-  begin
-    if fOscillogramCountEdit <> nil then
-      fFormManager.ActivePage.BaseOscillogramCount := fOscillogramCountEdit.Value;
-    RenderBasePage;
-  end;
-end;
-
-procedure TMainForm.BaseChartsPanelResize(Sender: TObject);
-begin
-  if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
-    (fFormManager.ActivePage.Id = 'BasePage') and
-    (fOscillogramCountEdit <> nil) then
-    RebuildBaseOscillograms(fOscillogramCountEdit.Value);
-end;
-
 { Автогенерация базовой директории и дефолтных ini-файлов конфигурации }
 procedure TMainForm.EnsureDevConfig;
-var
-  lAppConfigDir: string;
-  lAppConfigFileName: string;
-  lAppConfig: TStringList;
-  lIni: TIniFile;
 begin
-  RecorderEnsureMeraDirectories;
-  ForceDirectories(fProjectConfigDir);
-
-  lAppConfigFileName := RecorderAppConfigFileName;
-  lAppConfigDir := IncludeTrailingPathDelimiter(ExtractFilePath(
-    lAppConfigFileName));
-  ForceDirectories(lAppConfigDir);
-
-  if not FileExists(lAppConfigFileName) then
-  begin
-    lAppConfig := TStringList.Create;
-    try
-      lAppConfig.Add('[Application]');
-      lAppConfig.Add('DefaultProjectConfigDir=config/projects/default');
-      lAppConfig.Add('TimeSource=PC');
-      lAppConfig.Add('');
-      lAppConfig.Add('[Plugins]');
-      lAppConfig.Add('; Plugin list will be added later');
-      lAppConfig.SaveToFile(lAppConfigFileName);
-    finally
-      lAppConfig.Free;
-    end;
-  end;
-
-  lIni := TIniFile.Create(lAppConfigFileName);
-  try
-    if not lIni.ValueExists(CAppConfigSection, 'SoftwareArticle') then
-      lIni.WriteString(CAppConfigSection, 'SoftwareArticle',
-        CRecorderDefaultSoftwareArticle);
-  finally
-    lIni.Free;
-  end;
-
-  if not FileExists(fRunControlFileName) then
-    fRecorder.RunSettings.SaveToFile(fRunControlFileName);
+  EnsureRecorderProjectConfiguration(fProjectConfigDir, fRecorder.RunSettings);
 end;
 
 function TMainForm.GetDevProjectDir: string;
@@ -2702,20 +2470,12 @@ end;
 { Чтение условий запуска/останова записи из ini }
 procedure TMainForm.LoadRunSettings;
 var
-  lOldFileName: string;
+  lLoadedFileName: string;
 begin
-  if FileExists(fRunControlFileName) then
-  begin
-    fRecorder.RunSettings.LoadFromFile(fRunControlFileName);
-    AddLog('Project run-control config loaded: ' + fRunControlFileName);
-  end;
-  lOldFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) +
-    COldRunControlFileName;
-  if (not FileExists(fRunControlFileName)) and FileExists(lOldFileName) then
-  begin
-    fRecorder.RunSettings.LoadFromFile(lOldFileName);
-    AddLog('Legacy run-control config loaded: ' + lOldFileName);
-  end;
+  lLoadedFileName := LoadRecorderProjectRunSettings(fProjectConfigDir,
+    fRecorder.RunSettings);
+  if lLoadedFileName <> '' then
+    AddLog('Project run-control config loaded: ' + lLoadedFileName);
   SetRecorderMeraFilesPath(fRecorder.RunSettings.MeraFilesPath);
   UpdateRecordFrameManager;
   UpdateWinposButtonAction;
@@ -2723,9 +2483,7 @@ end;
 
 procedure TMainForm.SaveRunSettings;
 begin
-  RecorderEnsureMeraDirectories;
-  ForceDirectories(fProjectConfigDir);
-  fRecorder.RunSettings.SaveToFile(fRunControlFileName);
+  SaveRecorderProjectRunSettings(fProjectConfigDir, fRecorder.RunSettings);
 end;
 
 procedure TMainForm.ApplyDisplayTimingSettings;
@@ -2748,16 +2506,14 @@ procedure TMainForm.LoadProjectPackage;
 var
   lFiles: TRecorderProjectFileSet;
 begin
-  lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
-
   ClearDetachedForms;
-  LoadRecorderProjectConfig(lFiles.MainConfigFileName, fRecorder.TagRegistry);
+  lFiles := LoadRecorderProjectPackage(fProjectConfigDir,
+    fRecorder.TagRegistry, fFormManager, fComponentFactory);
   if fRecorder.AlarmEngine <> nil then
     fRecorder.AlarmEngine.Reset;
   if FileExists(lFiles.MainConfigFileName) then
     AddLog('Project main config loaded: ' + lFiles.MainConfigFileName);
 
-  LoadRecorderGuiConfig(lFiles.GuiFileName, fFormManager, fComponentFactory);
   fPluginRuntime.NotifyAll(PN_RCLOADCONFIG);
   RecorderResolveTagIdsInManager(fRecorder.TagRegistry, fFormManager);
   RecorderSyncTagNamesInManager(fRecorder.TagRegistry, fFormManager);
@@ -2781,13 +2537,9 @@ procedure TMainForm.SaveProjectPackage;
 var
   lFiles: TRecorderProjectFileSet;
 begin
-  lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
-  ForceDirectories(lFiles.DirectoryName);
-
   SaveDetachedFormPlacements;
-  SaveRunSettings;
-  SaveRecorderProjectConfig(lFiles.MainConfigFileName, fRecorder.TagRegistry);
-  SaveRecorderGuiConfig(lFiles.GuiFileName, fFormManager);
+  lFiles := SaveRecorderProjectPackage(fProjectConfigDir,
+    fRecorder.TagRegistry, fFormManager, fRecorder.RunSettings);
   fPluginRuntime.NotifyAll(PN_RCSAVECONFIG);
 
   AddLog('Project package saved: ' + lFiles.BaseName);
@@ -2798,10 +2550,7 @@ end;
 
 function TMainForm.GetAppConfigDir: string;
 begin
-  RecorderEnsureMeraDirectories;
-  Result := IncludeTrailingPathDelimiter(ExtractFilePath(
-    RecorderAppConfigFileName));
-  ForceDirectories(Result);
+  Result := RecorderAppConfigDir;
 end;
 
 function TMainForm.GetAppConfigFileName: string;
@@ -2812,111 +2561,40 @@ end;
 
 procedure TMainForm.LoadMainWindowLayout;
 var
-  lIni: TIniFile;
   lWidth: Integer;
   lMaxWidth: Integer;
 begin
   if pnRight = nil then
     Exit;
 
-  lIni := TIniFile.Create(GetAppConfigFileName);
-  try
-    lWidth := lIni.ReadInteger(CAppConfigSection, CRightPanelWidthKey,
-      pnRight.Width);
-  finally
-    lIni.Free;
-  end;
+  lWidth := LoadRecorderMainWindowWidth(pnRight.Width);
 
   lMaxWidth := Max(CRightPanelMinWidth, ClientWidth - CMainContentMinWidth);
   pnRight.Width := EnsureRange(lWidth, CRightPanelMinWidth, lMaxWidth);
 end;
 
 procedure TMainForm.SaveMainWindowLayout;
-var
-  lIni: TIniFile;
 begin
   if pnRight = nil then
     Exit;
-
-  lIni := TIniFile.Create(GetAppConfigFileName);
-  try
-    lIni.WriteInteger(CAppConfigSection, CRightPanelWidthKey, pnRight.Width);
-  finally
-    lIni.Free;
-  end;
+  SaveRecorderMainWindowWidth(pnRight.Width);
 end;
 
 function TMainForm.LoadDefaultProjectConfigDir: string;
-
-  function IsAbsolutePath(const APath: string): Boolean;
-  begin
-    Result := (APath <> '') and
-      (((Length(APath) >= 2) and (APath[2] = ':')) or
-       (APath[1] = PathDelim) or
-       ((Length(APath) >= 2) and (APath[1] = '\') and (APath[2] = '\')));
-  end;
-
-var
-  lAppConfigDir: string;
-  lAppConfigFileName: string;
-  lConfiguredDir: string;
-  lIni: TIniFile;
 begin
-  lAppConfigDir := GetAppConfigDir;
-  Result := IncludeTrailingPathDelimiter(RecorderServicePath) + 'config' +
-    DirectorySeparator + 'projects' + DirectorySeparator + 'default';
-  lAppConfigFileName := GetAppConfigFileName;
-  if not FileExists(lAppConfigFileName) then
-    Exit;
-
-  lIni := TIniFile.Create(lAppConfigFileName);
-  try
-    lConfiguredDir := Trim(lIni.ReadString(CAppConfigSection,
-      CDefaultProjectConfigDirKey, ''));
-  finally
-    lIni.Free;
-  end;
-
-  if lConfiguredDir = '' then
-    Exit;
-  if IsAbsolutePath(lConfiguredDir) then
-    Result := lConfiguredDir
-  else
-    Result := lAppConfigDir + lConfiguredDir;
+  Result := LoadRecorderDefaultProjectDir;
 end;
 
 procedure TMainForm.SaveDefaultProjectConfigDir;
-var
-  lAppConfigDir: string;
-  lAppConfigFileName: string;
-  lProjectConfigDir: string;
-  lValue: string;
-  lIni: TIniFile;
 begin
-  lAppConfigDir := GetAppConfigDir;
-  lAppConfigFileName := GetAppConfigFileName;
-  lProjectConfigDir := IncludeTrailingPathDelimiter(ExpandFileName(
-    fProjectConfigDir));
-
-  lValue := lProjectConfigDir;
-  if AnsiStartsText(lAppConfigDir, lProjectConfigDir) then
-    lValue := ExcludeTrailingPathDelimiter(Copy(lProjectConfigDir,
-      Length(lAppConfigDir) + 1, MaxInt));
-
-  ForceDirectories(lAppConfigDir);
-  lIni := TIniFile.Create(lAppConfigFileName);
-  try
-    lIni.WriteString(CAppConfigSection, CDefaultProjectConfigDirKey, lValue);
-  finally
-    lIni.Free;
-  end;
+  SaveRecorderDefaultProjectDir(fProjectConfigDir);
 end;
 
 procedure TMainForm.SetProjectConfigDir(const ADirectoryName: string);
 var
   lFiles: TRecorderProjectFileSet;
 begin
-  fProjectConfigDir := IncludeTrailingPathDelimiter(ExpandFileName(ADirectoryName));
+  fProjectConfigDir := RecorderNormalizeProjectDir(ADirectoryName);
   if fPluginRuntime <> nil then
     fPluginRuntime.ProjectDirectory := fProjectConfigDir;
   lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
@@ -3037,8 +2715,8 @@ var
   lMessage: string;
 begin
   try
-    fRecorder.SqlDbManager.Configure(IncludeTrailingPathDelimiter(
-      fProjectConfigDir) + 'sql-db.ini');
+    fRecorder.SqlDbManager.Configure(
+      RecorderProjectSqlConfigFileName(fProjectConfigDir));
   except
     on E: Exception do
     begin
@@ -3420,17 +3098,18 @@ begin
       end;
 
       RecorderSyncTagNamesInManager(fRecorder.TagRegistry, fFormManager);
+      fPluginRuntime.NotifyCatalogChanged;
       RebuildTagList(edTagSearch.Text);
       if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
-        (fFormManager.ActivePage.Id = 'DigitalForm') then
+        (fFormManager.ActivePage.Id = CRecorderDigitalFormPageId) then
         RenderDigitalPage(True);
       if (fFormEditor <> nil) and (fFormManager <> nil) and
         IsUserMnemonicPage(fFormManager.ActivePage) then
         fFormEditor.RefreshLive;
       if (fFormManager <> nil) and (fFormManager.ActivePage <> nil) and
-        (fFormManager.ActivePage.Id = 'BasePage') and
-        (fBaseChartsPanel <> nil) and fBaseChartsPanel.Visible then
-        RefreshBaseOscillograms;
+        (fFormManager.ActivePage.Id = CRecorderBaseFormPageId) and
+        (fBuiltInForms <> nil) and fBuiltInForms.BaseVisible then
+        fBuiltInForms.RefreshBase;
       AddLog(Format('Tag settings updated: %d channel(s).', [lTags.Count]));
     end;
   except
@@ -3628,6 +3307,7 @@ begin
   if lInputRevision <> fLastPluginInputRevision then
   begin
     fLastPluginInputRevision := lInputRevision;
+    fComponentManager.DoUpdateData;
     fPluginRuntime.NotifyAll(PN_UPDATEDATA);
     UpdateMeasurementSectionTags;
   end;
@@ -3717,12 +3397,12 @@ begin
   if lPage = nil then
     Exit;
 
-  if (lPage.Id = 'DigitalForm') and (sgFormular <> nil) and
+  if (lPage.Id = CRecorderDigitalFormPageId) and (sgFormular <> nil) and
     sgFormular.Visible then
     RenderDigitalPage(False)
-  else if (lPage.Id = 'BasePage') and (fBaseChartsPanel <> nil) and
-    fBaseChartsPanel.Visible then
-    RefreshBaseOscillograms
+  else if (lPage.Id = CRecorderBaseFormPageId) and
+    (fBuiltInForms <> nil) and fBuiltInForms.BaseVisible then
+    fBuiltInForms.RefreshBase
   else if IsUserMnemonicPage(lPage) and (fEditorShell <> nil) and
     (not lPage.Detached) and fEditorShell.Visible and (fFormEditor <> nil) then
     fFormEditor.RefreshLive
@@ -4073,16 +3753,9 @@ begin
 end;
 
 procedure TMainForm.UpdateMeasurementSectionTags;
-var
-  I: Integer;
 begin
-  if (fMeasurementSectionFactory = nil) or (fRecorder = nil) or
-    (fRecorder.TagRegistry = nil) then
-    Exit;
-  for I := 0 to fMeasurementSectionFactory.ChildCount - 1 do
-    TRecorderMeasurementSectionComponent(
-      fMeasurementSectionFactory.Children[I]).PublishGeneratedTags(
-        fRecorder.TagRegistry);
+  if (fComponentManager <> nil) and (fRecorder <> nil) then
+    fComponentManager.PublishGeneratedTags(fRecorder.TagRegistry);
 end;
 
 procedure TMainForm.UpdateTimeView;
@@ -4193,7 +3866,7 @@ begin
     CRecorderSqlDbControlTagName) then
   begin
     fRecorder.SqlDbManager.Config.ControlTagName := CRecorderSqlDbControlTagName;
-    lConfigFileName := IncludeTrailingPathDelimiter(fProjectConfigDir) + 'sql-db.ini';
+    lConfigFileName := RecorderProjectSqlConfigFileName(fProjectConfigDir);
     fRecorder.SqlDbManager.Config.SaveToFile(lConfigFileName);
   end;
 
@@ -4281,14 +3954,9 @@ begin
     end;
     lComponent := lFactory.CreateComponentForPage(lContext);
     try
-      if lComponent is TRecorderImageComponent then
-      begin
-        if fFormEditor <> nil then
-          fFormEditor.ClearSelection;
-        lPage.AddComponentToBack(lComponent);
-      end
-      else
-        lPage.AddComponent(lComponent);
+      if fComponentManager.AddToPage(lPage, lComponent) and
+        (fFormEditor <> nil) then
+        fFormEditor.ClearSelection;
     except
       lComponent.Free;
       raise;
@@ -4314,9 +3982,21 @@ begin
 end;
 
 procedure TMainForm.DeferredPrepareRuntime(Data: PtrInt);
+var lIndex: Integer;
 begin
   if csDestroying in ComponentState then Exit;
   try
+    { Startup acceptance loads the real UI/config/plugin path without issuing
+      hardware setup commands. The ordinary startup remains unchanged. }
+    for lIndex := 1 to ParamCount do
+      if SameText(ParamStr(lIndex), '--startup-ui-smoke') then
+      begin
+        RebuildTagList(edTagSearch.Text);
+        RenderActivePage;
+        fPluginRuntime.NotifyAll(PN_RCINITIALIZED);
+        AddLog('RESULT Startup UI ready; hardware preparation skipped.');
+        Exit;
+      end;
     AddLog('Deferred hardware preparation started.');
     PrepareRuntimeForConfiguration;
     { One offline source must not keep the successfully prepared devices hidden
@@ -4367,6 +4047,10 @@ end;
 
 procedure TMainForm.RunStateChanged(AOldState, ANewState: TRecorderState);
 begin
+  if (ANewState = rsRecord) and (AOldState <> rsRecord) then
+    fComponentManager.DoStart
+  else if (AOldState = rsRecord) and (ANewState <> rsRecord) then
+    fComponentManager.DoStop;
   if fPluginRuntime <> nil then
   begin
     if (ANewState = rsRecord) and (AOldState <> rsRecord) then
@@ -4475,7 +4159,7 @@ procedure TMainForm.ResetTrendSessions;
 var
   I: Integer;
 begin
-  TRecorderTrendView.BeginAcquisitionSession(fRecorder.TagRegistry);
+  fComponentManager.BeginAcquisitionSession(fRecorder.TagRegistry);
   if fFormEditor <> nil then
     fFormEditor.ResetTrendSessions;
   if fDetachedForms <> nil then

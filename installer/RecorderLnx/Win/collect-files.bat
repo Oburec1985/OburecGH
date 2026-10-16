@@ -2,7 +2,7 @@
 setlocal EnableExtensions
 
 rem Builds the complete, structured Inno Setup payload under .\files.
-rem Usage: collect-files.bat "<MX-248 vendor directory>" "<VC_redist.x86.exe>"
+rem Usage: collect-files.bat "<MX-248 vendor directory>" "<VC_redist.x86.exe>" ["<RecorderLnx.exe source>"] ["<plugin source directory>"]
 
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..\..\..") do set "REPO_ROOT=%%~fI"
@@ -10,6 +10,10 @@ set "FILES_DIR=%SCRIPT_DIR%files"
 set "RECORDER_DIR=%REPO_ROOT%\Lazarus\RecorderLnx"
 set "VENDOR_DIR=%~1"
 set "VC_REDIST=%~2"
+set "RECORDER_EXE_SOURCE=%~3"
+if not defined RECORDER_EXE_SOURCE set "RECORDER_EXE_SOURCE=%RECORDER_DIR%\lib\x86_64-win64\RecorderLnx.exe"
+set "PLUGIN_SOURCE_DIR=%~4"
+if not defined PLUGIN_SOURCE_DIR set "PLUGIN_SOURCE_DIR=%RECORDER_DIR%\lib\x86_64-win64\plugins"
 
 if not defined VENDOR_DIR (
   echo ERROR: MX-248 vendor directory was not specified.
@@ -27,6 +31,18 @@ if not exist "%VC_REDIST%" (
   echo ERROR: VC++ x86 redistributable not found: "%VC_REDIST%".
   exit /b 3
 )
+if not exist "%RECORDER_EXE_SOURCE%" (
+  echo ERROR: RecorderLnx.exe source not found: "%RECORDER_EXE_SOURCE%".
+  exit /b 3
+)
+if not exist "%PLUGIN_SOURCE_DIR%\LuaCalcPlugin.dll" (
+  echo ERROR: LuaCalcPlugin.dll not found in "%PLUGIN_SOURCE_DIR%".
+  exit /b 3
+)
+if not exist "%PLUGIN_SOURCE_DIR%\SampleInfoPlugin.dll" (
+  echo ERROR: SampleInfoPlugin.dll not found in "%PLUGIN_SOURCE_DIR%".
+  exit /b 3
+)
 
 if exist "%FILES_DIR%" rmdir /s /q "%FILES_DIR%"
 if exist "%FILES_DIR%" (
@@ -34,12 +50,13 @@ if exist "%FILES_DIR%" (
   exit /b 4
 )
 
-call :CopyFile "%RECORDER_DIR%\lib\x86_64-win64\RecorderLnx.exe" "%FILES_DIR%\app\RecorderLnx.exe" || exit /b 10
+call :CopyFile "%RECORDER_EXE_SOURCE%" "%FILES_DIR%\app\RecorderLnx.exe" || exit /b 10
 call :CopyFile "%RECORDER_DIR%\lib\x86_64-win64\RecorderHostAgent.exe" "%FILES_DIR%\app\RecorderHostAgent.exe" || exit /b 10
 call :CopyFile "%RECORDER_DIR%\lib\x86_64-win64\lua54.dll" "%FILES_DIR%\app\lua54.dll" || exit /b 10
+call :CopyFile "%RECORDER_DIR%\Device\DAC\Audio\Runtime\Win64\portaudio.dll" "%FILES_DIR%\app\portaudio.dll" || exit /b 10
 call :CopyFile "%RECORDER_DIR%\lib\x86_64-win64\help\RecorderLnxLua.chm" "%FILES_DIR%\app\help\RecorderLnxLua.chm" || exit /b 10
-call :CopyFile "%RECORDER_DIR%\lib\x86_64-win64\plugins\LuaCalcPlugin.dll" "%FILES_DIR%\app\plugins\LuaCalcPlugin.dll" || exit /b 10
-call :CopyFile "%RECORDER_DIR%\lib\x86_64-win64\plugins\SampleInfoPlugin.dll" "%FILES_DIR%\app\plugins\SampleInfoPlugin.dll" || exit /b 10
+call :CopyFile "%PLUGIN_SOURCE_DIR%\LuaCalcPlugin.dll" "%FILES_DIR%\app\plugins\LuaCalcPlugin.dll" || exit /b 10
+call :CopyFile "%PLUGIN_SOURCE_DIR%\SampleInfoPlugin.dll" "%FILES_DIR%\app\plugins\SampleInfoPlugin.dll" || exit /b 10
 call :CopyTree "%RECORDER_DIR%\lib\x86_64-win64\res" "%FILES_DIR%\app\res" || exit /b 11
 call :CopyFile "%RECORDER_DIR%\Device\MCbus\resources\devices\mc201\mc_201a.bio" "%FILES_DIR%\app\bios\devices\mc201\mc_201a.bio" || exit /b 10
 

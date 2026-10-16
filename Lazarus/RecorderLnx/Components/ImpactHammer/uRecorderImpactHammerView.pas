@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Buttons,
+  Buttons, Spin,
   LResources,
   ComCtrls,
   Math, uOglChart, uOglChartColors, uOglChartChart, uOglChartPage,
@@ -19,6 +19,8 @@ uses
   uRecorderImpactSessionContracts,
   uRecorderImpactHammerModel, uRecorderImpactHammerContracts,
   uRecorderImpactHammerPresenter, uRecorderImpactMeraAdapter,
+  uRecorderImpactGeometryBindingDialog,
+  uRecorderFrfRouteDialog,
   uRcFrfPeaks, uRcFrfPeakForm, uSharedColorCheckTable;
 
 type
@@ -33,9 +35,11 @@ type
     btnPreviousImpact: TButton;
     btnStart: TButton;
     btnStop: TButton;
-    btnSavePoints: TButton;
-    btnPlayModel: TButton;
-    btnStopModel: TButton;
+    btnGeometryBindings: TButton;
+    btnRoute:TButton;
+    chkScenario:TCheckBox;
+    seRoutePoint: TSpinEdit;
+    lblRoutePoint: TLabel;
     btnSaveSession: TButton;
     btnSaveCsv: TButton;
     btnSaveMdb: TButton;
@@ -79,9 +83,10 @@ type
     procedure btnPreviousImpactClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
-    procedure btnSavePointsClick(Sender: TObject);
-    procedure btnPlayModelClick(Sender: TObject);
-    procedure btnStopModelClick(Sender: TObject);
+    procedure btnGeometryBindingsClick(Sender: TObject);
+    procedure btnRouteClick(Sender:TObject);
+    procedure ScenarioChange(Sender:TObject);
+    procedure RoutePointChange(Sender: TObject);
     procedure sessionCommandClick(Sender: TObject);
     procedure axisOptionsChange(Sender: TObject);
     procedure extremaChange(Sender: TObject);
@@ -100,7 +105,13 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure chartDblClick(Sender: TObject);
   private
+    fUpdatingRoutePoint: Boolean;
+    procedure UpdateRoutePointControls;
+    function EnsureRouteDirectory: Boolean;
+  private
     fApplicationService: IRecorderImpactHammerApplicationService;
+    fRouteService:IRecorderFrfRouteService;
+    fRouteForm:TRecorderFrfRouteDialog;
     fConfigureError: string;
     fConfiguredRegistry: TRecorderTagRegistry;
     fConfiguredSettings: string;
@@ -139,6 +150,10 @@ type
     fSessionCommands: IRecorderImpactSessionCommandPort;
     fExportContext: TRecorderImpactExportContext;
     procedure BuildCharts;
+    procedure GeometryPreview(Sender: TObject);
+    procedure RouteStart(Sender:TObject);
+    procedure RouteCapture(Sender:TObject);
+    procedure RouteAssemble(Sender:TObject);
     procedure PresentResult(AType: TRecorderImpactResultType);
     procedure ShowResultOptions(AType: TRecorderImpactResultType);
     procedure UpdateCommandAvailability;
@@ -198,7 +213,7 @@ type
 implementation
 
 uses
-  uOglChartPanZoomListener,
+  uOglChartPanZoomListener, uRecorderMeraBaseModel,
   uRecorderImpactHammerService, uRecorderImpactSessionCommands;
 
 {$R *.lfm}
@@ -218,6 +233,8 @@ end;
 
 destructor TRecorderImpactHammerView.Destroy;
 begin
+  FreeAndNil(fRouteForm);
+  fRouteService:=nil;
   fSessionCommands := nil;
   fExportContext.Free;
   fPresenter.Free;
@@ -251,7 +268,26 @@ begin
 end;
 
 procedure TRecorderImpactHammerView.sessionCommandClick(Sender: TObject);
+var Error: string;
 begin
+  if (Sender = btnSaveSession) and (fComponent <> nil) and
+    fComponent.ScenarioEnabled then
+  begin
+    if not EnsureRouteDirectory then
+    begin
+      MessageDlg('Задайте папку маршрута или выберите объект базы данных испытаний.',
+        mtInformation, [mbOK], 0);
+      Exit;
+    end;
+    if fRouteService.RoutePointHasData and
+      (MessageDlg('В текущей точке уже есть данные FRF. Перезаписать?',
+        mtConfirmation, [mbYes, mbNo], 0) <> mrYes) then Exit;
+    if not fRouteService.SaveRoutePoint(Error) then
+      MessageDlg(Error, mtError, [mbOK], 0);
+    UpdateRoutePointControls;
+    RefreshControl(nil, 0);
+    Exit;
+  end;
   if fSessionCommands = nil then
     Exit;
   if Sender = btnSaveSession then
@@ -279,6 +315,9 @@ begin
     Exit;
   fComponent := TRecorderImpactHammerComponent(AComponent);
   fConfiguredRegistry := ATagRegistry;
+  chkScenario.OnClick:=nil;
+  chkScenario.Checked:=fComponent.ScenarioEnabled;
+  chkScenario.OnClick:=@ScenarioChange;
   ConfigureTimeAxes;
   if chkExtrema <> nil then
     chkExtrema.Checked := fComponent.ShowExtrema;
@@ -286,6 +325,8 @@ begin
     fComponent.ActiveResultType := irtFrfMagnitude;
   rgFrequencyResult.ItemIndex := Ord(fComponent.ActiveResultType) -
     Ord(irtSpectrum);
+  FreeAndNil(fRouteForm);
+  fRouteService:=nil;
   fApplicationService := nil;
   fSnapshot := Default(TRecorderImpactHammerSnapshot);
   fConfigureError := '';
@@ -299,6 +340,7 @@ begin
     ATagRegistry) then
   begin
     fApplicationService := Service;
+    Supports(fApplicationService, IRecorderFrfRouteService, fRouteService);
     fExportContext := TRecorderImpactExportContext.Create;
     fSessionCommands := TRecorderImpactSessionCommands.Create(Service,
       TRecorderImpactMeraFolderAdapter.Create(fExportContext),
@@ -319,7 +361,12 @@ begin
     lblImpactPosition.ShowHint := True;
   end;
   if fApplicationService <> nil then
+  begin
     RememberSettings;
+    if fComponent.ScenarioEnabled then EnsureRouteDirectory;
+  end;
+  UpdateRoutePointControls;
+  if (fComponent <> nil) and fComponent.ScenarioEnabled then RoutePointChange(nil);
 end;
 
 procedure TRecorderImpactHammerView.RefreshControl(
@@ -327,6 +374,7 @@ procedure TRecorderImpactHammerView.RefreshControl(
 var
   CurrentRevision: QWord;
 begin
+  UpdateRoutePointControls;
   if fApplicationService <> nil then
   begin
     CurrentRevision := fApplicationService.Revision;
@@ -930,6 +978,8 @@ begin
   if fComponent = nil then Exit;
   lState := fComponent.AxisStates[ActiveFrequencyResult];
   ApplyConfiguredFrequencyRange(lState);
+  fFrequencyPage.ZoomedX := False;
+  fFrequencyAxis.HasPresetRange := False;
   if lState.YMax > lState.YMin then
   begin
     fFrequencyAxis.MinValue := lState.YMin;
@@ -1409,6 +1459,16 @@ procedure TRecorderImpactHammerView.chartCursorChanged(Sender: TObject;
 var
   ChartCursor: TChartCursor;
 begin
+  if (ACursor is TChartCursor) and
+    (TChartCursor(ACursor).Parent = fFrequencyPage) then
+  begin
+    ChartCursor:=TChartCursor(ACursor);
+    if ChartCursor.Visible then
+      if ChartCursor.CursorType=cctDouble then
+        SetRecorderSelectedFrfFrequency(ChartCursor.X2)
+      else SetRecorderSelectedFrfFrequency(ChartCursor.X1);
+    Exit;
+  end;
   if fUpdatingWindow or (ACursor <> fTimeCursor) then
     Exit;
   ChartCursor := TChartCursor(ACursor);
@@ -1449,6 +1509,9 @@ begin
   btnStart.Enabled := fSnapshot.CanStart;
   btnArm.Enabled := fSnapshot.CanArm;
   btnStop.Enabled := fSnapshot.CanStop;
+  chkScenario.Enabled:=fApplicationService<>nil;
+  btnRoute.Enabled:=(fApplicationService<>nil) and (fComponent<>nil) and
+    fComponent.ScenarioEnabled;
 end;
 
 procedure TRecorderImpactHammerView.btnPreviousImpactClick(Sender: TObject);
@@ -1499,22 +1562,144 @@ begin
     fApplicationService.StopMeasurement;
 end;
 
-procedure TRecorderImpactHammerView.btnSavePointsClick(Sender: TObject);
+procedure TRecorderImpactHammerView.btnGeometryBindingsClick(Sender: TObject);
 begin
-  if fApplicationService <> nil then
+  if (fComponent <> nil) and
+    TRecorderImpactGeometryBindingDialog.Execute(Self, fComponent, @GeometryPreview) and
+    (fApplicationService <> nil) then
+  begin
     fApplicationService.SavePointBindings;
+    RememberSettings;
+  end;
 end;
 
-procedure TRecorderImpactHammerView.btnPlayModelClick(Sender: TObject);
+procedure TRecorderImpactHammerView.GeometryPreview(Sender: TObject);
 begin
-  if fApplicationService <> nil then
-    fApplicationService.PlayModelAnimation;
+  if fApplicationService <> nil then fApplicationService.SavePointBindings;
+  RememberSettings;
 end;
 
-procedure TRecorderImpactHammerView.btnStopModelClick(Sender: TObject);
+function TRecorderImpactHammerView.EnsureRouteDirectory: Boolean;
+var Directory: string;
 begin
-  if fApplicationService <> nil then
-    fApplicationService.StopModelAnimation;
+  Result := False;
+  if (fRouteService = nil) or (fComponent = nil) then Exit;
+  if fRouteService.Route.Directory <> '' then Exit(True);
+  Directory := Trim(fComponent.ExportPath);
+  if Directory = '' then
+  begin
+    Directory := RecorderMeraObjectDirectory;
+    if Directory <> '' then Directory := IncludeTrailingPathDelimiter(Directory) + 'frf';
+  end;
+  if Directory = '' then Exit;
+  Directory := IncludeTrailingPathDelimiter(Directory) + 'track';
+  try
+    if (fRouteService.Route.Count = 0) and
+      FileExists(IncludeTrailingPathDelimiter(Directory) + 'route.ini') then
+      fRouteService.Route.Load(Directory)
+    else
+      fRouteService.Route.Save(Directory);
+    Result := True;
+  except
+    on E: Exception do MessageDlg(E.Message, mtError, [mbOK], 0);
+  end;
+end;
+
+procedure TRecorderImpactHammerView.UpdateRoutePointControls;
+var Count, Index: Integer; CaptionText: string;
+begin
+  if fUpdatingRoutePoint then Exit;
+  fUpdatingRoutePoint := True;
+  try
+    Count := 0;
+    Index := 0;
+    if fRouteService <> nil then
+    begin
+      Count := fRouteService.Route.Count;
+      Index := fRouteService.Route.CurrentIndex;
+    end;
+    seRoutePoint.Enabled := (fComponent <> nil) and chkScenario.Checked and (Count > 0);
+    seRoutePoint.MaxValue := Max(1, Count);
+    seRoutePoint.Value := EnsureRange(Index + 1, 1, Max(1, Count));
+    CaptionText := 'Точки маршрута не заданы';
+    if (Index >= 0) and (Index < Count) then
+      CaptionText := IntToStr(Index + 1) + ' из ' + IntToStr(Count) + ': ' +
+        fRouteService.Route.Entries[Index].PointLabel;
+    if lblRoutePoint.Caption <> CaptionText then lblRoutePoint.Caption := CaptionText;
+    if fRouteService <> nil then
+    begin
+      seRoutePoint.Hint := fRouteService.Route.Directory;
+      seRoutePoint.ShowHint := True;
+    end;
+  finally
+    fUpdatingRoutePoint := False;
+  end;
+end;
+
+procedure TRecorderImpactHammerView.RoutePointChange(Sender: TObject);
+var Error: string;
+begin
+  if fUpdatingRoutePoint or not seRoutePoint.Enabled or (fRouteService = nil) then Exit;
+  if not fRouteService.SelectRoutePoint(seRoutePoint.Value - 1, Error) then
+    MessageDlg(Error, mtError, [mbOK], 0);
+  UpdateRoutePointControls;
+  RefreshControl(nil, 0);
+end;
+
+procedure TRecorderImpactHammerView.btnRouteClick(Sender:TObject);
+begin
+  if (fApplicationService=nil) or (fComponent=nil) then Exit;
+  if not fComponent.ScenarioEnabled then Exit;
+  if not Supports(fApplicationService,IRecorderFrfRouteService,fRouteService) then Exit;
+  if fRouteForm=nil then
+    fRouteForm:=TRecorderFrfRouteDialog.ShowRoute(Self,fComponent,
+      fRouteService.Route,@RouteStart,@RouteCapture,@RouteAssemble)
+  else
+  begin
+    fRouteForm.Show;
+    fRouteForm.BringToFront;
+  end;
+end;
+
+procedure TRecorderImpactHammerView.ScenarioChange(Sender:TObject);
+begin
+  if fComponent=nil then Exit;
+  fComponent.ScenarioEnabled:=chkScenario.Checked;
+  if not chkScenario.Checked then
+  begin
+    if fRouteForm<>nil then fRouteForm.Hide;
+    if Supports(fApplicationService,IRecorderFrfRouteService,fRouteService) then
+      fRouteService.UseLiveRoute;
+  end;
+  RememberSettings;
+  UpdateCommandAvailability;
+  if chkScenario.Checked then
+  begin
+    EnsureRouteDirectory;
+    UpdateRoutePointControls;
+    RoutePointChange(nil);
+  end
+  else
+    UpdateRoutePointControls;
+end;
+
+procedure TRecorderImpactHammerView.RouteStart(Sender:TObject);
+begin
+  fRouteService.UseLiveRoute;
+end;
+
+procedure TRecorderImpactHammerView.RouteCapture(Sender:TObject);
+var lError:string;
+begin
+  if not fRouteService.CaptureRouteStep(lError) then
+    raise Exception.Create(lError);
+end;
+
+procedure TRecorderImpactHammerView.RouteAssemble(Sender:TObject);
+var lError:string;
+begin
+  if not fRouteService.ShowSavedRoute(lError) then
+    raise Exception.Create(lError);
 end;
 
 initialization

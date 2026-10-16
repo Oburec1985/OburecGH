@@ -27,8 +27,8 @@ uses
   uMc032Device, uMc201ProtocolTypes;
 
 type
-  { Адаптер MC-032 + MC-201 к стандартному TRecorderDevice. }
-  TRecorderMcbusDevice = class(TRecorderDevice)
+  { Адаптер MC-032 + MC-201 к стандартному TRcDevice. }
+  TRecorderMcbusDevice = class(TRcDevice)
   private
     fController: TMc032Device;
     fConfig: TMc032Config;
@@ -36,7 +36,7 @@ type
     fProgramInfo: TMc201ModuleProgramInfoArray;
     fPending: array of array of Double;
     fPendingCount: array of Integer;
-    fReadBlock: TRecorderAcquisitionBlock;
+    fReadBlock: TRcAcquisitionBlock;
     fBalanceDac: array of Word;
     fSampleIndices: array of Int64;
     fLastError: string;
@@ -80,7 +80,7 @@ type
     procedure Start; override;
     procedure Stop; override;
     function ReadBlock(ATimeoutMs: Cardinal;
-      out ABlock: TRecorderAcquisitionBlock): Boolean; override;
+      out ABlock: TRcAcquisitionBlock): Boolean; override;
     function TestLink(out AErrorText: string): Boolean; override;
     function SupportsDeviceAction(AAction: TRecorderDeviceAction): Boolean; override;
     // для MC поддерживает пока только балансировку
@@ -1213,7 +1213,7 @@ begin
 end;
 
 function TRecorderMcbusDevice.ReadBlock(ATimeoutMs: Cardinal;
-  out ABlock: TRecorderAcquisitionBlock): Boolean;
+  out ABlock: TRcAcquisitionBlock): Boolean;
 var
   I, J, lCount, lRemaining: Integer;
   lDeadline: QWord;

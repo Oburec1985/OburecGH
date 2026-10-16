@@ -14,6 +14,7 @@ var M,R,I:T3dMatrix; P,Q,Hit,Delta:T3dVector; Ray:T3dRayValue;
   B,TB:T3dBounds; Corners:array[0..7] of T3dVector; D,T,U:Single;
   Screen:T3dScreenPoint; Scene:T3dScene; Node:T3dNode; Ids:array[0..0] of QWord;
   Camera:T3dCamera; Forward,Right,Up:T3dVector;
+  LabelItem:T3dSceneLabel;
 begin
   try
     SetIdentity(M); M[12]:=3; M[13]:=-2; M[14]:=5;
@@ -45,7 +46,9 @@ begin
     FillChar(Camera,SizeOf(Camera),0);
     Camera.Distance:=6; Camera.VerticalFovDegrees:=45;
     Camera.ProjectionKind:=pkOrthographic; Camera.OrthographicScale:=3;
-    Camera.PitchDegrees:=-90;
+    Camera.Forward:=Vector3d(0,-1,0);
+    Camera.Right:=Vector3d(1,0,0);
+    Camera.Up:=Vector3d(0,0,-1);
     M:=BuildProjectionMatrix(Camera,2,0.1,100);
     Near(M[0],1/6,'orthographic aspect');
     Near(M[5],1/3,'orthographic scale');
@@ -64,6 +67,47 @@ begin
       TB:=SceneOrSelectionBounds(Scene,[]); Near(TB.Min.X,-1,'scene min'); Near(TB.Max.X,11,'scene max');
       Ids[0]:=2; TB:=SceneOrSelectionBounds(Scene,Ids); Near(TB.Min.X,9,'selection min'); Near(TB.Max.X,11,'selection max');
     finally Scene.Free; end;
+    Scene:=T3dScene.Create;
+    try
+      Node:=T3dNode.Create; Node.Id:=42;
+      SetIdentity(Node.WorldTransform);
+      Node.Mesh:=T3dMeshData.Create;
+      SetLength(Node.Mesh.Positions,1);
+      Node.Mesh.Positions[0]:=Vector3d(1,2,3);
+      SetLength(Node.Mesh.LogicalVertices,1);
+      Node.Mesh.LogicalVertices[0].Id:=7;
+      SetLength(Node.Mesh.LogicalVertices[0].CornerIndices,1);
+      Node.Mesh.LogicalVertices[0].CornerIndices[0]:=0;
+      Scene.AddNode(Node);
+      LabelItem:=Scene.EnsureLabel(1,0);
+      LabelItem.Visible:=True; LabelItem.NodeId:=42;
+      LabelItem.AtVertex:=True; LabelItem.LogicalVertexId:=7;
+      Check(Scene.EnsureLabel(1,0)=LabelItem,'label identity');
+      Check(Scene.ResolveLabelPosition(LabelItem,P),'label initial');
+      Near(P.X,1,'label initial x');
+      Node.WorldTransform[12]:=10;
+      Check(Scene.ResolveLabelPosition(LabelItem,P),'label moved without FRF');
+      Near(P.X,11,'label follows transform');
+      Node.Mesh.Positions[0].Y:=9;
+      Check(Scene.ResolveLabelPosition(LabelItem,P),'label deformed');
+      Near(P.Y,9,'label follows geometry');
+      Check(TryAxisAngleMatrix(Vector3d(0,0,1),Pi/2,M),'label rotation');
+      Node.WorldTransform:=M;
+      Check(Scene.ResolveLabelPosition(LabelItem,P),'label rotated');
+      Near(P.X,-9,'label rotation x'); Near(P.Y,1,'label rotation y');
+      LabelItem.Visible:=False;
+      Check(not Scene.ResolveLabelPosition(LabelItem,P),'hidden label');
+      LabelItem.Visible:=True;
+      Check(Scene.ResolveLabelPosition(LabelItem,P),'label shown again');
+      LabelItem.NodeId:=999;
+      Check(not Scene.ResolveLabelPosition(LabelItem,P),'missing label target');
+      LabelItem.NodeId:=42;
+      Scene.EnsureLabel(2,0);
+      Scene.RemoveLabels(1);
+      Check(Scene.LabelCount=1,'owner scoped removal');
+      Scene.RemoveLabels(2);
+      Check(Scene.LabelCount=0,'label removal');
+    finally Scene.Free end;
     WriteLn('RESULT ThreeDMath passed');
   except on E:Exception do begin WriteLn(StdErr,'RESULT ThreeDMath failed: ',E.Message); Halt(1); end; end;
 end.

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags>
+        <MainUnitHasTitleStatement Value="False"/>
+        <UseAppBundle Value="False"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="StatefulVisualProbePlugin"/>
+    </General>
+    <BuildModes>
+      <Item Name="Default" Default="True"/>
+    </BuildModes>
+    <Units>
+      <Unit>
+        <Filename Value="StatefulVisualProbePlugin.lpr"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+    </Units>
+    <RequiredPackages>
+      <Item><PackageName Value="LCL"/></Item>
+    </RequiredPackages>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target>
+      <Filename Value="lib/$(TargetCPU)-$(TargetOS)/StatefulVisualProbePlugin"/>
+    </Target>
+    <SearchPaths>
+      <OtherUnitFiles Value="../../"/>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/plugin"/>
+    </SearchPaths>
+    <CodeGeneration>
+      <RelocatableUnit Value="True"/>
+    </CodeGeneration>
+    <Linking>
+      <Options>
+        <ExecutableType Value="Library"/>
+      </Options>
+    </Linking>
+  </CompilerOptions>
+</CONFIG>

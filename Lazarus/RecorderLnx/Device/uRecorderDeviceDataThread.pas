@@ -21,7 +21,7 @@ uses
 type
   TDataThreadState = (dtsIdle, dtsStarting, dtsPlaying, dtsStopping);
 
-  PRecorderAcquisitionBlock = ^TRecorderAcquisitionBlock;
+  PRecorderAcquisitionBlock = ^TRcAcquisitionBlock;
 
   { Borrowed immutable view of one ring slot. Block remains valid until the
     same consumer calls ReleaseReadBlock. }
@@ -34,7 +34,7 @@ type
   TRecorderRingSlotState = (rssEmpty, rssReady, rssReading);
 
   { Callback для передачи прочитанного блока данных. Вызывается в контексте потока. }
-  TDataThreadBlockCallback = procedure(const ABlock: TRecorderAcquisitionBlock) of object;
+  TDataThreadBlockCallback = procedure(const ABlock: TRcAcquisitionBlock) of object;
 
   TRecorderDeviceDataThread = class(TThread)
   private
@@ -46,7 +46,7 @@ type
     fLock: TCriticalSection;
     
     { Кольцевой буфер блоков }
-    fBlocks: array of TRecorderAcquisitionBlock;
+    fBlocks: array of TRcAcquisitionBlock;
     fSlotStates: array of TRecorderRingSlotState;
     fSlotGenerations: array of QWord;
     fCapacity: Integer;
@@ -55,7 +55,7 @@ type
     fBlockCount: Integer;
     
     { Запасной блок для чтения и отбрасывания при заполненном кольце. }
-    fActiveBlock: TRecorderAcquisitionBlock;
+    fActiveBlock: TRcAcquisitionBlock;
     fWriteReserved: Boolean;
     fReservedWriteIndex: Integer;
     
@@ -64,7 +64,7 @@ type
     procedure PublishReservedBlock;
     procedure CancelReservedBlock;
   protected
-    procedure PushBlock(const ABlock: TRecorderAcquisitionBlock);
+    procedure PushBlock(const ABlock: TRcAcquisitionBlock);
     procedure Execute; override;
     
     { Разовые операции при старте и стопе (переопределяются в наследниках) }
@@ -73,7 +73,7 @@ type
     
     { Чтение сырых данных из прибора и заполнение ABlock.
       Должен быть переопределен в потомке. Возвращает True, если блок успешно собран. }
-    function ReadBlockFromDevice(var ABlock: TRecorderAcquisitionBlock): Boolean; virtual; abstract;
+    function ReadBlockFromDevice(var ABlock: TRcAcquisitionBlock): Boolean; virtual; abstract;
     
     { Переопределяемый метод отправки (если прибору нужно что-то слать периодически) }
     procedure SendBlockToDevice; virtual;
@@ -89,7 +89,7 @@ type
     procedure StopPlay;
     
     { Чтение блока из кольцевого буфера внешним потребителем (без аллокаций) }
-    function ReadBlock(out ABlock: TRecorderAcquisitionBlock): Boolean; virtual;
+    function ReadBlock(out ABlock: TRcAcquisitionBlock): Boolean; virtual;
 
     { Zero-copy SPSC read. One lease may be active at a time; release is
       mandatory in a finally block. }
@@ -107,7 +107,7 @@ type
 implementation
 
 { Вспомогательная процедура копирования данных блока без перевыделения памяти, если размеры совпадают }
-procedure CopyBlockData(const ASource: TRecorderAcquisitionBlock; var ADest: TRecorderAcquisitionBlock);
+procedure CopyBlockData(const ASource: TRcAcquisitionBlock; var ADest: TRcAcquisitionBlock);
 var
   lChan, lSamples: Integer;
   I: Integer;
@@ -318,7 +318,7 @@ begin
 end;
 
 procedure TRecorderDeviceDataThread.PushBlock(
-  const ABlock: TRecorderAcquisitionBlock);
+  const ABlock: TRcAcquisitionBlock);
 var
   lDest: PRecorderAcquisitionBlock;
 begin
@@ -335,7 +335,7 @@ begin
   end;
 end;
 
-function TRecorderDeviceDataThread.ReadBlock(out ABlock: TRecorderAcquisitionBlock): Boolean;
+function TRecorderDeviceDataThread.ReadBlock(out ABlock: TRcAcquisitionBlock): Boolean;
 var
   lLease: TRecorderAcquisitionBlockLease;
 begin

@@ -39,6 +39,8 @@ type
     IncreaseValueButton: TButton;
     BindingSearchEdit: TEdit;
     BindingSearchLabel: TLabel;
+    ParameterSearchEdit: TEdit;
+    ParameterSearchLabel: TLabel;
     BindingBottomPan: TPanel;
     BindingTagLabel: TLabel;
     BindingsGrid: TStringGrid;
@@ -85,6 +87,7 @@ type
     procedure IncreaseValueButtonClick(Sender: TObject);
     procedure ParametersMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure ParameterSearchEditChange(Sender: TObject);
     procedure ImagesGridSetEditText(Sender: TObject; ACol, ARow: Integer;
       const Value: string);
     procedure OkButtonClick(Sender: TObject);
@@ -101,6 +104,7 @@ type
     fSwitchTagName: string;
     fUpdatingTagCombo: Boolean;
     fUpdatingControls: Boolean;
+    fUpdatingParameterFilter: Boolean;
     procedure AdjustSelectedNumber(ADirection: Integer);
     procedure ApplyLiveChanges;
     function BuildPreviewSvgSource(const AFileName: string): string;
@@ -108,6 +112,7 @@ type
     procedure FillTags(const AFilter: string = '');
     procedure FillBindingTags(const AFilter: string = '');
     procedure LoadFromComponent;
+    procedure ApplyParameterFilter;
     procedure RebuildSvgParameters;
     procedure RebuildPreviews;
     procedure RestoreOriginalComponent;
@@ -241,6 +246,67 @@ begin
   FillBindingTags(BindingSearchEdit.Text);
 end;
 
+procedure TRecorderImageSettingsDialog.ParameterSearchEditChange(
+  Sender: TObject);
+begin
+  ApplyParameterFilter;
+end;
+
+procedure TRecorderImageSettingsDialog.ApplyParameterFilter;
+var
+  I, lVisibleRow, lSelectedSourceRow: Integer;
+  lFilter, lParameterName: string;
+begin
+  if fUpdatingParameterFilter or (BindingsGrid = nil) then
+    Exit;
+  fUpdatingParameterFilter := True;
+  try
+    lFilter := UTF8LowerCase(Trim(ParameterSearchEdit.Text));
+    lSelectedSourceRow := 0;
+    if (BindingsGrid.Row > 0) and (BindingsGrid.Row < BindingsGrid.RowCount) then
+      lSelectedSourceRow := BindingsGrid.Row;
+    lVisibleRow := 1;
+    for I := 1 to BindingsGrid.RowCount - 1 do
+    begin
+      lParameterName := BindingsGrid.Cells[0, I];
+      if (lFilter <> '') and
+        (Pos(lFilter, UTF8LowerCase(lParameterName)) = 0) then
+      begin
+        BindingsGrid.RowHeights[I] := 0;
+        Continue;
+      end;
+      BindingsGrid.RowHeights[I] := BindingsGrid.DefaultRowHeight;
+      if (I = lSelectedSourceRow) or (lVisibleRow = 1) then
+        lVisibleRow := I;
+    end;
+    if BindingsGrid.RowCount > 1 then
+      BindingsGrid.Row := lVisibleRow;
+  finally
+    fUpdatingParameterFilter := False;
+  end;
+  if (BindingsGrid.Row > 0) and (BindingsGrid.Row < BindingsGrid.RowCount) then
+  begin
+    lVisibleRow := BindingsGrid.Row;
+    if BindingsGrid.RowHeights[lVisibleRow] > 0 then
+    begin
+      fUpdatingControls := True;
+      try
+        BindingTagCombo.ItemIndex := Max(0,
+          BindingTagCombo.Items.IndexOf(BindingsGrid.Cells[1, lVisibleRow]));
+        BindingSourceCombo.ItemIndex := Max(0,
+          BindingSourceCombo.Items.IndexOf(BindingsGrid.Cells[2, lVisibleRow]));
+        BindingValueEdit.Text := BindingsGrid.Cells[3, lVisibleRow];
+      finally
+        fUpdatingControls := False;
+      end;
+      UpdateValueControls;
+    end
+    else
+      UpdateValueControls;
+  end;
+  BindingsGrid.Invalidate;
+end;
+
 destructor TRecorderImageSettingsDialog.Destroy;
 begin
   if not fAccepted then
@@ -372,6 +438,7 @@ begin
     end
     else
       UpdateValueControls;
+    ApplyParameterFilter;
     RebuildPreviews;
   finally
     fUpdatingControls := lWasUpdating;
@@ -434,6 +501,7 @@ begin
     end;
     if lNames.Count = 0 then
       BindingsGrid.Rows[1].Clear;
+    ApplyParameterFilter;
   finally
     lDrafts.Free;
     lNames.Free;
@@ -633,6 +701,8 @@ var
   lWasUpdating: Boolean;
 begin
   CanSelect := aRow > 0;
+  if CanSelect then
+    CanSelect := BindingsGrid.RowHeights[aRow] > 0;
   if not CanSelect then
     Exit;
   lWasUpdating := fUpdatingControls;

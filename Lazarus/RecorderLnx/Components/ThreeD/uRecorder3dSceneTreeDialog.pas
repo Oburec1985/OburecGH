@@ -190,8 +190,7 @@ end;
 function TRecorder3dSceneTreeDialog.UniqueName(
   AKind: T3dPrimitiveKind): string;
 const
-  CNames: array[T3dPrimitiveKind] of string =
-    ('Куб', 'Пластина', 'Плоскость', 'Линия');
+  CNames: array[T3dPrimitiveKind] of string = ('Куб', 'Пластина', 'Плоскость', 'Линия', 'Облако точек');
 var
   Number: Integer;
 begin
@@ -209,12 +208,23 @@ var
 begin
   if (fScene = nil) or (fComponent = nil) then
     Exit;
+  FillChar(Spec,SizeOf(Spec),0);
   Spec.Kind := PrimitiveKind;
   Spec.Iterations := seIterations.Value;
   Spec.CrossSectionIterations:=seCrossSection.Value;
   Spec.NodeId := fComponent.AllocatePrimitiveNodeId(fScene);
   Spec.Name := UniqueName(Spec.Kind);
   Spec.Position := Vector3d(0, 0, 0);
+  Spec.SizeX:=2; Spec.SizeY:=2; Spec.SizeZ:=2;
+  if Spec.Kind=pkBeam then
+  begin
+    Spec.SizeX:=3; Spec.SizeY:=0.5; Spec.SizeZ:=0.5;
+  end;
+  Spec.IterationsX:=Spec.Iterations;
+  Spec.IterationsY:=Spec.Iterations;
+  Spec.IterationsZ:=Spec.Iterations;
+  Spec.PointCloudShape:=pcsBox;
+  Spec.Color:=$00DCCDBE;
   fScene.AddNode(CreatePrimitiveNode(Spec));
   fComponent.AddPrimitive(Spec);
   fScene.RebuildWorldTransforms(lUpdated);
@@ -455,6 +465,8 @@ begin
     lblIterations.Caption := 'Точек:'
   else if PrimitiveKind = pkBeam then
     lblIterations.Caption := 'Вдоль:'
+  else if PrimitiveKind = pkPointCloud then
+    lblIterations.Caption := 'По осям:'
   else
     lblIterations.Caption := 'По ребру:';
   lblCrossSection.Visible:=PrimitiveKind=pkBeam;

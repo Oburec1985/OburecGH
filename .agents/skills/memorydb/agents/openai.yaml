@@ -1,0 +1,4 @@
+interface:
+  display_name: "MemoryDB"
+  short_description: "Semantic project memory and source search"
+  default_prompt: "Use $memorydb to search project memory and verify relevant source evidence."

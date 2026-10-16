@@ -44,38 +44,25 @@ end;
 
 procedure BuildCameraBasis(const ACamera:T3dCamera; out AForward,ARight,AUp:T3dVector);
 
-var Yaw,Pitch,Roll,C,S: Single;
-  BaseRight,BaseUp,ReferenceUp: T3dVector;
-  ForwardLength,RightLength,UpLength: Single;
+var ReferenceUp, CandidateRight: T3dVector;
 begin
-  ForwardLength := VectorDot(ACamera.Forward,ACamera.Forward);
-  RightLength := VectorDot(ACamera.Right,ACamera.Right);
-  UpLength := VectorDot(ACamera.Up,ACamera.Up);
-  if ACamera.PoseValid and
-     (Abs(ForwardLength-1)<0.001) and (Abs(RightLength-1)<0.001) and
-     (Abs(UpLength-1)<0.001) and
-     (Abs(VectorDot(ACamera.Forward,ACamera.Right))<0.001) and
-     (Abs(VectorDot(ACamera.Forward,ACamera.Up))<0.001) then
+  if not TryNormalize(ACamera.Forward,AForward) then
+    AForward := Vector3d(0,0,-1);
+  CandidateRight := VectorSubtract(ACamera.Right,
+    VectorScale(AForward,VectorDot(ACamera.Right,AForward)));
+  if not TryNormalize(CandidateRight,ARight) then
   begin
-    AForward := ACamera.Forward;
-    ARight := ACamera.Right;
-    AUp := ACamera.Up;
-    Exit;
+    ReferenceUp := ACamera.Up;
+    if not TryNormalize(ReferenceUp,ReferenceUp) then
+      ReferenceUp := Vector3d(0,1,0);
+    CandidateRight := VectorCross(AForward,ReferenceUp);
+    if not TryNormalize(CandidateRight,ARight) then
+    begin
+      ReferenceUp := Vector3d(0,0,1);
+      TryNormalize(VectorCross(AForward,ReferenceUp),ARight);
+    end;
   end;
-  Yaw := DegToRad(ACamera.YawDegrees);
-  Pitch := DegToRad(ACamera.PitchDegrees);
-  AForward := Vector3d(-Cos(Pitch)*Sin(Yaw),Sin(Pitch),-Cos(Pitch)*Cos(Yaw));
-  TryNormalize(AForward,AForward);
-  ReferenceUp := Vector3d(0,1,0);
-  if Abs(VectorDot(AForward,ReferenceUp)) > 0.999 then
-    ReferenceUp := Vector3d(0,0,1);
-  TryNormalize(VectorCross(AForward,ReferenceUp),BaseRight);
-  TryNormalize(VectorCross(BaseRight,AForward),BaseUp);
-  Roll := DegToRad(ACamera.RollDegrees);
-  C := Cos(Roll);
-  S := Sin(Roll);
-  ARight := VectorAdd(VectorScale(BaseRight,C),VectorScale(BaseUp,S));
-  AUp := VectorAdd(VectorScale(BaseUp,C),VectorScale(BaseRight,-S));
+  TryNormalize(VectorCross(ARight,AForward),AUp);
 end;
 
 function CameraPosition(const ACamera:T3dCamera): T3dVector;

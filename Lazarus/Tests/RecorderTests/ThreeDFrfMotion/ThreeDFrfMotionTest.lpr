@@ -66,6 +66,60 @@ begin
   Result := InterlockedCompareExchange(fDone, 0, 0) <> 0;
 end;
 
+procedure TestBandSampling;
+var
+  lRepository: TRecorderFrfRepository;
+  lProvider: IRecorderFrfProvider;
+  lSnapshot: IRecorderFrfSampler;
+  lBand: IRecorderFrfBandSampler;
+  lCurve: TRecorderFrfCurveData;
+  lMagnitude, lPhase: Double;
+  lOwner: TObject;
+begin
+  lOwner := TObject.Create;
+  lRepository := TRecorderFrfRepository.Create;
+  lProvider := lRepository;
+  try
+    lCurve.Id := 71;
+    lCurve.FrequencyHz := [89.0, 90.0, 100.0, 110.0, 111.0];
+    lCurve.Magnitude := [100.0, 3.0, 0.0, 4.0, 100.0];
+    lCurve.Amplitude := [100.0, 6.0, 0.0, 8.0, 100.0];
+    lCurve.PhaseRadians := [0.0, 0.0, 0.7, 0.0, 0.0];
+    lCurve.Coherence := [1.0, 1.0, 1.0, 1.0, 1.0];
+    Check(lRepository.Publish([lCurve]), 'band source publish');
+    lSnapshot := lProvider.AcquireSnapshot;
+    Check(lSnapshot.QueryInterface(IRecorderFrfBandSampler, lBand) = 0,
+      'snapshot exposes optional band sampler');
+    Check(lBand.TrySampleBand(71, 100, 10, False, lMagnitude, lPhase),
+      'FRF band available');
+    CheckNear(lMagnitude, 5, 'band includes both endpoints, excludes outside bins');
+    CheckNear(lPhase, 0.7, 'band phase is center phase');
+    Check(lBand.TrySampleBand(71, 100, 10, True, lMagnitude, lPhase),
+      'amplitude band available');
+    CheckNear(lMagnitude, 10, 'amplitude RSS source');
+    Check(lBand.TrySampleBand(71, 100, 1, False, lMagnitude, lPhase),
+      'single zero bin available');
+    CheckNear(lMagnitude, 0, 'narrow band excludes neighbors');
+    Check(not lBand.TrySampleBand(71, 95, 0.1, False, lMagnitude, lPhase),
+      'empty band unavailable');
+    Check(not lBand.TrySampleBand(71, 100, -1, False, lMagnitude, lPhase),
+      'negative tolerance rejected');
+    RegisterRecorderFrfProvider(lOwner, lProvider);
+    lSnapshot := RecorderAggregateFrfProvider.AcquireSnapshot;
+    Check(lSnapshot.QueryInterface(IRecorderFrfBandSampler, lBand) = 0,
+      'aggregate exposes band sampler');
+    Check(lBand.TrySampleBand(71, 100, 10, True, lMagnitude, lPhase),
+      'aggregate forwards amplitude band');
+    CheckNear(lMagnitude, 10, 'aggregate band value');
+  finally
+    UnregisterRecorderFrfProvider(lOwner);
+    lOwner.Free;
+    lBand := nil;
+    lSnapshot := nil;
+    lProvider := nil;
+  end;
+end;
+
 procedure TestAggregateProviderLifecycle;
 var
   lOwnerA, lOwnerB: TObject;
@@ -322,6 +376,7 @@ end;
 begin
   try
     TestInterpolation;
+    TestBandSampling;
     TestAggregateProviderLifecycle;
     TestClearPublishSerialization;
     TestAdapterAndSceneEngine;

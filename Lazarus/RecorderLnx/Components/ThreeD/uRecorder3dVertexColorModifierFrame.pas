@@ -187,7 +187,48 @@ begin fLoading:=True; try A:=SelectedAnchor; ReloadGradientCombo; ReloadTags; Re
 
 procedure TRecorder3dVertexColorModifierFrame.UpdateActions;
 var HasG,HasA,HasTag,VectorTag:Boolean; A:TRecorder3dVertexColorAnchor; T:TRecorderTag; E:TRecorderTagEstimate;
-begin HasG:=SelectedGradient<>nil; HasA:=SelectedAnchor<>nil; A:=SelectedAnchor; T:=nil; if (A<>nil) and (fRegistry<>nil) then T:=RecorderResolveTagReference(fRegistry,A.TagId,A.TagName); HasTag:=T<>nil; VectorTag:=HasTag and T.IsVector; btnDeleteGradient.Enabled:=HasG; btnAddAnchor.Enabled:=fHasVertex and (fComponent<>nil) and (fComponent.GradientStripCount>0); btnDeleteAnchor.Enabled:=HasA; edGradientName.Enabled:=HasG; cbLeftColor.Enabled:=HasG; cbRightColor.Enabled:=HasG; seLeftValue.Enabled:=HasG; seRightValue.Enabled:=HasG; edAnchorName.Enabled:=HasA; seRadius.Enabled:=HasA; seExponent.Enabled:=HasA and (cbFalloff.ItemIndex=Ord(vcfExponent)); cbFalloff.Enabled:=HasA; cbGradient.Enabled:=HasA; edTagSearch.Enabled:=HasA; cbTag.Enabled:=HasA; chkUseDefaultEstimate.Enabled:=HasA and VectorTag; cbEstimate.Enabled:=HasA and VectorTag and not chkUseDefaultEstimate.Checked; chkEnabled.Enabled:=HasA; chkApplyColor.Enabled:=HasA; chkShowValueLabel.Enabled:=HasA; if not fHasVertex then lblStatus.Caption:='Выберите вершину' else if not HasG then lblStatus.Caption:='Сначала создайте градиент' else if not HasA then lblStatus.Caption:='Добавьте цветовой якорь' else if not HasTag then lblStatus.Caption:='Выберите тег' else if not VectorTag then lblStatus.Caption:='Используется текущее значение' else begin if A.UseDefaultEstimate then E:=T.Estimate(T.EstimateSettings.DefaultKind) else E:=T.Estimate(A.EstimateKind); if E.Valid then lblStatus.Caption:='Оценка готова' else lblStatus.Caption:='Нет данных выбранной оценки'; end; end;
+begin
+  HasG:=SelectedGradient<>nil; HasA:=SelectedAnchor<>nil;
+  A:=SelectedAnchor; T:=nil;
+  if (A<>nil) and (fRegistry<>nil) then
+    T:=RecorderResolveTagReference(fRegistry,A.TagId,A.TagName);
+  HasTag:=T<>nil; VectorTag:=HasTag and T.IsVector;
+  btnDeleteGradient.Enabled:=HasG;
+  btnAddAnchor.Enabled:=fHasVertex and (fComponent<>nil) and
+    (fComponent.GradientStripCount>0);
+  btnDeleteAnchor.Enabled:=HasA;
+  edGradientName.Enabled:=HasG; cbLeftColor.Enabled:=HasG;
+  cbRightColor.Enabled:=HasG; seLeftValue.Enabled:=HasG;
+  seRightValue.Enabled:=HasG; edAnchorName.Enabled:=HasA;
+  seRadius.Enabled:=HasA;
+  seExponent.Enabled:=HasA and (cbFalloff.ItemIndex=Ord(vcfExponent));
+  cbFalloff.Enabled:=HasA; cbGradient.Enabled:=HasA;
+  edTagSearch.Enabled:=HasA; cbTag.Enabled:=HasA;
+  chkUseDefaultEstimate.Enabled:=HasA and VectorTag;
+  cbEstimate.Enabled:=HasA and VectorTag and not chkUseDefaultEstimate.Checked;
+  chkEnabled.Enabled:=HasA; chkApplyColor.Enabled:=HasA;
+  chkShowValueLabel.Enabled:=HasA;
+  if HasA and (A.FrfCurveId<>0) then
+  begin
+    edTagSearch.Enabled:=False; cbTag.Enabled:=False;
+    chkUseDefaultEstimate.Enabled:=False; cbEstimate.Enabled:=False;
+    lblStatus.Caption:='Источник FRF: '+A.SourceBindingId+', канал '+
+      IntToStr(A.FrfCurveId);
+    Exit;
+  end;
+  if not fHasVertex then lblStatus.Caption:='Выберите вершину'
+  else if not HasG then lblStatus.Caption:='Сначала создайте градиент'
+  else if not HasA then lblStatus.Caption:='Добавьте цветовой якорь'
+  else if not HasTag then lblStatus.Caption:='Выберите тег'
+  else if not VectorTag then lblStatus.Caption:='Используется текущее значение'
+  else
+  begin
+    if A.UseDefaultEstimate then E:=T.Estimate(T.EstimateSettings.DefaultKind)
+    else E:=T.Estimate(A.EstimateKind);
+    if E.Valid then lblStatus.Caption:='Оценка готова'
+    else lblStatus.Caption:='Нет данных выбранной оценки';
+  end;
+end;
 
 procedure TRecorder3dVertexColorModifierFrame.Changed;
 begin if Assigned(fOnChanged) then fOnChanged(Self); end;

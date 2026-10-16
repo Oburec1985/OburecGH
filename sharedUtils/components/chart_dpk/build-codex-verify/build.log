@@ -1,0 +1,640 @@
+__________________________________________________
+Проект "D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\ComponentsLib.dproj" (цели Build):
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe --no-config -B -Q -Z -I"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib\EN";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib\EN\Debug";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib\Debug";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Lib\Debug\Indy10";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\RaveReports\Lib";..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\ogl;..\..\..\sharedUtils\utils\FastMM;E:\Oburec\project\Delphi\projects2009\sharedUtils\utils\FastMM;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\forms;..\..\..\3dProj\Loader_\Render\Shaders;..\..\..\sharedUtils\utils\files;..\..\..\sharedUtils\utils;..\..\..\3dProj\Loader_;..\..\..\3dProj\Loader_\helpTools;..\..\..\sharedUtils\utils\PathUtils;..\..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;"..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\items";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib";\Imports;"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Imports";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Lib\Indy10";"C:\Users\Public\Documents\RAD Studio\7.0\Dcp";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\include";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\RaveReports\Lib" -LE"D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\build-codex-verify\Bpl" -LN"D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\build-codex-verify\Dcp" -NB"D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\build-codex-verify\Dcp" -O..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\ogl;..\..\..\sharedUtils\utils\FastMM;E:\Oburec\project\Delphi\projects2009\sharedUtils\utils\FastMM;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\forms;..\..\..\3dProj\Loader_\Render\Shaders;..\..\..\sharedUtils\utils\files;..\..\..\sharedUtils\utils;..\..\..\3dProj\Loader_;..\..\..\3dProj\Loader_\helpTools;..\..\..\sharedUtils\utils\PathUtils;..\..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;"..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\items";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners";..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\ogl;..\..\..\sharedUtils\utils\FastMM;E:\Oburec\project\Delphi\projects2009\sharedUtils\utils\FastMM;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\forms;"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib";\Imports;"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Imports";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Lib\Indy10";"C:\Users\Public\Documents\RAD Studio\7.0\Dcp";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\include";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\RaveReports\Lib" -R"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib\EN";..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\ogl;..\..\..\sharedUtils\utils\FastMM;E:\Oburec\project\Delphi\projects2009\sharedUtils\utils\FastMM;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\forms;..\..\..\3dProj\Loader_\Render\Shaders;..\..\..\sharedUtils\utils\files;..\..\..\sharedUtils\utils;..\..\..\3dProj\Loader_;..\..\..\3dProj\Loader_\helpTools;..\..\..\sharedUtils\utils\PathUtils;..\..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;"..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\items";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners";..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\ogl;..\..\..\sharedUtils\utils\FastMM;E:\Oburec\project\Delphi\projects2009\sharedUtils\utils\FastMM;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\forms;"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib";\Imports;"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Imports";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Lib\Indy10";"C:\Users\Public\Documents\RAD Studio\7.0\Dcp";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\include";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\RaveReports\Lib" -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib\EN";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib\EN\Debug";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib\Debug";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Lib\Debug\Indy10";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\RaveReports\Lib";..\..\..\sharedUtils;..\..\..\sharedUtils\math;..\..\..\sharedUtils\utils\lists;..\..\..\sharedUtils\objects;..\..\..\sharedUtils\ogl;..\..\..\sharedUtils\utils\FastMM;E:\Oburec\project\Delphi\projects2009\sharedUtils\utils\FastMM;..\..\..\sharedUtils\objects\utils;..\..\..\sharedUtils\utils\xml;..\..\..\sharedUtils\forms;..\..\..\3dProj\Loader_\Render\Shaders;..\..\..\sharedUtils\utils\files;..\..\..\sharedUtils\utils;..\..\..\3dProj\Loader_;..\..\..\3dProj\Loader_\helpTools;..\..\..\sharedUtils\utils\PathUtils;..\..\..\sharedUtils\utils\jcl-2.3.1.4197;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\windows\obj;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\common;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\include;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197\source\prototypes\containers;..\..\..\sharedUtils\utils\jcl-2.3.1.4197\jcl-2.3.1.4197;"..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\forms\frames";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\items";"..\..\..\sharedUtils\компоненты\chart_dpk\chart\items\framelisteners";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib";\Imports;"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Imports";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Lib\Indy10";"C:\Users\Public\Documents\RAD Studio\7.0\Dcp";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\include";"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\RaveReports\Lib" -V -VN -VR -K00400000 -GD -NO"D:\works\OburecGH\sharedUtils\компоненты\chart_dpk\build-codex-verify\Dcp"   ComponentsLib.dpk   
+Embarcadero Delphi for Win32 compiler version 21.0
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\utils\uText.pas(176) Warning: W1035 Return value of function 'FuncOutText' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\utils\uText.pas(208) Warning: W1035 Return value of function 'FuncOutVectorText' might be undefined
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\utils\uText.pas(213) Warning: W1058 Implicit string cast with potential data loss from 'string' to 'AnsiString'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\utils\uText.pas(215) Warning: W1058 Implicit string cast with potential data loss from 'string' to 'AnsiString'
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\utils\uText.pas(400) Warning: W1024 Combining signed and unsigned types - widened both operands
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\utils\uText.pas(405) Warning: W1024 Combining signed and unsigned types - widened both operands
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uFontMng.pas(11) Warning: W1010 Method 'Destroy' hides virtual method of base type 'TStringList'
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\math\u2DMath.pas(194) Warning: W1035 Return value of function 'FindPointOnSpline' might be undefined
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\utils\lists\uSimpleSetList.pas(74) Warning: W1035 Return value of function 'cFloatSetList.getSingle' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\utils\lists\uSimpleSetList.pas(114) Warning: W1035 Return value of function 'cDoubleSetList.getDouble' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\utils\lists\uSimpleSetList.pas(155) Warning: W1035 Return value of function 'cIntSetList.getInt' might be undefined
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\math\uMyMath.pas(676) Warning: W1035 Return value of function 'MeedleFilter' might be undefined
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\math\uMyMath.pas(829) Warning: W1035 Return value of function 'GetSKOd' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\ogl\shader\uShader.pas(63) Warning: W1010 Method 'Destroy' hides virtual method of base type 'TObject'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\ogl\shader\uShader.pas(107) Warning: W1057 Implicit string cast from 'AnsiChar' to 'string'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\ogl\shader\uShader.pas(218) Warning: W1057 Implicit string cast from 'AnsiString' to 'string'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\ogl\shader\uShader.pas(223) Warning: W1058 Implicit string cast with potential data loss from 'string' to 'AnsiString'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\ogl\shader\uShader.pas(228) Warning: W1058 Implicit string cast with potential data loss from 'string' to 'AnsiString'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\ogl\shader\uShader.pas(231) Warning: W1057 Implicit string cast from 'AnsiString' to 'string'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\ogl\shader\uShader.pas(265) Warning: W1058 Implicit string cast with potential data loss from 'string' to 'AnsiString'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\ogl\shader\uShader.pas(270) Warning: W1058 Implicit string cast with potential data loss from 'string' to 'AnsiString'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\ogl\shader\uShader.pas(309) Warning: W1057 Implicit string cast from 'AnsiChar' to 'string'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\ogl\shader\uShader.pas(308) Warning: W1036 Variable 'log' might not have been initialized
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uTrend.pas(103) Warning: W1010 Method 'AddPoint' hides virtual method of base type 'cBasicTrend'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uTrend.pas(104) Warning: W1010 Method 'AddPoint' hides virtual method of base type 'cBasicTrend'
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\utils\uFrameListener.pas(55) Warning: W1010 Method 'Destroy' hides virtual method of base type 'TStringList'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\utils\uFrameListener.pas(59) Warning: W1010 Method 'Add' hides virtual method of base type 'TStringList'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\utils\uFrameListener.pas(133) Warning: W1020 Constructing instance of 'cSetList' containing abstract method 'cSetList.deletechild'
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uDoubleCursor.pas(35) Warning: W1010 Method 'Destroy' hides virtual method of base type 'TObject'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uPageMng.pas(38) Warning: W1010 Method 'createEvents' hides virtual method of base type 'cDrawObj'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uPageMng.pas(39) Warning: W1010 Method 'DeleteEvents' hides virtual method of base type 'cDrawObj'
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\uChart.pas(143) Warning: W1010 Method 'CreateParams' hides virtual method of base type 'TCustomPanel'
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uChartCfgForm.pas(22) Warning: W1010 Method 'ShowModal' hides virtual method of base type 'TCustomForm'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uChartCfgForm.pas(60) Warning: W1035 Return value of function 'TChartCfgForm.showmodal' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : D:\works\OburecGH\sharedUtils\utils\uDescObj.pas(23) Warning: W1010 Method 'create' hides virtual method of base type 'cVectorList'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uTrendForm.pas(22) Warning: W1010 Method 'ShowModal' hides virtual method of base type 'TCustomForm'
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uTrendForm.pas(50) Warning: W1035 Return value of function 'TTrendForm.ShowModal' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uGistFrame.pas(80) Warning: W1035 Return value of function 'TGistFrame.GetObj' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uGistForm.pas(22) Warning: W1010 Method 'ShowModal' hides virtual method of base type 'TCustomForm'
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uGistForm.pas(50) Warning: W1035 Return value of function 'TGistForm.ShowModal' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uDrawObjEditForm.pas(19) Warning: W1010 Method 'ShowModal' hides virtual method of base type 'TCustomForm'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uDrawObjEditForm.pas(45) Warning: W1035 Return value of function 'TDrawObjEditForm.ShowModal' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uPageForm.pas(25) Warning: W1010 Method 'ShowModal' hides virtual method of base type 'TCustomForm'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uPageForm.pas(62) Warning: W1035 Return value of function 'TPageForm.ShowModal' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uChartCursor.pas(32) Warning: W1010 Method 'Destroy' hides virtual method of base type 'TObject'
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uChartCursor.pas(62) Warning: W1020 Constructing instance of 'cChartCursor' containing abstract method 'cBaseObj.setsorted'
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uCursorForm.pas(25) Warning: W1010 Method 'ShowModal' hides virtual method of base type 'TCustomForm'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uCursorForm.pas(67) Warning: W1035 Return value of function 'TCursorForm.ShowModal' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uDoubleCursorForm.pas(25) Warning: W1010 Method 'ShowModal' hides virtual method of base type 'TCustomForm'
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uTextLabel.pas(58) Warning: W1010 Method 'create' hides virtual method of base type 'cDrawObj'
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uTextLabelForm.pas(28) Warning: W1010 Method 'ShowModal' hides virtual method of base type 'TCustomForm'
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBuffTrend1d.pas(57) Warning: W1010 Method 'AddPoint' hides virtual method of base type 'cBasicTrend'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBuffTrend1d.pas(176) Warning: W1035 Return value of function 'cBuffTrend1d.GetYByInd' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBuffTrend1d.pas(223) Warning: W1023 Comparing signed and unsigned types - widened both operands
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBuffTrend1d.pas(280) Warning: W1013 Constant 0 converted to NIL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBuffTrend2d.pas(198) Warning: W1035 Return value of function 'cBuffTrend2d.AddPoint' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uAutoPage.pas(31) Warning: W1020 Constructing instance of 'cBuffTrend1d' containing abstract method 'cBasicTrend.GetT0'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uAutoPage.pas(31) Warning: W1020 Constructing instance of 'cBuffTrend1d' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uAutoPage.pas(33) Warning: W1020 Constructing instance of 'cBuffTrend2d' containing abstract method 'cBasicTrend.GetT0'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uAutoPage.pas(33) Warning: W1020 Constructing instance of 'cBuffTrend2d' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uAxisForm.pas(25) Warning: W1010 Method 'ShowModal' hides virtual method of base type 'TCustomForm'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uAxisForm.pas(48) Warning: W1035 Return value of function 'TAxisForm.ShowModal' might be undefined
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uEditMenuChartForm.pas(246) Warning: W1020 Constructing instance of 'cTextLabel' containing abstract method 'cBaseObj.setsorted'
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\uChart.pas(394) Warning: W1020 Constructing instance of 'cPageMngList' containing abstract method 'cBaseObj.setsorted'
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\uChart.pas(649) Warning: W1036 Variable 'res' might not have been initialized
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\uChart.pas(752) Warning: W1023 Comparing signed and unsigned types - widened both operands
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uPageMng.pas(141) Warning: W1020 Constructing instance of 'cPage' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uPageMng.pas(313) Warning: W1020 Constructing instance of 'cPageMng' containing abstract method 'cBaseObj.setsorted'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\framelisteners\uChartClickFrListener.pas(674) Warning: W1036 Variable 'sp' might not have been initialized
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\upage.pas(324) Warning: W1057 Implicit string cast from 'UTF8String' to 'string'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\upage.pas(342) Warning: W1057 Implicit string cast from 'string' to 'UTF8String'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\upage.pas(943) Warning: W1020 Constructing instance of 'cAxis' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\upage.pas(972) Warning: W1020 Constructing instance of 'cLabel' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\upage.pas(982) Warning: W1020 Constructing instance of 'cFloatLabel' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\upage.pas(992) Warning: W1020 Constructing instance of 'cFloatLabel' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\upage.pas(1000) Warning: W1020 Constructing instance of 'cFloatLabel' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\upage.pas(1008) Warning: W1020 Constructing instance of 'cFloatLabel' containing abstract method 'cBaseObj.setsorted'
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\upage.pas(1272) Warning: W1020 Constructing instance of 'cDrawObj' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\upage.pas(1288) Warning: W1020 Constructing instance of 'cDoubleCursor' containing abstract method 'cBaseObj.setsorted'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uLabel.pas(386) Warning: W1036 Variable 'lastindex' might not have been initialized
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uLabel.pas(985) Warning: W1036 Variable 'firstind' might not have been initialized
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uLabel.pas(985) Warning: W1036 Variable 'endind' might not have been initialized
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uDoubleCursor.pas(246) Warning: W1035 Return value of function 'GetMax' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uDoubleCursor.pas(431) Warning: W1036 Variable 'newpos' might not have been initialized
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uAxis.pas(169) Warning: W1035 Return value of function 'evalLogPos' might be undefined
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uAxis.pas(677) Warning: W1020 Constructing instance of 'cTrend' containing abstract method 'cBasicTrend.GetXByInd'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uAxis.pas(677) Warning: W1020 Constructing instance of 'cTrend' containing abstract method 'cBasicTrend.GetYByInd'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uAxis.pas(677) Warning: W1020 Constructing instance of 'cTrend' containing abstract method 'cGraphObj.SetCount'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uAxis.pas(677) Warning: W1020 Constructing instance of 'cTrend' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uAxis.pas(690) Warning: W1020 Constructing instance of 'cGistogram' containing abstract method 'cGraphObj.SetCount'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uAxis.pas(690) Warning: W1020 Constructing instance of 'cGistogram' containing abstract method 'cBaseObj.setsorted'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uGistogram.pas(449) Warning: W1020 Constructing instance of 'cMarkerList' containing abstract method 'cBaseObj.setsorted'
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uMarkers.pas(238) Warning: W1035 Return value of function 'cMarkerList.AddMarker' might be undefined
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uTrend.pas(257) Warning: W1036 Variable 'prev' might not have been initialized
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uTrend.pas(890) Warning: W1036 Variable 'page' might not have been initialized
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBasicTrend.pas(331) Warning: W1036 Variable 'xlgRange' might not have been initialized
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBasicTrend.pas(331) Warning: W1036 Variable 'xlgMin' might not have been initialized
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBasicTrend.pas(310) Warning: W1036 Variable 'lgRange' might not have been initialized
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBasicTrend.pas(334) Warning: W1036 Variable 'xrange' might not have been initialized
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBasicTrend.pas(310) Warning: W1036 Variable 'lgMin' might not have been initialized
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBasicTrend.pas(311) Warning: W1036 Variable 'range' might not have been initialized
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBasicTrend.pas(462) Warning: W1035 Return value of function 'cBasicTrend.GetLowInd' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBasicTrend.pas(467) Warning: W1035 Return value of function 'cBasicTrend.GetHiInd' might be undefined
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uBasicTrend.pas(705) Warning: W1035 Return value of function 'cBasicTrend.AddPoint' might be undefined
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uDrawObj.pas(196) Warning: W1058 Implicit string cast with potential data loss from 'string' to 'AnsiString'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uDrawObj.pas(197) Warning: W1058 Implicit string cast with potential data loss from 'string' to 'AnsiString'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uDrawObj.pas(198) Warning: W1057 Implicit string cast from 'AnsiString' to 'string'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uDrawObj.pas(198) Warning: W1057 Implicit string cast from 'AnsiString' to 'string'
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uEdit.pas(47) Warning: W1010 Method 'setcaption' hides virtual method of base type 'cBaseObj'
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uFreqBand.pas(19) Warning: W1010 Method 'Destroy' hides virtual method of base type 'TObject'
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uFreqBand.pas(109) Warning: W1035 Return value of function 'correctPosX' might be undefined
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uFreqBand.pas(126) Warning: W1036 Variable 'y' might not have been initialized
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uFreqBand.pas(155) Warning: W1036 Variable 'x' might not have been initialized
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uFreqBand.pas(155) Warning: W1036 Variable 'y' might not have been initialized
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uFreqBand.pas(186) Warning: W1020 Constructing instance of 'cLabel' containing abstract method 'cBaseObj.setsorted'
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uFreqBand.pas(286) Warning: W1020 Constructing instance of 'cLabel' containing abstract method 'cBaseObj.setsorted'
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\forms\uEditChartObjFrame.pas(87) Warning: W1035 Return value of function 'TEditDrawObjFrame.getObj' might be undefined
+
+
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uGrid.pas(177) Warning: W1010 Method 'Destroy' hides virtual method of base type 'TObject'
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uGrid.pas(308) Warning: W1022 Comparison always evaluates to True
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uGrid.pas(308) Warning: W1023 Comparing signed and unsigned types - widened both operands
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uGrid.pas(367) Warning: W1020 Constructing instance of 'cScrollBar' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uGrid.pas(368) Warning: W1020 Constructing instance of 'cScrollBar' containing abstract method 'cBaseObj.setsorted'
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uGrid.pas(607) Warning: W1036 Variable 'col' might not have been initialized
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uPolarGraphPage.pas(39) Warning: W1010 Method 'GetY' hides virtual method of base type 'cGraphObj'
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uPolarGraphPage.pas(101) Warning: W1010 Method 'create' hides virtual method of base type 'cDrawObj'
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uPolarGraphPage.pas(432) Warning: W1020 Constructing instance of 'cLabel' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uPolarGraphPage.pas(446) Warning: W1020 Constructing instance of 'cPolarAxis' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uPolarGraphPage.pas(449) Warning: W1020 Constructing instance of 'cFloatLabel' containing abstract method 'cBaseObj.setsorted'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uPolarGraphPage.pas(457) Warning: W1020 Constructing instance of 'cFloatLabel' containing abstract method 'cBaseObj.setsorted'
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : chart\items\uPolarGraphPage.pas(756) Warning: W1035 Return value of function 'cPolarGraph1dCycle.userIndToInternal' might be undefined
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'uMyMath' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'uAxisForm' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'uFrameListener' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclHookExcept' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclTD32' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclPeImage' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclUnitVersioning' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclSysUtils' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclConsole' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclSynch' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclRegistry' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclStrings' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclWideStrings' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclUnicode' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclSysInfo' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclIniFiles' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclShell' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclFileUtils' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclDateTime' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclSecurity' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'Snmp' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclAnsiStrings' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclStreams' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclMath' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'Jcl8087' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclCharsets' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclStringConversions' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclLogic' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclWin32' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclBase' implicitly imported into package 'ComponentsLib'
+
+C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\Bin\CodeGear.Delphi.Targets : warning : ComponentsLib.dpk(105) Warning: W1033 Unit 'JclResources' implicitly imported into package 'ComponentsLib'
+169183 lines, 0.41 seconds, 982712 bytes code, 548916 bytes data.
+Конец создания проекта "ComponentsLib.dproj".

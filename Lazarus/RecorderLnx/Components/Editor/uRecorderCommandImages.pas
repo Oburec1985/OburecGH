@@ -205,9 +205,24 @@ begin
 end;
 
 procedure EnsureImageListSize(AImages: TCustomImageList; AMinCount: Integer);
+var
+  lBitmap: TBitmap;
 begin
   while AImages.Count < AMinCount do
-    AddBitmapFile(AImages, '');
+  begin
+    { TBitmap.Create без LoadFromFile имеет размер 0x0, а некоторые LCL
+      widgetset-ы не добавляют такой элемент в TImageList. Создаём валидный
+      placeholder размером списка; вызывающий код сразу заменит его glyph-ом. }
+    lBitmap := TBitmap.Create;
+    try
+      lBitmap.SetSize(AImages.Width, AImages.Height);
+      lBitmap.Canvas.Brush.Color := clWhite;
+      lBitmap.Canvas.FillRect(0, 0, lBitmap.Width, lBitmap.Height);
+      AImages.Add(lBitmap, nil);
+    finally
+      lBitmap.Free;
+    end;
+  end;
 end;
 
 procedure RefreshSaveConfigIcons(AImages: TCustomImageList);
@@ -549,7 +564,9 @@ var
   lBitmap: TBitmap;
   lKind: Integer;
 begin
-  for lKind := 0 to 8 do
+  { 73 is a user-maintained MeraBase icon. Keep the generated groups split
+    around that reserved index instead of overwriting a contiguous range. }
+  for lKind := 0 to 4 do
   begin
     lBitmap := TBitmap.Create;
     try
@@ -562,17 +579,38 @@ begin
       lBitmap.Free;
     end;
   end;
+
+  for lKind := 0 to 2 do
+  begin
+    lBitmap := TBitmap.Create;
+    try
+      lBitmap.SetSize(42, 42);
+      lBitmap.PixelFormat := pf24bit;
+      lBitmap.Transparent := False;
+      Draw3dToolbarGlyph(lBitmap.Canvas, lKind + 6);
+      AImages.Replace(CIcon3dRotateX + lKind, lBitmap, nil);
+    finally
+      lBitmap.Free;
+    end;
+  end;
+end;
+
+procedure PrepareRecorderCommandImages(AImages: TCustomImageList);
+begin
+  if AImages = nil then
+    Exit;
+  EnsureImageListSize(AImages, CRecorderCommandImageCount);
+  Replace3dToolbarIcons(AImages);
 end;
 
 procedure RegenerateRecorderDesignerIcons(AImages: TCustomImageList);
 begin
   if AImages = nil then
     Exit;
-  EnsureImageListSize(AImages, CRecorderCommandImageCount);
+  PrepareRecorderCommandImages(AImages);
   ReplaceInputFieldIcon(AImages);
   ReplaceComponentPaletteIcons(AImages);
   Replace3dSceneIcon(AImages);
-  Replace3dToolbarIcons(AImages);
 end;
 
 procedure ValidateRecorderCommandImages(AImages: TCustomImageList);

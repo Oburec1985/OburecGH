@@ -11,6 +11,13 @@ unit uRecorderFormModel;
     Core/domain. Модуль не зависит от LCL и не создаёт экземпляры TControl. UI-слой
     берёт отсюда метаданные для связи с оболочкой LCL/Canvas/OpenGL-компонентами.
 
+  Ограничение для плагинов:
+    Базовая модель может хранить только общие данные (TypeId, Id, Name, bounds,
+    общую привязку). Не добавлять сюда состояния, алгоритмы или настройки
+    конкретного plugin-компонента. TRecorderOscillogramComponent и его поля —
+    legacy host-owned модель, подлежащая миграции в opaque plugin state; до
+    удаления сохранять совместимость существующих проектов.
+
   Сохранение между сессиями:
     Модель для сохранения/загрузки, зарегистрированные типы, layout engine и фабрики
     на этом уровне. При старте восстанавливаем состояние экрана по файлам проекта.
@@ -25,7 +32,7 @@ interface
 
 uses
   Classes, SysUtils, Contnrs, uRecorderTags, uOglChartColors,
-  uRecorderVibrationEstimate;
+  uRecorderVibrationEstimate, uRecorderRunControlSettings;
 
 type
   { TRecorderRect
@@ -62,11 +69,14 @@ type
   ERecorderFormError = class(Exception);
 
   TRecorderComponentFactoryBase = class;
+  TRecorderOpaqueStateResult = (rosNotHandled, rosSuccess, rosFailure);
   TRecorderFormPage = class;
   TRecorderNamedFont = class;
   TRecorderNamedFontManager = class;
   TRecorderVisualComponent = class;
   TRecorderVisualComponentClass = class of TRecorderVisualComponent;
+
+  TRecorderPluginConfigBytes = array of Byte;
 
   TRecorderComponentCreateContext = record
     Page: TRecorderFormPage;
@@ -119,6 +129,9 @@ type
     procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
     procedure GetEffectiveFont(const ALocal: TRecorderFontSnapshot;
       out AResult: TRecorderFontSnapshot);
+    procedure DoStart; virtual;
+    procedure DoStop; virtual;
+    procedure DoUpdateData; virtual;
 
     { Возвращает идентификатор типа для фабрики. }
     class function TypeId: string;
@@ -133,6 +146,36 @@ type
     property ParentPage: TRecorderFormPage read fParentPage;
     property NamedFontName: string read fNamedFontName write SetNamedFontName;
     property NamedFonts: TRecorderNamedFontManager read fNamedFonts;
+  end;
+
+  { Host-neutral envelope for a visual component implemented by a plugin.
+
+    The host model owns only the common visual-component attributes inherited
+    from TRecorderVisualComponent and this opaque, versioned payload. It must
+    not interpret ConfigBlob or retain a plugin object/interface/pointer here. }
+  TRecorderPluginVisualComponent = class(TRecorderVisualComponent)
+  private
+    fPluginTypeId: string;
+    fConfigSchemaId: string;
+    fConfigSchemaVersion: LongWord;
+    fConfigStatePresent: Boolean;
+    fConfigBlob: TRecorderPluginConfigBytes;
+    procedure SetPluginTypeId(const AValue: string);
+    procedure SetConfigBlob(const AValue: TRecorderPluginConfigBytes);
+    function GetConfigBlob: TRecorderPluginConfigBytes;
+  protected
+    class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    procedure AssignPluginVisual(ASource: TRecorderPluginVisualComponent);
+    property PluginTypeId: string read fPluginTypeId write SetPluginTypeId;
+    property ConfigSchemaId: string read fConfigSchemaId write fConfigSchemaId;
+    property ConfigSchemaVersion: LongWord read fConfigSchemaVersion
+      write fConfigSchemaVersion;
+    property ConfigStatePresent: Boolean read fConfigStatePresent
+      write fConfigStatePresent;
+    property ConfigBlob: TRecorderPluginConfigBytes read GetConfigBlob
+      write SetConfigBlob;
   end;
 
   TRecorderNamedFont = class
@@ -394,6 +437,7 @@ type
     fYOffset: Double;
     fTriggerTagName: string;
     fTriggerEnabled: Boolean;
+    fTriggerEdge: TRecorderSignalEdge;
     fTriggerLevel: Double;
     fTriggerPreRollPercent: Double;
     function GetLine(AIndex: Integer): TRecorderTrendLine;
@@ -438,6 +482,7 @@ type
     property YOffset: Double read GetYOffset write SetYOffset;
     property TriggerTagName: string read fTriggerTagName write fTriggerTagName;
     property TriggerEnabled: Boolean read fTriggerEnabled write fTriggerEnabled;
+    property TriggerEdge: TRecorderSignalEdge read fTriggerEdge write fTriggerEdge;
     property TriggerLevel: Double read fTriggerLevel write fTriggerLevel;
     property TriggerPreRollPercent: Double read fTriggerPreRollPercent
       write SetTriggerPreRollPercent;
@@ -511,6 +556,7 @@ type
 
   TRecorderSpectrumComponent = class(TRecorderVisualComponent)
   private
+    fAxes: TList;
     fRangeMinX, fRangeMaxX: Double;
     fRangeMinY, fRangeMaxY: Double;
     fLgX, fLgY: Boolean;
@@ -523,15 +569,20 @@ type
     fSpectrumIntegration: Integer;
     fTagNames: TStringList;
     fTagIds: array of TRecorderTagId;
+    fTagAxisIndexes: array of Integer;
     fTahoTagName: string;
     fTahoTagId: TRecorderTagId;
     fProfileName: string;
+    function GetAxis(AIndex: Integer): TRecorderTrendAxis;
+    function GetAxisCount: Integer;
   protected
     class function GetTypeId: string; override;
   public
     constructor Create; override;
     destructor Destroy; override;
     procedure Assign(ASource: TRecorderSpectrumComponent);
+    function AddAxis: TRecorderTrendAxis;
+    procedure ClearAxes;
     procedure EnsureTagIdsCount;
     procedure ClearTagRefs;
     procedure SetTagRefAt(AIndex: Integer; ATag: TRecorderTag);
@@ -540,6 +591,10 @@ type
     procedure ResolveTagIdsFromNames(ARegistry: TRecorderTagRegistry);
     function TagIdAt(AIndex: Integer): TRecorderTagId;
     procedure SetTagIdAt(AIndex: Integer; ATagId: TRecorderTagId);
+    function TagAxisIndexAt(AIndex: Integer): Integer;
+    procedure SetTagAxisIndexAt(AIndex, AAxisIndex: Integer);
+    property AxisCount: Integer read GetAxisCount;
+    property Axes[AIndex: Integer]: TRecorderTrendAxis read GetAxis;
     property RangeMinX: Double read fRangeMinX write fRangeMinX;
     property RangeMaxX: Double read fRangeMaxX write fRangeMaxX;
     property RangeMinY: Double read fRangeMinY write fRangeMinY;
@@ -654,6 +709,7 @@ const
   CRecorderPaletteGroupCharts = 'charts';
   CRecorderPaletteGroupIndicators = 'indicators';
   CRecorderPaletteGroupImages = 'images';
+  CRecorderPaletteGroupSignals = 'signals';
 
 type
   { TRecorderComponentFactoryBase
@@ -679,7 +735,7 @@ type
     function GetChildCount: Integer;
   protected
     { Убирает компонент из списка детей при уничтожении объекта. }
-    procedure ExcludeComponent(AComponent: TRecorderVisualComponent);
+    procedure ExcludeComponent(AComponent: TRecorderVisualComponent); virtual;
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
       const AContext: TRecorderComponentCreateContext); virtual;
   public
@@ -705,6 +761,17 @@ type
 
     { Проверяет, что компонент всё ещё числится среди созданных фабрикой. }
     function ContainsComponent(AComponent: TRecorderVisualComponent): Boolean;
+
+    { Явно раздаёт общие события всем компонентам этой фабрики. }
+    procedure DoStart; virtual;
+    procedure DoStop; virtual;
+    procedure DoUpdateData; virtual;
+    function LoadOpaqueComponentState(
+      AComponent: TRecorderVisualComponent): TRecorderOpaqueStateResult; virtual;
+    function SaveOpaqueComponentState(
+      AComponent: TRecorderVisualComponent): TRecorderOpaqueStateResult; virtual;
+    function CopyOpaqueComponentState(ASource, ATarget: TRecorderVisualComponent):
+      TRecorderOpaqueStateResult; virtual;
 
     { Объявляет, как фабрика представлена в палитре компонентов. Строковый ID
       иконки разрешается UI-слоем и не связывает Core с LCL/ImageList. }
@@ -801,7 +868,7 @@ type
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
       const AContext: TRecorderComponentCreateContext); override;
   public
-    constructor Create;
+    constructor Create; reintroduce;
   end;
 
   { Фабрика компонента осциллограммы }
@@ -834,12 +901,12 @@ type
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
       const AContext: TRecorderComponentCreateContext); override;
   public
-    constructor Create;
+    constructor Create; reintroduce;
   end;
 
   TRecorderLissajousFactory = class(TRecorderComponentFactoryBase)
   public
-    constructor Create;
+    constructor Create; reintroduce;
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
       const AContext: TRecorderComponentCreateContext); override;
   end;
@@ -978,6 +1045,9 @@ type
     экземпляры для каждого зарегистрированного типа компонента формы. }
   TRecorderComponentFactory = class
   private
+    { Non-owning lookup names. Canonical fRegistry alone owns factories and
+      dispatches lifecycle, so aliases never duplicate callbacks/destruction. }
+    fAliases: TStringList;
     fRegistry: TStringList;                        { строка зарегистрированных типов }
     function GetFactory(AIndex: Integer): TRecorderComponentFactoryBase;
     function GetFactoryCount: Integer;
@@ -997,6 +1067,14 @@ type
       AFactory - экземпляр фабрики; владение переходит реестру. }
     procedure RegisterFactory(AFactory: TRecorderComponentFactoryBase);
 
+    { Adds a case-insensitive alternate name for an existing canonical TypeId.
+      Alias chains and all canonical/alias name collisions are rejected. }
+    procedure RegisterAlias(const AAlias, ACanonicalTypeId: string);
+
+    { Removes and destroys a factory. Its component instances are destroyed
+      first by the factory while the owning plugin library is still loaded. }
+    function UnregisterFactory(const ATypeId: string): Boolean;
+
     { Создаёт компонент зарегистрированного типа.
       ATypeId - машинное имя компонента. }
     function CreateComponent(const ATypeId: string): TRecorderVisualComponent;
@@ -1009,6 +1087,9 @@ type
 
     { Регистрирует стандартный набор компонентов формы. }
     procedure RegisterDefaultComponents;
+    procedure DoStart;
+    procedure DoStop;
+    procedure DoUpdateData;
 
     property FactoryCount: Integer read GetFactoryCount;
     property Factories[AIndex: Integer]: TRecorderComponentFactoryBase read GetFactory;
@@ -1032,29 +1113,18 @@ type
       ATagName: string): TRecorderFormPage;
   end;
 
-function RecorderIsBuiltInOscillogram(
-  AComponent: TRecorderVisualComponent): Boolean;
-function RecorderIsPluginOscillograph(
-  AComponent: TRecorderVisualComponent): Boolean;
+function RecorderSignalCrossesTriggerLevel(APreviousValue, ACurrentValue,
+  ALevel: Double; AEdge: TRecorderSignalEdge): Boolean;
 
 implementation
 
-function RecorderIsBuiltInOscillogram(
-  AComponent: TRecorderVisualComponent): Boolean;
+function RecorderSignalCrossesTriggerLevel(APreviousValue, ACurrentValue,
+  ALevel: Double; AEdge: TRecorderSignalEdge): Boolean;
 begin
-  Result := AComponent is TRecorderOscillogramComponent;
-  if not Result then
-    Exit;
-  Result := (AComponent.Factory = nil) or SameText(
-    AComponent.Factory.TypeId, TRecorderOscillogramComponent.TypeId);
-end;
-
-function RecorderIsPluginOscillograph(
-  AComponent: TRecorderVisualComponent): Boolean;
-begin
-  Result := (AComponent is TRecorderOscillogramComponent) and
-    (AComponent.Factory <> nil) and
-    not RecorderIsBuiltInOscillogram(AComponent);
+  if AEdge = rseFalling then
+    Result := (APreviousValue > ALevel) and (ACurrentValue <= ALevel)
+  else
+    Result := (APreviousValue < ALevel) and (ACurrentValue >= ALevel);
 end;
 
 { TRecorderVisualComponent }
@@ -1211,9 +1281,96 @@ begin
   fBounds.Height := AHeight;
 end;
 
+procedure TRecorderVisualComponent.DoStart;
+begin
+end;
+
+procedure TRecorderVisualComponent.DoStop;
+begin
+end;
+
+procedure TRecorderVisualComponent.DoUpdateData;
+begin
+end;
+
 class function TRecorderVisualComponent.TypeId: string;
 begin
   Result := GetTypeId;
+end;
+
+{ TRecorderPluginVisualComponent }
+
+class function TRecorderPluginVisualComponent.GetTypeId: string;
+begin
+  Result := 'PluginVisual';
+end;
+
+constructor TRecorderPluginVisualComponent.Create;
+begin
+  inherited Create;
+  fPluginTypeId := '';
+  fConfigSchemaId := '';
+  fConfigSchemaVersion := 0;
+  fConfigStatePresent := False;
+  SetLength(fConfigBlob, 0);
+end;
+
+procedure TRecorderPluginVisualComponent.SetPluginTypeId(const AValue: string);
+var
+  lValue: string;
+begin
+  lValue := Trim(AValue);
+  if lValue = '' then
+    raise ERecorderFormError.Create('Plugin visual type id cannot be empty');
+  fPluginTypeId := lValue;
+end;
+
+procedure TRecorderPluginVisualComponent.SetConfigBlob(
+  const AValue: TRecorderPluginConfigBytes);
+begin
+  fConfigBlob := Copy(AValue, 0, Length(AValue));
+end;
+
+function TRecorderPluginVisualComponent.GetConfigBlob:
+  TRecorderPluginConfigBytes;
+begin
+  Result := Copy(fConfigBlob, 0, Length(fConfigBlob));
+end;
+
+procedure TRecorderPluginVisualComponent.AssignPluginVisual(
+  ASource: TRecorderPluginVisualComponent);
+begin
+  if ASource = nil then
+    raise EArgumentNilException.Create('ASource');
+  if ASource = Self then
+    Exit;
+
+  Id := ASource.Id;
+  Name := ASource.Name;
+  TagName := ASource.TagName;
+  TagId := ASource.TagId;
+  UseInactiveTag := ASource.UseInactiveTag;
+  Bounds := ASource.Bounds;
+  NamedFontName := ASource.NamedFontName;
+  PluginTypeId := ASource.PluginTypeId;
+  ConfigSchemaId := ASource.ConfigSchemaId;
+  ConfigSchemaVersion := ASource.ConfigSchemaVersion;
+  ConfigStatePresent := ASource.ConfigStatePresent;
+  ConfigBlob := ASource.fConfigBlob;
+  if (Factory <> nil) and (Factory = ASource.Factory) then
+  begin
+    case Factory.CopyOpaqueComponentState(ASource, Self) of
+      rosFailure:
+        raise ERecorderFormError.CreateFmt(
+          'Plugin state copy failed for %s', [PluginTypeId]);
+      rosSuccess: ;
+      rosNotHandled: ;
+    end;
+  end
+  else if ConfigStatePresent and (Factory <> nil) and
+    (Factory.LoadOpaqueComponentState(Self) = rosFailure) then
+    raise ERecorderFormError.CreateFmt(
+      'Plugin state restore failed for %s', [PluginTypeId]);
 end;
 
 { TRecorderStaticTextComponent }
@@ -1529,6 +1686,7 @@ begin
   fYOffset := 0.0;
   fTriggerTagName := '';
   fTriggerEnabled := False;
+  fTriggerEdge := rseRising;
   fTriggerLevel := 0.0;
   fTriggerPreRollPercent := 25.0;
   fAxes := TList.Create;
@@ -1679,6 +1837,7 @@ begin
   YOffset := ASource.YOffset;
   fTriggerTagName := ASource.TriggerTagName;
   fTriggerEnabled := ASource.TriggerEnabled;
+  fTriggerEdge := ASource.TriggerEdge;
   fTriggerLevel := ASource.TriggerLevel;
   TriggerPreRollPercent := ASource.TriggerPreRollPercent;
   fTagName := ASource.TagName;
@@ -1932,8 +2091,11 @@ begin
 end;
 
 constructor TRecorderSpectrumComponent.Create;
+var
+  lAxis: TRecorderTrendAxis;
 begin
   inherited Create;
+  fAxes := TList.Create;
   fTagNames := TStringList.Create;
   fTagNames.CaseSensitive := False;
   
@@ -1954,15 +2116,24 @@ begin
   fSpectrumIntegration := 0;
   fTahoTagId := 0;
   SetLength(fTagIds, 0);
+  SetLength(fTagAxisIndexes, 0);
+  lAxis := AddAxis;
+  lAxis.Name := 'Y1';
+  lAxis.RangeMin := fRangeMinY;
+  lAxis.RangeMax := fRangeMaxY;
 end;
 
 destructor TRecorderSpectrumComponent.Destroy;
 begin
+  ClearAxes;
+  fAxes.Free;
   fTagNames.Free;
   inherited Destroy;
 end;
 
 procedure TRecorderSpectrumComponent.Assign(ASource: TRecorderSpectrumComponent);
+var
+  I: Integer;
 begin
   if ASource = nil then Exit;
   fRangeMinX := ASource.RangeMinX;
@@ -1985,12 +2156,76 @@ begin
   fProfileName := ASource.ProfileName;
   fTagNames.Assign(ASource.TagNames);
   fTagIds := ASource.fTagIds;
+  fTagAxisIndexes := ASource.fTagAxisIndexes;
+  ClearAxes;
+  for I := 0 to ASource.AxisCount - 1 do
+    AddAxis.Assign(ASource.Axes[I]);
+  if AxisCount = 0 then
+    AddAxis;
+end;
+
+function TRecorderSpectrumComponent.GetAxis(AIndex: Integer): TRecorderTrendAxis;
+begin
+  Result := TRecorderTrendAxis(fAxes[AIndex]);
+end;
+
+function TRecorderSpectrumComponent.GetAxisCount: Integer;
+begin
+  Result := fAxes.Count;
+end;
+
+function TRecorderSpectrumComponent.AddAxis: TRecorderTrendAxis;
+begin
+  Result := TRecorderTrendAxis.Create;
+  Result.Name := 'Y' + IntToStr(fAxes.Count + 1);
+  Result.RangeMin := fRangeMinY;
+  Result.RangeMax := fRangeMaxY;
+  fAxes.Add(Result);
+end;
+
+procedure TRecorderSpectrumComponent.ClearAxes;
+var
+  I: Integer;
+begin
+  for I := fAxes.Count - 1 downto 0 do
+    TObject(fAxes[I]).Free;
+  fAxes.Clear;
 end;
 
 procedure TRecorderSpectrumComponent.EnsureTagIdsCount;
+var
+  lOldCount, I: Integer;
 begin
   if Length(fTagIds) <> fTagNames.Count then
     SetLength(fTagIds, fTagNames.Count);
+  lOldCount := Length(fTagAxisIndexes);
+  if lOldCount <> fTagNames.Count then
+  begin
+    SetLength(fTagAxisIndexes, fTagNames.Count);
+    for I := lOldCount to High(fTagAxisIndexes) do
+      fTagAxisIndexes[I] := 0;
+  end;
+end;
+
+function TRecorderSpectrumComponent.TagAxisIndexAt(AIndex: Integer): Integer;
+begin
+  EnsureTagIdsCount;
+  if (AIndex < 0) or (AIndex >= Length(fTagAxisIndexes)) then
+    Exit(0);
+  Result := fTagAxisIndexes[AIndex];
+  if (Result < 0) or (Result >= AxisCount) then
+    Result := 0;
+end;
+
+procedure TRecorderSpectrumComponent.SetTagAxisIndexAt(AIndex,
+  AAxisIndex: Integer);
+begin
+  EnsureTagIdsCount;
+  if (AIndex < 0) or (AIndex >= Length(fTagAxisIndexes)) then
+    Exit;
+  if (AAxisIndex < 0) or (AAxisIndex >= AxisCount) then
+    AAxisIndex := 0;
+  fTagAxisIndexes[AIndex] := AAxisIndex;
 end;
 
 function TRecorderSpectrumComponent.TagIdAt(AIndex: Integer): TRecorderTagId;
@@ -2013,6 +2248,7 @@ end;
 procedure TRecorderSpectrumComponent.ClearTagRefs;
 begin
   SetLength(fTagIds, 0);
+  SetLength(fTagAxisIndexes, 0);
   fTahoTagId := 0;
 end;
 
@@ -2393,6 +2629,48 @@ function TRecorderComponentFactoryBase.ContainsComponent(
   AComponent: TRecorderVisualComponent): Boolean;
 begin
   Result := fChildren.IndexOf(AComponent) >= 0;
+end;
+
+procedure TRecorderComponentFactoryBase.DoStart;
+var
+  I: Integer;
+begin
+  for I := 0 to fChildren.Count - 1 do
+    TRecorderVisualComponent(fChildren[I]).DoStart;
+end;
+
+procedure TRecorderComponentFactoryBase.DoStop;
+var
+  I: Integer;
+begin
+  for I := 0 to fChildren.Count - 1 do
+    TRecorderVisualComponent(fChildren[I]).DoStop;
+end;
+
+procedure TRecorderComponentFactoryBase.DoUpdateData;
+var
+  I: Integer;
+begin
+  for I := 0 to fChildren.Count - 1 do
+    TRecorderVisualComponent(fChildren[I]).DoUpdateData;
+end;
+
+function TRecorderComponentFactoryBase.LoadOpaqueComponentState(
+  AComponent: TRecorderVisualComponent): TRecorderOpaqueStateResult;
+begin
+  Result := rosNotHandled;
+end;
+
+function TRecorderComponentFactoryBase.SaveOpaqueComponentState(
+  AComponent: TRecorderVisualComponent): TRecorderOpaqueStateResult;
+begin
+  Result := rosNotHandled;
+end;
+
+function TRecorderComponentFactoryBase.CopyOpaqueComponentState(ASource,
+  ATarget: TRecorderVisualComponent): TRecorderOpaqueStateResult;
+begin
+  Result := rosNotHandled;
 end;
 
 procedure TRecorderComponentFactoryBase.ConfigureNewComponent(
@@ -2943,12 +3221,17 @@ begin
   fRegistry.CaseSensitive := False;
   fRegistry.Sorted := True;
   fRegistry.Duplicates := dupError;
+  fAliases := TStringList.Create;
+  fAliases.CaseSensitive := False;
+  fAliases.Sorted := True;
+  fAliases.Duplicates := dupError;
 end;
 
 destructor TRecorderComponentFactory.Destroy;
 var
   I: Integer;
 begin
+  fAliases.Free;
   for I := 0 to fRegistry.Count - 1 do
     fRegistry.Objects[I].Free;
   fRegistry.Free;
@@ -2979,11 +3262,47 @@ begin
   if AFactory = nil then
     raise ERecorderFormError.Create('Component factory cannot be nil');
 
-  if fRegistry.IndexOf(AFactory.TypeId) >= 0 then
+  if Trim(AFactory.TypeId) = '' then
+    raise ERecorderFormError.Create('Component factory TypeId cannot be empty');
+  if (fRegistry.IndexOf(AFactory.TypeId) >= 0) or
+    (fAliases.IndexOf(AFactory.TypeId) >= 0) then
     raise ERecorderFormError.CreateFmt('Component factory already registered: %s',
       [AFactory.TypeId]);
 
   fRegistry.AddObject(AFactory.TypeId, AFactory);
+end;
+
+procedure TRecorderComponentFactory.RegisterAlias(
+  const AAlias, ACanonicalTypeId: string);
+var
+  lIndex: Integer;
+begin
+  if Trim(AAlias) = '' then
+    raise ERecorderFormError.Create('Component factory alias cannot be empty');
+  if (fRegistry.IndexOf(AAlias) >= 0) or (fAliases.IndexOf(AAlias) >= 0) then
+    raise ERecorderFormError.CreateFmt('Component factory name already registered: %s', [AAlias]);
+  lIndex := fRegistry.IndexOf(ACanonicalTypeId);
+  if lIndex < 0 then
+    raise ERecorderFormError.CreateFmt('Alias target is not a canonical factory: %s', [ACanonicalTypeId]);
+  fAliases.AddObject(AAlias, fRegistry.Objects[lIndex]);
+end;
+
+function TRecorderComponentFactory.UnregisterFactory(
+  const ATypeId: string): Boolean;
+var
+  lIndex, I: Integer;
+  lFactory: TRecorderComponentFactoryBase;
+begin
+  lIndex := fRegistry.IndexOf(ATypeId);
+  Result := lIndex >= 0;
+  if not Result then
+    Exit;
+  lFactory := TRecorderComponentFactoryBase(fRegistry.Objects[lIndex]);
+  { Remove borrowed references before destruction can notify external owners. }
+  for I := fAliases.Count - 1 downto 0 do
+    if fAliases.Objects[I] = lFactory then fAliases.Delete(I);
+  fRegistry.Delete(lIndex);
+  lFactory.Free;
 end;
 
 function TRecorderComponentFactory.CreateComponent(
@@ -3013,7 +3332,37 @@ begin
   if lIndex >= 0 then
     Result := TRecorderComponentFactoryBase(fRegistry.Objects[lIndex])
   else
-    Result := nil;
+  begin
+    lIndex := fAliases.IndexOf(ATypeId);
+    if lIndex >= 0 then
+      Result := TRecorderComponentFactoryBase(fAliases.Objects[lIndex])
+    else
+      Result := nil;
+  end;
+end;
+
+procedure TRecorderComponentFactory.DoStart;
+var
+  I: Integer;
+begin
+  for I := 0 to FactoryCount - 1 do
+    Factories[I].DoStart;
+end;
+
+procedure TRecorderComponentFactory.DoStop;
+var
+  I: Integer;
+begin
+  for I := 0 to FactoryCount - 1 do
+    Factories[I].DoStop;
+end;
+
+procedure TRecorderComponentFactory.DoUpdateData;
+var
+  I: Integer;
+begin
+  for I := 0 to FactoryCount - 1 do
+    Factories[I].DoUpdateData;
 end;
 
 procedure TRecorderComponentFactory.RegisterDefaultComponents;

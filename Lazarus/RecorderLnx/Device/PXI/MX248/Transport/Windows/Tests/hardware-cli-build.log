@@ -1,0 +1,60 @@
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) Build Project: nothing to do.
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\Tests\lib\x86_64-win64\PxiMx248HardwareDiscoverCli.exe"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\Tests\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-MObjFPC"
+Info: (lazarus) Param[1]="-Scghi"
+Info: (lazarus) Param[2]="-O1"
+Info: (lazarus) Param[3]="-gw2"
+Info: (lazarus) Param[4]="-gl"
+Info: (lazarus) Param[5]="-l"
+Info: (lazarus) Param[6]="-vewnhibq"
+Info: (lazarus) Param[7]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\Tests\"
+Info: (lazarus) Param[8]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows"
+Info: (lazarus) Param[9]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Core"
+Info: (lazarus) Param[10]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Runtime"
+Info: (lazarus) Param[11]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device\Architecture"
+Info: (lazarus) Param[12]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Device"
+Info: (lazarus) Param[13]="-FED:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\Tests\lib\x86_64-win64\"
+Info: (lazarus) Param[14]="-oD:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\Tests\lib\x86_64-win64\PxiMx248HardwareDiscoverCli.exe"
+Info: (lazarus) Param[15]="PxiMx248HardwareDiscoverCli.lpr"
+Info: (lazarus) Param[16]="-B"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling PxiMx248HardwareDiscoverCli.lpr
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\uRecorderAcquisitionTypes.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Architecture\uRecorderDriverContractsV2.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Core\uRecorderPxiMx248Types.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Runtime\uRecorderPxiMx248RuntimeTransport.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Core\uRecorderPxiMx248Device.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Core\uRecorderPxiMx248Properties.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Architecture\uRecorderDriverPropertiesV2.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Architecture\uRecorderDriverPropertiesV2.pas(36,33) Hint: (5024) Parameter "AValues" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Architecture\uRecorderDriverPropertiesV2.pas(37,32) Hint: (5024) Parameter "AValues" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\Architecture\uRecorderDriverPropertiesV2.pas(41,33) Hint: (5024) Parameter "APreviousValues" not used
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Core\uRecorderPxiMx248Properties.pas(41,33) Hint: (5024) Parameter "APreviousValues" not used
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248WindowsTransport.pas
+(3104) Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248BridgeCodec.pas
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248BridgeCodec.pas(267,40) Hint: (5057) Local variable "lSingle" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248BridgeCodec.pas(292,17) Hint: (5057) Local variable "lSeen" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248WindowsTransport.pas(142,21) Hint: (5092) Variable "ADevices" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248WindowsTransport.pas(211,21) Hint: (5092) Variable "ADevices" of a managed type does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248WindowsTransport.pas(311,28) Hint: (5057) Local variable "lDiscard" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248WindowsTransport.pas(358,45) Hint: (5057) Local variable "lHeaderBytes" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248WindowsTransport.pas(469,41) Hint: (5057) Local variable "lPayload" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248WindowsTransport.pas(470,42) Hint: (5057) Local variable "lSlotPayload" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248WindowsTransport.pas(550,55) Hint: (5057) Local variable "lPayload" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248WindowsTransport.pas(565,50) Hint: (5057) Local variable "lPayload" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248WindowsTransport.pas(588,51) Hint: (5057) Local variable "lPayload" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\uRecorderPxiMx248WindowsTransport.pas(636,60) Hint: (5057) Local variable "lPayload" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\Tests\PxiMx248HardwareDiscoverCli.lpr(100,34) Hint: (5092) Variable "lBlock" of a managed type does not seem to be initialized
+(9015) Linking D:\works\OburecGH\Lazarus\RecorderLnx\Device\PXI\MX248\Transport\Windows\Tests\lib\x86_64-win64\PxiMx248HardwareDiscoverCli.exe
+(1008) 2555 lines compiled, 0.2 sec, 224528 bytes code, 9908 bytes data
+(1022) 19 hint(s) issued
+Info: (lazarus) [TCompiler.Compile] end

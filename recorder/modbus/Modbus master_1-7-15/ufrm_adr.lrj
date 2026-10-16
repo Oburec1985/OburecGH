@@ -1,0 +1,6 @@
+{"version":1,"strings":[
+{"hash":175229370,"name":"tfrm_adr.label1.caption","sourcebytes":[73,80,45,208,176,208,180,209,128,208,181,209,129,58],"value":"IP-\u0430\u0434\u0440\u0435\u0441:"},
+{"hash":169027393,"name":"tfrm_adr.edaddress.text","sourcebytes":[49,50,55,46,48,46,48,46,49],"value":"127.0.0.1"},
+{"hash":213451674,"name":"tfrm_adr.label2.caption","sourcebytes":[208,159,208,190,209,128,209,130,58],"value":"\u041F\u043E\u0440\u0442:"},
+{"hash":14386,"name":"tfrm_adr.edport.text","sourcebytes":[53,48,50],"value":"502"}
+]}

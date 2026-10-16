@@ -1,0 +1,7 @@
+{"version":1,"strings":[
+{"hash":170557810,"name":"tdlgnodecopy.caption","sourcebytes":[208,148,208,184,208,176,208,187,208,190,208,179,32,208,186,208,190,208,191,208,184,209,128,208,190,208,178,208,176,208,189,208,184,209,143,32,209,131,208,183,208,187,208,190,208,178],"value":"\u0414\u0438\u0430\u043B\u043E\u0433 \u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u0443\u0437\u043B\u043E\u0432"},
+{"hash":260256762,"name":"tdlgnodecopy.label1.caption","sourcebytes":[208,167,208,184,209,129,208,187,208,190,32,208,186,208,190,208,191,208,184,208,185,58],"value":"\u0427\u0438\u0441\u043B\u043E \u043A\u043E\u043F\u0438\u0439:"},
+{"hash":157040242,"name":"tdlgnodecopy.ednumber.text","sourcebytes":[101,100,78,117,109,98,101,114],"value":"edNumber"},
+{"hash":3386266,"name":"tdlgnodecopy.btnok.caption","sourcebytes":[38,208,158,208,154],"value":"&\u041E\u041A"},
+{"hash":69809520,"name":"tdlgnodecopy.btncancel.caption","sourcebytes":[208,158,209,130,208,188,208,181,208,189,208,176],"value":"\u041E\u0442\u043C\u0435\u043D\u0430"}
+]}

@@ -61,6 +61,8 @@ type
   TRecorderDacBackendFactory = class
   public
     function BackendId: string; virtual; abstract;
+    function DiscoverEndpoints(out AEndpoints: TRecorderDacEndpoints;
+      out AResult: TRecorderDacResult): Boolean; virtual; abstract;
     function CreateBackend(const AEndpoint: string): IRecorderDacBackend;
       virtual; abstract;
   end;

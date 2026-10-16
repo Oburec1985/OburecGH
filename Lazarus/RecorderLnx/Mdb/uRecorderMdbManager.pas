@@ -5,98 +5,108 @@ unit uRecorderMdbManager;
 
 interface
 
-uses
-  Classes, SysUtils, uRecorderSqlDbTypes, uRecorderSqlDbManager,
-  uRecorderMdbTypes, uRecorderMdbRepository;
+uses SysUtils, uRecorderMdbTypes, uRecorderMdbRepository;
 
 type
-  { Owns the operator's current product/test selection and publishes only a
-    validated immutable context to the SQL recording manager. }
+  { Owns one XML measurement-base session. Recorder/RcPan paths are attached
+    through repository registrations, not discovered through SQL. }
   TRecorderMdbManager = class
   private
     fRepository: TRecorderMdbRepository;
-    fSqlDbManager: TRecorderSqlDbManager;
     fContext: TMdbMeasurementContext;
-    procedure RestoreContext(AConfig: TRecorderSqlDbConfig);
   public
-    constructor Create(AConfig: TRecorderSqlDbConfig;
-      ASqlDbManager: TRecorderSqlDbManager);
+    constructor Create(const ABasePath, AObjectId, ATestId: string);
     destructor Destroy; override;
     procedure SelectContext(const AObject: TMdbObjectInfo;
       const ATest: TMdbTestInfo);
     procedure ClearContext;
+    procedure ChangeBasePath(const APath: string);
     property Context: TMdbMeasurementContext read fContext;
     property Repository: TRecorderMdbRepository read fRepository;
   end;
 
+{ UI-thread context shared by consumers on other mnemonic pages. The last
+  successfully selected database context wins; its manager retains ownership. }
+function RecorderMdbActiveObjectDirectory: string;
+
 implementation
 
-constructor TRecorderMdbManager.Create(AConfig: TRecorderSqlDbConfig;
-  ASqlDbManager: TRecorderSqlDbManager);
+uses uRecorderXmlDatabase;
+
+var ActiveManager: TRecorderMdbManager = nil;
+
+function RecorderMdbActiveObjectDirectory: string;
+var Node: TRecorderXmlDbNode;
 begin
-  inherited Create;
-  fSqlDbManager := ASqlDbManager;
-  fRepository := TRecorderMdbRepository.Create(AConfig);
-  RestoreContext(AConfig);
+  Result := '';
+  if ActiveManager = nil then Exit;
+  Node := ActiveManager.Repository.FindNode(ActiveManager.Context.ObjectId);
+  if Node <> nil then
+    Result := IncludeTrailingPathDelimiter(ActiveManager.Repository.BasePath + Node.RelativePath);
 end;
 
-procedure TRecorderMdbManager.RestoreContext(AConfig: TRecorderSqlDbConfig);
-var
-  lObjects: TMdbObjectInfos;
-  lTests: TMdbTestInfos;
-  I, J: Integer;
+procedure TRecorderMdbManager.ChangeBasePath(const APath: string);
+var lRepository: TRecorderMdbRepository;
 begin
+  if Trim(APath) = '' then raise EMdbError.Create('Укажите каталог базы');
+  lRepository := TRecorderMdbRepository.Create(APath);
+  try
+    lRepository.Open;
+  except
+    lRepository.Free;
+    raise;
+  end;
+  fRepository.Free;
+  fRepository := lRepository;
+  ClearContext;
+end;
+
+constructor TRecorderMdbManager.Create(const ABasePath, AObjectId,
+  ATestId: string);
+var lObjects: TMdbObjectInfos; lTests: TMdbTestInfos; I, J: Integer;
+begin
+  inherited Create;
+  fRepository := TRecorderMdbRepository.Create(ABasePath);
+  fRepository.Open;
   fContext := Default(TMdbMeasurementContext);
-  if (AConfig = nil) or (Trim(AConfig.MdbObjectId) = '') or
-    (Trim(AConfig.MdbTestId) = '') then Exit;
+  if (AObjectId = '') or (ATestId = '') then Exit;
   fRepository.ListObjects(lObjects);
   for I := 0 to High(lObjects) do
-    if lObjects[I].Id = AConfig.MdbObjectId then
+    if lObjects[I].Id = AObjectId then
     begin
-      fRepository.ListTests(lObjects[I].Id, lTests);
+      fRepository.ListTests(AObjectId, lTests);
       for J := 0 to High(lTests) do
-        if lTests[J].Id = AConfig.MdbTestId then
+        if lTests[J].Id = ATestId then
         begin
-          fContext.ObjectId := lObjects[I].Id;
-          fContext.ObjectName := lObjects[I].Name;
-          fContext.TestId := lTests[J].Id;
-          fContext.TestName := lTests[J].Name;
+          SelectContext(lObjects[I], lTests[J]);
           Exit;
         end;
-      Exit;
     end;
 end;
 
 destructor TRecorderMdbManager.Destroy;
 begin
+  if ActiveManager = Self then ActiveManager := nil;
   fRepository.Free;
   inherited Destroy;
 end;
 
 procedure TRecorderMdbManager.SelectContext(const AObject: TMdbObjectInfo;
   const ATest: TMdbTestInfo);
-var
-  lContext: TMdbMeasurementContext;
 begin
-  lContext.ObjectId := AObject.Id;
-  lContext.TestId := ATest.Id;
-  lContext.ObjectName := AObject.Name;
-  lContext.TestName := ATest.Name;
-  lContext.RequireValid;
   if ATest.ObjectId <> AObject.Id then
     raise EMdbError.Create('Selected test belongs to another object');
-  if not fRepository.ContextExists(lContext.ObjectId, lContext.TestId) then
-    raise EMdbError.Create('Selected measurement context no longer exists');
-  if fSqlDbManager <> nil then
-    fSqlDbManager.PersistMeasurementContext(lContext.ObjectId,
-      lContext.TestId);
-  fContext := lContext;
+  if not fRepository.ContextExists(AObject.Id, ATest.Id) then
+    raise EMdbError.Create('Selected context no longer exists');
+  fContext.ObjectId := AObject.Id; fContext.ObjectName := AObject.Name;
+  fContext.TestId := ATest.Id; fContext.TestName := ATest.Name;
+  fContext.RequireValid;
+  ActiveManager := Self;
 end;
 
 procedure TRecorderMdbManager.ClearContext;
 begin
-  if fSqlDbManager <> nil then
-    fSqlDbManager.PersistMeasurementContext('', '');
+  if ActiveManager = Self then ActiveManager := nil;
   fContext := Default(TMdbMeasurementContext);
 end;
 

@@ -19,6 +19,9 @@ procedure RotateCamera(var ACamera: T3dOrbitCamera; const ADelta: T3dPoint;
 procedure RotateCameraConstrained(var ACamera: T3dOrbitCamera;
                                   const ADelta: T3dPoint; ASensitivity: Single;
                                   AConstraint: T3dCameraRotationConstraint);
+procedure RotateCameraAroundAxis(var ACamera: T3dOrbitCamera;
+                                 const AAxis: T3dVector;
+                                 AAngleDegrees: Single);
 procedure PanCamera(var ACamera: T3dOrbitCamera; const ADelta: T3dPoint;
                     const AViewport: T3dViewport);
 procedure ZoomCamera(var ACamera: T3dOrbitCamera; ASteps: Single);
@@ -40,10 +43,6 @@ begin
   Result.Forward := ACamera.Forward;
   Result.Right := ACamera.Right;
   Result.Up := ACamera.Up;
-  Result.PoseValid := ACamera.PoseValid;
-  Result.YawDegrees := ACamera.YawDegrees;
-  Result.PitchDegrees := ACamera.PitchDegrees;
-  Result.RollDegrees := ACamera.RollDegrees;
   Result.Distance := ACamera.Distance;
   Result.VerticalFovDegrees := ACamera.VerticalFovDegrees;
   Result.ProjectionKind := ACamera.ProjectionKind;
@@ -135,7 +134,6 @@ begin
   ACamera.Forward := lForward;
   ACamera.Right := lRight;
   ACamera.Up := lUp;
-  ACamera.PoseValid := True;
 end;
 
 procedure RotateCameraConstrained(var ACamera: T3dOrbitCamera;
@@ -185,6 +183,23 @@ begin
         AssignCameraBasis(ACamera,lForward,lRight);
       end;
   end;
+end;
+
+procedure RotateCameraAroundAxis(var ACamera: T3dOrbitCamera;
+                                 const AAxis: T3dVector;
+                                 AAngleDegrees: Single);
+
+var
+  lForward,lRight,lUp: T3dVector;
+  lAngle: Single;
+begin
+  if (AAngleDegrees=0) or (Dot(AAxis,AAxis)<=Sqr(C3dEpsilon)) then
+    Exit;
+  CameraBasis(ACamera,lForward,lRight,lUp);
+  lAngle:=DegToRad(AAngleDegrees);
+  lForward:=RotateAroundAxis(lForward,AAxis,lAngle);
+  lRight:=RotateAroundAxis(lRight,AAxis,lAngle);
+  AssignCameraBasis(ACamera,lForward,lRight);
 end;
 
 procedure PanCamera(var ACamera: T3dOrbitCamera; const ADelta: T3dPoint;

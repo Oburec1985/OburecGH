@@ -27,6 +27,19 @@ function RecorderBiosPath: string;
 function RecorderSysComPath: string;
 function RecorderServicePath: string;
 function RecorderServiceFileName(const AFileName: string): string;
+function RecorderIsAbsolutePath(const APath: string): Boolean;
+function RecorderAppConfigDir: string;
+function RecorderDefaultProjectConfigDir: string;
+function RecorderResolveAppPath(const APath: string): string;
+function RecorderNormalizeProjectDir(const APath: string): string;
+function RecorderProjectSqlConfigFileName(const AProjectDir: string): string;
+function RecorderLegacyRunControlFileName(const AProjectDir: string): string;
+function RecorderProjectRecordsDir(const AProjectDir,
+  AConfiguredRoot: string): string;
+function RecorderMeasureDir(const ARootDir, AMeasureName: string): string;
+function RecorderMeraFileName(const AMeasureDir: string): string;
+function RecorderMeraRelativeFileName(const AMeasureName: string): string;
+function RecorderProgramDir: string;
 procedure RecorderEnsureMeraDirectories;
 function RecorderMeraCalibrRootDir: string;
 procedure RecorderMeraResetThermocoupleCache;
@@ -75,7 +88,7 @@ begin
     ExtractFilePath(ParamStr(0)))) + 'RecorderLnx.paths.ini';
 end;
 
-function IsAbsolutePath(const APath: string): Boolean;
+function RecorderIsAbsolutePath(const APath: string): Boolean;
 begin
   Result := (APath <> '') and
     (((Length(APath) >= 2) and (APath[2] = ':')) or
@@ -251,7 +264,7 @@ begin
   g_AppConfigIsExplicit := lConfiguredFileName <> '';
   if not g_AppConfigIsExplicit then
     g_AppConfigFileName := RecorderServiceFileName('app.ini')
-  else if IsAbsolutePath(lConfiguredFileName) then
+  else if RecorderIsAbsolutePath(lConfiguredFileName) then
     g_AppConfigFileName := ExpandFileName(lConfiguredFileName)
   else
     g_AppConfigFileName := ExpandFileName(RecorderServiceFileName(
@@ -330,6 +343,76 @@ begin
   Result := IncludeTrailingPathDelimiter(RecorderServicePath) + AFileName;
 end;
 
+function RecorderAppConfigDir: string;
+begin
+  RecorderEnsureMeraDirectories;
+  Result := IncludeTrailingPathDelimiter(ExtractFilePath(
+    RecorderAppConfigFileName));
+end;
+
+function RecorderDefaultProjectConfigDir: string;
+begin
+  Result := IncludeTrailingPathDelimiter(RecorderServicePath) + 'config' +
+    DirectorySeparator + 'projects' + DirectorySeparator + 'default';
+end;
+
+function RecorderResolveAppPath(const APath: string): string;
+begin
+  if RecorderIsAbsolutePath(Trim(APath)) then
+    Result := ExpandFileName(Trim(APath))
+  else
+    Result := ExpandFileName(RecorderAppConfigDir + Trim(APath));
+end;
+
+function RecorderNormalizeProjectDir(const APath: string): string;
+begin
+  Result := IncludeTrailingPathDelimiter(ExpandFileName(APath));
+end;
+
+function RecorderProjectSqlConfigFileName(const AProjectDir: string): string;
+begin
+  Result := RecorderNormalizeProjectDir(AProjectDir) + 'sql-db.ini';
+end;
+
+function RecorderLegacyRunControlFileName(const AProjectDir: string): string;
+begin
+  Result := RecorderNormalizeProjectDir(AProjectDir) + 'run-control.ini';
+end;
+
+function RecorderProjectRecordsDir(const AProjectDir,
+  AConfiguredRoot: string): string;
+begin
+  Result := Trim(AConfiguredRoot);
+  if Result = '' then
+    Result := RecorderNormalizeProjectDir(AProjectDir) + 'records';
+  Result := RecorderNormalizeProjectDir(Result);
+end;
+
+function RecorderMeasureDir(const ARootDir, AMeasureName: string): string;
+begin
+  Result := RecorderNormalizeProjectDir(ARootDir) + AMeasureName;
+  Result := RecorderNormalizeProjectDir(Result);
+end;
+
+function RecorderMeraFileName(const AMeasureDir: string): string;
+var
+  lDir: string;
+begin
+  lDir := ExcludeTrailingPathDelimiter(Trim(AMeasureDir));
+  if lDir = '' then Exit('');
+  Result := IncludeTrailingPathDelimiter(lDir) + ExtractFileName(lDir) + '.mera';
+end;
+
+function RecorderMeraRelativeFileName(const AMeasureName: string): string;
+begin
+  Result := AMeasureName + '/' + AMeasureName + '.mera';
+end;
+
+function RecorderProgramDir: string;
+begin
+  Result := RecorderNormalizeProjectDir(ExtractFilePath(ParamStr(0)));
+end;
+
 procedure RecorderEnsureMeraDirectories;
 var
   lDestinationStream: TFileStream;
@@ -373,7 +456,7 @@ begin
       try
         lProjectConfigDir := Trim(lIni.ReadString('Application',
           'DefaultProjectConfigDir', ''));
-        if (lProjectConfigDir <> '') and not IsAbsolutePath(lProjectConfigDir) then
+        if (lProjectConfigDir <> '') and not RecorderIsAbsolutePath(lProjectConfigDir) then
           lIni.WriteString('Application', 'DefaultProjectConfigDir',
             'config' + PathDelim + lProjectConfigDir);
       finally

@@ -55,7 +55,7 @@ function RecorderMic140DownloadHardwareCalibrationFromDevice(
 implementation
 
 uses
-  Math, StrUtils, LazFileUtils, fpjson,
+  StrUtils, LazFileUtils, fpjson,
   uRecorderProjectFiles,
   uRecorderMeraPaths,
   uRecorderMic140LegacyConstants, uRecorderMic140Thermocouple,
@@ -815,8 +815,8 @@ begin
     [lHost, lPort, ATag.Address, lChanIndex, BoolToStr(lIsTemperature, True),
      lRangeIndex, Mic140FlashLogFilePath()]));
 
-  FillChar(lTare, SizeOf(lTare), 0);
-  FillChar(lTare2, SizeOf(lTare2), 0);
+  lTare := Default(TMic140TareType1);
+  lTare2 := Default(TMic140TareType2);
   lCli := nil;
   lDevice := RecorderHardwareFindLiveDevice(ATag.SourceId);
   if (lDevice <> nil) and Supports(lDevice, IMic140ServiceMemory, lService) then

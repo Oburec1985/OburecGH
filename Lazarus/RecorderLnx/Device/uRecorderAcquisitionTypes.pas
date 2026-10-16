@@ -12,7 +12,7 @@ unit uRecorderAcquisitionTypes;
 interface
 
 type
-  TRecorderAcquisitionBlock = record
+  TRcAcquisitionBlock = record
     ChannelCount: Integer;
     SampleCount: Integer;
     FirstTimeSec: Double;
@@ -26,14 +26,14 @@ type
     Values: array of array of Double;
   end;
 
-procedure ClearRecorderAcquisitionBlock(var ABlock: TRecorderAcquisitionBlock);
-function RecorderBlockChannelSampleCount(const ABlock: TRecorderAcquisitionBlock;
+procedure ClearRecorderAcquisitionBlock(var ABlock: TRcAcquisitionBlock);
+function RecorderBlockChannelSampleCount(const ABlock: TRcAcquisitionBlock;
   AChannel: Integer): Integer;
-function RecorderBlockChannelSampleRate(const ABlock: TRecorderAcquisitionBlock;
+function RecorderBlockChannelSampleRate(const ABlock: TRcAcquisitionBlock;
   AChannel: Integer): Double;
-function RecorderBlockChannelFirstTime(const ABlock: TRecorderAcquisitionBlock;
+function RecorderBlockChannelFirstTime(const ABlock: TRcAcquisitionBlock;
   AChannel: Integer): Double;
-function RecorderBlockSampleTime(const ABlock: TRecorderAcquisitionBlock;
+function RecorderBlockSampleTime(const ABlock: TRcAcquisitionBlock;
   AChannel, ASample: Integer): Double;
 {
   Глубокое копирование блока для передачи между потоками (чтение → публикация).
@@ -43,11 +43,11 @@ function RecorderBlockSampleTime(const ABlock: TRecorderAcquisitionBlock;
   чтения сразу перезаписывается следующим кадром. Для тел отсчётов используется Move
   (копирование байт), а не «перенос» владения — оба блока должны существовать независимо.
 }
-procedure CopyRecorderAcquisitionBlock(const ASource: TRecorderAcquisitionBlock;
-  var ADest: TRecorderAcquisitionBlock);
+procedure CopyRecorderAcquisitionBlock(const ASource: TRcAcquisitionBlock;
+  var ADest: TRcAcquisitionBlock);
 implementation
 
-function RecorderBlockChannelSampleCount(const ABlock: TRecorderAcquisitionBlock;
+function RecorderBlockChannelSampleCount(const ABlock: TRcAcquisitionBlock;
   AChannel: Integer): Integer;
 begin
   Result := ABlock.SampleCount;
@@ -55,7 +55,7 @@ begin
     Result := ABlock.ChannelSampleCounts[AChannel];
 end;
 
-function RecorderBlockChannelSampleRate(const ABlock: TRecorderAcquisitionBlock;
+function RecorderBlockChannelSampleRate(const ABlock: TRcAcquisitionBlock;
   AChannel: Integer): Double;
 begin
   Result := ABlock.SampleRateHz;
@@ -63,7 +63,7 @@ begin
     Result := ABlock.ChannelSampleRatesHz[AChannel];
 end;
 
-function RecorderBlockChannelFirstTime(const ABlock: TRecorderAcquisitionBlock;
+function RecorderBlockChannelFirstTime(const ABlock: TRcAcquisitionBlock;
   AChannel: Integer): Double;
 begin
   Result := ABlock.FirstTimeSec;
@@ -71,7 +71,7 @@ begin
     Result := ABlock.ChannelFirstTimesSec[AChannel];
 end;
 
-function RecorderBlockSampleTime(const ABlock: TRecorderAcquisitionBlock;
+function RecorderBlockSampleTime(const ABlock: TRcAcquisitionBlock;
   AChannel, ASample: Integer): Double;
 var
   lRate: Double;
@@ -82,8 +82,8 @@ begin
     Result := Result + ASample / lRate;
 end;
 
-procedure CopyRecorderAcquisitionBlock(const ASource: TRecorderAcquisitionBlock;
-  var ADest: TRecorderAcquisitionBlock);
+procedure CopyRecorderAcquisitionBlock(const ASource: TRcAcquisitionBlock;
+  var ADest: TRcAcquisitionBlock);
 var
   I: Integer;
   lSampleCount: Integer;
@@ -117,7 +117,7 @@ begin
   end;
 end;
 
-procedure ClearRecorderAcquisitionBlock(var ABlock: TRecorderAcquisitionBlock);
+procedure ClearRecorderAcquisitionBlock(var ABlock: TRcAcquisitionBlock);
 begin
   ABlock.ChannelCount := 0;
   ABlock.SampleCount := 0;

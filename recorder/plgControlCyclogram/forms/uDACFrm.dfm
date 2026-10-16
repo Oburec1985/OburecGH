@@ -2,7 +2,7 @@ object DACFrm: TDACFrm
   Left = 0
   Top = 0
   Caption = 'DAC Control'
-  ClientHeight = 324
+  ClientHeight = 266
   ClientWidth = 458
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -123,10 +123,6 @@ object DACFrm: TDACFrm
     end
     object tsSweepSin: TTabSheet
       Caption = 'SweepSin'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
     end
   end
   object gbProgram: TGroupBox

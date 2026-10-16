@@ -22,19 +22,19 @@ type
     fValues: TStringList;
     function FindDescriptor(const AName: string): Integer;
     function ParsePacket(const AText: string; AAllowWildcard: Boolean;
-      out AItems: TStringList): TRecorderOperationResult;
+      out AItems: TStringList): TRcOperationResult;
     function ValidateValue(const ADescriptor: TRecorderPropertyDescriptor;
-      const AValue: string; out ACanonicalValue: string): TRecorderOperationResult;
+      const AValue: string; out ACanonicalValue: string): TRcOperationResult;
     procedure ValidateDescriptor(var ADescriptor: TRecorderPropertyDescriptor);
-    function ValidateSnapshot(AValues: TStrings): TRecorderOperationResult;
+    function ValidateSnapshot(AValues: TStrings): TRcOperationResult;
     function BuildCandidate(const AProperties: string; out ACandidate: TStringList):
-      TRecorderOperationResult;
+      TRcOperationResult;
     function SerializeValues(AValues: TStrings): string;
   protected
     { Pure calculation hook. It may normalize dependent candidate values but
       must not perform I/O or mutate live driver state. }
-    function CalculateCandidate(AValues: TStrings): TRecorderOperationResult; virtual;
-    function ValidateCandidate(AValues: TStrings): TRecorderOperationResult; virtual;
+    function CalculateCandidate(AValues: TStrings): TRcOperationResult; virtual;
+    function ValidateCandidate(AValues: TStrings): TRcOperationResult; virtual;
     { Called after the immutable snapshot swap. It must be non-throwing and must
       not perform device I/O. If it nevertheless raises, the base rolls the
       snapshot back and reports rocInternal. }
@@ -44,10 +44,10 @@ type
     destructor Destroy; override;
     function GetPropertyDescriptors: TRecorderPropertyDescriptorArray;
     function GetProperties(const ARequest: string; out AResponse: string):
-      TRecorderOperationResult;
+      TRcOperationResult;
     function CalcProperties(const AProperties: string; out AResponse: string):
-      TRecorderOperationResult;
-    function SetProperties(const AProperties: string): TRecorderOperationResult;
+      TRcOperationResult;
+    function SetProperties(const AProperties: string): TRcOperationResult;
     function ValueOf(const AName: string): string;
   end;
 
@@ -109,7 +109,7 @@ var
   lFormat: TFormatSettings;
   lMax, lMin: Double;
   I, J: Integer;
-  lResult: TRecorderOperationResult;
+  lResult: TRcOperationResult;
 begin
   ADescriptor.Name := Trim(ADescriptor.Name);
   if (ADescriptor.Name = '') or (Pos(';', ADescriptor.Name) > 0) or
@@ -167,26 +167,26 @@ begin
 end;
 
 function TRecorderTransactionalPropertyStore.ValidateSnapshot(
-  AValues: TStrings): TRecorderOperationResult;
+  AValues: TStrings): TRcOperationResult;
 var
   I, lDescriptorIndex: Integer;
   lCanonical: string;
 begin
   if AValues.Count <> Length(fDescriptors) then
-    Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+    Exit(TRcOperationResult.Failure(rocInvalidArgument,
       'properties.calculate', 'Calculated snapshot changed property count'));
   for I := 0 to AValues.Count - 1 do
   begin
     lDescriptorIndex := FindDescriptor(AValues.Names[I]);
     if lDescriptorIndex < 0 then
-      Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+      Exit(TRcOperationResult.Failure(rocInvalidArgument,
         'properties.calculate', 'Calculated snapshot contains unknown property'));
     Result := ValidateValue(fDescriptors[lDescriptorIndex],
       AValues.ValueFromIndex[I], lCanonical);
     if not Result.IsSuccess then Exit;
     AValues.ValueFromIndex[I] := lCanonical;
   end;
-  Result := TRecorderOperationResult.Success;
+  Result := TRcOperationResult.Success;
 end;
 
 destructor TRecorderTransactionalPropertyStore.Destroy;
@@ -205,7 +205,7 @@ begin
 end;
 
 function TRecorderTransactionalPropertyStore.ParsePacket(const AText: string;
-  AAllowWildcard: Boolean; out AItems: TStringList): TRecorderOperationResult;
+  AAllowWildcard: Boolean; out AItems: TStringList): TRcOperationResult;
 var
   I, lEquals: Integer;
   lItem, lName, lValue: string;
@@ -224,21 +224,21 @@ begin
     begin
       lItem := Trim(lParts[I]);
       if lItem = '' then
-        Exit(TRecorderOperationResult.Failure(rocInvalidArgument, 'properties.parse',
+        Exit(TRcOperationResult.Failure(rocInvalidArgument, 'properties.parse',
           'Empty property item'));
       if AAllowWildcard and (lItem = '*') then
       begin
         if lParts.Count <> 1 then
-          Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+          Exit(TRcOperationResult.Failure(rocInvalidArgument,
             'properties.parse', 'Wildcard must be the only request item'));
         AItems.Add('*');
-        Exit(TRecorderOperationResult.Success);
+        Exit(TRcOperationResult.Success);
       end;
       lEquals := Pos('=', lItem);
       if AAllowWildcard then
       begin
         if lEquals <> 0 then
-          Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+          Exit(TRcOperationResult.Failure(rocInvalidArgument,
             'properties.parse', 'Get request must contain names only'));
         lName := lItem;
         lValue := '';
@@ -246,23 +246,23 @@ begin
       else
       begin
         if (lEquals <= 1) or (Pos('=', Copy(lItem, lEquals + 1, MaxInt)) > 0) then
-          Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+          Exit(TRcOperationResult.Failure(rocInvalidArgument,
             'properties.parse', 'Expected exactly one name=value separator'));
         lName := Trim(Copy(lItem, 1, lEquals - 1));
         lValue := Trim(Copy(lItem, lEquals + 1, MaxInt));
       end;
       if FindDescriptor(lName) < 0 then
-        Exit(TRecorderOperationResult.Failure(rocUnsupported, 'properties.parse',
+        Exit(TRcOperationResult.Failure(rocUnsupported, 'properties.parse',
           'Unknown property: ' + lName));
       if AItems.IndexOfName(lName) >= 0 then
-        Exit(TRecorderOperationResult.Failure(rocInvalidArgument, 'properties.parse',
+        Exit(TRcOperationResult.Failure(rocInvalidArgument, 'properties.parse',
           'Duplicate property: ' + lName));
       AItems.Add(lName + '=' + lValue);
     end;
     if AItems.Count = 0 then
-      Exit(TRecorderOperationResult.Failure(rocInvalidArgument, 'properties.parse',
+      Exit(TRcOperationResult.Failure(rocInvalidArgument, 'properties.parse',
         'Property packet is empty'));
-    Result := TRecorderOperationResult.Success;
+    Result := TRcOperationResult.Success;
   finally
     lParts.Free;
     if not Result.IsSuccess then
@@ -272,7 +272,7 @@ end;
 
 function TRecorderTransactionalPropertyStore.ValidateValue(
   const ADescriptor: TRecorderPropertyDescriptor; const AValue: string;
-  out ACanonicalValue: string): TRecorderOperationResult;
+  out ACanonicalValue: string): TRcOperationResult;
 var
   lBool: Boolean;
   lFloat, lMin, lMax: Double;
@@ -290,7 +290,7 @@ begin
     rpkInteger:
       begin
         if not TryStrToInt64(AValue, lInt) then
-          Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+          Exit(TRcOperationResult.Failure(rocInvalidArgument,
             'properties.validate', ADescriptor.Name + ' is not an integer'));
         lFloat := lInt;
         ACanonicalValue := IntToStr(lInt);
@@ -298,7 +298,7 @@ begin
     rpkFloat:
       begin
         if not TryStrToFloat(AValue, lFloat, lFormat) then
-          Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+          Exit(TRcOperationResult.Failure(rocInvalidArgument,
             'properties.validate', ADescriptor.Name + ' is not a float'));
         ACanonicalValue := FloatToStr(lFloat, lFormat);
       end;
@@ -306,7 +306,7 @@ begin
       begin
         if SameText(AValue, 'true') or (AValue = '1') then lBool := True
         else if SameText(AValue, 'false') or (AValue = '0') then lBool := False
-        else Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+        else Exit(TRcOperationResult.Failure(rocInvalidArgument,
           'properties.validate', ADescriptor.Name + ' is not a boolean'));
         ACanonicalValue := BoolToStr(lBool, True);
       end;
@@ -321,9 +321,9 @@ begin
             if SameText(Trim(lAllowed[I]), Trim(AValue)) then
             begin
               ACanonicalValue := Trim(lAllowed[I]);
-              Exit(TRecorderOperationResult.Success);
+              Exit(TRcOperationResult.Success);
             end;
-          Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+          Exit(TRcOperationResult.Failure(rocInvalidArgument,
             'properties.validate', ADescriptor.Name + ' is not an allowed value'));
         finally
           lAllowed.Free;
@@ -334,14 +334,14 @@ begin
   begin
     if (ADescriptor.MinimumValue <> '') and
       TryStrToFloat(ADescriptor.MinimumValue, lMin, lFormat) and (lFloat < lMin) then
-      Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+      Exit(TRcOperationResult.Failure(rocInvalidArgument,
         'properties.validate', ADescriptor.Name + ' is below minimum'));
     if (ADescriptor.MaximumValue <> '') and
       TryStrToFloat(ADescriptor.MaximumValue, lMax, lFormat) and (lFloat > lMax) then
-      Exit(TRecorderOperationResult.Failure(rocInvalidArgument,
+      Exit(TRcOperationResult.Failure(rocInvalidArgument,
         'properties.validate', ADescriptor.Name + ' is above maximum'));
   end;
-  Result := TRecorderOperationResult.Success;
+  Result := TRcOperationResult.Success;
 end;
 
 function TRecorderTransactionalPropertyStore.SerializeValues(
@@ -364,7 +364,7 @@ begin
 end;
 
 function TRecorderTransactionalPropertyStore.GetProperties(
-  const ARequest: string; out AResponse: string): TRecorderOperationResult;
+  const ARequest: string; out AResponse: string): TRcOperationResult;
 var
   I: Integer;
   lItems: TStringList;
@@ -391,7 +391,7 @@ end;
 
 function TRecorderTransactionalPropertyStore.BuildCandidate(
   const AProperties: string; out ACandidate: TStringList):
-  TRecorderOperationResult;
+  TRcOperationResult;
 var
   I, lDescriptorIndex: Integer;
   lCanonical: string;
@@ -409,7 +409,7 @@ begin
     begin
       lDescriptorIndex := FindDescriptor(lItems.Names[I]);
       if fDescriptors[lDescriptorIndex].Access = rpaReadOnly then
-        Exit(TRecorderOperationResult.Failure(rocUnsupported,
+        Exit(TRcOperationResult.Failure(rocUnsupported,
           'properties.validate', 'Read-only property: ' + lItems.Names[I]));
       Result := ValidateValue(fDescriptors[lDescriptorIndex],
         lItems.ValueFromIndex[I], lCanonical);
@@ -428,7 +428,7 @@ begin
 end;
 
 function TRecorderTransactionalPropertyStore.CalcProperties(
-  const AProperties: string; out AResponse: string): TRecorderOperationResult;
+  const AProperties: string; out AResponse: string): TRcOperationResult;
 var
   lCandidate: TStringList;
 begin
@@ -443,7 +443,7 @@ begin
 end;
 
 function TRecorderTransactionalPropertyStore.SetProperties(
-  const AProperties: string): TRecorderOperationResult;
+  const AProperties: string): TRcOperationResult;
 var
   lCandidate, lPrevious: TStringList;
   lPreviousSerialized: string;
@@ -457,13 +457,13 @@ begin
     lCandidate := lPrevious;
     try
       AfterCommit(lPreviousSerialized);
-      Result := TRecorderOperationResult.Success;
+      Result := TRcOperationResult.Success;
     except
       on E: Exception do
       begin
         lCandidate := fValues;
         fValues := lPrevious;
-        Result := TRecorderOperationResult.Failure(rocInternal,
+        Result := TRcOperationResult.Failure(rocInternal,
           'properties.commit', E.ClassName + ': ' + E.Message);
       end;
     end;
@@ -473,15 +473,15 @@ begin
 end;
 
 function TRecorderTransactionalPropertyStore.CalculateCandidate(
-  AValues: TStrings): TRecorderOperationResult;
+  AValues: TStrings): TRcOperationResult;
 begin
-  Result := TRecorderOperationResult.Success;
+  Result := TRcOperationResult.Success;
 end;
 
 function TRecorderTransactionalPropertyStore.ValidateCandidate(
-  AValues: TStrings): TRecorderOperationResult;
+  AValues: TStrings): TRcOperationResult;
 begin
-  Result := TRecorderOperationResult.Success;
+  Result := TRcOperationResult.Success;
 end;
 
 procedure TRecorderTransactionalPropertyStore.AfterCommit(

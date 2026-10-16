@@ -1,0 +1,40 @@
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+Target OS: Win64 for x64
+Compiling ModbusRuntimeTests.lpr
+Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Core\uModbusCoreTypes.pas
+Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Runtime\uRecorderModbusTransport.pas
+Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Runtime\uRecorderModbusFakeTransport.pas
+Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Runtime\uRecorderModbusRuntime.pas
+Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Core\uModbusPlanner.pas
+fgl.pp(1152,5) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusTagRuntime>.Add(const Item:TRecorderModbusTagRuntime):LongInt;" marked as inline is not inlined
+fgl.pp(1152,18) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusTagRuntime>.Get(Index:LongInt):TRecorderModbusTagRuntime;" marked as inline is not inlined
+fgl.pp(1152,5) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Add(const Item:TRecorderModbusDeviceRuntime):LongInt;" marked as inline is not inlined
+fgl.pp(1152,18) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(355,5) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusTagRuntime>.Add(const Item:TRecorderModbusTagRuntime):LongInt;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(377,5) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Add(const Item:TRecorderModbusDeviceRuntime):LongInt;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(398,21) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(406,14) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusTagRuntime>.Get(Index:LongInt):TRecorderModbusTagRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(480,27) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusTagRuntime>.Get(Index:LongInt):TRecorderModbusTagRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(488,27) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusTagRuntime>.Get(Index:LongInt):TRecorderModbusTagRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(491,40) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusTagRuntime>.Get(Index:LongInt):TRecorderModbusTagRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(509,18) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(510,21) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(510,66) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(515,19) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(515,68) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(519,86) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(520,91) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(521,57) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(677,36) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(719,34) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(754,39) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(759,39) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(786,58) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(880,37) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(882,34) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusDeviceRuntime>.Get(Index:LongInt):TRecorderModbusDeviceRuntime;" marked as inline is not inlined
+uRecorderModbusRuntime.pas(882,42) Note: Call to subroutine "function TFPGObjectList<uRecorderModbusRuntime.TRecorderModbusTagRuntime>.Get(Index:LongInt):TRecorderModbusTagRuntime;" marked as inline is not inlined
+Compiling D:\works\OburecGH\Lazarus\RecorderLnx\Device\Modbus\Runtime\uRecorderModbusRtuTransport.pas
+Linking ModbusRuntimeTests.exe
+2197 lines compiled, 0.2 sec, 313376 bytes code, 15204 bytes data
+27 note(s) issued

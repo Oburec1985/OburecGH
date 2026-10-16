@@ -14,7 +14,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <SearchPaths>
-      <OtherUnitFiles Value="../../../RecorderLnx;../../../RecorderLnx/Algs;../../../RecorderLnx/Core;../../../RecorderLnx/UI;../../../RecorderLnx/Components/Common;../../../RecorderLnx/Components/Donut;../../../RecorderLnx/Components/Editor;../../../RecorderLnx/Components/ImpactHammer;../../../RecorderLnx/Components/Lissajous;../../../RecorderLnx/Components/Oscillogram;../../../RecorderLnx/Components/Spectrum;../../../RecorderLnx/Components/ThreeD;../../../RecorderLnx/Components/Trend;../../../RecorderLnx/Plugins/SDK;../../../SharedUtils;../../../SharedUtils/math;../../../SharedUtils/components/chart_lzr;../../../SharedUtils/3d/core;../../../SharedUtils/3d/contracts;../../../SharedUtils/3d/motion"/>
+      <OtherUnitFiles Value="../../../RecorderLnx;../../../RecorderLnx/Algs;../../../RecorderLnx/Core;../../../RecorderLnx/UI;../../../RecorderLnx/Components/Common;../../../RecorderLnx/Components/Donut;../../../RecorderLnx/Components/Editor;../../../RecorderLnx/Components/ImpactHammer;../../../RecorderLnx/Components/Lissajous;../../../RecorderLnx/Components/Oscillogram;../../../RecorderLnx/Components/Spectrum;../../../RecorderLnx/Components/ThreeD;../../../RecorderLnx/Components/Trend;../../../RecorderLnx/Plugins/SDK;../../../SharedUtils;../../../SharedUtils/math;../../../SharedUtils/components/chart_lzr;../../../SharedUtils/3d/core;../../../SharedUtils/3d/contracts;../../../SharedUtils/3d/motion;../../../SharedUtils/3d/io"/>
       <UnitOutputDirectory Value="lib"/>
     </SearchPaths>
   </CompilerOptions>

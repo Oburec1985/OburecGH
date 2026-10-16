@@ -11,7 +11,8 @@ interface
 
 uses
   SysUtils, Math, u3dCoreTypes, u3dScene, u3dGeometryMath, u3dSkin, u3dVertexColors,
-  uRecorderTags, uRecorder3dModel;
+  uRecorderTags, uRecorder3dModel, uRecorderFrfContracts,
+  uRecorderImpactHammerContracts;
 
 type
   TRecorder3dVertexValueLabel=record
@@ -33,6 +34,13 @@ type
     ShowLabels:array of Boolean;
     Names:array of string;
     LogicalIndices:array of Integer;
+    FrfCurveIds:array of QWord;
+    FrfBandRms:array of Boolean;
+    FrfTolerances:array of Double;
+    FrfGains:array of Double;
+    FrfSources:array of TRecorderIntensitySource;
+    SampleValues:array of Double;
+    SampleActive:array of Boolean;
     Node:T3dNode;
     constructor Create;
     destructor Destroy; override;
@@ -44,6 +52,7 @@ type
     fRegistry:TRecorderTagRegistry;
     fRegistryRevision:QWord;
     fScene:T3dScene;
+    fFrfProvider:IRecorderFrfProvider;
     fGroups:array of TRecorder3dVertexColorGroup;
     procedure ClearGroups;
     function ResolveTag(AAnchor:TRecorder3dVertexColorAnchor):TRecorderTag;
@@ -54,11 +63,18 @@ type
     procedure Configure(AComponent:TRecorder3dComponent;
       ARegistry:TRecorderTagRegistry);
     procedure AttachScene(AScene:T3dScene);
+    procedure ConfigureFrfProvider(const AProvider:IRecorderFrfProvider);
     function ApplyChanged:Boolean;
     procedure BuildValueLabels(out ALabels:TRecorder3dVertexValueLabels);
   end;
 
 implementation
+
+procedure TRecorder3dVertexColorAdapter.ConfigureFrfProvider(
+  const AProvider:IRecorderFrfProvider);
+begin
+  fFrfProvider:=AProvider;
+end;
 
 constructor TRecorder3dVertexColorGroup.Create;
 begin
@@ -81,7 +97,12 @@ end;
 procedure TRecorder3dVertexColorAdapter.ClearGroups;
 var I:Integer;
 begin
-  for I:=0 to High(fGroups) do fGroups[I].Free;
+  for I:=0 to High(fGroups) do
+  begin
+    if (fGroups[I].Node<>nil) and (fGroups[I].Node.Mesh<>nil) then
+      SetLength(fGroups[I].Node.Mesh.VertexColors,0);
+    fGroups[I].Free;
+  end;
   SetLength(fGroups,0);
 end;
 
@@ -152,6 +173,7 @@ begin
     Gradients[I].RightColor.B:=Byte((Gradient.RightColor shr 16) and $FF);
     Gradients[I].LeftValue:=Gradient.LeftValue;
     Gradients[I].RightValue:=Gradient.RightValue;
+    Gradients[I].CadGradient:=Gradient.CadGradient;
   end;
 
   SetLength(MeshIds,0);
@@ -190,6 +212,13 @@ begin
     SetLength(fGroups[GroupIndex].ShowLabels,Count);
     SetLength(fGroups[GroupIndex].Names,Count);
     SetLength(fGroups[GroupIndex].LogicalIndices,Count);
+    SetLength(fGroups[GroupIndex].FrfCurveIds,Count);
+    SetLength(fGroups[GroupIndex].FrfBandRms,Count);
+    SetLength(fGroups[GroupIndex].FrfTolerances,Count);
+    SetLength(fGroups[GroupIndex].FrfGains,Count);
+    SetLength(fGroups[GroupIndex].FrfSources,Count);
+    SetLength(fGroups[GroupIndex].SampleValues,Count);
+    SetLength(fGroups[GroupIndex].SampleActive,Count);
     Count:=0;
     for I:=0 to fComponent.VertexColorAnchorCount-1 do
     begin
@@ -207,6 +236,17 @@ begin
       Evals[Count].Value:=0;
       Evals[Count].Enabled:=Anchor.Enabled;
       Evals[Count].ApplyColor:=Anchor.ApplyColor;
+      Evals[Count].EnvelopeXEnabled:=Anchor.EnvelopeXEnabled;
+      Evals[Count].EnvelopeYEnabled:=Anchor.EnvelopeYEnabled;
+      Evals[Count].EnvelopeZEnabled:=Anchor.EnvelopeZEnabled;
+      Evals[Count].EnvelopeX:=Anchor.EnvelopeX;
+      Evals[Count].EnvelopeY:=Anchor.EnvelopeY;
+      Evals[Count].EnvelopeZ:=Anchor.EnvelopeZ;
+      fGroups[GroupIndex].FrfCurveIds[Count]:=Anchor.FrfCurveId;
+      fGroups[GroupIndex].FrfBandRms[Count]:=Anchor.FrfBandRms;
+      fGroups[GroupIndex].FrfTolerances[Count]:=Anchor.FrfBandTolerancePercent;
+      fGroups[GroupIndex].FrfGains[Count]:=Anchor.FrfGain;
+      fGroups[GroupIndex].FrfSources[Count]:=Anchor.FrfIntensitySource;
       fGroups[GroupIndex].Tags[Count]:=ResolveTag(Anchor);
       fGroups[GroupIndex].TagIds[Count]:=Anchor.TagId;
       fGroups[GroupIndex].TagNames[Count]:=Anchor.TagName;
@@ -257,12 +297,50 @@ begin
 end;
 
 function TRecorder3dVertexColorAdapter.ApplyChanged:Boolean;
-var I,J:Integer; Value:Double; Changed,Active:Boolean;
+var I,J:Integer; Value,lPhase,lFrequency,lMaximum:Double; Changed,Active:Boolean;
+  lSampler:IRecorderFrfSampler; lAmplitude:IRecorderAmplitudeSampler;
+  lBand:IRecorderFrfBandSampler;
 begin
   Result:=False;
   if (fRegistry<>nil) and
     (fRegistryRevision<>fRegistry.StructureRevision) then
     RefreshTagReferences;
+  lSampler:=nil;
+  if fFrfProvider<>nil then lSampler:=fFrfProvider.AcquireSnapshot
+  else lSampler:=RecorderAggregateFrfProvider.AcquireSnapshot;
+  if lSampler<>nil then
+  begin
+    Supports(lSampler,IRecorderAmplitudeSampler,lAmplitude);
+    Supports(lSampler,IRecorderFrfBandSampler,lBand);
+  end;
+  lFrequency:=RecorderSelectedFrfFrequency;
+  lMaximum:=0;
+  for I:=0 to High(fGroups) do
+    for J:=0 to High(fGroups[I].FrfCurveIds) do
+    begin
+      Active:=False; Value:=NaN;
+      if (fGroups[I].FrfCurveIds[J]<>0) and (lSampler<>nil) then
+      begin
+        if fGroups[I].FrfBandRms[J] then
+          Active:=(lBand<>nil) and lBand.TrySampleBand(
+            fGroups[I].FrfCurveIds[J],lFrequency,fGroups[I].FrfTolerances[J],
+            fGroups[I].FrfSources[J]=risAmplitude,Value,lPhase)
+        else if fGroups[I].FrfSources[J]=risAmplitude then
+          Active:=(lAmplitude<>nil) and lAmplitude.TrySampleAmplitude(
+            fGroups[I].FrfCurveIds[J],lFrequency,Value,lPhase)
+        else Active:=lSampler.TrySample(fGroups[I].FrfCurveIds[J],
+          lFrequency,Value,lPhase);
+        Active:=Active and fGroups[I].ConfigEnabled[J] and
+          not IsNan(Value) and not IsInfinite(Value);
+        if Active then
+        begin
+          Value:=Abs(Value*fGroups[I].FrfGains[J]);
+          lMaximum:=Max(lMaximum,Value);
+        end;
+      end;
+      fGroups[I].SampleValues[J]:=Value;
+      fGroups[I].SampleActive[J]:=Active;
+    end;
   for I:=0 to High(fGroups) do
   begin
     Changed:=False;
@@ -270,7 +348,16 @@ begin
     begin
       Active:=False;
       Value:=NaN;
-      if RecorderTryReadScalarValue(fGroups[I].Tags[J],
+      if fGroups[I].FrfCurveIds[J]<>0 then
+      begin
+        Active:=fGroups[I].SampleActive[J];
+        if Active then
+        begin
+          Value:=0;
+          if lMaximum>0 then Value:=fGroups[I].SampleValues[J]/lMaximum;
+        end;
+      end
+      else if RecorderTryReadScalarValue(fGroups[I].Tags[J],
         fGroups[I].UseDefaultEstimates[J],fGroups[I].EstimateKinds[J],Value) then
         Active:=fGroups[I].ConfigEnabled[J];
       if (not fGroups[I].ActiveInitialized[J]) or

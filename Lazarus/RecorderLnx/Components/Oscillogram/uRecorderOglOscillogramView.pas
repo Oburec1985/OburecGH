@@ -10,6 +10,12 @@ unit uRecorderOglOscillogramView;
     FPS is measured only when the caller explicitly enables it, normally in
     Preview mode. The value is calculated from rendered frames collected during
     an approximately one-second display window, not from a single render time.
+
+  Ownership boundary:
+    Simple builtin Oscillogram and BasePage charts belong to RecorderLnx.
+    Advanced Oscillograph belongs to its self-contained plugin; this builtin
+    view must not query plugin capabilities, invoke plugin calculations or
+    dispatch its controls into a plugin. No chart object crosses plugin ABI.
 }
 {$mode objfpc}{$H+}
 {$codepage UTF8}
@@ -19,10 +25,10 @@ uses
   Classes, Controls, ExtCtrls, StdCtrls, Graphics, Forms, ComCtrls, Menus,
   ImgList, Grids,
   uOglChart, uOglChartChart, uOglChartPage, uOglChartAxis,
+  uOglChartCursor,
   uOglChartDrawObj,
   uOglChartTrend, uOglChartTypes, uRecorderFormModel, uRecorderTags, uRecorderVisualControl,
-  uOglChartColors, uRecorderTagRefs, uRecorderPluginApi,
-  uRecorderPluginRuntime;
+  uOglChartColors, uRecorderTagRefs, uRecorderRunControlSettings;
 type
   { TRecorderOglOscillogram
     Thin RecorderLnx wrapper around oglChart. It owns a default chart model with
@@ -35,7 +41,6 @@ type
     fChart: TOglChart;
     fCurrentTagName: string;
     fComponent: TRecorderOscillogramComponent;
-    fPluginMode: Boolean;
     fControlPanel: TScrollBox;
     fSignalPanel: TPanel;
     fSignalLabel: TLabel;
@@ -48,13 +53,20 @@ type
     fAutoRangeButton: TToolButton;
     fXCursorButton: TToolButton;
     fLegendButton: TToolButton;
+    fLegendHostPanel: TPanel;
     fLegendPanel: TScrollBox;
-    fLegendLabels: array of TLabel;
+    fLegendSplitter: TSplitter;
+    fLegendGrid: TStringGrid;
+    fLegendColumnWidthsBeforeDrag: array[0..6] of Integer;
+    fLegendColumnWidths: array[0..6] of Integer;
+    fLegendUserSizedColumns: Boolean;
+    fLegendLastRowCount: Integer;
+    fLegendManualHeight: Integer;
+    fLegendUserResized: Boolean;
+    fLegendSplitterDragging: Boolean;
     fXCursorMenu: TPopupMenu;
     fXCursorCount: Integer;
-    fXCursors: array[0..1] of Double;
     fXCursorsInitialized: Boolean;
-    fDraggingXCursor: Integer;
     fAutoRange: Boolean;
     fAutoRangeApplied: Boolean;
     fAppliedXMin, fAppliedXMax: Double;
@@ -65,6 +77,7 @@ type
     fYScaleSpin: TUpDown;
     fOffsetEdit: TEdit;
     fTriggerCheck: TCheckBox;
+    fTriggerFallingCheck: TCheckBox;
     fLevelEdit: TEdit;
     fPreRollEdit: TEdit;
     fClosedInputCheck: TCheckBox;
@@ -74,15 +87,12 @@ type
     fYAxisTagId: TRecorderTagId;
     fTagRegistry: TRecorderTagRegistry;
     fUpdatingControls: Boolean;
-    fPluginMetricsValid: Boolean;
-    fPluginPeak: Double;
-    fPluginRms: Double;
-    fPluginValues: TRecorderDoubleArray;
     fTriggerTimes: TRecorderDoubleArray;
     fTriggerValues: TRecorderDoubleArray;
     fTriggerArmed: Boolean;
     fTriggerHasFrame: Boolean;
     fLastTriggerTime: Double;
+    fTriggerHoldUntil: Double;
     fFpsLastRenderTimeMs: Double;
     fFpsMeasureEnabled: Boolean;
     fFpsMeasured: Double;
@@ -120,9 +130,22 @@ type
     fAxisMax: array of Double;
     fTrend: TObject;
     procedure ChartAfterRender(Sender: TObject; ARenderTimeMs: Double);
-    procedure BuildPluginControls;
+    procedure ChartCursorChanged(Sender: TObject; ACursor: TObject);
+    procedure BuildControlPanel;
     procedure BuildToolBar;
     procedure UpdateLegend;
+    procedure UpdateLegendLayout;
+    procedure LegendPanelResize(Sender: TObject);
+    procedure LegendGridMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure LegendGridMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure LegendSplitterDragStarted(Sender: TObject);
+    procedure LegendSplitterMoved(Sender: TObject);
+    procedure LegendPrepareCanvas(Sender: TObject; ACol, ARow: Integer;
+      AState: TGridDrawState);
+    procedure LegendDrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
     procedure RefreshLegendValues;
     function LegendValueAt(ASeries: cLineSeries; AX: Double;
       out AValue: Double): Boolean;
@@ -130,12 +153,8 @@ type
     procedure ToolButtonClick(Sender: TObject);
     procedure XCursorModeClick(Sender: TObject);
     procedure EnsureXCursorsInitialized;
-    procedure DrawXCursors;
-    function XCursorHit(AX, AY: Integer): Integer;
-    procedure SetXCursorFromPixel(AIndex, AX: Integer; AShift: TShiftState);
+    function PageCursor: TChartCursor;
     procedure RebuildExtremaCaches;
-    function SnapCursorX(AX, AMaxDistance: Double; AUseMaximum: Boolean;
-      out ASnappedX: Double): Boolean;
     procedure SignalGridSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     function ActiveAxisIndex: Integer;
@@ -151,6 +170,7 @@ type
     procedure ControlValueEdited(Sender: TObject);
     procedure ApplyActiveYScale;
     procedure TriggerChanged(Sender: TObject);
+    procedure TriggerEdgeChanged(Sender: TObject);
     procedure ClosedInputChanged(Sender: TObject);
     procedure ScaleSpinClick(Sender: TObject; Button: TUDBtnType);
     procedure ChartMouseDown(Sender: TObject; Button: TMouseButton;
@@ -177,6 +197,10 @@ type
     function ResolveTag(ATagRegistry: TRecorderTagRegistry): TRecorderTag;
     function ResolveTagByName(ATagRegistry: TRecorderTagRegistry;
       const ATagName: string): TRecorderTag;
+    function SupportsAdvancedControls: Boolean;
+    function DispatchComponentEvent(const AName, AControlId: string;
+      AValue1: Double = 0; AValue2: Double = 0; AIntValue: Int64 = 0;
+      AFlags: QWord = 0): Boolean;
     procedure ResetFpsMeasure;
     procedure SyncLinesFromComponent(AComponent: TRecorderOscillogramComponent);
     procedure SetAxisRange(AMinValue, AMaxValue: Double);
@@ -192,6 +216,7 @@ type
     function GetChartControl: TOglChart;
 
     constructor Create(AOwner: TComponent); override;
+    procedure Resize; override;
     destructor Destroy; override;
 
     { Creates the inner OpenGL chart, model, page, axis and trend. }
@@ -298,6 +323,29 @@ uses
   SysUtils, Math, uSharedNumberFormat,
   uRecorderDebugLog, uRecorderUnitManager, uOglChartRenderer,
   uOglChartFontMng, GL;
+
+const
+  COscillogramLegendMinChartHeight = 64;
+
+type
+  TRecorderLegendSplitter = class(TSplitter)
+  private
+    fOnDragStarted: TNotifyEvent;
+  protected
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
+  public
+    property OnDragStarted: TNotifyEvent read fOnDragStarted
+      write fOnDragStarted;
+  end;
+
+procedure TRecorderLegendSplitter.MouseDown(Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if (Button = mbLeft) and Assigned(fOnDragStarted) then
+    fOnDragStarted(Self);
+  inherited MouseDown(Button, Shift, X, Y);
+end;
 
 procedure SelectOscillogramDisplayUnit(const ASourceUnit: string;
   AMaxAbsValue: Double; AUnitNames: TStrings; out ADisplayUnit: string;
@@ -527,9 +575,12 @@ begin
   fUnitNames := TStringList.Create;
   RecorderUnitManager.FillUnitNames(fUnitNames);
   fActiveSeriesIndex := 0;
-  fDraggingXCursor := -1;
   fXCursorCount := 1;
   fXCursorsInitialized := False;
+  fLegendLastRowCount := -1;
+  fLegendManualHeight := 0;
+  fLegendUserResized := False;
+  fLegendSplitterDragging := False;
 end;
 
 destructor TRecorderOglOscillogram.Destroy;
@@ -544,14 +595,42 @@ begin
   inherited Destroy;
 end;
 
+function TRecorderOglOscillogram.SupportsAdvancedControls: Boolean;
+begin
+  { Advanced Oscillograph controls belong exclusively to the plugin view. }
+  Result := False;
+end;
+
+function TRecorderOglOscillogram.DispatchComponentEvent(
+  const AName, AControlId: string; AValue1: Double; AValue2: Double;
+  AIntValue: Int64; AFlags: QWord): Boolean;
+begin
+  { Dormant advanced handlers do not dispatch into any plugin. }
+  Result := False;
+end;
+
 procedure TRecorderOglOscillogram.Configure(AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
 var
   I: Integer;
 begin
   fComponent := TRecorderOscillogramComponent(AComponent);
-  fPluginMode := RecorderIsPluginOscillograph(fComponent);
   if fChart = nil then
     ConfigureDefault;
+  if fChart <> nil then
+  begin
+    if SupportsAdvancedControls then
+    begin
+      fChart.OnMouseDown := @ChartMouseDown;
+      fChart.OnMouseMove := @ChartMouseMove;
+      fChart.OnMouseUp := @ChartMouseUp;
+    end
+    else
+    begin
+      fChart.OnMouseDown := nil;
+      fChart.OnMouseMove := nil;
+      fChart.OnMouseUp := nil;
+    end;
+  end;
   fBindingMode := TRecorderOscillogramComponent(AComponent).BindingMode;
   fTagRegistry := ATagRegistry;
   { The built-in Oscillogram is intentionally a simple chart.  Advanced
@@ -559,29 +638,49 @@ begin
     TypeId comparison must be case-insensitive: the built-in factory exposes
     "Oscillogram", while older code compared it with lowercase text and
     mistakenly enabled the plugin UI on the base component. }
-  if fPluginMode then
+  if SupportsAdvancedControls then
   begin
-    if fControlPanel = nil then
-      BuildPluginControls;
-    if fToolBar = nil then
+    if SupportsAdvancedControls and
+      (fControlPanel = nil) then
+      BuildControlPanel;
+    if (SupportsAdvancedControls or
+      SupportsAdvancedControls) and (fToolBar = nil) then
       BuildToolBar;
     fAutoRange := fComponent.AutoRangeEnabled;
     fAutoRangeApplied := False;
     fXCursorCount := fComponent.XCursorCount;
     if (fXCursorCount < 1) or (fXCursorCount > 2) then
       fXCursorCount := 1;
-    fXCursorMenu.Items[fXCursorCount - 1].Checked := True;
-    fXCursorButton.Down := fComponent.XCursorEnabled;
-    fAutoRangeButton.Down := fAutoRange;
-    fLegendButton.Down := fComponent.LegendVisible;
-    fLegendPanel.Visible := fComponent.LegendVisible;
+    if fXCursorMenu <> nil then
+      fXCursorMenu.Items[fXCursorCount - 1].Checked := True;
+    if fXCursorButton <> nil then
+      fXCursorButton.Down := fComponent.XCursorEnabled;
+    if PageCursor <> nil then
+    begin
+      PageCursor.Visible := fComponent.XCursorEnabled;
+      if fXCursorCount = 2 then
+        PageCursor.CursorType := cctDouble
+      else
+        PageCursor.CursorType := cctSingle;
+    end;
+    if fAutoRangeButton <> nil then
+      fAutoRangeButton.Down := fAutoRange;
+    if fLegendButton <> nil then
+      fLegendButton.Down := fComponent.LegendVisible;
+    if fLegendHostPanel <> nil then
+      fLegendHostPanel.Visible := SupportsAdvancedControls and
+        fComponent.LegendVisible;
+    if fLegendSplitter <> nil then
+      fLegendSplitter.Visible := SupportsAdvancedControls and
+        fComponent.LegendVisible;
     RefreshControlValues;
   end
   else
   begin
     if fControlPanel <> nil then fControlPanel.Visible := False;
     if fToolBar <> nil then fToolBar.Visible := False;
-    if fLegendPanel <> nil then fLegendPanel.Visible := False;
+    if fLegendHostPanel <> nil then fLegendHostPanel.Visible := False;
+    if fLegendSplitter <> nil then fLegendSplitter.Visible := False;
   end;
   fTagOffset := TRecorderOscillogramComponent(AComponent).TagOffset;
   fAbsoluteTagId := AComponent.TagId;
@@ -594,6 +693,7 @@ begin
   fHasDataSignature := False;
   fTriggerArmed := False;
   fTriggerHasFrame := False;
+  fTriggerHoldUntil := 0;
   Refresh(ATagRegistry, 1.0);
 end;
 
@@ -628,10 +728,12 @@ begin
   fInfoPanel := TPanel.Create(Self);
   fInfoPanel.Parent := Self;
   fInfoPanel.Align := alTop;
-  fInfoPanel.Height := 22;
+  fInfoPanel.Height := 18;
   fInfoPanel.BevelOuter := bvNone;
   fInfoPanel.ParentBackground := True;
-  fInfoPanel.BorderSpacing.Around := 4;
+  fInfoPanel.BorderSpacing.Left := 4;
+  fInfoPanel.BorderSpacing.Right := 4;
+  fInfoPanel.Visible := False;
   fInfoNextLeft := 0;
   ClearInfoPanel;
   AppendInfoPart('-', clGray);
@@ -640,7 +742,8 @@ begin
   lChart.Align := alClient;
   lChart.AutoResizeViewport := True;
   lChart.OnAfterRender := @ChartAfterRender;
-  if fPluginMode then
+  lChart.OnCursorChanged := @ChartCursorChanged;
+  if SupportsAdvancedControls then
   begin
     lChart.OnMouseDown := @ChartMouseDown;
     lChart.OnMouseMove := @ChartMouseMove;
@@ -710,10 +813,9 @@ var
   lActiveAxis: TChartAxis;
 begin
   fFpsLastRenderTimeMs := ARenderTimeMs;
-  if fPluginMode then
+  if SupportsAdvancedControls then
   begin
     DrawTriggerLevelCursor;
-    DrawXCursors;
     DetectManualRange;
     SyncViewportControls;
     if UpdateAxisDisplayUnits and (fChart <> nil) then
@@ -760,6 +862,31 @@ begin
     ResetFpsMeasure;
 end;
 
+procedure TRecorderOglOscillogram.ChartCursorChanged(Sender: TObject;
+  ACursor: TObject);
+var
+  lCursor: TChartCursor;
+begin
+  if not (ACursor is TChartCursor) then
+    Exit;
+  lCursor := TChartCursor(ACursor);
+  fXCursorCount := 1;
+  if lCursor.CursorType = cctDouble then
+    fXCursorCount := 2;
+  if fComponent <> nil then
+  begin
+    fComponent.XCursorEnabled := lCursor.Visible;
+    fComponent.XCursorCount := fXCursorCount;
+    DispatchComponentEvent('cursor.changed', 'x_cursor', lCursor.X1,
+      lCursor.X2, fXCursorCount, Ord(lCursor.Visible));
+  end;
+  if fXCursorButton <> nil then
+    fXCursorButton.Down := lCursor.Visible;
+  if (fXCursorMenu <> nil) and (fXCursorMenu.Items.Count >= fXCursorCount) then
+    fXCursorMenu.Items[fXCursorCount - 1].Checked := True;
+  RefreshLegendValues;
+end;
+
 procedure TRecorderOglOscillogram.ClearInfoPanel;
 var
   I: Integer;
@@ -789,6 +916,7 @@ begin
   lLabel.AutoSize := True;
   lLabel.Left := fInfoNextLeft;
   lLabel.Top := 2;
+  fInfoPanel.Height := Max(fInfoPanel.Height, lLabel.Height + 4);
   Inc(fInfoNextLeft, lLabel.Width);
 end;
 
@@ -805,6 +933,9 @@ var
   lTagName: string;
 begin
   ClearInfoPanel;
+  { Keep the transitional host view compact until its deletion: no blank
+    statistics row for an unbound channel. }
+  if fInfoPanel <> nil then fInfoPanel.Visible := ATag <> nil;
   if ATag = nil then
   begin
     AppendInfoPart('-', clGray);
@@ -814,10 +945,6 @@ begin
         TChartAxis(fAxis).MaxValue - TChartAxis(fAxis).MinValue)]), clGray);
       fDyLabel := TLabel(fInfoPanel.Controls[fInfoPanel.ControlCount - 1]);
     end;
-    if fPluginMetricsValid then
-      AppendInfoPart(Format('; Peak=%s RMS=%s',
-        [FormatSignificant(fPluginPeak),
-         FormatSignificant(fPluginRms)]), clGray);
     Exit;
   end;
 
@@ -880,10 +1007,6 @@ begin
           TChartAxis(fAxis).MinValue)]), clGray);
       fDyLabel := TLabel(fInfoPanel.Controls[fInfoPanel.ControlCount - 1]);
     end;
-    if fPluginMetricsValid then
-      AppendInfoPart(Format('; Peak=%s RMS=%s',
-        [FormatSignificant(fPluginPeak),
-         FormatSignificant(fPluginRms)]), clGray);
   finally
     lShownTags.Free;
   end;
@@ -1006,7 +1129,7 @@ begin
   if fAxis = nil then
     Exit;
   lAxisCount := 1;
-  if fPluginMode and (fComponent <> nil) then
+  if SupportsAdvancedControls and (fComponent <> nil) then
     lAxisCount := Max(1, fComponent.AxisCount);
   if Length(fAxes) > lAxisCount then
   begin
@@ -1054,7 +1177,7 @@ begin
   for I := 0 to lNeed - 1 do
   begin
     lAxisIndex := 0;
-    if fPluginMode and (fComponent <> nil) then
+    if SupportsAdvancedControls and (fComponent <> nil) then
       if I = 0 then
         lAxisIndex := fComponent.PrimaryAxisIndex
       else
@@ -1128,6 +1251,12 @@ begin
   CanSelect := (ARow > 0) and (ARow <= Length(fSeries));
   if CanSelect then
   begin
+    if not DispatchComponentEvent('signal.selected', 'signal_grid', 0, 0,
+      ARow - 1) then
+    begin
+      CanSelect := False;
+      Exit;
+    end;
     fActiveSeriesIndex := ARow - 1;
     UpdateActiveSeriesRenderPriority;
     { Масштаб и смещение в правой панели относятся к оси выбранной линии,
@@ -1249,7 +1378,8 @@ end;
 function TRecorderOglOscillogram.ActiveAxisIndex: Integer;
 begin
   Result := 0;
-  if not fPluginMode or (fComponent = nil) then
+  if not SupportsAdvancedControls or
+    (fComponent = nil) then
     Exit;
   if fActiveSeriesIndex = 0 then
     Result := fComponent.PrimaryAxisIndex
@@ -1288,7 +1418,7 @@ procedure TRecorderOglOscillogram.ActivateFirstSeriesOnAxis(
 var
   I: Integer;
 begin
-  if (not fPluginMode) or (AAxis = nil) then
+  if not SupportsAdvancedControls or (AAxis = nil) then
     Exit;
   for I := 0 to High(fSeries) do
     if fSeries[I].Visible and (fSeries[I].Parent = AAxis) then
@@ -1496,7 +1626,7 @@ begin
   ATrend.ReplacePoints(fLinePoints, APointCount);
 end;
 
-procedure TRecorderOglOscillogram.BuildPluginControls;
+procedure TRecorderOglOscillogram.BuildControlPanel;
 var
   lLabel: TLabel;
 
@@ -1547,6 +1677,13 @@ begin
   fTriggerCheck.Top := 155;
   fTriggerCheck.Caption := 'Триггер';
   fTriggerCheck.OnChange := @TriggerChanged;
+  fTriggerFallingCheck := TCheckBox.Create(Self);
+  fTriggerFallingCheck.Parent := fControlPanel;
+  fTriggerFallingCheck.SetBounds(78, 153, 86, 23);
+  fTriggerFallingCheck.Caption := 'Спад ↓';
+  fTriggerFallingCheck.Hint := 'Снято — захват по фронту ↑';
+  fTriggerFallingCheck.ShowHint := True;
+  fTriggerFallingCheck.OnChange := @TriggerEdgeChanged;
   AddLabel('Уровень', 184);
   fLevelEdit := AddEdit(203);
   fLevelCursorCheck := TCheckBox.Create(Self);
@@ -1669,7 +1806,9 @@ begin
   fToolBar.ParentBiDiMode := False;
   fToolBar.BiDiMode := bdLeftToRight;
   fToolBar.Align := alTop;
-  fToolBar.Height := 26;
+  fToolBar.EdgeBorders := [];
+  fToolBar.AutoSize := True;
+  fToolBar.Height := fToolBar.ButtonHeight;
   fToolBar.Images := fToolImages;
   fToolBar.OnPaintButton := @PaintToolButton;
   fToolBar.ShowCaptions := False;
@@ -1677,6 +1816,10 @@ begin
   fAutoRangeButton := AddButton('Автодиапазон всех осей', 1);
   fXCursorButton := AddButton('Курсор X (режим — правой кнопкой)', 2);
   fLegendButton := AddButton('Показать/скрыть легенду', 3);
+  fLevelButton.Visible := SupportsAdvancedControls;
+  fAutoRangeButton.Visible := SupportsAdvancedControls;
+  fXCursorButton.Visible := SupportsAdvancedControls;
+  fLegendButton.Visible := SupportsAdvancedControls;
   fXCursorMenu := TPopupMenu.Create(Self);
   for I := 1 to 2 do
   begin
@@ -1691,30 +1834,217 @@ begin
     fXCursorMenu.Items.Add(lItem);
   end;
   fXCursorButton.PopupMenu := fXCursorMenu;
+  { Keep the chart as the remaining alClient area. The splitter and legend
+    live in the same bottom-docked stack; the legend is hosted by a panel so
+    alignment never has to choose between the grid and the panel itself. }
+  fLegendSplitter := TRecorderLegendSplitter.Create(Self);
+  fLegendSplitter.Parent := Self;
+  fLegendSplitter.Align := alBottom;
+  fLegendSplitter.Height := 5;
+  fLegendSplitter.Cursor := crVSplit;
+  fLegendSplitter.AutoSnap := False;
+  fLegendSplitter.MinSize := COscillogramLegendMinChartHeight;
+  TRecorderLegendSplitter(fLegendSplitter).OnDragStarted :=
+    @LegendSplitterDragStarted;
+  fLegendSplitter.OnMoved := @LegendSplitterMoved;
+  fLegendHostPanel := TPanel.Create(Self);
+  fLegendHostPanel.Parent := Self;
+  fLegendHostPanel.Align := alBottom;
+  fLegendHostPanel.Height := 66;
+  fLegendHostPanel.BevelOuter := bvNone;
+  fLegendHostPanel.Constraints.MinHeight := 44;
   fLegendPanel := TScrollBox.Create(Self);
-  fLegendPanel.Parent := Self;
-  fLegendPanel.Align := alBottom;
-  fLegendPanel.Height := 25;
+  fLegendPanel.Parent := fLegendHostPanel;
+  fLegendPanel.Align := alClient;
   fLegendPanel.BorderStyle := bsSingle;
   fLegendPanel.AutoScroll := True;
+  fLegendPanel.OnResize := @LegendPanelResize;
+  fLegendSplitter.ResizeControl := fLegendHostPanel;
   fLegendButton.Down := True;
+  fLegendHostPanel.Visible := SupportsAdvancedControls;
+  fLegendSplitter.Visible := fLegendHostPanel.Visible;
 end;
 
 procedure TRecorderOglOscillogram.UpdateLegend;
+begin
+  if fLegendPanel = nil then Exit;
+  if fLegendGrid = nil then
+  begin
+    fLegendGrid := TStringGrid.Create(Self);
+    { Set the column count before parenting: assigning Parent can synchronously
+      resize the panel and fire LegendPanelResize during construction. }
+    fLegendGrid.ColCount := 7;
+    fLegendGrid.Parent := fLegendPanel;
+    fLegendGrid.FixedCols := 0;
+    fLegendGrid.FixedRows := 1;
+    fLegendGrid.Align := alClient;
+    fLegendGrid.RowCount := 2;
+    fLegendGrid.DefaultRowHeight := 22;
+    fLegendGrid.Options := (fLegendGrid.Options - [goEditing, goRowSizing,
+      goRangeSelect]) + [goColSizing];
+    fLegendGrid.OnMouseDown := @LegendGridMouseDown;
+    fLegendGrid.OnMouseUp := @LegendGridMouseUp;
+    fLegendGrid.OnPrepareCanvas := @LegendPrepareCanvas;
+    fLegendGrid.OnDrawCell := @LegendDrawCell;
+    fLegendGrid.Cells[0, 0] := '';
+    fLegendGrid.Cells[1, 0] := 'Сигнал';
+    fLegendGrid.Cells[2, 0] := 'Y1';
+    fLegendGrid.Cells[3, 0] := 'Y2';
+    fLegendGrid.Cells[4, 0] := 'ΔY';
+    fLegendGrid.Cells[5, 0] := 'ΔX';
+    fLegendGrid.Cells[6, 0] := 'f';
+  end;
+  fLegendGrid.RowCount := Max(1, Length(fSeries) + 1);
+  UpdateLegendLayout;
+  RefreshLegendValues;
+end;
+
+procedure TRecorderOglOscillogram.UpdateLegendLayout;
+var
+  lDesiredHeight, lAvailableHeight: Integer;
+begin
+  if (fLegendPanel = nil) or (fLegendGrid = nil) then
+    Exit;
+  lDesiredHeight := fLegendGrid.RowCount * fLegendGrid.DefaultRowHeight + 2;
+  lAvailableHeight := ClientHeight - COscillogramLegendMinChartHeight -
+    fLegendSplitter.Height;
+  if fToolBar <> nil then
+    Dec(lAvailableHeight, fToolBar.Height);
+  if (fInfoPanel <> nil) and fInfoPanel.Visible then
+    Dec(lAvailableHeight, fInfoPanel.Height);
+  lAvailableHeight := Max(1, lAvailableHeight);
+  if fLegendGrid.RowCount <> fLegendLastRowCount then
+  begin
+    fLegendLastRowCount := fLegendGrid.RowCount;
+    fLegendUserResized := False;
+    fLegendManualHeight := 0;
+  end;
+  if fLegendUserResized then
+    lDesiredHeight := fLegendManualHeight;
+  lDesiredHeight := EnsureRange(lDesiredHeight, 1, lAvailableHeight);
+  if fLegendHostPanel.Height <> lDesiredHeight then
+    fLegendHostPanel.Height := lDesiredHeight;
+  { The grid fills the scrollbox client area; refresh columns after the host
+    panel height changes and LCL has completed its alignment pass. }
+  LegendPanelResize(fLegendPanel);
+end;
+
+procedure TRecorderOglOscillogram.LegendSplitterMoved(Sender: TObject);
+begin
+  fLegendUserResized := True;
+  fLegendSplitterDragging := False;
+  fLegendManualHeight := fLegendHostPanel.Height;
+end;
+
+procedure TRecorderOglOscillogram.LegendSplitterDragStarted(Sender: TObject);
+begin
+  fLegendSplitterDragging := True;
+end;
+
+procedure TRecorderOglOscillogram.LegendPanelResize(Sender: TObject);
+var
+  lWidth, lNameWidth, lNumericWidth, lTotalWidth, I: Integer;
+begin
+  if (fLegendGrid = nil) or (fLegendGrid.ColCount < 7) or
+    (fLegendGrid.ClientWidth <= 0) then
+    Exit;
+  lWidth := Max(1, fLegendPanel.ClientWidth - 2);
+  if fLegendUserSizedColumns then
+  begin
+    lTotalWidth := 0;
+    for I := Low(fLegendColumnWidths) to High(fLegendColumnWidths) do
+      Inc(lTotalWidth, fLegendColumnWidths[I]);
+    if lTotalWidth <= 0 then Exit;
+    for I := 0 to 5 do
+      fLegendGrid.ColWidths[I] := Max(1,
+        (fLegendColumnWidths[I] * lWidth) div lTotalWidth);
+    lTotalWidth := 0;
+    for I := 0 to 5 do
+      Inc(lTotalWidth, fLegendGrid.ColWidths[I]);
+    fLegendGrid.ColWidths[6] := Max(1, lWidth - lTotalWidth);
+  end
+  else
+  begin
+    fLegendGrid.ColWidths[0] := Min(18, lWidth);
+    lNameWidth := Max(1, ((lWidth - fLegendGrid.ColWidths[0]) * 32) div 100);
+    fLegendGrid.ColWidths[1] := lNameWidth;
+    lNumericWidth := Max(1, (lWidth - fLegendGrid.ColWidths[0] - lNameWidth) div 5);
+    for I := 2 to 5 do
+      fLegendGrid.ColWidths[I] := lNumericWidth;
+    fLegendGrid.ColWidths[6] := Max(1, lWidth - fLegendGrid.ColWidths[0] -
+      lNameWidth - 4 * lNumericWidth);
+  end;
+end;
+
+procedure TRecorderOglOscillogram.LegendGridMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   I: Integer;
 begin
-  if fLegendPanel = nil then Exit;
-  for I := 0 to High(fLegendLabels) do
-    fLegendLabels[I].Free;
-  SetLength(fLegendLabels, Length(fSeries));
-  for I := 0 to High(fSeries) do
+  if fLegendGrid = nil then Exit;
+  for I := Low(fLegendColumnWidthsBeforeDrag) to
+    High(fLegendColumnWidthsBeforeDrag) do
+    fLegendColumnWidthsBeforeDrag[I] := fLegendGrid.ColWidths[I];
+end;
+
+procedure TRecorderOglOscillogram.LegendGridMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  I: Integer;
+begin
+  if fLegendGrid = nil then Exit;
+  for I := Low(fLegendColumnWidths) to High(fLegendColumnWidths) do
   begin
-    fLegendLabels[I] := TLabel.Create(Self);
-    fLegendLabels[I].Parent := fLegendPanel;
-    fLegendLabels[I].Top := 5;
+    fLegendColumnWidths[I] := fLegendGrid.ColWidths[I];
+    if fLegendColumnWidths[I] <> fLegendColumnWidthsBeforeDrag[I] then
+      fLegendUserSizedColumns := True;
   end;
-  RefreshLegendValues;
+end;
+
+procedure TRecorderOglOscillogram.LegendPrepareCanvas(Sender: TObject;
+  ACol, ARow: Integer; AState: TGridDrawState);
+var
+  lColor: TColor;
+begin
+  if not (Sender is TStringGrid) then
+    Exit;
+  if (ARow = 0) or (ARow > Length(fSeries)) then
+  begin
+    if ARow = 0 then
+    begin
+      TStringGrid(Sender).Canvas.Font.Color := clBlack;
+      TStringGrid(Sender).Canvas.Font.Style := [fsBold];
+    end;
+    Exit;
+  end;
+  lColor := TrendLabelColor(ARow - 1);
+  if ACol = 1 then
+    TStringGrid(Sender).Canvas.Font.Color := lColor;
+end;
+
+procedure TRecorderOglOscillogram.LegendDrawCell(Sender: TObject;
+  ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
+var
+  lCanvas: TCanvas;
+  lSquare: TRect;
+begin
+  if (ACol <> 0) or (ARow <= 0) or (ARow > Length(fSeries)) or
+    not (Sender is TStringGrid) then
+    Exit;
+  lCanvas := TStringGrid(Sender).Canvas;
+  lSquare := Bounds(Rect.Left + (Rect.Width - 9) div 2,
+    Rect.Top + (Rect.Height - 9) div 2, 9, 9);
+  lCanvas.Brush.Style := bsSolid;
+  lCanvas.Brush.Color := TrendLabelColor(ARow - 1);
+  lCanvas.Pen.Color := clGray;
+  lCanvas.Rectangle(lSquare);
+end;
+
+procedure TRecorderOglOscillogram.Resize;
+begin
+  inherited Resize;
+  if not fLegendSplitterDragging then
+    UpdateLegendLayout;
 end;
 
 function TRecorderOglOscillogram.LegendValueAt(ASeries: cLineSeries;
@@ -1754,17 +2084,19 @@ end;
 
 procedure TRecorderOglOscillogram.RefreshLegendValues;
 var
-  I, lLeft: Integer;
+  I, lCol, lRow: Integer;
   lSeries: cLineSeries;
-  lCaption, lName: string;
-  lX, lValue1, lValue2: Double;
+  lCursor: TChartCursor;
+  lName: string;
+  lValue1, lValue2: Double;
   lYRange: Double;
   lDisplayFormat: string;
   lHas1, lHas2: Boolean;
 begin
   if (fLegendPanel = nil) or not fLegendPanel.Visible or
-     (fPage = nil) then Exit;
+     (fPage = nil) or (fLegendGrid = nil) then Exit;
   EnsureXCursorsInitialized;
+  lCursor := PageCursor;
   lYRange := 0;
   if fAxis <> nil then
     lYRange := Max(Abs(TChartAxis(fAxis).MinValue),
@@ -1772,54 +2104,48 @@ begin
   lDisplayFormat := '4';
   if fComponent <> nil then
     lDisplayFormat := fComponent.DisplayFormat;
-  lLeft := 8;
-  for I := 0 to High(fLegendLabels) do
+  for I := 0 to High(fSeries) do
   begin
+    lRow := I + 1;
     lSeries := GetTrendByIndex(I);
-    fLegendLabels[I].Visible := (lSeries <> nil) and lSeries.Visible;
-    if not fLegendLabels[I].Visible then Continue;
+    if (lSeries = nil) or not lSeries.Visible then
+    begin
+      for lCol := 0 to fLegendGrid.ColCount - 1 do
+        fLegendGrid.Cells[lCol, lRow] := '';
+      Continue;
+    end;
     if (I = 0) and (fComponent <> nil) and
        (Trim(fComponent.TagName) <> '') then
       lName := fComponent.TagName
     else
       lName := lSeries.Caption;
-    lCaption := '■ ' + lName;
-    if (fXCursorButton <> nil) and fXCursorButton.Down and
-       fXCursorsInitialized then
+    fLegendGrid.Cells[0, lRow] := '';
+    fLegendGrid.Cells[1, lRow] := lName;
+    fLegendGrid.Cells[2, lRow] := '';
+    fLegendGrid.Cells[3, lRow] := '';
+    fLegendGrid.Cells[4, lRow] := '';
+    fLegendGrid.Cells[5, lRow] := '';
+    fLegendGrid.Cells[6, lRow] := '';
+    if (lCursor <> nil) and lCursor.Visible then
     begin
-      lX := fXCursors[0];
-      lHas1 := LegendValueAt(lSeries, lX, lValue1);
+      lHas1 := LegendValueAt(lSeries, lCursor.X1, lValue1);
       if lHas1 then
-        lCaption := lCaption + '  Y1=' +
-          FormatOscillogramValue(lValue1, lYRange, lDisplayFormat)
-      else
-        lCaption := lCaption + '  Y1=-';
-      if fXCursorCount = 2 then
+        fLegendGrid.Cells[2, lRow] := FormatOscillogramValue(lValue1,
+          lYRange, lDisplayFormat);
+      if lCursor.CursorType = cctDouble then
       begin
-        lX := fXCursors[1];
-        lHas2 := LegendValueAt(lSeries, lX, lValue2);
+        lHas2 := LegendValueAt(lSeries, lCursor.X2, lValue2);
         if lHas2 then
-          lCaption := lCaption + '  Y2=' +
-            FormatOscillogramValue(lValue2, lYRange, lDisplayFormat)
-        else
-          lCaption := lCaption + '  Y2=-';
+          fLegendGrid.Cells[3, lRow] := FormatOscillogramValue(lValue2,
+            lYRange, lDisplayFormat);
         if lHas1 and lHas2 then
-          lCaption := lCaption + '  Δ=' +
-            FormatOscillogramValue(lValue2 - lValue1, lYRange,
-              lDisplayFormat);
+          fLegendGrid.Cells[4, lRow] := FormatOscillogramValue(
+            lValue2 - lValue1, lYRange, lDisplayFormat);
       end;
     end
     else if lSeries.PointCount > 0 then
-      lCaption := lCaption + '  Y=' +
-        FormatOscillogramValue(lSeries.Points[lSeries.PointCount - 1].Y,
-          lYRange, lDisplayFormat)
-    else
-      lCaption := lCaption + '  Y=-';
-    if fLegendLabels[I].Caption <> lCaption then
-      fLegendLabels[I].Caption := lCaption;
-    fLegendLabels[I].Font.Color := TrendLabelColor(I);
-    fLegendLabels[I].Left := lLeft;
-    lLeft := lLeft + fLegendLabels[I].Width + 16;
+      fLegendGrid.Cells[2, lRow] := FormatOscillogramValue(
+        lSeries.Points[lSeries.PointCount - 1].Y, lYRange, lDisplayFormat);
   end;
 end;
 
@@ -1850,7 +2176,21 @@ end;
 procedure TRecorderOglOscillogram.ToolButtonClick(Sender: TObject);
 var
   I: Integer;
+  lControlId: string;
+  lDown: Boolean;
 begin
+  lControlId := '';
+  lDown := TToolButton(Sender).Down;
+  if Sender = fLevelButton then lControlId := 'level_cursor'
+  else if Sender = fAutoRangeButton then lControlId := 'auto_range'
+  else if Sender = fXCursorButton then lControlId := 'x_cursor'
+  else if Sender = fLegendButton then lControlId := 'legend';
+  if (lControlId = '') or not DispatchComponentEvent('toolbar.toggle',
+    lControlId, Ord(lDown)) then
+  begin
+    TToolButton(Sender).Down := not lDown;
+    Exit;
+  end;
   if Sender = fLevelButton then
   begin
     fLevelCursorCheck.Checked := fLevelButton.Down;
@@ -1873,13 +2213,19 @@ begin
   end
   else if Sender = fXCursorButton then
   begin
-    if fComponent <> nil then fComponent.XCursorEnabled := fXCursorButton.Down;
-    RefreshLegendValues;
-    fChart.Invalidate;
+    if PageCursor <> nil then
+    begin
+      EnsureXCursorsInitialized;
+      PageCursor.Visible := fXCursorButton.Down;
+      fChart.NotifyCursorChanged(PageCursor);
+      fChart.Redraw;
+    end;
   end
   else if Sender = fLegendButton then
   begin
-    fLegendPanel.Visible := fLegendButton.Down;
+    fLegendHostPanel.Visible := fLegendButton.Down;
+    if fLegendSplitter <> nil then
+      fLegendSplitter.Visible := fLegendButton.Down;
     if fComponent <> nil then fComponent.LegendVisible := fLegendButton.Down;
     RefreshLegendValues;
   end;
@@ -1887,17 +2233,34 @@ end;
 
 procedure TRecorderOglOscillogram.XCursorModeClick(Sender: TObject);
 begin
+  if not DispatchComponentEvent('cursor.mode', 'x_cursor', 0, 0,
+    TMenuItem(Sender).Tag) then
+    Exit;
   EnsureXCursorsInitialized;
   fXCursorCount := TMenuItem(Sender).Tag;
-  if fComponent <> nil then fComponent.XCursorCount := fXCursorCount;
+  if PageCursor <> nil then
+  begin
+    if fXCursorCount = 2 then
+      PageCursor.CursorType := cctDouble
+    else
+      PageCursor.CursorType := cctSingle;
+    fChart.NotifyCursorChanged(PageCursor);
+  end;
   TMenuItem(Sender).Checked := True;
-  RefreshLegendValues;
-  fChart.Invalidate;
+  fChart.Redraw;
+end;
+
+function TRecorderOglOscillogram.PageCursor: TChartCursor;
+begin
+  Result := nil;
+  if fPage <> nil then
+    Result := GetOrCreatePageCursor(TChartPage(fPage));
 end;
 
 procedure TRecorderOglOscillogram.EnsureXCursorsInitialized;
 var
   lPage: TChartPage;
+  lCursor: TChartCursor;
   lRange: Double;
 begin
   if fXCursorsInitialized or (fPage = nil) then
@@ -1911,8 +2274,11 @@ begin
   lRange := lPage.XMaxValue - lPage.XMinValue;
   if lRange <= 0 then
     Exit;
-  fXCursors[0] := lPage.XMinValue + 0.33 * lRange;
-  fXCursors[1] := lPage.XMinValue + 0.67 * lRange;
+  lCursor := PageCursor;
+  if lCursor = nil then
+    Exit;
+  lCursor.X1 := lPage.XMinValue + 0.33 * lRange;
+  lCursor.X2 := lPage.XMinValue + 0.67 * lRange;
   fXCursorsInitialized := True;
 end;
 
@@ -1940,6 +2306,8 @@ begin
   fLevelEdit.Text := FormatSignificant(fComponent.TriggerLevel);
   fPreRollEdit.Text := FormatSignificant(fComponent.TriggerPreRollPercent);
   fTriggerCheck.Checked := fComponent.TriggerEnabled;
+  fTriggerFallingCheck.Checked :=
+    fComponent.TriggerEdge = rseFalling;
   fClosedInputCheck.Checked := fComponent.ClosedInput;
   fLevelCursorCheck.Checked := fComponent.LevelCursorVisible;
   if fLevelButton <> nil then
@@ -2020,17 +2388,31 @@ var
   lCompanionValue: Double;
   lChartAxis: TChartAxis;
   lModelAxis: TRecorderTrendAxis;
+  lControlId: string;
 begin
   if (fComponent = nil) or fUpdatingControls then
     Exit;
   if not TryStrToFloat(TEdit(Sender).Text, lValue) then
     Exit;
+  lControlId := '';
+  if Sender = fXScaleEdit then lControlId := 'x_scale'
+  else if Sender = fYScaleEdit then lControlId := 'y_scale'
+  else if Sender = fOffsetEdit then lControlId := 'y_offset'
+  else if Sender = fLevelEdit then lControlId := 'trigger_level'
+  else if Sender = fPreRollEdit then lControlId := 'trigger_preroll';
+  if (lControlId = '') or not DispatchComponentEvent('control.changed',
+    lControlId, lValue) then
+  begin
+    RefreshControlValues;
+    Exit;
+  end;
   if Sender = fXScaleEdit then
   begin
     if lValue <= 0 then Exit;
     fComponent.XScale := lValue;
     fTriggerArmed := False;
     fTriggerHasFrame := False;
+    fTriggerHoldUntil := 0;
     TChartPage(fPage).ZoomedX := False;
   end
   else if Sender = fYScaleEdit then
@@ -2080,6 +2462,7 @@ begin
     fComponent.TriggerLevel := lValue;
     fTriggerArmed := False;
     fTriggerHasFrame := False;
+    fTriggerHoldUntil := 0;
   end
   else if Sender = fPreRollEdit then
   begin
@@ -2087,6 +2470,7 @@ begin
     fPreRollEdit.Text := FormatSignificant(fComponent.TriggerPreRollPercent);
     fTriggerArmed := False;
     fTriggerHasFrame := False;
+    fTriggerHoldUntil := 0;
   end;
   fHasDataSignature := False;
   Refresh(fTagRegistry, CurrentDisplaySeconds);
@@ -2113,9 +2497,28 @@ begin
 end;
 
 procedure TRecorderOglOscillogram.TriggerChanged(Sender: TObject);
+var
+  lControlId: string;
+  lChecked: Boolean;
 begin
   if (fComponent = nil) or fUpdatingControls then
     Exit;
+  if Sender = fLevelCursorCheck then
+  begin
+    lControlId := 'level_cursor';
+    lChecked := fLevelCursorCheck.Checked;
+  end
+  else
+  begin
+    lControlId := 'trigger';
+    lChecked := fTriggerCheck.Checked;
+  end;
+  if not DispatchComponentEvent('control.toggle', lControlId,
+    Ord(lChecked)) then
+  begin
+    RefreshControlValues;
+    Exit;
+  end;
   fComponent.TriggerEnabled := fTriggerCheck.Checked;
   if Sender = fLevelCursorCheck then
   begin
@@ -2124,63 +2527,29 @@ begin
   end;
   fTriggerArmed := False;
   fTriggerHasFrame := False;
+  fTriggerHoldUntil := 0;
   fHasDataSignature := False;
   Refresh(fTagRegistry, CurrentDisplaySeconds);
 end;
 
-procedure TRecorderOglOscillogram.DrawXCursors;
+procedure TRecorderOglOscillogram.TriggerEdgeChanged(Sender: TObject);
 var
-  lRenderer: TOpenGLChartRenderer;
-  lRect: TChartPixelRect;
-  lPage: TChartPage;
-  lX: Single;
-  I: Integer;
+  lEdge: TRecorderSignalEdge;
 begin
-  if (fXCursorButton = nil) or not fXCursorButton.Down or
-     (fChart = nil) or (fPage = nil) then Exit;
-  lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
-  if lRenderer = nil then Exit;
-  lPage := TChartPage(fPage);
-  EnsureXCursorsInitialized;
-  if not fXCursorsInitialized then Exit;
-  lRect := lRenderer.GetPageContentRect(lPage);
-  for I := 0 to fXCursorCount - 1 do
-  begin
-    lX := lRenderer.XValueToPixel(lPage, nil, fXCursors[I],
-      lRect.Left, lRect.Right);
-    if (lX < lRect.Left) or (lX > lRect.Right) then
-      Continue;
-    glColor3f(0.8, 0.1, 0.1);
-    glLineWidth(1.5);
-    glLineStipple(1, $00FF);
-    glEnable(GL_LINE_STIPPLE);
-    glBegin(GL_LINES);
-    glVertex2f(lX, lRect.Top);
-    glVertex2f(lX, lRect.Bottom);
-    glEnd;
-    glDisable(GL_LINE_STIPPLE);
-    glLineWidth(1);
-  end;
-end;
-
-function TRecorderOglOscillogram.XCursorHit(AX, AY: Integer): Integer;
-var
-  lRenderer: TOpenGLChartRenderer;
-  lRect: TChartPixelRect;
-  I: Integer;
-begin
-  Result := -1;
-  if (fXCursorButton = nil) or not fXCursorButton.Down or
-     (fChart = nil) or (fPage = nil) then Exit;
-  lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
-  if lRenderer = nil then Exit;
-  EnsureXCursorsInitialized;
-  if not fXCursorsInitialized then Exit;
-  lRect := lRenderer.GetPageContentRect(TChartPage(fPage));
-  if (AY < lRect.Top) or (AY > lRect.Bottom) then Exit;
-  for I := 0 to fXCursorCount - 1 do
-    if Abs(AX - lRenderer.XValueToPixel(TChartPage(fPage), nil,
-      fXCursors[I], lRect.Left, lRect.Right)) <= 6 then Exit(I);
+  if (fComponent = nil) or fUpdatingControls then
+    Exit;
+  if fTriggerFallingCheck.Checked then
+    lEdge := rseFalling
+  else
+    lEdge := rseRising;
+  fComponent.TriggerEdge := lEdge;
+  DispatchComponentEvent('control.changed', 'trigger_edge',
+    Ord(lEdge));
+  fTriggerArmed := False;
+  fTriggerHasFrame := False;
+  fTriggerHoldUntil := 0;
+  fHasDataSignature := False;
+  Refresh(fTagRegistry, CurrentDisplaySeconds);
 end;
 
 procedure TRecorderOglOscillogram.RebuildExtremaCaches;
@@ -2230,100 +2599,6 @@ begin
   end;
 end;
 
-function TRecorderOglOscillogram.SnapCursorX(AX, AMaxDistance: Double;
-  AUseMaximum: Boolean; out ASnappedX: Double): Boolean;
-var
-  lCount, lLeft, lRight, lMiddle, lCandidate, lPointIndex: Integer;
-  lDistance, lBestDistance: Double;
-  lIndices: array of Integer;
-  lSeries: cLineSeries;
-
-  procedure CheckCandidate(AIndex: Integer);
-  begin
-    if (AIndex < 0) or (AIndex >= lCount) then
-      Exit;
-    lPointIndex := lIndices[AIndex];
-    lDistance := Abs(lSeries.Points[lPointIndex].X - AX);
-    if lDistance < lBestDistance then
-    begin
-      lBestDistance := lDistance;
-      ASnappedX := lSeries.Points[lPointIndex].X;
-    end;
-  end;
-
-begin
-  Result := False;
-  if (fActiveSeriesIndex < 0) or
-     (fActiveSeriesIndex >= Length(fSeries)) or
-     (fActiveSeriesIndex >= Length(fMaximaCounts)) or
-     (fActiveSeriesIndex >= Length(fMinimaCounts)) then
-    Exit;
-  lSeries := fSeries[fActiveSeriesIndex];
-  if (lSeries = nil) or not lSeries.Visible then
-    Exit;
-  if AUseMaximum then
-  begin
-    lCount := fMaximaCounts[fActiveSeriesIndex];
-    lIndices := fMaximaIndices[fActiveSeriesIndex];
-  end
-  else
-  begin
-    lCount := fMinimaCounts[fActiveSeriesIndex];
-    lIndices := fMinimaIndices[fActiveSeriesIndex];
-  end;
-  if lCount = 0 then
-    Exit;
-  lLeft := 0;
-  lRight := lCount;
-  while lLeft < lRight do
-  begin
-    lMiddle := (lLeft + lRight) div 2;
-    if lSeries.Points[lIndices[lMiddle]].X < AX then
-      lLeft := lMiddle + 1
-    else
-      lRight := lMiddle;
-  end;
-  lCandidate := lLeft;
-  lBestDistance := AMaxDistance + 1.0;
-  CheckCandidate(lCandidate - 1);
-  CheckCandidate(lCandidate);
-  Result := lBestDistance <= AMaxDistance;
-end;
-
-procedure TRecorderOglOscillogram.SetXCursorFromPixel(AIndex, AX: Integer;
-  AShift: TShiftState);
-var
-  lRenderer: TOpenGLChartRenderer;
-  lRect: TChartPixelRect;
-  lPage: TChartPage;
-  lX, lSnappedX, lSnapDistance: Double;
-begin
-  if (AIndex < 0) or (AIndex > 1) or (fChart = nil) then Exit;
-  lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
-  if lRenderer = nil then Exit;
-  lPage := TChartPage(fPage);
-  lRect := lRenderer.GetPageContentRect(lPage);
-  if lRect.Right <= lRect.Left then Exit;
-  lX := lPage.XMinValue + EnsureRange((AX - lRect.Left) /
-    (lRect.Right - lRect.Left), 0.0, 1.0) *
-    (lPage.XMaxValue - lPage.XMinValue);
-  lSnapDistance := 12.0 * (lPage.XMaxValue - lPage.XMinValue) /
-    (lRect.Right - lRect.Left);
-  if (ssCtrl in AShift) and
-     SnapCursorX(lX, lSnapDistance, False, lSnappedX) then
-    lX := lSnappedX
-  else if (ssShift in AShift) and
-     SnapCursorX(lX, lSnapDistance, True, lSnappedX) then
-    lX := lSnappedX;
-  fXCursors[AIndex] := lX;
-  fXCursorsInitialized := True;
-  if fXCursorButton <> nil then
-    fXCursorButton.Hint := Format('X%d = %s с', [AIndex + 1,
-      FormatSignificant(lX)]);
-  RefreshLegendValues;
-  fChart.Invalidate;
-end;
-
 procedure TRecorderOglOscillogram.DetectManualRange;
 var
   I: Integer;
@@ -2351,9 +2626,16 @@ var
 begin
   if (fComponent = nil) or fUpdatingControls then
     Exit;
+  if not DispatchComponentEvent('control.toggle', 'closed_input',
+    Ord(fClosedInputCheck.Checked)) then
+  begin
+    RefreshControlValues;
+    Exit;
+  end;
   fComponent.ClosedInput := fClosedInputCheck.Checked;
   fTriggerArmed := False;
   fTriggerHasFrame := False;
+  fTriggerHoldUntil := 0;
   fYRangeInitialized := False;
   for I := 0 to High(fAxisRangeInitialized) do
     fAxisRangeInitialized[I] := False;
@@ -2449,6 +2731,7 @@ procedure TRecorderOglOscillogram.SetTriggerLevelFromPixel(AY: Integer);
 var
   lRenderer: TOpenGLChartRenderer;
   lRect: TChartPixelRect;
+  lValue: Double;
 begin
   if (fComponent = nil) or (fChart = nil) or (fPage = nil) or
      (fAxis = nil) then Exit;
@@ -2456,8 +2739,11 @@ begin
   if lRenderer = nil then Exit;
   lRect := lRenderer.GetPageContentRect(TChartPage(fPage));
   AY := Max(lRect.Top, Min(AY, lRect.Bottom));
-  fComponent.TriggerLevel := lRenderer.PixelToAxisValue(TriggerAxis,
-    AY, lRect.Bottom, lRect.Top);
+  lValue := lRenderer.PixelToAxisValue(TriggerAxis, AY,
+    lRect.Bottom, lRect.Top);
+  if not DispatchComponentEvent('control.changed', 'trigger_level',
+    lValue) then Exit;
+  fComponent.TriggerLevel := lValue;
   fLevelEdit.Text := FormatSignificant(fComponent.TriggerLevel);
   fChart.Invalidate;
 end;
@@ -2469,13 +2755,17 @@ var
   lHit: TChartTextHit;
   lRenderer: TOpenGLChartRenderer;
 begin
+  if not DispatchComponentEvent('chart.mouse_down', 'chart', X, Y,
+    Ord(Button)) then
+    Exit;
   if Button = mbLeft then
   begin
     { Activate the signal here, from the actual hit result, instead of waiting
       for MouseUp and relying on SelectedObject. Other chart listeners may
       replace SelectedObject between the two events. Both the axis line and
       its captions/tick labels belong to the same selectable axis. }
-    if fPluginMode and (fChart <> nil) then
+    if SupportsAdvancedControls and
+      (fChart <> nil) then
     begin
       lAxis := nil;
       lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
@@ -2489,13 +2779,6 @@ begin
       if lAxis <> nil then
         ActivateFirstSeriesOnAxis(lAxis);
     end;
-    fDraggingXCursor := XCursorHit(X, Y);
-    if fDraggingXCursor >= 0 then
-    begin
-      fChart.MouseInputEnabled := False;
-      SetXCursorFromPixel(fDraggingXCursor, X, Shift);
-      Exit;
-    end;
   end;
   if (Button <> mbLeft) or (ssCtrl in Shift) or
      not TriggerLevelHit(X, Y) then Exit;
@@ -2507,13 +2790,8 @@ end;
 procedure TRecorderOglOscillogram.ChartMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if (fDraggingXCursor >= 0) and (ssLeft in Shift) then
-    SetXCursorFromPixel(fDraggingXCursor, X, Shift);
-  if (fDraggingXCursor >= 0) or (XCursorHit(X, Y) >= 0) then
-  begin
-    fChart.Cursor := crSizeWE;
+  if not DispatchComponentEvent('chart.mouse_move', 'chart', X, Y) then
     Exit;
-  end;
   if fDraggingLevel and (ssLeft in Shift) then
     SetTriggerLevelFromPixel(Y);
   if fDraggingLevel or TriggerLevelHit(X, Y) then
@@ -2523,13 +2801,9 @@ end;
 procedure TRecorderOglOscillogram.ChartMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if (Button = mbLeft) and (fDraggingXCursor >= 0) then
-  begin
-    SetXCursorFromPixel(fDraggingXCursor, X, Shift);
-    fDraggingXCursor := -1;
-    fChart.MouseInputEnabled := True;
+  if not DispatchComponentEvent('chart.mouse_up', 'chart', X, Y,
+    Ord(Button)) then
     Exit;
-  end;
   if (Button = mbLeft) and fDraggingLevel then
   begin
     SetTriggerLevelFromPixel(Y);
@@ -2537,6 +2811,7 @@ begin
     fChart.MouseInputEnabled := True;
     fTriggerArmed := False;
     fTriggerHasFrame := False;
+    fTriggerHoldUntil := 0;
     fHasDataSignature := False;
     Refresh(fTagRegistry, CurrentDisplaySeconds);
   end;
@@ -2571,7 +2846,6 @@ var
   lDataSignature: QWord;
   lSignatureTag: TRecorderTag;
   lViewChanged: Boolean;
-  lPluginFrame: TRecorderPluginOscillogramFrame;
   lAxisCenter: Double;
   lAxisHalfRange: Double;
   lAxisBaseMin: Double;
@@ -2588,31 +2862,33 @@ var
   lPrimaryTag: TRecorderTag;
   lTriggerMean: Double;
   lAxisIndex: Integer;
-  lPluginMean: Double;
-  lPluginIndex: Integer;
   lWindowSeconds: Double;
   lPreRollSeconds: Double;
+  lTriggerEventTime: Double;
 begin
   { The chart applies pan/zoom after our OnMouseUp handler, so inspect the
     viewport again before the next data update can apply automatic ranges. }
-  if fPluginMode then
+  if SupportsAdvancedControls then
     DetectManualRange;
-  if fPluginMode and (fComponent <> nil) and (fComponent.XScale > 0) then
+  if SupportsAdvancedControls and
+    (fComponent <> nil) and (fComponent.XScale > 0) then
     ADisplaySeconds := fComponent.XScale;
-  if fPluginMode and fAutoRange then
+  if SupportsAdvancedControls and fAutoRange then
     for I := 0 to High(fAxisRangeInitialized) do
       fAxisRangeInitialized[I] := False;
   if ADisplaySeconds <= 0 then
     ADisplaySeconds := 1.0;
   lWindowSeconds := ADisplaySeconds;
-  if fPluginMode and (fComponent <> nil) and fComponent.TriggerEnabled and
+  if SupportsAdvancedControls and (fComponent <> nil) and
+    fComponent.TriggerEnabled and
     TChartPage(fPage).ZoomedX then
     lWindowSeconds := TChartPage(fPage).XMaxValue -
       TChartPage(fPage).XMinValue;
   if (lWindowSeconds <= 0) or (lWindowSeconds > ADisplaySeconds) then
     lWindowSeconds := ADisplaySeconds;
   lPreRollSeconds := 0;
-  if fPluginMode and (fComponent <> nil) and fComponent.TriggerEnabled then
+  if SupportsAdvancedControls and (fComponent <> nil) and
+    fComponent.TriggerEnabled then
     lPreRollSeconds := lWindowSeconds *
       fComponent.TriggerPreRollPercent / 100.0;
   if fFpsMeasureEnabled <> AMeasureFps then
@@ -2637,7 +2913,8 @@ begin
         (lDataSignature shr 59)) xor
         (QWord(lSignatureTag.Id) + lSignatureTag.SignalBuffer.Revision);
   end;
-  if fPluginMode and (fComponent <> nil) and fComponent.TriggerEnabled then
+  if SupportsAdvancedControls and (fComponent <> nil) and
+    fComponent.TriggerEnabled then
   begin
     lSignatureTag := ResolveTagByName(ATagRegistry,
       fComponent.TriggerTagName);
@@ -2668,17 +2945,9 @@ begin
     SetLength(fLineSnapshots, 1 + fExtraLines.Count);
   if fTrend = nil then
     Exit;
-  fPluginMetricsValid := False;
   lTag := ResolveTag(ATagRegistry);
   if lTag = nil then
   begin
-    if fPluginMode and (fComponent <> nil) then
-    begin
-      lPluginFrame := Default(TRecorderPluginOscillogramFrame);
-      lPluginFrame.Size := SizeOf(lPluginFrame);
-      lPluginFrame.DisplaySeconds := ADisplaySeconds;
-      RecorderPluginRepaint(fComponent, @lPluginFrame);
-    end;
     fCurrentTagName := '';
     SetChartTitle(Format('No tag frame:%d', [fFrameNo]));
     if not TChartAxis(fAxis).HasPresetRange then
@@ -2742,7 +3011,8 @@ begin
   end;
   lTag := lPrimaryTag;
   lTriggered := False;
-  if fPluginMode and (fComponent <> nil) and fComponent.TriggerEnabled then
+  if SupportsAdvancedControls and (fComponent <> nil) and
+    fComponent.TriggerEnabled then
   begin
     if Trim(fComponent.TriggerTagName) = '' then
       lTriggerTag := lPrimaryTag
@@ -2753,6 +3023,7 @@ begin
     begin
       fTriggerArmed := False;
       fTriggerHasFrame := False;
+      fTriggerHoldUntil := 0;
       Exit;
     end;
     if not fTriggerArmed then
@@ -2780,20 +3051,27 @@ begin
       for lTriggerIndex := 1 to lTriggerCount - 1 do
         if (fTriggerTimes[lTriggerIndex] > fLastTriggerTime) and
           ((not fTriggerHasFrame) or
-            (fTriggerTimes[lTriggerIndex] >=
-              fLastTriggerTime + lWindowSeconds)) and
+            (fTriggerTimes[lTriggerIndex] >= fTriggerHoldUntil)) and
           (fTriggerTimes[lTriggerIndex] <= lTriggerSearchEnd) and
-          (fTriggerValues[lTriggerIndex - 1] - lTriggerMean < fComponent.TriggerLevel) and
-          (fTriggerValues[lTriggerIndex] - lTriggerMean >= fComponent.TriggerLevel) then
+          RecorderSignalCrossesTriggerLevel(
+            fTriggerValues[lTriggerIndex - 1] - lTriggerMean,
+            fTriggerValues[lTriggerIndex] - lTriggerMean,
+            fComponent.TriggerLevel, fComponent.TriggerEdge) then
         begin
-          lDisplayStart := fTriggerTimes[lTriggerIndex];
+          lTriggerEventTime := fTriggerTimes[lTriggerIndex];
+          lDisplayStart := lTriggerEventTime;
           lTriggered := True;
         end;
     end;
     if not lTriggered then
       Exit;
-    fLastTriggerTime := lDisplayStart;
+    fLastTriggerTime := lTriggerEventTime;
     fTriggerHasFrame := True;
+    { Re-arm only after one full configured capture interval, not after the
+      currently zoomed viewport. Otherwise a short manual zoom can let a later
+      crossing replace the captured frame while its configured window is still
+      in progress. }
+    fTriggerHoldUntil := lTriggerEventTime + ADisplaySeconds;
     lDisplayStart := lDisplayStart - lPreRollSeconds;
     { Источник остаётся полным кольцевым буфером; только видимое окно
       пересчитывается относительно его левой границы. }
@@ -2814,39 +3092,6 @@ begin
       lDisplayStart + lWindowSeconds) do
     Dec(fLineSnapshots[0].Count);
   lSnapshot := fLineSnapshots[0];
-  if fPluginMode and (fComponent <> nil) then
-  begin
-    lPluginFrame := Default(TRecorderPluginOscillogramFrame);
-    lPluginFrame.Size := SizeOf(lPluginFrame);
-    lPluginFrame.SampleCount := lSnapshot.Count;
-    lPluginFrame.DisplaySeconds := lWindowSeconds;
-    if lSnapshot.Count > 0 then
-    begin
-      if fComponent.ClosedInput then
-      begin
-        if Length(fPluginValues) < lSnapshot.Count then
-          SetLength(fPluginValues, lSnapshot.Count);
-        lPluginMean := 0;
-        for lPluginIndex := 0 to lSnapshot.Count - 1 do
-          lPluginMean := lPluginMean + lSnapshot.Values[lPluginIndex];
-        lPluginMean := lPluginMean / lSnapshot.Count;
-        for lPluginIndex := 0 to lSnapshot.Count - 1 do
-          fPluginValues[lPluginIndex] :=
-            lSnapshot.Values[lPluginIndex] - lPluginMean;
-        lPluginFrame.Values := @fPluginValues[0];
-      end
-      else
-        lPluginFrame.Values := @lSnapshot.Values[0];
-    end;
-    fPluginMetricsValid := RecorderPluginRepaint(fComponent, @lPluginFrame) and
-      (lSnapshot.Count > 0);
-    if fPluginMetricsValid then
-    begin
-      fPluginPeak := Max(Abs(lPluginFrame.MinValue),
-        Abs(lPluginFrame.MaxValue));
-      fPluginRms := lPluginFrame.RmsValue;
-    end;
-  end;
   SetChartTitle(Format('%s frame:%d', [lTag.Name, fFrameNo]));
   lHasRange := False;
   for I := 0 to High(fAxisHasRange) do
@@ -2859,7 +3104,7 @@ begin
   begin
     lHasRange := True;
     lAxisIndex := 0;
-    if fPluginMode and (fComponent <> nil) then
+    if SupportsAdvancedControls and (fComponent <> nil) then
       lAxisIndex := fComponent.PrimaryAxisIndex;
     AccumulateAxisRange(Max(0, Min(lAxisIndex, High(fAxes))),
       lMinValue, lMaxValue, lPointCount);
@@ -2911,7 +3156,8 @@ begin
     Inc(lPointCount, lLinePoints);
   end;
 
-  if fPluginMode then
+  if SupportsAdvancedControls or
+    SupportsAdvancedControls then
   begin
     RebuildExtremaCaches;
     UpdateSignalGrid;
@@ -2922,10 +3168,11 @@ begin
     if fAxisHasRange[I] and not fAxisRangeInitialized[I] then
     begin
       lTag := nil;
-      if fPluginMode and (fComponent <> nil) and
+      if SupportsAdvancedControls and
+        (fComponent <> nil) and
         (fComponent.PrimaryAxisIndex = I) then
         lTag := lPrimaryTag;
-    if fPluginMode and fAutoRange then
+    if SupportsAdvancedControls and fAutoRange then
       begin
         fAxes[I].HasPresetRange := False;
         ApplyOscillogramTagYRange(fAxes[I], nil,
@@ -2936,8 +3183,9 @@ begin
           fAxisMin[I], fAxisMax[I]);
       fAxisRangeInitialized[I] := True;
     end;
-    if fPluginMode and fAutoRange then Continue;
-    if (not fPluginMode) or (fComponent = nil) or
+    if SupportsAdvancedControls and fAutoRange then Continue;
+    if not SupportsAdvancedControls or
+      (fComponent = nil) or
       (I >= fComponent.AxisCount) or
       (fComponent.Axes[I].YScale <= 0) or fAxes[I].HasPresetRange then
       Continue;
@@ -2952,7 +3200,7 @@ begin
   end;
   fYRangeInitialized := fAxisRangeInitialized[0];
   UpdateAxisDisplayUnits;
-  if fPluginMode and fAutoRange then
+  if SupportsAdvancedControls and fAutoRange then
   begin
     if Length(fAppliedYMin) <> Length(fAxes) then
       SetLength(fAppliedYMin, Length(fAxes));
@@ -3020,6 +3268,7 @@ begin
   fYRangeInitialized := False;
   fTriggerArmed := False;
   fTriggerHasFrame := False;
+  fTriggerHoldUntil := 0;
   fHasDataSignature := False;
   fCurrentTagName := '';
   ResetFpsMeasure;

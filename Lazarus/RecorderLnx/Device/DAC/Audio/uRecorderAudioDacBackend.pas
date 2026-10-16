@@ -46,6 +46,8 @@ type
   TRecorderAudioDacFactory = class(TRecorderDacBackendFactory)
   public
     function BackendId: string; override;
+    function DiscoverEndpoints(out AEndpoints: TRecorderDacEndpoints;
+      out AResult: TRecorderDacResult): Boolean; override;
     function CreateBackend(const AEndpoint: string): IRecorderDacBackend; override;
   end;
 
@@ -142,6 +144,9 @@ function TRecorderAudioDacBackend.Configure(const AConfig: TRecorderDacConfig;
   out AResult: TRecorderDacResult): Boolean;
 var
   lError: TPaError;
+  lDeviceIndex: Integer;
+  lDeviceInfo: PPaDeviceInfo;
+  lOutput: TPaStreamParameters;
 begin
   if not RequireState(rdsInitialized, rdsgConfigure, AResult) then Exit(False);
   if not RecorderDacValidateConfig(AConfig, AResult) then Exit(False);
@@ -152,14 +157,32 @@ begin
       'PortAudio float output uses normalized values from -1 to +1');
     Exit(False);
   end;
-  if not SameText(fEndpoint, 'default') then
+  if SameText(fEndpoint, 'default') then
+    lError := fApi.OpenDefaultStream(@fStream, 0, AConfig.ChannelCount,
+      CPaFloat32, AConfig.SampleRateHz, AConfig.FramesPerBlock, nil, nil)
+  else
   begin
-    AResult := RecorderDacFailed(rdeUnsupported, rdsgConfigure,
-      'The first PortAudio backend supports the default output device only');
-    Exit(False);
+    if not TryStrToInt(fEndpoint, lDeviceIndex) then
+    begin
+      AResult := RecorderDacFailed(rdeInvalidConfig, rdsgConfigure,
+        'Invalid PortAudio output device endpoint: ' + fEndpoint);
+      Exit(False);
+    end;
+    lDeviceInfo := fApi.GetDeviceInfo(lDeviceIndex);
+    if (lDeviceInfo = nil) or (lDeviceInfo^.MaxOutputChannels < AConfig.ChannelCount) then
+    begin
+      AResult := RecorderDacFailed(rdeInvalidConfig, rdsgConfigure,
+        'PortAudio output device is unavailable: ' + fEndpoint);
+      Exit(False);
+    end;
+    lOutput.Device := lDeviceIndex;
+    lOutput.ChannelCount := AConfig.ChannelCount;
+    lOutput.SampleFormat := CPaFloat32;
+    lOutput.SuggestedLatency := lDeviceInfo^.DefaultLowOutputLatency;
+    lOutput.HostApiSpecificStreamInfo := nil;
+    lError := fApi.OpenStream(@fStream, nil, @lOutput,
+      AConfig.SampleRateHz, AConfig.FramesPerBlock, CPaNoFlag, nil, nil);
   end;
-  lError := fApi.OpenDefaultStream(@fStream, 0, AConfig.ChannelCount,
-    CPaFloat32, AConfig.SampleRateHz, AConfig.FramesPerBlock, nil, nil);
   Result := Check(lError, rdsgConfigure, AResult);
   if not Result then Exit;
   fConfig := AConfig;
@@ -250,6 +273,89 @@ end;
 function TRecorderAudioDacFactory.BackendId: string;
 begin
   Result := 'audio.portaudio';
+end;
+
+function TRecorderAudioDacFactory.DiscoverEndpoints(
+  out AEndpoints: TRecorderDacEndpoints;
+  out AResult: TRecorderDacResult): Boolean;
+var
+  I, J, lCount, lDefaultDevice, lOutputCount, lHostApi, lDuplicateCount: Integer;
+  lApi: TRecorderPortAudioApi;
+  lInfo: PPaDeviceInfo;
+  lText: string;
+begin
+  SetLength(AEndpoints, 0);
+  lApi := TRecorderPortAudioApi.Create;
+  try
+    if not lApi.Load(lText) then
+    begin
+      AResult := RecorderDacFailed(rdeDriver, rdsgDiscover, lText);
+      Exit(False);
+    end;
+    lCount := lApi.Initialize();
+    if lCount <> CPaNoError then
+    begin
+      AResult := RecorderDacFailed(rdeDriver, rdsgDiscover,
+        lApi.ErrorText(lCount), lCount);
+      Exit(False);
+    end;
+    try
+      lCount := lApi.GetDeviceCount();
+      if lCount < 0 then
+      begin
+        AResult := RecorderDacFailed(rdeDriver, rdsgDiscover,
+          lApi.ErrorText(lCount), lCount);
+        Exit(False);
+      end;
+      lDefaultDevice := lApi.GetDefaultOutputDevice();
+      lHostApi := -1;
+      lInfo := lApi.GetDeviceInfo(lDefaultDevice);
+      if lInfo <> nil then lHostApi := lInfo^.HostApi;
+      lOutputCount := 0;
+      for I := 0 to lCount - 1 do
+      begin
+        lInfo := lApi.GetDeviceInfo(I);
+        if (lInfo = nil) or (lInfo^.MaxOutputChannels <= 0) then Continue;
+        { Enumerate one host API: Windows exposes each physical endpoint again
+          through MME, DirectSound, WASAPI and WDM/KS. Keep the default host's
+          supported format behaviour instead of merging devices by name. }
+        if (lHostApi >= 0) and (lInfo^.HostApi <> lHostApi) then Continue;
+        lText := StrPas(lInfo^.Name);
+        {$IFDEF WINDOWS}
+        if SameText(lText, 'Microsoft Sound Mapper - Output') then Continue;
+        {$ENDIF}
+        SetLength(AEndpoints, lOutputCount + 1);
+        AEndpoints[lOutputCount].BackendId := BackendId;
+        if I = lDefaultDevice then
+          AEndpoints[lOutputCount].Endpoint := 'default'
+        else
+          AEndpoints[lOutputCount].Endpoint := IntToStr(I);
+        AEndpoints[lOutputCount].DisplayName := lText;
+        Inc(lOutputCount);
+      end;
+      { Equal captions may be separate HDMI ports. Preserve both endpoints and
+        make them distinguishable instead of deleting a physical output. }
+      for I := 0 to High(AEndpoints) do
+      begin
+        lText := AEndpoints[I].DisplayName;
+        lDuplicateCount := 0;
+        for J := 0 to High(AEndpoints) do
+          if SameText(lText, AEndpoints[J].DisplayName) then
+            Inc(lDuplicateCount);
+        if lDuplicateCount > 1 then
+          for J := High(AEndpoints) downto I do
+            if SameText(lText, AEndpoints[J].DisplayName) then
+              AEndpoints[J].DisplayName := lText + ' [' +
+                AEndpoints[J].Endpoint + ']';
+      end;
+      AResult := RecorderDacOk;
+      Result := True;
+    finally
+      lApi.Terminate;
+    end;
+  finally
+    lApi.Free;
+  end;
 end;
 
 function TRecorderAudioDacFactory.CreateBackend(

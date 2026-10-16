@@ -4,7 +4,9 @@ unit uRecorderPxiMx248DeviceAdapter;
   Production adapter from the V2 MX-248 core to RecorderLnx IRecorderDevice.
   It translates the legacy procedure-based lifecycle without hiding stages:
   Connect, InitializeDevice, ConfigureDevice, Start, Stop and Disconnect each
-  call exactly one core stage. ProgramDevice is the existing explicit composite.
+  map to the corresponding hardware stage. Configure also restores the PXI
+  control plane before Start; Apply must refresh the same persisted settings.
+  ProgramDevice is the existing explicit composite.
 
   The adapter owns TPxiMx248Device. Expected block timeout returns False;
   other operation failures are retained in rdpError* and raised only where the
@@ -18,21 +20,25 @@ unit uRecorderPxiMx248DeviceAdapter;
 interface
 
 uses
-  SysUtils, Variants, uRecorderAcquisitionTypes, uRecorderDeviceInterfaces,
+  Classes, SysUtils, Variants, uRecorderAcquisitionTypes, uRecorderDeviceInterfaces,
   uRecorderDriverContractsV2, uRecorderPxiMx248Device, uRecorderPxiMx248Types,
   uRecorderPxiMx248RuntimeTransport;
 
 type
-  TRecorderPxiMx248DeviceAdapter = class(TRecorderDevice)
+  TRcPxiMx248DeviceAdapter = class(TRcDevice,
+    IPxiMx248MaintenanceDevice, IPxiMx248LiveControlDevice)
   private
-    fBlock: TRecorderAcquisitionBlock;
+    fBlock: TRcAcquisitionBlock;
     fBlockTransport: IPxiMx248BlockTransport;
     fCore: TPxiMx248Device;
-    fLastErrorCode: TRecorderOperationCode;
+    fSourceAddress: string;
+    fLastErrorCode: TRcOperationCode;
     fLastErrorText: string;
-    procedure ApplyResult(const AResult: TRecorderOperationResult);
+    fRtsiClock, fRtsiSync, fTriggerMode, fTriggerSource,
+      fTriggerLevel: Integer;
+    procedure ApplyResult(const AResult: TRcOperationResult);
     procedure PrepareReadBuffer;
-    procedure RaiseOnFailure(const AResult: TRecorderOperationResult);
+    procedure RaiseOnFailure(const AResult: TRcOperationResult);
     procedure SyncLegacyState;
   protected
     function BuildChannelName(AIndex: Integer): string; override;
@@ -40,7 +46,8 @@ type
     function GetChannels: TRecorderDeviceChannelArray; override;
   public
     constructor Create(const ADeviceId, AName: string;
-      const ATransport: IPxiMx248BlockTransport); reintroduce;
+      const ATransport: IPxiMx248BlockTransport;
+      const ASourceAddress: string = ''); reintroduce;
     destructor Destroy; override;
     function GetDeviceProperty(AProperty: TRecorderDeviceProperty;
       AIndex: Integer = -1): Variant; override;
@@ -52,12 +59,93 @@ type
     procedure ConfigureDevice; override;
     procedure Start; override;
     procedure Stop; override;
+    procedure LoadPxiSettings(const AProperties: string);
     function ReadBlock(ATimeoutMs: Cardinal;
-      out ABlock: TRecorderAcquisitionBlock): Boolean; override;
+      out ABlock: TRcAcquisitionBlock): Boolean; override;
     function TestLink(out AErrorText: string): Boolean; override;
+    function ZeroBalance(AChannelMask: Cardinal; out AValues: string): TRcOperationResult;
+    function ReadLiveProperties(out AProperties: string): TRcOperationResult;
+    function ApplyLive(const AProperties: string; ARtsiClock, ARtsiSync,
+      ATriggerMode, ATriggerSource, ATriggerLevel: Integer;
+      out AReadback: string): TRcOperationResult;
   end;
 
 implementation
+
+uses
+  uRecorderPxiMx248Addressing;
+
+function TRcPxiMx248DeviceAdapter.ReadLiveProperties(
+  out AProperties: string): TRcOperationResult;
+var
+  lMaintenance: IPxiMx248MaintenanceTransport;
+begin
+  AProperties := '';
+  if not Supports(fBlockTransport, IPxiMx248MaintenanceTransport,
+    lMaintenance) then
+    Exit(TRcOperationResult.Failure(rocUnsupported,
+      'mx248.runtime.read', 'Transport does not support maintenance'));
+  Result := lMaintenance.ReadLiveProperties(AProperties);
+  ApplyResult(Result);
+end;
+
+function TRcPxiMx248DeviceAdapter.ApplyLive(const AProperties: string;
+  ARtsiClock, ARtsiSync, ATriggerMode, ATriggerSource,
+  ATriggerLevel: Integer; out AReadback: string): TRcOperationResult;
+var
+  lMaintenance: IPxiMx248MaintenanceTransport;
+begin
+  AReadback := '';
+  if fCore.State = pmsRunning then
+    Exit(TRcOperationResult.Failure(rocInvalidState,
+      'mx248.runtime.apply', 'Stop acquisition before applying settings'));
+  if not Supports(fBlockTransport, IPxiMx248MaintenanceTransport,
+    lMaintenance) then
+    Exit(TRcOperationResult.Failure(rocUnsupported,
+      'mx248.runtime.apply', 'Transport does not support maintenance'));
+  Result := fCore.SetProperties(AProperties);
+  if Result.IsSuccess then Result := fCore.Configure;
+  if Result.IsSuccess then Result := lMaintenance.ConfigurePxi(3, ARtsiClock,
+    ARtsiSync, ATriggerMode, ATriggerSource, ATriggerLevel);
+  if Result.IsSuccess then Result := lMaintenance.ReadLiveProperties(AReadback);
+  if Result.IsSuccess then
+  begin
+    fRtsiClock:=ARtsiClock;
+    fRtsiSync:=ARtsiSync;
+    fTriggerMode:=ATriggerMode;
+    fTriggerSource:=ATriggerSource;
+    fTriggerLevel:=ATriggerLevel;
+  end;
+  ApplyResult(Result);
+  if Result.IsSuccess then PrepareReadBuffer;
+end;
+
+function TRcPxiMx248DeviceAdapter.ZeroBalance(AChannelMask: Cardinal;
+  out AValues: string): TRcOperationResult;
+var
+  lMaintenance: IPxiMx248MaintenanceTransport;
+begin
+  AValues := '';
+  if fCore.State = pmsRunning then
+    Exit(TRcOperationResult.Failure(rocInvalidState,
+      'mx248.zero-balance', 'Stop acquisition before zero balance'));
+  if fCore.State in [pmsCreated, pmsOffline] then
+  begin
+    Result := fCore.Connect;
+    if not Result.IsSuccess then Exit;
+  end;
+  if fCore.State = pmsConnected then
+  begin
+    Result := fCore.Initialize;
+    if not Result.IsSuccess then Exit;
+  end;
+  if not Supports(fBlockTransport, IPxiMx248MaintenanceTransport,
+    lMaintenance) then
+    Exit(TRcOperationResult.Failure(rocUnsupported,
+      'mx248.zero-balance', 'Transport does not support maintenance'));
+  Result := lMaintenance.ZeroBalance(AChannelMask, AValues);
+  ApplyResult(Result);
+end;
 
 function PropertyValue(const AResponse: string): string;
 var
@@ -68,30 +156,63 @@ begin
   else Result := AResponse;
 end;
 
-constructor TRecorderPxiMx248DeviceAdapter.Create(const ADeviceId, AName: string;
-  const ATransport: IPxiMx248BlockTransport);
+constructor TRcPxiMx248DeviceAdapter.Create(const ADeviceId, AName: string;
+  const ATransport: IPxiMx248BlockTransport; const ASourceAddress: string);
 begin
   if ATransport = nil then
     raise EArgumentNilException.Create('MX-248 block transport is required');
   inherited Create(ADeviceId, AName);
+  fSourceAddress := Trim(ASourceAddress);
   fBlockTransport := ATransport;
   fCore := TPxiMx248Device.Create(ATransport);
   fChannelCount := CPxiMx248ChannelCount;
   fPollFrequencyHz := 1000.0;
   fUpdateTimeMs := 256;
   fLastErrorCode := rocOk;
+  LoadPxiSettings('');
   PrepareReadBuffer;
 end;
 
-destructor TRecorderPxiMx248DeviceAdapter.Destroy;
+procedure TRcPxiMx248DeviceAdapter.LoadPxiSettings(const AProperties: string);
+var
+  lValues: TStringList;
+  lLine: string;
+begin
+  lValues := TStringList.Create;
+  try
+    lValues.StrictDelimiter := True;
+    lValues.Delimiter := ';';
+    lValues.DelimitedText := AProperties;
+    fRtsiClock := 0;
+    if SameText(lValues.Values['pxi.clock-source'], 'internal') then
+      fRtsiClock := 3;
+    fRtsiSync := 1;
+    if SameText(lValues.Values['pxi.bus-role'], 'Slave') then fRtsiSync := 0
+    else if SameText(lValues.Values['pxi.bus-role'], 'Hardwired') then
+      fRtsiSync := 2;
+    { Original Recorder configures TRIG_INTERNAL for the software Start pulse.
+      An absent external trigger selection must not suppress that pulse. }
+    fTriggerMode := 2;
+    fTriggerSource := 0;
+    lLine := lValues.Values['pxi.trigger-line'];
+    if Pos('PXI_TRIG', UpperCase(lLine)) = 1 then
+      fTriggerSource := StrToIntDef(Copy(lLine, 9, MaxInt), 0);
+    fTriggerLevel := Ord(SameText(lValues.Values['pxi.trigger-level'], 'high') or
+      SameText(lValues.Values['pxi.trigger-edge'], 'rising'));
+  finally
+    lValues.Free;
+  end;
+end;
+
+destructor TRcPxiMx248DeviceAdapter.Destroy;
 begin
   fCore.Free;
   fBlockTransport := nil;
   inherited Destroy;
 end;
 
-procedure TRecorderPxiMx248DeviceAdapter.ApplyResult(
-  const AResult: TRecorderOperationResult);
+procedure TRcPxiMx248DeviceAdapter.ApplyResult(
+  const AResult: TRcOperationResult);
 begin
   fLastErrorCode := AResult.Code;
   if AResult.IsSuccess then
@@ -101,15 +222,15 @@ begin
   SyncLegacyState;
 end;
 
-procedure TRecorderPxiMx248DeviceAdapter.RaiseOnFailure(
-  const AResult: TRecorderOperationResult);
+procedure TRcPxiMx248DeviceAdapter.RaiseOnFailure(
+  const AResult: TRcOperationResult);
 begin
   ApplyResult(AResult);
   if not AResult.IsSuccess then
     raise ERecorderDeviceError.Create(fLastErrorText);
 end;
 
-procedure TRecorderPxiMx248DeviceAdapter.SyncLegacyState;
+procedure TRcPxiMx248DeviceAdapter.SyncLegacyState;
 begin
   case fCore.State of
     pmsCreated, pmsOffline: fState := rdsDisconnected;
@@ -119,10 +240,10 @@ begin
   end;
 end;
 
-procedure TRecorderPxiMx248DeviceAdapter.PrepareReadBuffer;
+procedure TRcPxiMx248DeviceAdapter.PrepareReadBuffer;
 var
   lBlockSamples: Integer;
-  lResult: TRecorderOperationResult;
+  lResult: TRcOperationResult;
   lText: string;
 begin
   lResult := fCore.GetProperties('sample-rate-hz;block-samples', lText);
@@ -135,20 +256,23 @@ begin
     lBlockSamples);
 end;
 
-function TRecorderPxiMx248DeviceAdapter.BuildChannelName(AIndex: Integer): string;
+function TRcPxiMx248DeviceAdapter.BuildChannelName(AIndex: Integer): string;
 begin
   Result := Format('MX-248 AIn%d', [AIndex + 1]);
 end;
 
-function TRecorderPxiMx248DeviceAdapter.BuildChannelAddress(AIndex: Integer): string;
+function TRcPxiMx248DeviceAdapter.BuildChannelAddress(AIndex: Integer): string;
 begin
-  Result := IntToStr(AIndex + 1);
+  if fSourceAddress = '' then
+    Result := IntToStr(AIndex + 1)
+  else
+    Result := PxiMx248ChannelAddress(fSourceAddress, AIndex + 1);
 end;
 
-function TRecorderPxiMx248DeviceAdapter.GetChannels: TRecorderDeviceChannelArray;
+function TRcPxiMx248DeviceAdapter.GetChannels: TRecorderDeviceChannelArray;
 var
   I: Integer;
-  lResult: TRecorderOperationResult;
+  lResult: TRcOperationResult;
   lText: string;
 begin
   Result := inherited GetChannels;
@@ -157,7 +281,11 @@ begin
     TryStrToFloat(PropertyValue(lText), fPollFrequencyHz);
   for I := 0 to High(Result) do
   begin
-    Result[I].UnitName := 'V';
+    lResult := fCore.GetProperties(Format('channel.%d.amplifier-enabled',
+      [I + 1]), lText);
+    if lResult.IsSuccess and SameText(PropertyValue(lText), 'True') then
+      Result[I].UnitName := 'пКл'
+    else Result[I].UnitName := 'V';
     Result[I].ModuleType := 'PXI MX-248';
     Result[I].PollFrequencyHz := fPollFrequencyHz;
     lResult := fCore.GetProperties(Format('channel.%d.enabled', [I + 1]), lText);
@@ -166,7 +294,7 @@ begin
   end;
 end;
 
-function TRecorderPxiMx248DeviceAdapter.GetDeviceProperty(
+function TRcPxiMx248DeviceAdapter.GetDeviceProperty(
   AProperty: TRecorderDeviceProperty; AIndex: Integer): Variant;
 begin
   case AProperty of
@@ -178,20 +306,20 @@ begin
   end;
 end;
 
-function TRecorderPxiMx248DeviceAdapter.GetProp(const AName: string;
+function TRcPxiMx248DeviceAdapter.GetProp(const AName: string;
   AIndex: Integer): string;
 var
-  lResult: TRecorderOperationResult;
+  lResult: TRcOperationResult;
 begin
   lResult := fCore.GetProperties(AName, Result);
   ApplyResult(lResult);
   if not lResult.IsSuccess then Result := '';
 end;
 
-function TRecorderPxiMx248DeviceAdapter.SetProp(const AText: string;
+function TRcPxiMx248DeviceAdapter.SetProp(const AText: string;
   AIndex: Integer): Boolean;
 var
-  lResult: TRecorderOperationResult;
+  lResult: TRcOperationResult;
 begin
   if fState = rdsStarted then Exit(False);
   lResult := fCore.SetProperties(AText);
@@ -200,12 +328,12 @@ begin
   if Result then PrepareReadBuffer;
 end;
 
-procedure TRecorderPxiMx248DeviceAdapter.Connect;
+procedure TRcPxiMx248DeviceAdapter.Connect;
 begin
   RaiseOnFailure(fCore.Connect);
 end;
 
-procedure TRecorderPxiMx248DeviceAdapter.Disconnect;
+procedure TRcPxiMx248DeviceAdapter.Disconnect;
 begin
   fCore.Disconnect;
   fLastErrorCode := rocOk;
@@ -213,31 +341,36 @@ begin
   SyncLegacyState;
 end;
 
-procedure TRecorderPxiMx248DeviceAdapter.InitializeDevice;
+procedure TRcPxiMx248DeviceAdapter.InitializeDevice;
 begin
   RaiseOnFailure(fCore.Initialize);
 end;
 
-procedure TRecorderPxiMx248DeviceAdapter.ConfigureDevice;
+procedure TRcPxiMx248DeviceAdapter.ConfigureDevice;
+var
+  lMaintenance: IPxiMx248MaintenanceTransport;
 begin
   PrepareReadBuffer;
   RaiseOnFailure(fCore.Configure);
+  if Supports(fBlockTransport, IPxiMx248MaintenanceTransport, lMaintenance) then
+    RaiseOnFailure(lMaintenance.ConfigurePxi(3, fRtsiClock, fRtsiSync,
+      fTriggerMode, fTriggerSource, fTriggerLevel));
 end;
 
-procedure TRecorderPxiMx248DeviceAdapter.Start;
+procedure TRcPxiMx248DeviceAdapter.Start;
 begin
   RaiseOnFailure(fCore.Start);
 end;
 
-procedure TRecorderPxiMx248DeviceAdapter.Stop;
+procedure TRcPxiMx248DeviceAdapter.Stop;
 begin
   RaiseOnFailure(fCore.Stop);
 end;
 
-function TRecorderPxiMx248DeviceAdapter.ReadBlock(ATimeoutMs: Cardinal;
-  out ABlock: TRecorderAcquisitionBlock): Boolean;
+function TRcPxiMx248DeviceAdapter.ReadBlock(ATimeoutMs: Cardinal;
+  out ABlock: TRcAcquisitionBlock): Boolean;
 var
-  lResult: TRecorderOperationResult;
+  lResult: TRcOperationResult;
 begin
   Result := False;
   if fCore.State <> pmsRunning then Exit;
@@ -249,7 +382,7 @@ begin
     ((Length(fBlock.Values) > 0) and
      (fBlock.SampleCount > Length(fBlock.Values[0]))) then
   begin
-    ApplyResult(TRecorderOperationResult.Failure(rocProtocol,
+    ApplyResult(TRcOperationResult.Failure(rocProtocol,
       'mx248.read', 'Invalid acquisition block dimensions'));
     Exit;
   end;
@@ -257,10 +390,10 @@ begin
   Result := fBlock.SampleCount > 0;
 end;
 
-function TRecorderPxiMx248DeviceAdapter.TestLink(
+function TRcPxiMx248DeviceAdapter.TestLink(
   out AErrorText: string): Boolean;
 var
-  lResult: TRecorderOperationResult;
+  lResult: TRcOperationResult;
 begin
   lResult := fCore.TestLink;
   ApplyResult(lResult);

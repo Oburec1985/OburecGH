@@ -32,7 +32,7 @@
     <PathDelim Value="\"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..;../..;../../Core;../../../../Architecture"/>
+      <OtherUnitFiles Value="..;../..;../../Core;../../Transport/Windows;../../Runtime;../../../../Architecture;../../../..;../../../../Core;../../../../..;../../../../../Core;../../../../../Algs;../../../../../../SharedUtils"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>

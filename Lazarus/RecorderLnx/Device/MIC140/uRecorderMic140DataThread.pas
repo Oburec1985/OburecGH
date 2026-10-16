@@ -20,7 +20,7 @@ uses
 type
   { Один блок из прибора; True = блок готов. Вызов только из DataThread. }
   TMic140DataThreadReadFunc = function(ATimeoutMs: Cardinal;
-    var ABlock: TRecorderAcquisitionBlock): Boolean of object;
+    var ABlock: TRcAcquisitionBlock): Boolean of object;
 
   TRecorderMic140DataThread = class(TRecorderDeviceDataThread)
   private
@@ -29,7 +29,7 @@ type
   protected
     procedure OnStart; override;
     procedure OnStop; override;
-    function ReadBlockFromDevice(var ABlock: TRecorderAcquisitionBlock): Boolean; override;
+    function ReadBlockFromDevice(var ABlock: TRcAcquisitionBlock): Boolean; override;
   public
     constructor Create(AReadFunc: TMic140DataThreadReadFunc;
       AReadTimeoutMs: Cardinal = 500);
@@ -65,7 +65,7 @@ begin
 end;
 
 function TRecorderMic140DataThread.ReadBlockFromDevice(
-  var ABlock: TRecorderAcquisitionBlock): Boolean;
+  var ABlock: TRcAcquisitionBlock): Boolean;
 begin
   Result := False;
   if not Assigned(fReadFunc) then

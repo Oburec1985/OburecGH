@@ -28,13 +28,14 @@ if ($Version -notmatch '^\d+\.\d+\.\d+([+~-][0-9A-Za-z.]+)?$') {
 }
 Write-Host "RecorderLnx installer version: $Version"
 $projectFile = Join-Path $repoRoot 'Lazarus\RecorderLnx\RecorderLnx.lpi'
+$recorderPackageExe = Join-Path $repoRoot 'Lazarus\RecorderLnx\lib\x86_64-win64\RecorderLnx-package.exe'
 $hostAgentProjectFile = Join-Path $repoRoot 'Lazarus\RecorderHostAgent\RecorderHostAgent.lpi'
 $luaPluginProjectFile = Join-Path $repoRoot 'Lazarus\RecorderLnx\Plugins\LuaCalcPlugin\LuaCalcPlugin.lpi'
 $oscillographPluginProjectFile = Join-Path $repoRoot 'Lazarus\RecorderLnx\Plugins\SampleInfoPlugin\SampleInfoPlugin.lpi'
 $hostAgentPackage = Join-Path $repoRoot 'Lazarus\RecorderLnx\lib\x86_64-win64\RecorderHostAgent.exe'
-$pluginPackageDir = Join-Path $repoRoot 'Lazarus\RecorderLnx\lib\x86_64-win64\plugins'
-$luaPluginPackage = Join-Path $pluginPackageDir 'LuaCalcPlugin.dll'
-$oscillographPluginPackage = Join-Path $pluginPackageDir 'SampleInfoPlugin.dll'
+$packagePluginDir = Join-Path $installerDir 'package-build\plugins'
+$luaPluginPackage = ''
+$oscillographPluginPackage = ''
 $luaRuntimePackage = Join-Path $repoRoot 'Lazarus\RecorderLnx\lib\x86_64-win64\lua54.dll'
 $luaHelpBuild = Join-Path $repoRoot 'Lazarus\RecorderLnx\Docs\LuaHelp\build-help.ps1'
 $luaHelpPackage = Join-Path $repoRoot 'Lazarus\RecorderLnx\lib\x86_64-win64\help\RecorderLnxLua.chm'
@@ -88,7 +89,39 @@ function Invoke-BoundedProcess([string]$FileName, [string[]]$Arguments,
     $startInfo.CreateNoWindow = $true
     $startInfo.RedirectStandardOutput = $true
     $startInfo.RedirectStandardError = $true
-    foreach ($argument in $Arguments) { [void]$startInfo.ArgumentList.Add($argument) }
+    # Windows PowerShell 5.1 runs on .NET Framework, where ProcessStartInfo has
+    # no ArgumentList property. Quote according to the CommandLineToArgvW rules
+    # so the same build script also works from paths containing spaces.
+    $quotedArguments = foreach ($argument in $Arguments) {
+        if ($argument -notmatch '[\s"]') {
+            $argument
+            continue
+        }
+        $builder = [Text.StringBuilder]::new()
+        [void]$builder.Append('"')
+        $backslashes = 0
+        foreach ($character in $argument.ToCharArray()) {
+            if ($character -eq '\') {
+                $backslashes++
+            } elseif ($character -eq '"') {
+                [void]$builder.Append(('\' * (($backslashes * 2) + 1)))
+                [void]$builder.Append('"')
+                $backslashes = 0
+            } else {
+                if ($backslashes -gt 0) {
+                    [void]$builder.Append(('\' * $backslashes))
+                    $backslashes = 0
+                }
+                [void]$builder.Append($character)
+            }
+        }
+        if ($backslashes -gt 0) {
+            [void]$builder.Append(('\' * ($backslashes * 2)))
+        }
+        [void]$builder.Append('"')
+        $builder.ToString()
+    }
+    $startInfo.Arguments = $quotedArguments -join ' '
     $process = [Diagnostics.Process]::new()
     $process.StartInfo = $startInfo
     if (-not $process.Start()) { throw "Could not start: $FileName" }
@@ -218,9 +251,12 @@ if ((Get-PeMachine $mx248BridgeExe) -ne 0x014C) {
 }
 
 Write-Host 'Building RecorderLnx...'
-& $compiler -B $projectFile
+& $compiler -B --no-write-project "--opt=-o$recorderPackageExe" $projectFile
 if ($LASTEXITCODE -ne 0) {
     throw "RecorderLnx build failed: exit code $LASTEXITCODE"
+}
+if (-not (Test-Path -LiteralPath $recorderPackageExe -PathType Leaf)) {
+    throw "RecorderLnx package build output not found: $recorderPackageExe"
 }
 
 Write-Host 'Building installed-layout MX-248 bridge process smoke...'
@@ -240,13 +276,16 @@ if (-not (Test-Path -LiteralPath $hostAgentPackage)) {
 }
 
 Write-Host 'Building LuaCalcPlugin...'
-& $compiler -B $luaPluginProjectFile
+New-Item -ItemType Directory -Force -Path $packagePluginDir | Out-Null
+$luaPluginPackage = Join-Path $packagePluginDir 'LuaCalcPlugin.dll'
+$oscillographPluginPackage = Join-Path $packagePluginDir 'SampleInfoPlugin.dll'
+& $compiler -B --no-write-project "--opt=-o$luaPluginPackage" $luaPluginProjectFile
 if ($LASTEXITCODE -ne 0) {
     throw "LuaCalcPlugin build failed: exit code $LASTEXITCODE"
 }
 
 Write-Host 'Building SampleInfoPlugin (oscillograph)...'
-& $compiler -B $oscillographPluginProjectFile
+& $compiler -B --no-write-project "--opt=-o$oscillographPluginPackage" $oscillographPluginProjectFile
 if ($LASTEXITCODE -ne 0) {
     throw "SampleInfoPlugin build failed: exit code $LASTEXITCODE"
 }
@@ -271,7 +310,7 @@ if (-not (Test-Path -LiteralPath $luaHelpPackage)) {
 }
 
 Write-Host 'Collecting structured installer payload...'
-& $collector $VendorDevApiDir $VcRedistX86Path
+& $collector $VendorDevApiDir $VcRedistX86Path $recorderPackageExe $packagePluginDir
 if ($LASTEXITCODE -ne 0) {
     throw "Installer payload collection failed: exit code $LASTEXITCODE"
 }

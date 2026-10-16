@@ -20,6 +20,8 @@ type
     procedure DrawAxes(const ACamera:T3dCameraSnapshot; AWidth,AHeight:Integer);
     procedure DrawMesh(ANode: T3dNode; AMesh: T3dMeshData;
       const AOptions: T3dRenderOptions);
+    procedure DrawPointCloudOverlays(AScene:T3dScene;
+      const AOptions:T3dRenderOptions);
     procedure DrawScene(AScene: T3dScene; const AOptions: T3dRenderOptions);
     procedure DrawNodeGeometry(AScene:T3dScene; ANode:T3dNode;
       const AOptions:T3dRenderOptions);
@@ -322,7 +324,7 @@ procedure T3dOpenGLRenderer.DrawMesh(ANode: T3dNode; AMesh: T3dMeshData;
                                      const AOptions: T3dRenderOptions);
 
 var
-  I: Integer;
+  I,J,K: Integer;
   M: T3dMeshData;
   P, N: T3dVector;
   C: T3dColor;
@@ -331,10 +333,10 @@ var
 
   procedure SetCornerColor(AIndex:LongWord);
   begin
-    if ANode.HasColorOverride then
-      C:=ANode.ColorOverride
-    else if AIndex<LongWord(Length(M.VertexColors)) then
+    if AIndex<LongWord(Length(M.VertexColors)) then
       C:=M.VertexColors[AIndex]
+    else if ANode.HasColorOverride then
+      C:=ANode.ColorOverride
     else
       C:=M.Color;
     glColor3ub(C.R,C.G,C.B);
@@ -407,7 +409,36 @@ begin
     glDisable(GL_LIGHTING);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glColor3f(0.95, 0.8, 0.15);
-    if Length(M.WireEdges)>0 then
+    if ANode.DrawBoundsOverride and ANode.Bounds.Valid then
+    begin
+      glBegin(GL_LINES);
+      for I:=0 to 11 do
+      begin
+        case I of
+          0: begin J:=0; K:=1 end;
+          1: begin J:=0; K:=2 end;
+          2: begin J:=0; K:=4 end;
+          3: begin J:=1; K:=3 end;
+          4: begin J:=1; K:=5 end;
+          5: begin J:=2; K:=3 end;
+          6: begin J:=2; K:=6 end;
+          7: begin J:=3; K:=7 end;
+          8: begin J:=4; K:=5 end;
+          9: begin J:=4; K:=6 end;
+          10: begin J:=5; K:=7 end;
+          else begin J:=6; K:=7 end;
+        end;
+        if (J and 1)=0 then P.X:=ANode.Bounds.Min.X else P.X:=ANode.Bounds.Max.X;
+        if (J and 2)=0 then P.Y:=ANode.Bounds.Min.Y else P.Y:=ANode.Bounds.Max.Y;
+        if (J and 4)=0 then P.Z:=ANode.Bounds.Min.Z else P.Z:=ANode.Bounds.Max.Z;
+        glVertex3f(P.X,P.Y,P.Z);
+        if (K and 1)=0 then P.X:=ANode.Bounds.Min.X else P.X:=ANode.Bounds.Max.X;
+        if (K and 2)=0 then P.Y:=ANode.Bounds.Min.Y else P.Y:=ANode.Bounds.Max.Y;
+        if (K and 4)=0 then P.Z:=ANode.Bounds.Min.Z else P.Z:=ANode.Bounds.Max.Z;
+        glVertex3f(P.X,P.Y,P.Z);
+      end;
+    end
+    else if Length(M.WireEdges)>0 then
     begin
       glBegin(GL_LINES);
       for I:=0 to High(M.WireEdges) do
@@ -434,17 +465,21 @@ begin
     glEnd;
   end;
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  if lDrawPoints then
+  if lDrawPoints and not ANode.DrawBoundsOverride then
   begin
     lDepthTestWasEnabled := glIsEnabled(GL_DEPTH_TEST);
     if not RenderPassUsesDepthTest(rpPoints) then
       glDisable(GL_DEPTH_TEST);
     glPointSize(4);
-    glColor3ub(AOptions.PointColor.R,AOptions.PointColor.G,
-      AOptions.PointColor.B);
     glBegin(GL_POINTS);
     for I := 0 to High(M.Positions) do
     begin
+      if ANode.HasRenderOverride and (not lDrawFill) and
+         (not lDrawWireframe) then
+        SetCornerColor(I)
+      else
+        glColor3ub(AOptions.PointColor.R,AOptions.PointColor.G,
+          AOptions.PointColor.B);
       P := M.Positions[I];
       glVertex3f(P.X, P.Y, P.Z);
     end;
@@ -639,6 +674,64 @@ begin
   glPopMatrix;
 end;
 
+procedure T3dOpenGLRenderer.DrawPointCloudOverlays(AScene:T3dScene;
+  const AOptions:T3dRenderOptions);
+var
+  I,J:Integer;
+  Node:T3dNode;
+  Mesh:T3dMeshData;
+  SourceNode:T3dNode;
+  P:T3dVector;
+  DrawPoints:Boolean;
+  DepthWasEnabled:GLboolean;
+  C:T3dColor;
+begin
+  if AScene=nil then Exit;
+  DepthWasEnabled:=glIsEnabled(GL_DEPTH_TEST);
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+  for I:=0 to High(AScene.Nodes) do
+  begin
+    Node:=AScene.Nodes[I];
+    if (Node=nil) or not Node.DrawBoundsOverride then Continue;
+    if Node.HasRenderOverride then
+      DrawPoints:=Node.DrawPointsOverride
+    else
+      DrawPoints:=AOptions.DrawPoints;
+    if not DrawPoints then Continue;
+    Mesh:=Node.Mesh;
+    if (Mesh<>nil) and (Length(Mesh.Positions)=0) and
+      (Mesh.SourceNodeId<>0) then
+    begin
+      SourceNode:=AScene.FindNode(Mesh.SourceNodeId);
+      if SourceNode<>nil then Mesh:=SourceNode.Mesh;
+    end;
+    if (Mesh=nil) or (Length(Mesh.Positions)=0) then Continue;
+    if Node.HasColorOverride then
+      C:=Node.ColorOverride
+    else
+      C:=AOptions.PointColor;
+    glColor3ub(C.R,C.G,C.B);
+    glPointSize(4);
+    glPushMatrix;
+    glMultMatrixf(@Node.WorldTransform[0]);
+    glBegin(GL_POINTS);
+    for J:=0 to High(Mesh.Positions) do
+    begin
+      if J<Length(Mesh.VertexColors) then
+      begin
+        C:=Mesh.VertexColors[J];
+        glColor3ub(C.R,C.G,C.B);
+      end;
+      P:=Mesh.Positions[J];
+      glVertex3f(P.X,P.Y,P.Z);
+    end;
+    glEnd;
+    glPopMatrix;
+  end;
+  if DepthWasEnabled=GL_TRUE then glEnable(GL_DEPTH_TEST);
+end;
+
 procedure T3dOpenGLRenderer.DrawScene(AScene: T3dScene;
                                       const AOptions: T3dRenderOptions);
 
@@ -679,6 +772,9 @@ begin
       end;
     end;
   end;
+  { Point-cloud markers are an overlay pass: draw them after every opaque
+    mesh and editor overlay so later scene nodes cannot erase them. }
+  DrawPointCloudOverlays(AScene,AOptions);
 end;
 
 procedure T3dOpenGLRenderer.DrawNodeGeometry(AScene:T3dScene; ANode:T3dNode;

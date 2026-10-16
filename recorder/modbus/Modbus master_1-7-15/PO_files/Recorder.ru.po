@@ -1,0 +1,606 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.4.4\n"
+
+#: resstr.rsbigendian
+msgid "Старшим байтом вперед"
+msgstr "Старшим байтом вперед"
+
+#: resstr.rsbus
+msgid " Шина: "
+msgstr " Шина: "
+
+#: resstr.rsconfnotfound
+msgid "Файл конфигурации не найден! Возможно требуется выполнить сохранение в ПО Recorder"
+msgstr "Файл конфигурации не найден! Возможно требуется выполнить сохранение в ПО Recorder"
+
+#: resstr.rsdisablebus
+msgid "Выключить шину"
+msgstr "Выключить шину"
+
+#: resstr.rsdisabledevice
+msgid "Выключить устройство"
+msgstr "Выключить устройство"
+
+#: resstr.rsemptyadress
+msgid "Поле адреса не должно быть пустым!"
+msgstr "Поле адреса не должно быть пустым!"
+
+#: resstr.rsemptytimer
+msgid "Поле таймера ожидания ответа не должно быть пустым!"
+msgstr "Поле таймера ожидания ответа не должно быть пустым!"
+
+#: resstr.rsenablebus
+msgctxt "resstr.rsenablebus"
+msgid "Включить шину"
+msgstr "Включить шину"
+
+#: resstr.rsenabledevice
+msgctxt "resstr.rsenabledevice"
+msgid "Включить устройство"
+msgstr "Включить устройство"
+
+#: resstr.rsgranddoubleword
+msgid "Старшим двойным словом вперед"
+msgstr "Старшим двойным словом вперед"
+
+#: resstr.rsgrandword
+msgid "Старшим словом вперед"
+msgstr "Старшим словом вперед"
+
+#: resstr.rsmakepausedelay
+msgid "Задайте значение паузы между опросами одного устройства!"
+msgstr "Задайте значение паузы между опросами одного устройства!"
+
+#: resstr.rsnocorrection
+msgid "Без корректировки"
+msgstr "Без корректировки"
+
+#: resstr.rsrxmsg
+#, object-pascal-format
+msgid "Время Reorder: %f; Шина: %s, Устройство: %s, Ответ: %s"
+msgstr "Время Reorder: %f; Шина: %s, Устройство: %s, Ответ: %s"
+
+#: resstr.rsselectbus
+msgid "Выберите шину для добавления устройства"
+msgstr "Выберите шину для добавления устройства"
+
+#: resstr.rsselectdevice
+msgid "Выберите устройство для добавления тэга"
+msgstr "Выберите устройство для добавления тэга"
+
+#: resstr.rssystem
+msgid "Система"
+msgstr "Система"
+
+#: resstr.rstriesnumber
+msgid "Поле числа попыток не должно быть пустым!"
+msgstr "Поле числа попыток не должно быть пустым!"
+
+#: resstr.rstxmsg
+#, object-pascal-format
+msgid "Время Reorder: %f; Шина: %s, Устройство: %s, Запрос: %s"
+msgstr "Время Reorder: %f; Шина: %s, Устройство: %s, Запрос: %s"
+
+#: resstr.rsvers
+#, object-pascal-format
+msgid ". Версия: %s"
+msgstr ". Версия: %s"
+
+#: tdlgnodecopy.btncancel.caption
+msgctxt "tdlgnodecopy.btncancel.caption"
+msgid "Отмена"
+msgstr ""
+
+#: tdlgnodecopy.btnok.caption
+msgctxt "tdlgnodecopy.btnok.caption"
+msgid "&ОК"
+msgstr ""
+
+#: tdlgnodecopy.caption
+msgid "Диалог копирования узлов"
+msgstr "Диалог копирования узлов"
+
+#: tdlgnodecopy.ednumber.text
+msgid "edNumber"
+msgstr ""
+
+#: tdlgnodecopy.label1.caption
+msgid "Число копий:"
+msgstr "Число копий:"
+
+#: tdlg_confselect.btncancel.caption
+msgctxt "tdlg_confselect.btncancel.caption"
+msgid "Отмена"
+msgstr ""
+
+#: tdlg_confselect.btnok.caption
+msgctxt "tdlg_confselect.btnok.caption"
+msgid "&ОК"
+msgstr ""
+
+#: tdlg_confselect.caption
+msgid "Выбор конфигурации"
+msgstr "Выбор конфигурации"
+
+#: tform_settings.btnimport.hint
+#, fuzzy
+#| msgid ""
+#| "Импорт настроек из других конфигураций. \n"
+#| "Бывает полезно если для разных конфигураций \n"
+#| "используются одинаковые настройки оборудования Modbus.\n"
+#| "Вызывает диалог с помощью которого можно выбрать имя \n"
+#| "конфигурации из которой копируются настройки, при этом \n"
+#| "текущие настройки стераются"
+msgid "Импорт настроек из других конфигураций. "
+msgstr ""
+"Импорт настроек из других конфигураций. \n"
+"Бывает полезно если для разных конфигураций \n"
+"используются одинаковые настройки оборудования Modbus.\n"
+"Вызывает диалог с помощью которого можно выбрать имя \n"
+"конфигурации из которой копируются настройки, при этом \n"
+"текущие настройки стераются"
+
+#: tform_settings.btnstart.hint
+msgid "Запуск режима просмотра в Recorder"
+msgstr "Запуск режима просмотра в Recorder"
+
+#: tform_settings.caption
+msgid "Плагин Modbus Master"
+msgstr "Плагин Modbus Master"
+
+#: tform_settings.cblang.text
+msgid "Русский (Ru)"
+msgstr ""
+
+#: tform_settings.chblog.caption
+msgid "Вести log"
+msgstr "Вести log"
+
+#: tform_settings.chbstart.caption
+msgid "Автостарт"
+msgstr "Автостарт"
+
+#: tform_settings.chbstart.hint
+msgid ""
+"При установленном флаге плагин будет автоматически запускать\n"
+"режим просмотра в Recorder сразу после загрузки"
+msgstr ""
+"При установленном флаге плагин будет автоматически запускать\n"
+"режим просмотра в Recorder сразу после загрузки"
+
+#: tform_settings.labout.caption
+msgid "?"
+msgstr ""
+
+#: tform_settings.labout.hint
+msgctxt "tform_settings.labout.hint"
+msgid "О программе"
+msgstr "О программе"
+
+#: tform_settings.sbtnlisting.caption
+msgid "Обмен"
+msgstr "Обмен"
+
+#: tform_settings.sbtnsettings.caption
+msgid "Переменные"
+msgstr "Переменные"
+
+#: tfrmabout.caption
+msgctxt "tfrmabout.caption"
+msgid "О программе"
+msgstr "О программе"
+
+#: tfrmabout.label1.caption
+msgid "Плагин к ПО Recorder"
+msgstr "Плагин к ПО Recorder"
+
+#: tfrmabout.label3.caption
+msgid ""
+"Поддержка протоколов RTU и TCP\n"
+"в режиме ведущего устройства"
+msgstr ""
+"Поддержка протоколов RTU и TCP\n"
+"в режиме ведущего устройства"
+
+#: tfrmabout.labout.caption
+#, object-pascal-format
+msgid "Modbus master v.%s"
+msgstr "Modbus master v.%s"
+
+#: tfrm_adr.edaddress.text
+msgid "127.0.0.1"
+msgstr ""
+
+#: tfrm_adr.edport.text
+msgid "502"
+msgstr ""
+
+#: tfrm_adr.label1.caption
+msgid "IP-адрес:"
+msgstr "IP-адрес:"
+
+#: tfrm_adr.label2.caption
+msgctxt "tfrm_adr.label2.caption"
+msgid "Порт:"
+msgstr "Порт:"
+
+#: tfrm_bus.chbinterchange.caption
+msgctxt "tfrm_bus.chbinterchange.caption"
+msgid "Отображать обмен данными"
+msgstr "Отображать обмен данными"
+
+#: tfrm_bus.chbinterchange.hint
+msgid "Если флаг установлен, то на вкладке \"Обмен\" отображаются кодограммы относящиеся к шине"
+msgstr "Если флаг установлен, то на вкладке \"Обмен\" отображаются кодограммы относящиеся к шине"
+
+#: tfrm_bus.edname.hint
+msgid "Наименование шины"
+msgstr "Наименование шины"
+
+#: tfrm_bus.edname.text
+msgctxt "tfrm_bus.edname.text"
+msgid "edName"
+msgstr ""
+
+#: tfrm_bus.edpausedelay.hint
+msgid " Установите задержку между опросами одного и того же устройства"
+msgstr " Установите задержку между опросами одного и того же устройства"
+
+#: tfrm_bus.edpausedelay.text
+msgid "50"
+msgstr ""
+
+#: tfrm_bus.gbtype.caption
+msgid "Тип шины"
+msgstr "Тип шины"
+
+#: tfrm_bus.gbtype.hint
+msgid "Выбор типа шины (последовательный порт или TCP)"
+msgstr "Выбор типа шины (последовательный порт или TCP)"
+
+#: tfrm_bus.label1.caption
+msgctxt "tfrm_bus.label1.caption"
+msgid "Наименование:"
+msgstr "Наименование:"
+
+#: tfrm_bus.label2.caption
+msgctxt "tfrm_bus.label2.caption"
+msgid "Описание:"
+msgstr "Описание:"
+
+#: tfrm_bus.label3.caption
+msgid "Задержка опроса, мс:"
+msgstr "Задержка опроса, мс:"
+
+#: tfrm_bus.memdescr.hint
+msgid "Описание шины"
+msgstr "Описание шины"
+
+#: tfrm_bus.rbrtu.caption
+msgid "Modbus RTU"
+msgstr ""
+
+#: tfrm_bus.rbrtu.hint
+msgid "Разновидность протокола, работающая по последовательлным интерфейсам, таким как RS-232, RS-485 и др."
+msgstr "Разновидность протокола, работающая по последовательлным интерфейсам, таким как RS-232, RS-485 и др."
+
+#: tfrm_bus.rbtcp.caption
+msgid "Modbus TCP"
+msgstr ""
+
+#: tfrm_bus.rbtcp.hint
+msgid "Разновидность протокола работающая поверх TCP IP в сетях Ethernet"
+msgstr "Разновидность протокола работающая поверх TCP IP в сетях Ethernet"
+
+#: tfrm_device.chbactive.caption
+msgid "Включить"
+msgstr "Включить"
+
+#: tfrm_device.chbactive.hint
+msgid "Снятие флага позволяет исключить устройство из цикла опроса"
+msgstr "Снятие флага позволяет исключить устройство из цикла опроса"
+
+#: tfrm_device.chbinterchange.caption
+msgctxt "tfrm_device.chbinterchange.caption"
+msgid "Отображать обмен данными"
+msgstr "Отображать обмен данными"
+
+#: tfrm_device.chbinterchange.hint
+msgid "Если флаг установлен, то на вкладке \"Обмен\" отображаются кодограммы относящиеся к устройству"
+msgstr "Если флаг установлен, то на вкладке \"Обмен\" отображаются кодограммы относящиеся к устройству"
+
+#: tfrm_device.chbtries.caption
+msgid "Отключать при отсутствуии связи"
+msgstr "Отключать при отсутствуии связи"
+
+#: tfrm_device.chbtries.hint
+msgid "Если установлен флаг, то устройство перестанет опрашиваться при обрыве связи через заданное число попыток"
+msgstr "Если установлен флаг, то устройство перестанет опрашиваться при обрыве связи через заданное число попыток"
+
+#: tfrm_device.edadr.hint
+msgid "Адрес на шине Modbus (Modbus ID)"
+msgstr "Адрес на шине Modbus (Modbus ID)"
+
+#: tfrm_device.edadr.text
+msgid "edAdr"
+msgstr ""
+
+#: tfrm_device.edname.hint
+msgid "Имя устройства"
+msgstr "Имя устройства"
+
+#: tfrm_device.edname.text
+msgctxt "tfrm_device.edname.text"
+msgid "edName"
+msgstr ""
+
+#: tfrm_device.edtimer.hint
+msgid "Период времени между попытками восстановления связи"
+msgstr "Период времени между попытками восстановления связи"
+
+#: tfrm_device.edtimer.text
+msgid "edTimer"
+msgstr ""
+
+#: tfrm_device.edtries.hint
+msgid "Число попыток восстановления после потери связи"
+msgstr "Число попыток восстановления после потери связи"
+
+#: tfrm_device.edtries.text
+msgid "edTries"
+msgstr ""
+
+#: tfrm_device.label1.caption
+msgctxt "tfrm_device.label1.caption"
+msgid "Наименование:"
+msgstr "Наименование:"
+
+#: tfrm_device.label2.caption
+msgctxt "tfrm_device.label2.caption"
+msgid "Описание:"
+msgstr "Описание:"
+
+#: tfrm_device.label3.caption
+msgctxt "tfrm_device.label3.caption"
+msgid "Адрес:"
+msgstr "Адрес:"
+
+#: tfrm_device.label4.caption
+msgid "Число попыток:"
+msgstr "Число попыток:"
+
+#: tfrm_device.label5.caption
+msgid "Таймер, мс:"
+msgstr "Таймер, мс:"
+
+#: tfrm_device.memdescr.hint
+msgid "Описание устройства"
+msgstr "Описание устройства"
+
+#: tfrm_port.cbparity.hint
+msgid ""
+"Проверка на четность при обмене данными. \n"
+"Указывается в документации на устройство"
+msgstr ""
+"Проверка на четность при обмене данными. \n"
+"Указывается в документации на устройство"
+
+#: tfrm_port.cbparity.text
+msgid "cbParity"
+msgstr ""
+
+#: tfrm_port.cbport.hint
+msgid ""
+"Выбор последовательного порта. \n"
+"Указать порт к которому подключено оборудование"
+msgstr ""
+"Выбор последовательного порта. \n"
+"Указать порт к которому подключено оборудование"
+
+#: tfrm_port.cbport.text
+msgid "cbPort"
+msgstr ""
+
+#: tfrm_port.cbspeed.hint
+msgid ""
+"Скорость передачи данных. \n"
+"Указывается в документации на устройство"
+msgstr ""
+"Скорость передачи данных. \n"
+"Указывается в документации на устройство"
+
+#: tfrm_port.cbspeed.text
+msgid "cbSpeed"
+msgstr ""
+
+#: tfrm_port.label1.caption
+msgctxt "tfrm_port.label1.caption"
+msgid "Порт:"
+msgstr "Порт:"
+
+#: tfrm_port.label2.caption
+msgid "Четность:"
+msgstr "Четность:"
+
+#: tfrm_port.label3.caption
+msgid "Скорость:"
+msgstr "Скорость:"
+
+#: tfrm_protocol.menuitem1.caption
+msgid "Очистить протокол"
+msgstr "Очистить протокол"
+
+#: tfrm_settings.btnapply.caption
+msgid "Применить"
+msgstr "Применить"
+
+#: tfrm_settings.label1.caption
+msgid "Устройства"
+msgstr "Устройства"
+
+#: tfrm_settings.label2.caption
+msgid "Настройка"
+msgstr "Настройка"
+
+#: tfrm_settings.menuitem1.caption
+msgid "Добавить шину"
+msgstr "Добавить шину"
+
+#: tfrm_settings.menuitem2.caption
+msgid "Добавить устройство"
+msgstr "Добавить устройство"
+
+#: tfrm_settings.menuitem3.caption
+msgid "Добавить переменную"
+msgstr "Добавить переменную"
+
+#: tfrm_settings.menuitem4.caption
+msgid "Копировать узел"
+msgstr "Копировать узел"
+
+#: tfrm_settings.menuitem5.caption
+msgid "Копировать многократно"
+msgstr "Копировать многократно"
+
+#: tfrm_settings.menuitem6.caption
+msgctxt "tfrm_settings.menuitem6.caption"
+msgid "Включить устройство"
+msgstr "Включить устройство"
+
+#: tfrm_settings.menuitem7.caption
+msgctxt "tfrm_settings.menuitem7.caption"
+msgid "Включить шину"
+msgstr "Включить шину"
+
+#: tfrm_value.cbbyteorder.hint
+msgid "У разных устройств бывает различная реализация "
+msgstr "У разных устройств бывает различная реализация "
+
+#: tfrm_value.cbbyteorder.text
+msgid "cbByteOrder"
+msgstr ""
+
+#: tfrm_value.cbmemoryregion.hint
+msgid "Регистры хранения (holding registers) или регистры  ввода (input registers)"
+msgstr "Регистры хранения (holding registers) или регистры  ввода (input registers)"
+
+#: tfrm_value.cbmemoryregion.text
+msgid "cbMemoryRegion"
+msgstr ""
+
+#: tfrm_value.cbtype.hint
+msgid "Тип данных в устройстве"
+msgstr "Тип данных в устройстве"
+
+#: tfrm_value.cbtype.text
+msgid "cbType"
+msgstr ""
+
+#: tfrm_value.chbcontiniouswrite.caption
+msgid "Постоянная запись"
+msgstr "Постоянная запись"
+
+#: tfrm_value.chbcontiniouswrite.hint
+msgid "Запись переменной выполняется циклически вне зависимости от изменения значения"
+msgstr "Запись переменной выполняется циклически вне зависимости от изменения значения"
+
+#: tfrm_value.chbimidiatewr.caption
+msgid "Запись при изменении"
+msgstr "Запись при изменении"
+
+#: tfrm_value.chbimidiatewr.hint
+msgid ""
+"При установленном флаге посылка команды на запись значения \n"
+"происходит немедленно (без очереди) при изменении тега в Recorder-е"
+msgstr ""
+"При установленном флаге посылка команды на запись значения \n"
+"происходит немедленно (без очереди) при изменении тега в Recorder-е"
+
+#: tfrm_value.edadr.hint
+msgid "Адрес регистра"
+msgstr "Адрес регистра"
+
+#: tfrm_value.edadr.text
+msgid "EdAdr"
+msgstr ""
+
+#: tfrm_value.edname.hint
+msgid "Наименование переменной. Соответствует названию канала в Recorder"
+msgstr "Наименование переменной. Соответствует названию канала в Recorder"
+
+#: tfrm_value.edname.text
+msgctxt "tfrm_value.edname.text"
+msgid "edName"
+msgstr ""
+
+#: tfrm_value.label1.caption
+msgctxt "tfrm_value.label1.caption"
+msgid "Наименование:"
+msgstr "Наименование:"
+
+#: tfrm_value.label2.caption
+msgctxt "tfrm_value.label2.caption"
+msgid "Описание:"
+msgstr "Описание:"
+
+#: tfrm_value.label3.caption
+msgctxt "tfrm_value.label3.caption"
+msgid "Адрес:"
+msgstr "Адрес:"
+
+#: tfrm_value.label4.caption
+msgid "Тип:"
+msgstr "Тип:"
+
+#: tfrm_value.label5.caption
+msgid "Область памяти:"
+msgstr "Область памяти:"
+
+#: tfrm_value.label6.caption
+msgid "Порядок байт:"
+msgstr "Порядок байт:"
+
+#: tfrm_value.memdescr.hint
+msgid "Описание переменной (отображается в Recorder)"
+msgstr "Описание переменной (отображается в Recorder)"
+
+#: tfrm_value.rbread.caption
+msgid "Чтение"
+msgstr "Чтение"
+
+#: tfrm_value.rbread.hint
+msgid ""
+"Тип доступа - чтение. \n"
+"Значение будет только считываться с периодом ограниченным \n"
+"скоростью ответа устройства и задержкой между опросами"
+msgstr ""
+"Тип доступа - чтение. \n"
+"Значение будет только считываться с периодом ограниченным \n"
+"скоростью ответа устройства и задержкой между опросами"
+
+#: tfrm_value.rbreadwrite.caption
+msgid "Чтение и запись"
+msgstr "Чтение и запись"
+
+#: tfrm_value.rbreadwrite.hint
+msgid "Тип доступа - чтение и запись. "
+msgstr "Тип доступа - чтение и запись. "
+
+#: tfrm_value.rbwrite.caption
+msgid "Запись"
+msgstr "Запись"
+
+#: tfrm_value.rbwrite.hint
+msgid "Тип доступа - запись. "
+msgstr "Тип доступа - запись. "
+

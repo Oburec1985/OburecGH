@@ -13,10 +13,10 @@ unit uRecorderVisualControl;
 interface
 
 uses
-  Classes, SysUtils, Math, Controls, ExtCtrls, Graphics, StdCtrls, Buttons,
+  Classes, SysUtils, Math, Controls, ExtCtrls, Graphics, StdCtrls, Buttons, Forms,
   BGRABitmap, BGRABitmapTypes, BGRASVG,
   uOglChart, uRecorderFormModel, uRecorderTags, uRecorderAlarms,
-  uRecorderSvgRenderer;
+  uRecorderSvgRenderer, uRecorderPluginRuntime, uRecorderVisualComponentApiV2;
 
 type
   { IVForm
@@ -47,6 +47,31 @@ type
     class function GetControlClass(AComponentClass: TRecorderVisualComponentClass): TRecorderVisualControlClass;
     { Очистка реестра }
     class procedure ClearRegistry;
+  end;
+
+  { Generic native-parent adapter only. Child controls, rendering, input and
+    editor behavior belong to the plugin. Never cast its opaque state. }
+  TRecorderPluginVisualHostControl = class(TPanel, IVForm)
+  private
+    fSession: TRecorderPluginViewSession;
+    fComponentIdentity: Pointer;
+    fEditMode: Boolean;
+    fDisplayWindow: Double;
+    function Surface: TRecorderVisualSurfaceV2;
+    procedure AttachView;
+    procedure SetEditMode(AValue: Boolean);
+  protected
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
+    procedure Resize; override;
+  public
+    destructor Destroy; override;
+    procedure Configure(AComponent: TRecorderVisualComponent;
+      ATagRegistry: TRecorderTagRegistry);
+    procedure RefreshControl(ATagRegistry: TRecorderTagRegistry;
+      ADisplaySeconds: Double);
+    function GetChartControl: TOglChart;
+    property EditMode: Boolean read fEditMode write SetEditMode;
   end;
 
   { TRecorderStaticTextView
@@ -284,6 +309,114 @@ begin
 end;
 
 { TRecorderButtonView }
+
+function TRecorderPluginVisualHostControl.Surface: TRecorderVisualSurfaceV2;
+var
+  lForm: TCustomForm;
+begin
+  FillChar(Result, SizeOf(Result), 0);
+  Result.Header.Size := SizeOf(Result);
+  Result.Header.AbiMajor := REC_VISUAL_ABI_V2_MAJOR;
+  Result.Header.AbiMinor := REC_VISUAL_ABI_V2_MINOR;
+  Result.Dpi := Screen.PixelsPerInch;
+  lForm := GetParentForm(Self);
+  if lForm <> nil then Result.Dpi := lForm.PixelsPerInch;
+  {$IFDEF LCLwin32} Result.NativeBackend := REC_VISUAL_NATIVE_WIN32; {$ENDIF}
+  {$IFDEF LCLgtk2} Result.NativeBackend := REC_VISUAL_NATIVE_GTK2; {$ENDIF}
+  { Other widgetsets require an adapter exposing a real native C handle.
+    Their LCL Handle may itself be a Pascal wrapper and must not cross ABI. }
+  if (Result.NativeBackend <> REC_VISUAL_NATIVE_NONE) and HandleAllocated then
+    Result.ParentWindow := PtrUInt(Handle);
+  Result.Width := ClientWidth;
+  Result.Height := ClientHeight;
+  if not fEditMode then Result.Flags := REC_VISUAL_VIEW_INTERACTIVE;
+end;
+
+procedure TRecorderPluginVisualHostControl.AttachView;
+var
+  lStatus: LongInt;
+begin
+  if (fSession = nil) or not fSession.Active or not HandleAllocated then Exit;
+  lStatus := fSession.Attach(Surface);
+  fDisplayWindow := 0;
+  if lStatus = REC_VISUAL_OK then Caption := ''
+  else Caption := 'Plugin view unavailable';
+end;
+
+procedure TRecorderPluginVisualHostControl.CreateWnd;
+begin
+  inherited CreateWnd;
+  AttachView;
+end;
+
+procedure TRecorderPluginVisualHostControl.DestroyWnd;
+begin
+  if (fSession <> nil) and (fSession.Detach <> REC_VISUAL_OK) then
+    RecorderDebugLog('[Plugin V2] Native parent detach failed');
+  inherited DestroyWnd;
+end;
+
+destructor TRecorderPluginVisualHostControl.Destroy;
+begin
+  FreeAndNil(fSession);
+  inherited Destroy;
+end;
+
+procedure TRecorderPluginVisualHostControl.Resize;
+begin
+  inherited Resize;
+  if (fSession <> nil) and HandleAllocated and
+    (fSession.Resize(Surface) = REC_VISUAL_ERROR) then
+    RecorderDebugLog('[Plugin V2] Native view resize failed');
+end;
+
+procedure TRecorderPluginVisualHostControl.SetEditMode(AValue: Boolean);
+var
+  lBefore: Boolean;
+begin
+  if fEditMode = AValue then Exit;
+  lBefore := fEditMode;
+  fEditMode := AValue;
+  if (fSession <> nil) and HandleAllocated and
+    fSession.Attached and (fSession.SetMode(Surface) <> REC_VISUAL_OK) then
+  begin
+    fEditMode := lBefore;
+    RecorderDebugLog('[Plugin V2] Native view mode update failed');
+  end;
+end;
+
+procedure TRecorderPluginVisualHostControl.Configure(
+  AComponent: TRecorderVisualComponent; ATagRegistry: TRecorderTagRegistry);
+begin
+  if not (AComponent is TRecorderPluginVisualComponent) then Exit;
+  if (fSession = nil) or (fComponentIdentity <> Pointer(AComponent)) then
+  begin
+    FreeAndNil(fSession);
+    fComponentIdentity := Pointer(AComponent);
+    fSession := RecorderPluginVisualOpenView(
+      TRecorderPluginVisualComponent(AComponent));
+  end;
+  HandleNeeded;
+  if (fSession <> nil) and not fSession.Attached then AttachView;
+end;
+
+procedure TRecorderPluginVisualHostControl.RefreshControl(
+  ATagRegistry: TRecorderTagRegistry; ADisplaySeconds: Double);
+var lStatus: LongInt;
+begin
+  { Only a changed common display setting crosses this cold boundary.
+    Data notifications remain the generic runtime factory's responsibility. }
+  if (fSession = nil) or not fSession.Attached or
+    (ADisplaySeconds <= 0) or (ADisplaySeconds = fDisplayWindow) then Exit;
+  lStatus := fSession.SetDisplayWindow(ADisplaySeconds);
+  if lStatus in [REC_VISUAL_OK, REC_VISUAL_NOT_HANDLED] then
+    fDisplayWindow := ADisplaySeconds;
+end;
+
+function TRecorderPluginVisualHostControl.GetChartControl: TOglChart;
+begin
+  Result := nil;
+end;
 
 constructor TRecorderButtonView.Create(AOwner: TComponent);
 begin
@@ -1761,6 +1894,8 @@ begin
 end;
 
 initialization
+  TRecorderVisualControlRegistry.RegisterControl(TRecorderPluginVisualComponent,
+    TRecorderPluginVisualHostControl);
   // Регистрация визуальных контролов мнемосхем
   TRecorderVisualControlRegistry.RegisterControl(TRecorderStaticTextComponent, TRecorderStaticTextView);
   TRecorderVisualControlRegistry.RegisterControl(TRecorderButtonComponent, TRecorderButtonView);

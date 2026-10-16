@@ -1,0 +1,227 @@
+inherited Frm_Value: TFrm_Value
+  Height = 482
+  Width = 858
+  ClientHeight = 482
+  ClientWidth = 858
+  Font.CharSet = RUSSIAN_CHARSET
+  Font.Height = -16
+  Font.Pitch = fpVariable
+  Font.Quality = fqDraft
+  ParentFont = False
+  DesignLeft = 281
+  DesignTop = 159
+  object Label1: TLabel[0]
+    Left = 16
+    Height = 21
+    Top = 32
+    Width = 138
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'Наименование:'
+  end
+  object Label2: TLabel[1]
+    Left = 16
+    Height = 21
+    Top = 79
+    Width = 138
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'Описание:'
+  end
+  object edName: TEdit[2]
+    Left = 160
+    Height = 29
+    Hint = 'Наименование переменной. Соответствует названию канала в Recorder'
+    Top = 24
+    Width = 640
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 0
+    Text = 'edName'
+  end
+  object memDescr: TMemo[3]
+    Left = 160
+    Height = 113
+    Hint = 'Описание переменной (отображается в Recorder)'
+    Top = 71
+    Width = 640
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Lines.Strings = (
+      'memDescr'
+    )
+    TabOrder = 1
+  end
+  object chbContiniousWrite: TCheckBox[4]
+    AnchorSideRight.Control = chbImidiateWr
+    Left = 160
+    Height = 25
+    Hint = 'Запись переменной выполняется циклически вне зависимости от изменения значения'
+    Top = 200
+    Width = 155
+    Anchors = [akLeft, akBottom]
+    BorderSpacing.Right = 12
+    Caption = 'Постоянная запись'
+    TabOrder = 2
+  end
+  object chbImidiateWr: TCheckBox[5]
+    AnchorSideLeft.Control = chbContiniousWrite
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideRight.Control = chbGroupWrite
+    Left = 327
+    Height = 25
+    Hint = 'При установленном флаге посылка команды на запись значения '#13#10'происходит немедленно (без очереди) при изменении тега в Recorder-е'
+    Top = 200
+    Width = 182
+    Anchors = [akLeft, akBottom]
+    BorderSpacing.Left = 12
+    BorderSpacing.Right = 12
+    Caption = 'Запись при изменении'
+    TabOrder = 3
+  end
+  object Label3: TLabel[6]
+    Left = 40
+    Height = 21
+    Top = 248
+    Width = 166
+    Alignment = taRightJustify
+    Anchors = [akLeft, akBottom]
+    AutoSize = False
+    Caption = 'Адрес:'
+  end
+  object Label4: TLabel[7]
+    Left = 40
+    Height = 21
+    Top = 296
+    Width = 165
+    Alignment = taRightJustify
+    Anchors = [akLeft, akBottom]
+    AutoSize = False
+    Caption = 'Тип:'
+  end
+  object Label5: TLabel[8]
+    Left = 40
+    Height = 21
+    Top = 344
+    Width = 165
+    Alignment = taRightJustify
+    Anchors = [akLeft, akBottom]
+    AutoSize = False
+    Caption = 'Область памяти:'
+  end
+  object Label6: TLabel[9]
+    Left = 40
+    Height = 21
+    Top = 392
+    Width = 167
+    Alignment = taRightJustify
+    Anchors = [akLeft, akBottom]
+    AutoSize = False
+    Caption = 'Порядок байт:'
+  end
+  object rbRead: TRadioButton[10]
+    Left = 160
+    Height = 25
+    Hint = 'Тип доступа - чтение. '#13#10'Значение будет только считываться с периодом ограниченным '#13#10'скоростью ответа устройства и задержкой между опросами'
+    Top = 440
+    Width = 70
+    Anchors = [akLeft, akBottom]
+    Caption = 'Чтение'
+    Checked = True
+    TabOrder = 6
+    TabStop = True
+  end
+  object rbWrite: TRadioButton[11]
+    Left = 256
+    Height = 25
+    Hint = 'Тип доступа - запись. '
+    Top = 440
+    Width = 68
+    Anchors = [akLeft, akBottom]
+    Caption = 'Запись'
+    TabOrder = 4
+  end
+  object rbReadWrite: TRadioButton[12]
+    Left = 352
+    Height = 25
+    Hint = 'Тип доступа - чтение и запись. '
+    Top = 440
+    Width = 135
+    Anchors = [akLeft, akBottom]
+    Caption = 'Чтение и запись'
+    TabOrder = 5
+    Visible = False
+  end
+  object EdAdr: TEdit[13]
+    Left = 216
+    Height = 29
+    Hint = 'Адрес регистра'
+    Top = 240
+    Width = 302
+    Anchors = [akLeft, akBottom]
+    TabOrder = 7
+    Text = 'EdAdr'
+    OnKeyPress = EdAdrKeyPress
+  end
+  object cbType: TComboBox[14]
+    Left = 216
+    Height = 29
+    Hint = 'Тип данных в устройстве'
+    Top = 288
+    Width = 302
+    Anchors = [akLeft, akBottom]
+    ItemHeight = 21
+    Items.Strings = (
+      'Bool'
+      'Int16'
+      'Int32'
+      'UInt16'
+      'UInt32'
+      'Single'
+      'Double'
+    )
+    ReadOnly = True
+    TabOrder = 8
+    Text = 'cbType'
+  end
+  object cbMemoryRegion: TComboBox[15]
+    Left = 216
+    Height = 29
+    Hint = 'Регистры хранения (holding registers) или регистры  ввода (input registers)'
+    Top = 336
+    Width = 303
+    Anchors = [akLeft, akBottom]
+    ItemHeight = 21
+    Items.Strings = (
+      'Holding'
+      'Input'
+      'Coils'
+    )
+    ReadOnly = True
+    TabOrder = 9
+    Text = 'cbMemoryRegion'
+  end
+  object cbByteOrder: TComboBox[16]
+    Left = 215
+    Height = 29
+    Hint = 'У разных устройств бывает различная реализация '
+    Top = 384
+    Width = 303
+    Anchors = [akLeft, akBottom]
+    ItemHeight = 21
+    ReadOnly = True
+    TabOrder = 10
+    Text = 'cbByteOrder'
+  end
+  object chbGroupWrite: TCheckBox[17]
+    AnchorSideLeft.Control = chbImidiateWr
+    AnchorSideLeft.Side = asrBottom
+    Left = 521
+    Height = 25
+    Hint = 'Разрешить обработку групповой командой'
+    Top = 200
+    Width = 174
+    Anchors = [akLeft, akBottom]
+    BorderSpacing.Left = 12
+    Caption = 'Групповая обработка'
+    TabOrder = 11
+  end
+end

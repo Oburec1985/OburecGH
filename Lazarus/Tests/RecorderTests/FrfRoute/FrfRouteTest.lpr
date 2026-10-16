@@ -1,0 +1,94 @@
+program FrfRouteTest;
+{$mode objfpc}{$H+}
+uses Classes, SysUtils, IniFiles, uRecorderFrfRepository, uRecorderFrfRoute;
+
+procedure Check(ACondition: Boolean; const AMessage: string);
+begin if not ACondition then raise Exception.Create(AMessage) end;
+
+var lRoute, lReload: TRecorderFrfRoute; lEntry: TRecorderFrfRouteEntry;
+  lCurve: TRecorderFrfCurveData; lCurves: TRecorderRouteCurveArray;
+  lDirectory: string; lGuid: TGUID; lFiles: TStringList; lIndex: Integer;
+  lIni: TMemIniFile;
+begin
+  CreateGUID(lGuid);
+  lDirectory := IncludeTrailingPathDelimiter(GetTempDir) + 'frf-route-' + GUIDToString(lGuid);
+  lRoute := TRecorderFrfRoute.Create;
+  lReload := TRecorderFrfRoute.Create;
+  lFiles := TStringList.Create;
+  try
+    lEntry := Default(TRecorderFrfRouteEntry);
+    lEntry.ChannelIndex := 0; lEntry.PointNumber := 7;
+    lEntry.TargetNodeId := 100; lEntry.TargetNodeName := 'Object A';
+    lRoute.Add(lEntry);
+    Check(lRoute[0].PointLabel = '7', 'Default label is object point number');
+    lEntry.PointNumber := 8; lEntry.TargetNodeId := 200;
+    lEntry.TargetNodeName := 'Object B';
+    lEntry.PointLabel := 'Route B-12';
+    lRoute.Add(lEntry);
+    Check(lRoute[0].CurveId <> lRoute[1].CurveId, 'Duplicate channel needs distinct snapshot IDs');
+    lRoute.Save(lDirectory);
+    lRoute.SetPointLabel(0, 'Route A-01');
+    Check(not lRoute.LoadSavedCurves(lCurves), 'Incomplete route must refuse playback');
+    lCurve.Id := 1;
+    SetLength(lCurve.FrequencyHz, 2); SetLength(lCurve.Magnitude, 2);
+    SetLength(lCurve.PhaseRadians, 2); SetLength(lCurve.Coherence, 2);
+    SetLength(lCurve.Amplitude, 2);
+    lCurve.FrequencyHz[0] := 10; lCurve.FrequencyHz[1] := 20;
+    lCurve.Magnitude[0] := 2.5; lCurve.Magnitude[1] := 3.5;
+    lCurve.Amplitude[0] := 7.25; lCurve.Amplitude[1] := 8.25;
+    lRoute.CaptureCurrent(lCurve);
+    Check(lRoute.CurrentIndex = 1, 'Capture must advance');
+    lCurve.Magnitude[0] := 99;
+    lRoute.CaptureCurrent(lCurve);
+    lReload.Load(lDirectory);
+    Check(lReload.CurrentIndex = 2, 'Progress restart');
+    Check(lReload[0].TargetNodeName = 'Object A', 'Object persisted');
+    Check(lReload[0].PointLabel = 'Route A-01', 'Edited route label persisted');
+    Check(lReload[1].PointLabel = 'Route B-12', 'Custom label persisted');
+    lReload.SetPointLabel(1, '');
+    Check(lReload[1].PointLabel = '8', 'Empty label restores object point number');
+    lIni := TMemIniFile.Create(lDirectory + '/route.ini');
+    try
+      lIni.DeleteKey('Point0', 'PointLabel');
+      lIni.UpdateFile;
+    finally lIni.Free end;
+    lReload.Load(lDirectory);
+    Check(lReload[0].PointLabel = '7', 'Legacy route defaults missing label to point number');
+    Check(lReload.LoadSavedCurves(lCurves), 'Complete route playback');
+    Check(lCurves[0].Magnitude[0] = 2.5, 'First snapshot isolated from RAM mutation');
+    Check(lCurves[1].Magnitude[0] = 99, 'Second independent snapshot');
+    Check(lCurves[0].Amplitude[0] = 7.25, 'Amplitude persists');
+    Check(lCurves[0].Id = lRoute[0].CurveId, 'Durable curve identity');
+    lReload.CurrentIndex := 0;
+    lEntry := lReload[0];
+    lEntry.PointNumber := 11;
+    lEntry.PointLabel := 'Edited label';
+    lEntry.ChannelIndex := 1;
+    lEntry.CurveId := 0;
+    lEntry.Captured := False;
+    lReload.UpdateEntry(0, lEntry);
+    Check(lReload[0].CurveId = lRoute[0].CurveId, 'Edit preserves curve identity');
+    Check(lReload[0].Captured, 'Edit preserves saved state');
+    lReload.MoveEntry(0, 1);
+    Check(lReload.CurrentIndex = 1, 'Reorder retains current point identity');
+    Check(lReload.LoadSavedCurves(lCurves), 'Reorder retains saved files');
+    Check(lCurves[1].Magnitude[0] = 2.5, 'Reordered snapshot follows point');
+    lReload.MoveEntry(1, 0);
+    lReload.CaptureEntry(0, lCurve);
+    Check(lReload.CurrentIndex = 0, 'Explicit capture does not advance');
+    lFiles.Add(lRoute.PointDirectory(0) + '/curve.frf');
+    lFiles.Add(lRoute.PointDirectory(1) + '/curve.frf');
+    DeleteFile(lFiles[0]);
+    Check(not lReload.LoadSavedCurves(lCurves), 'Missing snapshot refuses playback');
+    lReload.ResetProgress;
+    Check(lReload.CurrentIndex = 0, 'Resume first missing snapshot');
+    lFiles.Add(lDirectory + '/route.ini');
+    WriteLn('RESULT FrfRouteTest passed');
+  finally
+    for lIndex := 0 to lFiles.Count - 1 do DeleteFile(lFiles[lIndex]);
+    RemoveDir(lRoute.PointDirectory(0));
+    RemoveDir(lRoute.PointDirectory(1));
+    RemoveDir(lDirectory);
+    lFiles.Free; lReload.Free; lRoute.Free;
+  end;
+end.

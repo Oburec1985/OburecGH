@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dream Team"
+  short_description: "Strict multi-agent development review"
+  default_prompt: "Use $dreamteam to bring this development task to a verified result."

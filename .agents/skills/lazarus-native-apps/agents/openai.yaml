@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lazarus Native Apps"
+  short_description: "Build native apps with Lazarus and Free Pascal."
+  default_prompt: "Use $lazarus-native-apps to build or modify a native Lazarus/FPC desktop application."

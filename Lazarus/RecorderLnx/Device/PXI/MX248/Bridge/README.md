@@ -3,10 +3,10 @@
 The bridge is a Delphi Win32 console helper for a Win64 RecorderLnx client. It
 uses inherited stdin/stdout pipes and loads the original Win32 `DevAPI.dll`.
 
-## IPC v1
+## IPC v2
 
 All integers are little-endian. Every frame starts with this packed 16-byte
-header: `magic:u32=0x42383432, version:u16=1, command:u16, requestId:u32,
+header: `magic:u32=0x42383432, version:u16=2, command:u16, requestId:u32,
 payloadSize:u32`. Payload size is limited to 1 MiB.
 
 A response retains request command/id. Its payload is `code:u32`, then three
@@ -22,6 +22,9 @@ Stable command payloads:
 | `CONFIGURE` (14) | fixed 80-byte `ConfigureV1` below | empty |
 | `START` (15), `STOP` (16), `DISCONNECT` (18) | empty | empty |
 | `READ_BLOCK` (17) | `requestedSamples:i32` | self-describing block below |
+| `READ_PROPERTIES` (19) | empty | UTF-8 `key=value` snapshot described below |
+| `CONFIGURE_PXI` (20) | fixed 32-byte `PxiConfigV1` | empty |
+| `ZERO_BALANCE` (21) | `channelMask:u32`, bits 0..7 | UTF-8 `ch1=value;...` |
 
 `ConfigureV1` is packed and uses an IEEE-754 binary64 rate:
 
@@ -56,6 +59,39 @@ repeat channelCount times:
   samples:f32[sampleCount]
 ```
 
+`READ_PROPERTIES` is a read-only lifecycle stage after `INITIALIZE`. Its data
+starts with `schema=mx248.live.v1` and continues as semicolon-separated UTF-8
+`key=value` fields. Decimal numbers always use `.`. Scalar keys are
+`sample-rate-hz`, `supported-rates-hz` (comma-separated), `rtsi-sev`,
+`rtsi-clock`, `rtsi-sync`, `trigger-mode`, `trigger-source`, and
+`trigger-level`. Per-channel
+keys have the prefix `ch1.` .. `ch8.` and include `enabled`, `block-samples`,
+`icp-current`, `amplifier-enabled`, `input-mode`, `range-index`, `range-min`,
+`range-max`, `lpf-index`, `calibration-mode`, `input-floating`,
+`sensitivity-nominal`, and `sensitivity`. The bridge returns a DevAPI error
+instead of substituting zero when any required live property cannot be read.
+
+`PxiConfigV1` contains eight packed signed 32-bit values:
+
+```text
+rtsiSev, rtsiClock, rtsiSync      # 0 slave, 1 master, 2 hardwired, 3 off
+triggerMode                       # 0 off, 1 external, 2 internal, 3 soft, 4 processing unit
+triggerSource                     # vendor line/source index, 0..31
+triggerLevel                      # DevAPI PROP_TRIG_LEVEL TTL value, 0 or 1
+reserved[2]                       # must be zero
+```
+
+`CONFIGURE_PXI` applies these six DevAPI properties and then performs
+`Config`/`Programming`. It is deliberately separate from acquisition
+`CONFIGURE`, so a property read never changes hardware and a normal Start/Stop
+does not silently rewrite PXI routing.
+
+`ZERO_BALANCE` calls the original `ZBalance(device, channel, &value)` once for
+each selected available AIn channel, in ascending logical order. Returned
+values are exactly the vendor results. The operation is not transactional: if
+a later channel fails, earlier selected channels may already have been
+balanced; the first DevAPI error is returned and no fabricated values follow.
+
 ## Proven original mappings
 
 `DevAPI/Tools.cpp` establishes channel enumeration via `CHAN_CNT_DEV`,
@@ -74,11 +110,21 @@ Configuration follows the original virtual properties:
 - amplifier handle: `PROP_AMPLIFIER` (`0x5058`, confirmed by the C++ probe);
 - amplifier: `PROP_CHAN_ON`, `PROP_INPUT_MODE`, `INDEX_RANGE_CHAN`,
   `PROP_LPF_CHAN`, `PROP_CALIBRATION`, `PROP_CHAN_FLOAT`.
+- PXI routing: `PROP_RTSI_SEV`, `PROP_RTSI_CLK`, `PROP_RTSI_SYNC`,
+  `PROP_TRIGGER`, `PROP_TRIG_SRC`, `PROP_TRIG_LEVEL` using the values from
+  original `Trigger.h` and `devapi/Const.h`. `PROP_TRIG_LEVEL` is an active
+  TTL level (0/1), not a separate rising/falling edge selector;
+- hardware balance: exported DevAPI `ZBalance` with the device and channel
+  handles, matching original `DevAPI.h` and `mx224v14.cpp`.
 
 `mx248amp.cpp` proves calibration is zero when disabled or global mode plus one
 when enabled. `MeasChannel.cpp` routes range and LPF indices to
 `SetAInRangeIndex`/`SetLpfIndex`. Properties are applied before
 `Config`/`Programming`; used inputs are rebound afterwards.
+
+`mx248flash.cpp` defines amplifier range indices as `100`, `10`, and `1` nC.
+The original UI defaults to pC, so the corresponding display values are
+`100000`, `10000`, and `1000` pC; index 2 is therefore the `1000 pC` range.
 
 The Win32 ABI probe against original headers proves pointer size 4,
 `TLocation=140`, `TDeviceRoute=144`, `TDevice=1196`, `TDeviceEnum=132760`.

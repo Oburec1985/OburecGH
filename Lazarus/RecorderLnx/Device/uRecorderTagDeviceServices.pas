@@ -36,6 +36,7 @@ implementation
 
 uses
   SysUtils, Dialogs, uRecorderConfiguredDataSources,
+  uRecorderConfiguredSourceEditor, uRecorderPxiMx248ConfiguredEditor,
   uRecorderMc201SlotSettingsDialog, uRecorderMic140SettingsDialog,
   uRecorderMic185SettingsDialog, uRecorderMc032SettingsDialog,
   uRecorderSettingsDialog, uRecorderTagBalance,
@@ -69,6 +70,13 @@ begin
   Result := False;
   if (ARecorder = nil) or (ATag = nil) then
     Exit;
+  if TryParseRcMx248SourceId(ATag.SourceId, I, lSlot) then
+  begin
+    Result := RecorderEditConfiguredDataSource(AOwner, ARecorder.TagRegistry,
+      ATag.SourceId, lNewSourceId, ATag.ModuleType, ARecorder.DataSources);
+    if Result then Log(ALog, 'MX-248 hardware settings updated.');
+    Exit;
+  end;
   if TryParseRecorderMc032SourceId(ATag.SourceId, lHost, lPort) then
   begin
     lConfig := RecorderConfiguredDataSourcesFind(ARecorder.TagRegistry,

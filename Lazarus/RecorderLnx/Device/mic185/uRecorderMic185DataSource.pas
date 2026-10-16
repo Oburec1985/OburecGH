@@ -265,7 +265,7 @@ type
     procedure PublishRuntimeTransforms(
       var ATransforms: TRecorderMic185ValueTransformArray);
     procedure ConfigureDevice;
-    procedure PublishMeasurementBlock(const ABlock: TRecorderAcquisitionBlock);
+    procedure PublishMeasurementBlock(const ABlock: TRcAcquisitionBlock);
     procedure PublishAuxChannels(ATimeSec: Double);
     procedure TraceZeroBalance(const AText: string);
   protected
@@ -1557,7 +1557,7 @@ var
     out AErrorText: string): Boolean;
   var
     I, J, K: Integer;
-    lBlock: TRecorderAcquisitionBlock;
+    lBlock: TRcAcquisitionBlock;
     lCh: Integer;
     lCounts: array of Integer;
     lDiscarded: Integer;
@@ -3421,7 +3421,7 @@ begin
   for I := 0 to High(lChannels) do
   begin
     lTag := FindTagBySourceAddress(ARegistry, lChannels[I].Address);
-    { A project may rename a hardware channel (for example 185_{149_01} to
+    { A project may rename a hardware channel (for example 185_149_01 to
       4Е1). In that case fSelectedNames contains the project tag name, while
       the freshly enumerated device channel still has its factory name.
       Preserve the configured channel by matching source+address before the
@@ -3735,7 +3735,7 @@ begin
   inherited Stop;
 end;
 
-procedure TRecorderMic185DataSource.PublishMeasurementBlock(const ABlock: TRecorderAcquisitionBlock);
+procedure TRecorderMic185DataSource.PublishMeasurementBlock(const ABlock: TRcAcquisitionBlock);
 var
   I, J: Integer;
   lCount: Integer;
@@ -3866,7 +3866,7 @@ end;
 
 procedure TRecorderMic185DataSource.DoTick;
 var
-  lBlock: TRecorderAcquisitionBlock;
+  lBlock: TRcAcquisitionBlock;
   lDevice: TRecorderMic185Device;
   lError: string;
   lNow: QWord;

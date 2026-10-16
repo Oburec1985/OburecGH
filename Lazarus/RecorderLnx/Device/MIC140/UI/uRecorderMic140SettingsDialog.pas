@@ -658,6 +658,7 @@ var
 begin
   Result := False;
   ANewSourceId := ASourceId;
+  lResult := Default(TRecorderMic140DialogResult);
   if ATagRegistry = nil then
     Exit;
 

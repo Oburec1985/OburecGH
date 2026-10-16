@@ -1,0 +1,4 @@
+interface:
+  display_name: "Learn from fixes"
+  short_description: "Turn confirmed bug fixes into durable prevention rules"
+  default_prompt: "After fixing a confirmed error, derive a reusable prevention rule and record it at the appropriate system or project level."

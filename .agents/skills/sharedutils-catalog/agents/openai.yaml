@@ -1,0 +1,4 @@
+interface:
+  display_name: "SharedUtils Catalog"
+  short_description: "Reuse and maintain shared Pascal utilities"
+  default_prompt: "Use $sharedutils-catalog to find the correct shared unit before implementing this reusable Pascal functionality."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "AGrav Knowledge Base"
+  short_description: "Work with the AGrav Obsidian knowledge base."
+  default_prompt: "Use $agrav-knowledge-base to check AGrav before related project work and update the knowledge base when important results appear."

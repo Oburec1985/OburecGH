@@ -1,29 +1,23 @@
 object PxiMx248ChannelDialog: TPxiMx248ChannelDialog
   Left = 420
-  Height = 330
+  Height = 378
   Top = 240
   Width = 560
   BorderIcons = [biSystemMenu]
   Caption = 'MX-248 — канал'
-  ClientHeight = 330
+  ClientHeight = 378
   ClientWidth = 560
+  Constraints.MinHeight = 378
+  Constraints.MinWidth = 520
   OnCreate = FormCreate
   Position = poOwnerFormCenter
-  object chkEnabled: TCheckBox
-    Left = 24
-    Height = 23
-    Top = 20
-    Width = 126
-    Caption = 'Канал включён'
-    TabOrder = 0
-  end
   object chkAmplifier: TCheckBox
-    Left = 184
+    Left = 24
     Height = 23
     Top = 20
     Width = 150
     Caption = 'Включить усилитель'
-    TabOrder = 1
+    TabOrder = 0
   end
   object lblInputMode: TLabel
     Left = 24
@@ -38,7 +32,7 @@ object PxiMx248ChannelDialog: TPxiMx248ChannelDialog
     Top = 82
     Width = 240
     Style = csDropDownList
-    TabOrder = 2
+    TabOrder = 1
   end
   object lblIeee: TLabel
     Left = 288
@@ -53,7 +47,7 @@ object PxiMx248ChannelDialog: TPxiMx248ChannelDialog
     Top = 82
     Width = 240
     Style = csDropDownList
-    TabOrder = 3
+    TabOrder = 2
   end
   object lblGain: TLabel
     Left = 24
@@ -67,8 +61,9 @@ object PxiMx248ChannelDialog: TPxiMx248ChannelDialog
     Height = 23
     Top = 146
     Width = 504
+    Anchors = [akTop, akLeft, akRight]
     Style = csDropDownList
-    TabOrder = 4
+    TabOrder = 3
   end
   object lblLpf: TLabel
     Left = 24
@@ -83,16 +78,32 @@ object PxiMx248ChannelDialog: TPxiMx248ChannelDialog
     Top = 210
     Width = 240
     Style = csDropDownList
+    TabOrder = 4
+  end
+  object chkCalibration: TCheckBox
+    Left = 288
+    Height = 23
+    Top = 210
+    Width = 250
+    Caption = 'Включить калибровочный сигнал'
     TabOrder = 5
+  end
+  object chkFloating: TCheckBox
+    Left = 24
+    Height = 23
+    Top = 250
+    Width = 280
+    Caption = 'Плавающий вход усилителя'
+    TabOrder = 6
   end
   object pnButtons: TPanel
     Left = 0
     Height = 52
-    Top = 278
+    Top = 326
     Width = 560
     Align = alBottom
     BevelOuter = bvNone
-    TabOrder = 6
+    TabOrder = 7
     object btnOk: TButton
       Left = 376
       Height = 30

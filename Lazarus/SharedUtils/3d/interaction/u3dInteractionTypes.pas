@@ -25,10 +25,6 @@ type
   T3dOrbitCamera = record
     Target: T3dVector;
     Forward, Right, Up: T3dVector;
-    PoseValid: Boolean;
-    YawDegrees: Single;
-    PitchDegrees: Single;
-    RollDegrees: Single;
     Distance: Single;
     VerticalFovDegrees: Single;
     ProjectionKind: T3dProjectionKind;

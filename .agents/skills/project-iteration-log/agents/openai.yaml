@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Iteration Log"
+  short_description: "������� ������ �������� � ����������� ������ ����� � ��������"
+  default_prompt: "���� ������� ������ ������ �������� ������ ��� ��������."

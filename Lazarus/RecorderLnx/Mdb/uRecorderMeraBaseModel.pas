@@ -9,11 +9,20 @@ uses
   Classes, SysUtils, uRecorderFormModel;
 
 type
-  { Model of the embedded test database component. The selected context itself
-    lives in sql-db.ini, so every form and the SQL writer share one value. }
+  { Persistent settings of one embedded XML test-database component. }
   TRecorderMeraBaseComponent = class(TRecorderVisualComponent)
+  private
+    fBasePath: string;
+    fObjectId: string;
+    fTestId: string;
   protected
     class function GetTypeId: string; override;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    property BasePath: string read fBasePath write fBasePath;
+    property ObjectId: string read fObjectId write fObjectId;
+    property TestId: string read fTestId write fTestId;
   end;
 
   TRecorderMeraBaseFactory = class(TRecorderComponentFactoryBase)
@@ -28,8 +37,55 @@ type
   end;
 
 procedure RegisterRecorderMeraBaseFactory(AFactory: TRecorderComponentFactory);
+function RecorderMeraObjectDirectory: string;
 
 implementation
+
+uses
+  uRecorderMeraPaths, uRecorderMdbRepository, uRecorderXmlDatabase;
+
+var g_BaseModels: TList = nil;
+
+constructor TRecorderMeraBaseComponent.Create;
+begin
+  inherited Create;
+  if g_BaseModels = nil then g_BaseModels := TList.Create;
+  g_BaseModels.Add(Self);
+end;
+
+destructor TRecorderMeraBaseComponent.Destroy;
+begin
+  if g_BaseModels <> nil then g_BaseModels.Remove(Self);
+  inherited Destroy;
+end;
+
+function RecorderMeraObjectDirectory: string;
+var
+  I: Integer;
+  Model: TRecorderMeraBaseComponent;
+  Repository: TRecorderMdbRepository;
+  Node: TRecorderXmlDbNode;
+begin
+  Result := '';
+  if g_BaseModels = nil then Exit;
+  // Models remain alive on inactive pages; views and their managers do not.
+  // Ignore undo/copy snapshots, which have no owning page.
+  for I := 0 to g_BaseModels.Count - 1 do
+  begin
+    Model := TRecorderMeraBaseComponent(g_BaseModels[I]);
+    if (Model.ParentPage = nil) or (Trim(Model.ObjectId) = '') or
+      not DirectoryExists(Model.BasePath) then Continue;
+    Repository := TRecorderMdbRepository.Create(Model.BasePath);
+    try
+      Repository.Open;
+      Node := Repository.FindNode(Model.ObjectId);
+      if Node <> nil then
+        Exit(IncludeTrailingPathDelimiter(Repository.BasePath + Node.RelativePath));
+    finally
+      Repository.Free;
+    end;
+  end;
+end;
 
 class function TRecorderMeraBaseComponent.GetTypeId: string;
 begin
@@ -41,7 +97,7 @@ begin
   inherited Create(TRecorderMeraBaseComponent.TypeId,
     'База испытаний', TRecorderMeraBaseComponent, 590, 640, False);
   ConfigurePalette('База испытаний', 'Добавить базу испытаний',
-    'sql-trend', 70, rppStandalone);
+    'mera-base', 70, rppStandalone);
 end;
 
 function TRecorderMeraBaseFactory.CreateComponentForPage(
@@ -61,6 +117,8 @@ procedure TRecorderMeraBaseFactory.ConfigureNewComponent(
   const AContext: TRecorderComponentCreateContext);
 begin
   AComponent.Name := 'MeraBase';
+  TRecorderMeraBaseComponent(AComponent).BasePath :=
+    IncludeTrailingPathDelimiter(RecorderMeraFilesPath) + 'mdb';
 end;
 
 procedure RegisterRecorderMeraBaseFactory(AFactory: TRecorderComponentFactory);
@@ -70,4 +128,6 @@ begin
     AFactory.RegisterFactory(TRecorderMeraBaseFactory.Create);
 end;
 
+finalization
+  FreeAndNil(g_BaseModels);
 end.

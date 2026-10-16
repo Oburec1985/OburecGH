@@ -235,6 +235,7 @@ type
 implementation
 
 const
+  CLogAxisLabelDigits = 3;
   CAxisMinLabelWidth = 30;
   CAxisColumnGap = 8;
 
@@ -753,7 +754,11 @@ begin
   // Добавляем минимальное значение в качестве первого тика
   SetLength(ATicks, 1);
   ATicks[0].Value := lOriginalMin;
-  ATicks[0].Text := FormatSignificant(lOriginalMin);
+  { Pan and wheel zoom produce valid but arbitrary logarithmic bounds. Four
+    significant digits make those moving endpoint labels look like raw data
+    (for example 1.035 or 0.00003403), while three keep the scale readable
+    without changing its actual range. }
+  ATicks[0].Text := FormatSignificant(lOriginalMin, CLogAxisLabelDigits);
   lIndex := 1;
   lMinPow := Floor(Log10(lMinVal));
   lMaxPow := Ceil(Log10(AMax));
@@ -768,7 +773,8 @@ begin
       if (lOriginalMin <= 0) and (lValue <= 1.01e-10) then
         ATicks[lIndex].Text := '0'
       else
-        ATicks[lIndex].Text := FormatSignificant(lValue);
+        ATicks[lIndex].Text := FormatSignificant(lValue,
+          CLogAxisLabelDigits);
       Inc(lIndex);
     end;
 
@@ -779,7 +785,8 @@ begin
   begin
     SetLength(ATicks, lIndex + 1);
     ATicks[lIndex].Value := lOriginalMax;
-    ATicks[lIndex].Text := FormatSignificant(lOriginalMax);
+    ATicks[lIndex].Text := FormatSignificant(lOriginalMax,
+      CLogAxisLabelDigits);
   end;
 
 end;
@@ -787,7 +794,7 @@ end;
 procedure TOpenGLChartRenderer.BuildAxisTicks(AAxis: TChartAxis; ATargetCount: Integer; out ATicks: TChartTickArray);
 var
   I: Integer;
-  lRange, lResolution, lRoundedMin: Double;
+  lRange, lResolution, lRoundedValue, lRatio: Double;
   lScale: Double;
 begin
   if Assigned(AAxis) and (AAxis.Scale = casLog10) then
@@ -803,15 +810,30 @@ begin
     lScale := 1.0;
   if (Abs(lScale - 1.0) > 1E-15) or (AAxis.DisplayUnit <> '') then
     for I := 0 to High(ATicks) do
-      ATicks[I].Text := FormatSignificant(ATicks[I].Value * lScale);
+      if AAxis.Scale = casLog10 then
+        ATicks[I].Text := FormatSignificant(ATicks[I].Value * lScale,
+          CLogAxisLabelDigits)
+      else
+        ATicks[I].Text := FormatSignificant(ATicks[I].Value * lScale);
   if (Length(ATicks) > 0) and (AAxis.Scale <> casLog10) then
   begin
     lRange := Abs(AAxis.MaxValue - AAxis.MinValue);
-    lResolution := lRange * 0.01;
+    { Floating point tick stepping can leave tiny residuals around zero. Format
+      every linear tick to 0.01% of this axis range, not just its lower bound;
+      otherwise one noisy label can consume the margin and shift the next axis. }
+    lResolution := lRange * 0.0001;
     if lResolution > 0 then
     begin
-      lRoundedMin := Round(ATicks[0].Value / lResolution) * lResolution;
-      ATicks[0].Text := FormatSignificant(lRoundedMin * lScale);
+      for I := 0 to High(ATicks) do
+      begin
+        lRoundedValue := ATicks[I].Value;
+        lRatio := lRoundedValue / lResolution;
+        { Round returns Int64; retain the original value for unusual axes whose
+          offset is so large that the number of resolution steps overflows it. }
+        if not IsInfinite(lRatio) and (Abs(lRatio) < 9.0E18) then
+          lRoundedValue := Round(lRatio) * lResolution;
+        ATicks[I].Text := FormatSignificant(lRoundedValue * lScale);
+      end;
     end;
   end;
 end;

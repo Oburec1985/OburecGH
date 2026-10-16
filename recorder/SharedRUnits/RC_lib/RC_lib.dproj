@@ -2,6 +2,8 @@
 		<PropertyGroup>
 			<ProjectGuid>{E0FC65B6-ECF4-4E62-A135-0CE3D33EED45}</ProjectGuid>
 			<MainSource>RC_lib.dpk</MainSource>
+			<DCC_BplOutput>C:\Users\Public\Documents\RAD Studio\7.0\Bpl</DCC_BplOutput>
+			<DCC_DcpOutput>C:\Users\Public\Documents\RAD Studio\7.0\Dcp</DCC_DcpOutput>
 			<ProjectVersion>12.0</ProjectVersion>
 			<Config Condition="'$(Config)'==''">Debug</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>

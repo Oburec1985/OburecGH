@@ -1,0 +1,972 @@
+{
+    "format":  "RecorderLnx.ProjectConfig",
+    "version":  1,
+    "networkBindAddress":  "",
+    "dataSources":  [
+                        {
+                            "sourceId":  "debug.diagnostics",
+                            "sourceAddress":  "",
+                            "moduleType":  "diagnostics",
+                            "enabled":  true,
+                            "defaultPollFrequencyHz":  5,
+                            "specificConfigText":  ""
+                        },
+                        {
+                            "sourceId":  "pxi-mx248:2:14",
+                            "sourceAddress":  "",
+                            "moduleType":  "PXI MX-248",
+                            "enabled":  true,
+                            "defaultPollFrequencyHz":  512000,
+                            "specificConfigText":  "sample-rate-hz=512000;block-samples=256;calibration-mode=reference;channel.1.enabled=True;channel.1.amplifier-enabled=True;channel.1.input-mode=differential;channel.1.range-index=0;channel.1.lpf-index=0;channel.1.icp-current=off;channel.1.calibration-enabled=False;channel.1.input-floating=False;channel.2.enabled=True;channel.2.amplifier-enabled=True;channel.2.input-mode=differential;channel.2.range-index=0;channel.2.lpf-index=0;channel.2.icp-current=off;channel.2.calibration-enabled=False;channel.2.input-floating=False;channel.3.enabled=True;channel.3.amplifier-enabled=True;channel.3.input-mode=differential;channel.3.range-index=0;channel.3.lpf-index=0;channel.3.icp-current=off;channel.3.calibration-enabled=False;channel.3.input-floating=False;channel.4.enabled=True;channel.4.amplifier-enabled=True;channel.4.input-mode=differential;channel.4.range-index=0;channel.4.lpf-index=0;channel.4.icp-current=off;channel.4.calibration-enabled=False;channel.4.input-floating=False;channel.5.enabled=True;channel.5.amplifier-enabled=True;channel.5.input-mode=differential;channel.5.range-index=0;channel.5.lpf-index=0;channel.5.icp-current=off;channel.5.calibration-enabled=False;channel.5.input-floating=False;channel.6.enabled=True;channel.6.amplifier-enabled=True;channel.6.input-mode=differential;channel.6.range-index=0;channel.6.lpf-index=0;channel.6.icp-current=off;channel.6.calibration-enabled=False;channel.6.input-floating=False;channel.7.enabled=True;channel.7.amplifier-enabled=True;channel.7.input-mode=differential;channel.7.range-index=0;channel.7.lpf-index=0;channel.7.icp-current=off;channel.7.calibration-enabled=False;channel.7.input-floating=False;channel.8.enabled=True;channel.8.amplifier-enabled=True;channel.8.input-mode=differential;channel.8.range-index=0;channel.8.lpf-index=0;channel.8.icp-current=off;channel.8.calibration-enabled=False;channel.8.input-floating=False"
+                        }
+                    ],
+    "calibrations":  [
+                         {
+                             "type":  "strain",
+                             "name":  "ГХ 132",
+                             "description":  "Встроенный тензокалькулятор RecorderLnx",
+                             "unitIn":  "мВ",
+                             "unitOut":  "мкстр",
+                             "extrapolation":  true,
+                             "scale":  1,
+                             "offset":  0,
+                             "k1":  1388.8888888888889,
+                             "k2":  0,
+                             "moduleData":  "scheme=0;input=3;output=1;excitationKind=1;excitation=3;gaugeFactor=2;poisson=0,3;youngMPa=200000;resistance=120;deltaT=0;tcr=0;expansion=0;maxMicrostrain=10000",
+                             "points":  [
+
+                                        ]
+                         }
+                     ],
+    "spectrumConfigs":  [
+
+                        ],
+    "algorithmConfigs":  [
+
+                         ],
+    "frequencyBands":  [
+                           {
+                               "name":  "B01",
+                               "kind":  0,
+                               "x1":  10,
+                               "x2":  100,
+                               "terms":  [
+
+                                         ]
+                           },
+                           {
+                               "name":  "B02",
+                               "kind":  0,
+                               "x1":  120,
+                               "x2":  200,
+                               "terms":  [
+
+                                         ]
+                           }
+                       ],
+    "tagGroups":  [
+
+                  ],
+    "tags":  [
+                 {
+                     "id":  1,
+                     "name":  "MemTag",
+                     "address":  "diagnostics.memory",
+                     "unit":  "MB",
+                     "sourceUnit":  "MB",
+                     "description":  "Recorder process memory usage",
+                     "groupPath":  "",
+                     "sourceId":  "debug.diagnostics",
+                     "isVirtual":  true,
+                     "externalWriteAllowed":  true,
+                     "sourceValueMode":  "",
+                     "moduleType":  "diagnostics",
+                     "pollFrequencyHz":  5,
+                     "rangeMin":  -32000,
+                     "rangeMax":  32000,
+                     "autoRange":  true,
+                     "autoUnit":  true,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  false,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  1,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+
+                                             ]
+                 },
+                 {
+                     "id":  28,
+                     "name":  "CpuUsage",
+                     "address":  "diagnostics.cpu",
+                     "unit":  "%",
+                     "sourceUnit":  "%",
+                     "description":  "Recorder process CPU usage",
+                     "groupPath":  "",
+                     "sourceId":  "debug.diagnostics",
+                     "isVirtual":  true,
+                     "externalWriteAllowed":  true,
+                     "sourceValueMode":  "",
+                     "moduleType":  "diagnostics",
+                     "pollFrequencyHz":  5,
+                     "rangeMin":  -32000,
+                     "rangeMax":  32000,
+                     "autoRange":  true,
+                     "autoUnit":  true,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  true,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  1,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+
+                                             ]
+                 },
+                 {
+                     "id":  654,
+                     "name":  "StainTag",
+                     "address":  "virtual.StainTag",
+                     "unit":  "-",
+                     "sourceUnit":  "-",
+                     "description":  "Пользовательский виртуальный скалярный тег",
+                     "groupPath":  "",
+                     "sourceId":  "manual",
+                     "isVirtual":  true,
+                     "externalWriteAllowed":  true,
+                     "sourceValueMode":  "",
+                     "moduleType":  "Virtual",
+                     "pollFrequencyHz":  0,
+                     "rangeMin":  -32000,
+                     "rangeMax":  32000,
+                     "autoRange":  true,
+                     "autoUnit":  false,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  true,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  1,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+                                                 "ГХ 132"
+                                             ]
+                 },
+                 {
+                     "id":  3966898890667575010,
+                     "name":  "SqlDbRecordEnabled",
+                     "address":  "",
+                     "unit":  "",
+                     "sourceUnit":  "",
+                     "description":  "Служебное управление записью SQL DB (\u003e0.5 вкл., \u003c0.5 выкл.)",
+                     "groupPath":  "",
+                     "sourceId":  "Detached: system:sql-db",
+                     "isVirtual":  true,
+                     "externalWriteAllowed":  true,
+                     "sourceValueMode":  "",
+                     "moduleType":  "SQLdb",
+                     "pollFrequencyHz":  0,
+                     "rangeMin":  0,
+                     "rangeMax":  1,
+                     "autoRange":  true,
+                     "autoUnit":  true,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  false,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  1,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+
+                                             ]
+                 },
+                 {
+                     "id":  4165435580668876260,
+                     "name":  "MX-248 [2:14] AIn1",
+                     "address":  "1",
+                     "unit":  "V",
+                     "sourceUnit":  "V",
+                     "description":  "",
+                     "groupPath":  "",
+                     "sourceId":  "pxi-mx248:2:14",
+                     "isVirtual":  false,
+                     "externalWriteAllowed":  false,
+                     "sourceValueMode":  "",
+                     "moduleType":  "",
+                     "pollFrequencyHz":  512000,
+                     "rangeMin":  -32000,
+                     "rangeMax":  32000,
+                     "autoRange":  true,
+                     "autoUnit":  true,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  false,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  200,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+
+                                             ]
+                 },
+                 {
+                     "id":  982307848987361850,
+                     "name":  "MX-248 [2:14] AIn2",
+                     "address":  "2",
+                     "unit":  "V",
+                     "sourceUnit":  "V",
+                     "description":  "",
+                     "groupPath":  "",
+                     "sourceId":  "pxi-mx248:2:14",
+                     "isVirtual":  false,
+                     "externalWriteAllowed":  false,
+                     "sourceValueMode":  "",
+                     "moduleType":  "",
+                     "pollFrequencyHz":  512000,
+                     "rangeMin":  -32000,
+                     "rangeMax":  32000,
+                     "autoRange":  true,
+                     "autoUnit":  true,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  false,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  200,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+
+                                             ]
+                 },
+                 {
+                     "id":  4231371308139331801,
+                     "name":  "MX-248 [2:14] AIn3",
+                     "address":  "3",
+                     "unit":  "V",
+                     "sourceUnit":  "V",
+                     "description":  "",
+                     "groupPath":  "",
+                     "sourceId":  "pxi-mx248:2:14",
+                     "isVirtual":  false,
+                     "externalWriteAllowed":  false,
+                     "sourceValueMode":  "",
+                     "moduleType":  "",
+                     "pollFrequencyHz":  512000,
+                     "rangeMin":  -32000,
+                     "rangeMax":  32000,
+                     "autoRange":  true,
+                     "autoUnit":  true,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  false,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  200,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+
+                                             ]
+                 },
+                 {
+                     "id":  229104594326114569,
+                     "name":  "MX-248 [2:14] AIn4",
+                     "address":  "4",
+                     "unit":  "V",
+                     "sourceUnit":  "V",
+                     "description":  "",
+                     "groupPath":  "",
+                     "sourceId":  "pxi-mx248:2:14",
+                     "isVirtual":  false,
+                     "externalWriteAllowed":  false,
+                     "sourceValueMode":  "",
+                     "moduleType":  "",
+                     "pollFrequencyHz":  512000,
+                     "rangeMin":  -32000,
+                     "rangeMax":  32000,
+                     "autoRange":  true,
+                     "autoUnit":  true,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  false,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  200,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+
+                                             ]
+                 },
+                 {
+                     "id":  2469130642008846107,
+                     "name":  "MX-248 [2:14] AIn5",
+                     "address":  "5",
+                     "unit":  "V",
+                     "sourceUnit":  "V",
+                     "description":  "",
+                     "groupPath":  "",
+                     "sourceId":  "pxi-mx248:2:14",
+                     "isVirtual":  false,
+                     "externalWriteAllowed":  false,
+                     "sourceValueMode":  "",
+                     "moduleType":  "",
+                     "pollFrequencyHz":  512000,
+                     "rangeMin":  -32000,
+                     "rangeMax":  32000,
+                     "autoRange":  true,
+                     "autoUnit":  true,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  false,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  200,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+
+                                             ]
+                 },
+                 {
+                     "id":  1813107730099010226,
+                     "name":  "MX-248 [2:14] AIn6",
+                     "address":  "6",
+                     "unit":  "V",
+                     "sourceUnit":  "V",
+                     "description":  "",
+                     "groupPath":  "",
+                     "sourceId":  "pxi-mx248:2:14",
+                     "isVirtual":  false,
+                     "externalWriteAllowed":  false,
+                     "sourceValueMode":  "",
+                     "moduleType":  "",
+                     "pollFrequencyHz":  512000,
+                     "rangeMin":  -32000,
+                     "rangeMax":  32000,
+                     "autoRange":  true,
+                     "autoUnit":  true,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  false,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  200,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+
+                                             ]
+                 },
+                 {
+                     "id":  3930008916286517591,
+                     "name":  "MX-248 [2:14] AIn7",
+                     "address":  "7",
+                     "unit":  "V",
+                     "sourceUnit":  "V",
+                     "description":  "",
+                     "groupPath":  "",
+                     "sourceId":  "pxi-mx248:2:14",
+                     "isVirtual":  false,
+                     "externalWriteAllowed":  false,
+                     "sourceValueMode":  "",
+                     "moduleType":  "",
+                     "pollFrequencyHz":  512000,
+                     "rangeMin":  -32000,
+                     "rangeMax":  32000,
+                     "autoRange":  true,
+                     "autoUnit":  true,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  false,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  200,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+
+                                             ]
+                 },
+                 {
+                     "id":  1985173314048155572,
+                     "name":  "MX-248 [2:14] AIn8",
+                     "address":  "8",
+                     "unit":  "V",
+                     "sourceUnit":  "V",
+                     "description":  "",
+                     "groupPath":  "",
+                     "sourceId":  "pxi-mx248:2:14",
+                     "isVirtual":  false,
+                     "externalWriteAllowed":  false,
+                     "sourceValueMode":  "",
+                     "moduleType":  "",
+                     "pollFrequencyHz":  512000,
+                     "rangeMin":  -32000,
+                     "rangeMax":  32000,
+                     "autoRange":  true,
+                     "autoUnit":  true,
+                     "hardwareCalibrationEnabled":  false,
+                     "hardwareCalibrationName":  "",
+                     "channelCalibrationEnabled":  false,
+                     "estimates":  {
+                                       "default":  "MO",
+                                       "portionLength":  200,
+                                       "smoothingEnabled":  false,
+                                       "smoothingK":  1,
+                                       "scadaEnabled":  false,
+                                       "enabled":  [
+                                                       "MO"
+                                                   ]
+                                   },
+                     "setpoints":  {
+                                       "hysteresisEnabled":  false,
+                                       "soundUntilEnd":  true,
+                                       "statusChannelEnabled":  false,
+                                       "statusChannelName":  "",
+                                       "rangeControlEnabled":  true,
+                                       "rangeAlarmInfoText":  "",
+                                       "HighAlarm":  {
+                                                         "enabled":  false,
+                                                         "threshold":  10,
+                                                         "alarmInfoText":  "",
+                                                         "color":  255,
+                                                         "outputEnabled":  false,
+                                                         "hysteresisPercent":  0
+                                                     },
+                                       "HighWarning":  {
+                                                           "enabled":  false,
+                                                           "threshold":  5,
+                                                           "alarmInfoText":  "",
+                                                           "color":  65535,
+                                                           "outputEnabled":  false,
+                                                           "hysteresisPercent":  0
+                                                       },
+                                       "LowWarning":  {
+                                                          "enabled":  false,
+                                                          "threshold":  -5,
+                                                          "alarmInfoText":  "",
+                                                          "color":  65535,
+                                                          "outputEnabled":  false,
+                                                          "hysteresisPercent":  0
+                                                      },
+                                       "LowAlarm":  {
+                                                        "enabled":  false,
+                                                        "threshold":  -10,
+                                                        "alarmInfoText":  "",
+                                                        "color":  255,
+                                                        "outputEnabled":  false,
+                                                        "hysteresisPercent":  0
+                                                    }
+                                   },
+                     "calibrationPipeline":  [
+
+                                             ]
+                 }
+             ]
+}

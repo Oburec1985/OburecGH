@@ -1,0 +1,142 @@
+inherited Frm_Device: TFrm_Device
+  Height = 627
+  Width = 858
+  ClientHeight = 627
+  ClientWidth = 858
+  Font.CharSet = RUSSIAN_CHARSET
+  Font.Height = -16
+  Font.Pitch = fpVariable
+  Font.Quality = fqDraft
+  ParentFont = False
+  DesignLeft = 512
+  DesignTop = 218
+  object Label1: TLabel[0]
+    Left = 8
+    Height = 21
+    Top = 32
+    Width = 142
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'Наименование:'
+  end
+  object edName: TEdit[1]
+    Left = 160
+    Height = 29
+    Hint = 'Имя устройства'
+    Top = 24
+    Width = 640
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 0
+    Text = 'edName'
+  end
+  object Label2: TLabel[2]
+    Left = 8
+    Height = 21
+    Top = 128
+    Width = 142
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'Описание:'
+  end
+  object memDescr: TMemo[3]
+    Left = 160
+    Height = 328
+    Hint = 'Описание устройства'
+    Top = 120
+    Width = 640
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Lines.Strings = (
+      'memDescr'
+    )
+    TabOrder = 1
+  end
+  object Label3: TLabel[4]
+    Left = 8
+    Height = 21
+    Top = 79
+    Width = 142
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'Адрес:'
+  end
+  object edAdr: TEdit[5]
+    Left = 160
+    Height = 29
+    Hint = 'Адрес на шине Modbus (Modbus ID)'
+    Top = 71
+    Width = 80
+    TabOrder = 2
+    Text = 'edAdr'
+    OnKeyPress = edAdrKeyPress
+  end
+  object chbInterchange: TCheckBox[6]
+    Left = 160
+    Height = 25
+    Hint = 'Если флаг установлен, то на вкладке "Обмен" отображаются кодограммы относящиеся к устройству'
+    Top = 464
+    Width = 227
+    Anchors = [akLeft, akBottom]
+    Caption = 'Отображать обмен данными'
+    TabOrder = 3
+  end
+  object chbActive: TCheckBox[7]
+    Left = 160
+    Height = 25
+    Hint = 'Снятие флага позволяет исключить устройство из цикла опроса'
+    Top = 504
+    Width = 89
+    Anchors = [akLeft, akBottom]
+    Caption = 'Включить'
+    TabOrder = 4
+  end
+  object chbTries: TCheckBox[8]
+    Left = 160
+    Height = 25
+    Hint = 'Если установлен флаг, то устройство перестанет опрашиваться при обрыве связи через заданное число попыток'
+    Top = 544
+    Width = 262
+    Anchors = [akLeft, akBottom]
+    Caption = 'Отключать при отсутствуии связи'
+    TabOrder = 5
+  end
+  object Label4: TLabel[9]
+    Left = 448
+    Height = 21
+    Top = 548
+    Width = 129
+    Alignment = taRightJustify
+    Anchors = [akLeft, akBottom]
+    AutoSize = False
+    Caption = 'Число попыток:'
+  end
+  object Label5: TLabel[10]
+    Left = 456
+    Height = 21
+    Top = 592
+    Width = 121
+    Alignment = taRightJustify
+    Anchors = [akLeft, akBottom]
+    AutoSize = False
+    Caption = 'Таймер, мс:'
+  end
+  object edTries: TEdit[11]
+    Left = 592
+    Height = 29
+    Hint = 'Число попыток восстановления после потери связи'
+    Top = 540
+    Width = 112
+    Anchors = [akLeft, akBottom]
+    TabOrder = 6
+    Text = 'edTries'
+  end
+  object edTimer: TEdit[12]
+    Left = 592
+    Height = 29
+    Hint = 'Период времени между попытками восстановления связи'
+    Top = 584
+    Width = 112
+    Anchors = [akLeft, akBottom]
+    TabOrder = 7
+    Text = 'edTimer'
+  end
+end

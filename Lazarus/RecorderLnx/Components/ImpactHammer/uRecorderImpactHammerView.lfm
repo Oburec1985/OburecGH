@@ -106,12 +106,12 @@ object RecorderImpactHammerView: TRecorderImpactHammerView
   end
   object pnlCommands: TPanel
     Left = 0
-    Height = 48
+    Height = 80
     Top = 572
     Width = 720
     Align = alBottom
     BevelOuter = bvNone
-    ClientHeight = 48
+    ClientHeight = 80
     ClientWidth = 920
     TabOrder = 3
     object btnStart: TButton
@@ -144,32 +144,52 @@ object RecorderImpactHammerView: TRecorderImpactHammerView
       OnClick = btnStopClick
       TabOrder = 2
     end
-    object btnSavePoints: TButton
+    object btnGeometryBindings: TButton
       Left = 356
       Height = 32
       Top = 8
-      Width = 128
-      Caption = 'Сохранить точки'
-      OnClick = btnSavePointsClick
+      Width = 184
+      Caption = 'Привязка к геометрии'
+      OnClick = btnGeometryBindingsClick
       TabOrder = 3
     end
-    object btnPlayModel: TButton
-      Left = 492
+    object btnRoute: TButton
+      Left = 548
       Height = 32
       Top = 8
-      Width = 104
-      Caption = 'Анимация'
-      OnClick = btnPlayModelClick
+      Width = 128
+      Caption = 'Маршрут FRF'
+      OnClick = btnRouteClick
       TabOrder = 4
     end
-    object btnStopModel: TButton
-      Left = 604
-      Height = 32
-      Top = 8
-      Width = 104
-      Caption = 'Стоп модели'
-      OnClick = btnStopModelClick
+    object chkScenario: TCheckBox
+      Left = 12
+      Top = 48
+      Height = 23
+      Width = 220
+      Caption = 'Работа по сценарию'
+      OnClick = ScenarioChange
       TabOrder = 5
+    end
+    object seRoutePoint: TSpinEdit
+      Left = 236
+      Top = 46
+      Width = 76
+      Height = 26
+      MinValue = 1
+      MaxValue = 1
+      Value = 1
+      Enabled = False
+      OnChange = RoutePointChange
+      TabOrder = 6
+    end
+    object lblRoutePoint: TLabel
+      Left = 322
+      Top = 52
+      Width = 348
+      Height = 20
+      AutoSize = False
+      Caption = 'Точки маршрута не заданы'
     end
   end
   object RightPan: TScrollBox

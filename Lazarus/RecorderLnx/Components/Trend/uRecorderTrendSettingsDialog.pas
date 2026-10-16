@@ -138,8 +138,8 @@ var
   lText: string;
 begin
   lText := Trim(AText);
-  lText := StringReplace(lText, '.', DecimalSeparator, [rfReplaceAll]);
-  lText := StringReplace(lText, ',', DecimalSeparator, [rfReplaceAll]);
+  lText := StringReplace(lText, '.', DefaultFormatSettings.DecimalSeparator, [rfReplaceAll]);
+  lText := StringReplace(lText, ',', DefaultFormatSettings.DecimalSeparator, [rfReplaceAll]);
   Result := StrToFloatDef(lText, ADefault);
 end;
 

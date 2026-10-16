@@ -41,16 +41,33 @@ var
   lHeaderBytes: array[0..15] of Byte;
   lPayload: array[0..255] of Byte;
   lPayloadSize: Integer;
-  lDiscovery: RawByteString;
+  lData: RawByteString;
 begin
   FillChar(lPayload, SizeOf(lPayload), 0);
   PutU32(ACode, lPayload, 0);
   if ADiscovery then
   begin
-    lDiscovery := '0,3253,524,MX-248 PXI Card,1,2,14';
-    lPayloadSize := 16 + Length(lDiscovery);
-    PutU32(Length(lDiscovery), lPayload, 12);
-    Move(PAnsiChar(lDiscovery)^, lPayload[16], Length(lDiscovery));
+    lData := '0,3253,524,MX-248 PXI Card,1,2,14';
+    lPayloadSize := 16 + Length(lData);
+    PutU32(Length(lData), lPayload, 12);
+    Move(PAnsiChar(lData)^, lPayload[16], Length(lData));
+  end
+  else if ARequest.Command=CPxiMx248CommandReadProperties then
+  begin
+    lData:='schema=mx248.live.v1;sample-rate-hz=512000;'+
+      'supported-rates-hz=422,844,512000;rtsi-sev=0;rtsi-clock=1;'+
+      'rtsi-sync=0;trigger-mode=0;trigger-source=0;'+
+      'ch1.sensitivity=26370.54';
+    lPayloadSize:=16+Length(lData);
+    PutU32(Length(lData),lPayload,12);
+    Move(PAnsiChar(lData)^,lPayload[16],Length(lData))
+  end
+  else if ARequest.Command=CPxiMx248CommandZeroBalance then
+  begin
+    lData:='ch1=0.125;ch8=-0.25';
+    lPayloadSize:=16+Length(lData);
+    PutU32(Length(lData),lPayload,12);
+    Move(PAnsiChar(lData)^,lPayload[16],Length(lData))
   end
   else if ABlock then
   begin

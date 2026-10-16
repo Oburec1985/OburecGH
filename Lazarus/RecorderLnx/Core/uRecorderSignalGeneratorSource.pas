@@ -86,7 +86,7 @@ end;
 procedure TRecorderSignalGeneratorSource.SyncRuntimeConfig;
 var
   I: Integer;
-  lPhaseDeltaDeg: Double;
+  lPhaseDeltaDeg, lRunningSampleRateHz: Double;
   lSignal: TRuntimeSignal;
   lRevision: LongInt;
 begin
@@ -98,7 +98,9 @@ begin
     begin
       lSignal := TRuntimeSignal(fSignals[I]);
       lPhaseDeltaDeg := -lSignal.AppliedPhaseDeg;
+      lRunningSampleRateHz := lSignal.Config.SampleRateHz;
       fComponent.SnapshotSignal(I, lSignal.Config);
+      lSignal.Config.SampleRateHz := lRunningSampleRateHz;
       lPhaseDeltaDeg := lPhaseDeltaDeg + lSignal.Config.PhaseDeg;
       if lPhaseDeltaDeg <> 0.0 then
         lSignal.PhaseRad := lSignal.PhaseRad + DegToRad(lPhaseDeltaDeg);
@@ -115,13 +117,24 @@ end;
 
 procedure TRecorderSignalGeneratorSource.Start;
 var
-  I: Integer;
+  I, lCount: Integer;
   lSignal: TRuntimeSignal;
 begin
   fTimeSec := 0.0;
   for I := 0 to fSignals.Count - 1 do
   begin
     lSignal := TRuntimeSignal(fSignals[I]);
+    if (fComponent <> nil) and (I < fComponent.SignalCount) then
+      fComponent.SnapshotSignal(I, lSignal.Config);
+    lCount := Max(1, Round(lSignal.Config.SampleRateHz *
+      UpdateTimeMs / 1000.0));
+    SetLength(lSignal.Times, lCount);
+    SetLength(lSignal.Values, lCount);
+    if lSignal.Tag <> nil then
+    begin
+      lSignal.Tag.PollFrequencyHz := lSignal.Config.SampleRateHz;
+      lSignal.Tag.SignalBuffer.ConfigureBlockRing(lCount, 8);
+    end;
     lSignal.PhaseRad := DegToRad(lSignal.Config.PhaseDeg);
     lSignal.AppliedPhaseDeg := lSignal.Config.PhaseDeg;
     lSignal.ElapsedSec := 0.0;
@@ -132,7 +145,7 @@ end;
 procedure TRecorderSignalGeneratorSource.DoCreateTags(
   ARegistry: TRecorderTagRegistry);
 var
-  I: Integer;
+  I, lBlockSamples: Integer;
   lSignal: TRuntimeSignal;
 begin
   for I := 0 to fSignals.Count - 1 do
@@ -148,6 +161,9 @@ begin
     lSignal.Tag.IsVirtual := True;
     lSignal.Tag.UnitName := 'a.u.';
     lSignal.Tag.PollFrequencyHz := lSignal.Config.SampleRateHz;
+    lBlockSamples := Max(1, Round(lSignal.Config.SampleRateHz *
+      UpdateTimeMs / 1000.0));
+    lSignal.Tag.SignalBuffer.ConfigureBlockRing(lBlockSamples, 8);
   end;
 end;
 
@@ -220,7 +236,7 @@ begin
           Floor(lSignal.PhaseRad / (2.0 * Pi)) * 2.0 * Pi;
       lSignal.ElapsedSec := lSignal.ElapsedSec + lDt;
     end;
-    Registry.PublishBlock(lSignal.Tag.Name, lSignal.Times, lSignal.Values,
+    Registry.PublishBlock(lSignal.Tag, lSignal.Times, lSignal.Values,
       lCount, True);
   end;
   fTimeSec := fTimeSec + UpdateTimeMs / 1000.0;

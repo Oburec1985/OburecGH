@@ -23,9 +23,16 @@ type
   IPxiMx248SettingsService = interface
     ['{96BD307E-6DD9-4E07-A214-8D457CCADDC2}']
     function ApplyDraft(const ASourceId: string; AChassis, ASlot: Integer;
-      const AProperties: string): TRecorderOperationResult;
+      const AProperties: string): TRcOperationResult;
     function Discover(out ADevices: TPxiMx248DiscoveredDevices):
-      TRecorderOperationResult;
+      TRcOperationResult;
+    function ReadLiveProperties(AChassis, ASlot: Integer;
+      out AProperties: string): TRcOperationResult;
+    function ApplyLiveDraft(AChassis, ASlot: Integer;
+      const AProperties: string; out AReadback: string):
+      TRcOperationResult;
+    function ZeroBalance(AChassis, ASlot: Integer; AChannelMask: Cardinal;
+      out AValues: string): TRcOperationResult;
   end;
 
 implementation

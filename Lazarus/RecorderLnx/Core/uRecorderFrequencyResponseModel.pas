@@ -106,7 +106,7 @@ type
 
   TRecorderFrequencyResponseFactory = class(TRecorderComponentFactoryBase)
   public
-    constructor Create;
+    constructor Create; reintroduce;
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
       const AContext: TRecorderComponentCreateContext); override;
   end;
@@ -477,10 +477,8 @@ begin Result := ResolveTag(ARegistry, fFrequencyTagId, fFrequencyTagName); if Re
 
 constructor TRecorderFrequencyResponseFactory.Create;
 begin
-  inherited Create(TRecorderFrequencyResponseComponent.TypeId, 'АФЧХ',
-    TRecorderFrequencyResponseComponent, 420, 300, False);
-  ConfigurePalette('АФЧХ', 'Добавить АЧХ, фазу или передаточную характеристику',
-    'frequency-response', 45, rppGroup, CRecorderPaletteGroupCharts);
+  inherited Create(TRecorderFrequencyResponseComponent.TypeId, 'АФЧХ', TRecorderFrequencyResponseComponent, 420, 300, False);
+  ConfigurePalette('АФЧХ', 'Добавить АЧХ, фазу или передаточную характеристику','frequency-response', 45, rppGroup, CRecorderPaletteGroupCharts);
 end;
 
 procedure TRecorderFrequencyResponseFactory.ConfigureNewComponent(

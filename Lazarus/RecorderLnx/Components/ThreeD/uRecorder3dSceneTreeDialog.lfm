@@ -43,6 +43,7 @@ object Recorder3dSceneTreeDialog: TRecorder3dSceneTreeDialog
         'Пластина (балка)'
         'Плоскость'
         'Прямая (линия)'
+        'Облако точек'
       )
       Style = csDropDownList
       TabOrder = 0

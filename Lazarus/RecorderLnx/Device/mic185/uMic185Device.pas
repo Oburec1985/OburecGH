@@ -18,7 +18,7 @@ uses
   uMic185MebiusTcpProtocol, uMic185MebiusTypes, uMic185Constants;
 
 type
-  TRecorderMic185Device = class(TRecorderDevice)
+  TRecorderMic185Device = class(TRcDevice)
   private
     fClient: TRecorderMebiusTcpClient;
     fDeviceSerial: LongWord;
@@ -60,7 +60,7 @@ type
     { Частота канала для создания тегов и буферов RecorderLnx. }
     function BuildLogicalChannelFrequency(AIndex: Integer): Double;
   protected
-    { Обновляет общие параметры TRecorderDevice после чтения конфигурации. }
+    { Обновляет общие параметры TRcDevice после чтения конфигурации. }
     procedure ReadDeviceParameters; override;
   public
     constructor Create(const ADeviceId, AName: string); override;
@@ -86,7 +86,7 @@ type
     function TryProgramDevice(out AErrorText: string): Boolean;
     procedure ProgramDevice; override;
     { Принимает настройки каналов от RecorderLnx без изменения базового
-      интерфейса TRecorderDevice. }
+      интерфейса TRcDevice. }
     procedure ApplyChannelProgramSettings(
       const ASettings: TMic185ChannelProgramSettingsArray;
       const AGroupAddition: TMic185GroupAdditionArray;
@@ -103,7 +103,7 @@ type
     procedure Stop; override;
     { Читает очередной блок измерений и перекладывает его в acquisition block. }
     function ReadBlock(ATimeoutMs: Cardinal;
-      out ABlock: TRecorderAcquisitionBlock): Boolean; override;
+      out ABlock: TRcAcquisitionBlock): Boolean; override;
     property SoftVersion: LongWord read fSoftVersion;
     property DeviceSerial: LongWord read fDeviceSerial;
     property MeasChannelCount: Integer read fMeasChannelCount;
@@ -916,7 +916,7 @@ begin
 end;
 
 function TRecorderMic185Device.ReadBlock(ATimeoutMs: Cardinal;
-  out ABlock: TRecorderAcquisitionBlock): Boolean;
+  out ABlock: TRcAcquisitionBlock): Boolean;
 var
   I, J: Integer;
   lGroup: Integer;

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lazarus Integrations"
+  short_description: "Add DB, REST, and WebView integrations to Lazarus apps."
+  default_prompt: "Use $lazarus-integrations to add database, REST API, or embedded browser features to Lazarus apps."

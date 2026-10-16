@@ -13,7 +13,7 @@ unit uRecorderDriverContractsV2;
 interface
 
 type
-  TRecorderOperationCode = (
+  TRcOperationCode = (
     rocOk,
     rocInvalidArgument,
     rocInvalidState,
@@ -24,13 +24,13 @@ type
     rocInternal
   );
 
-  TRecorderOperationResult = record
-    Code: TRecorderOperationCode;
+  TRcOperationResult = record
+    Code: TRcOperationCode;
     Stage: string;
     MessageText: string;
-    class function Success: TRecorderOperationResult; static;
-    class function Failure(ACode: TRecorderOperationCode;
-      const AStage, AMessage: string): TRecorderOperationResult; static;
+    class function Success: TRcOperationResult; static;
+    class function Failure(ACode: TRcOperationCode;
+      const AStage, AMessage: string): TRcOperationResult; static;
     function IsSuccess: Boolean;
   end;
 
@@ -61,31 +61,31 @@ type
     ['{EE9FF035-222A-4C3A-BDD1-21136734690F}']
     function GetPropertyDescriptors: TRecorderPropertyDescriptorArray;
     function GetProperties(const ARequest: string; out AResponse: string):
-      TRecorderOperationResult;
+      TRcOperationResult;
     { Calculates a complete candidate snapshot without mutation or device I/O. }
     function CalcProperties(const AProperties: string; out AResponse: string):
-      TRecorderOperationResult;
-    function SetProperties(const AProperties: string): TRecorderOperationResult;
+      TRcOperationResult;
+    function SetProperties(const AProperties: string): TRcOperationResult;
   end;
 
 implementation
 
-class function TRecorderOperationResult.Success: TRecorderOperationResult;
+class function TRcOperationResult.Success: TRcOperationResult;
 begin
   Result.Code := rocOk;
   Result.Stage := '';
   Result.MessageText := '';
 end;
 
-class function TRecorderOperationResult.Failure(ACode: TRecorderOperationCode;
-  const AStage, AMessage: string): TRecorderOperationResult;
+class function TRcOperationResult.Failure(ACode: TRcOperationCode;
+  const AStage, AMessage: string): TRcOperationResult;
 begin
   Result.Code := ACode;
   Result.Stage := AStage;
   Result.MessageText := AMessage;
 end;
 
-function TRecorderOperationResult.IsSuccess: Boolean;
+function TRcOperationResult.IsSuccess: Boolean;
 begin
   Result := Code = rocOk;
 end;
