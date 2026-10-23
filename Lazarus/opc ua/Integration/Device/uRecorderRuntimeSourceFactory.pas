@@ -1,0 +1,522 @@
+unit uRecorderRuntimeSourceFactory;
+
+{
+  Композиция runtime-источников RecorderLnx.
+
+  Этот модуль является границей между универсальной оболочкой приложения и
+  реализациями устройств. UI передаёт модель Recorder и получает полностью
+  собранный TRecorderDataSourceManager, не зная типов MIC/MCbus.
+}
+
+{$mode objfpc}{$H+}
+{$codepage UTF8}
+
+interface
+
+uses
+  Classes, uRecorder, uRecorderFormModel;
+
+type
+  TRecorderRuntimeSourceLogEvent = procedure(const AMessage: string) of object;
+
+procedure RecorderBuildRuntimeSources(ARecorder: TRecorder;
+  ADataUpdateMs: Cardinal; ALog: TRecorderRuntimeSourceLogEvent = nil;
+  AForms: TRecorderFormManager = nil);
+procedure RecorderReplaceRuntimeSource(ARecorder: TRecorder;
+  const ASourceId: string; ADataUpdateMs: Cardinal;
+  ALog: TRecorderRuntimeSourceLogEvent = nil;
+  APrepareNow: Boolean = True);
+
+implementation
+
+uses
+  SysUtils, Math, uRecorderTags, uRecorderDataSources,
+  uRecorderConfiguredDataSources, uRecorderMic140DataSource,
+  uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig,
+  uRecorderMic140Utils, uRecorderMic185DataSource, uRecorderMcbusDataSource,
+  uRecorderOpcUaTypes, uRecorderOpcUaFactory, uRecorderSqlDataSource,
+  uRecorderSignalGeneratorModel, uRecorderSignalGeneratorSource,
+  uRecorderPxiMx248ConfiguredEditor, uRecorderPxiMx248Factory,
+  uModbusCoreTypes, uRecorderModbusFactory;
+
+const
+  CMeraSourcePrefix = 'Mera file: ';
+
+procedure Log(ALog: TRecorderRuntimeSourceLogEvent; const AText: string);
+begin
+  if Assigned(ALog) then
+    ALog(AText);
+end;
+
+procedure FreeGroupedLists(AList: TStringList);
+var
+  I: Integer;
+begin
+  if AList = nil then
+    Exit;
+  for I := 0 to AList.Count - 1 do
+    AList.Objects[I].Free;
+  AList.Free;
+end;
+
+function EnsureGroup(AList: TStringList; const AKey: string): TStringList;
+var
+  lIndex: Integer;
+begin
+  lIndex := AList.IndexOf(AKey);
+  if lIndex < 0 then
+  begin
+    Result := TStringList.Create;
+    Result.CaseSensitive := False;
+    AList.AddObject(AKey, Result);
+  end
+  else
+    Result := TStringList(AList.Objects[lIndex]);
+end;
+
+function RecorderMic140TagDefinesScanFrequency(ATag: TRecorderTag): Boolean;
+var
+  lChannelNumber: Integer;
+begin
+  Result := (ATag <> nil) and (ATag.PollFrequencyHz > 0) and
+    (not RecorderMic140IsUtsAddress(ATag.Address)) and
+    (Pos('diagnostics.', LowerCase(Trim(ATag.Address))) <> 1) and
+    ParseMic140ChannelNumber(ATag.Address, lChannelNumber);
+end;
+
+procedure RecorderBuildRuntimeSources(ARecorder: TRecorder;
+  ADataUpdateMs: Cardinal; ALog: TRecorderRuntimeSourceLogEvent;
+  AForms: TRecorderFormManager);
+var
+  I: Integer;
+  K: Integer;
+  lChannelCount: Integer;
+  lChannelNumber: Integer;
+  lConfigured: TRecorderConfiguredDataSource;
+  lFileName: string;
+  lFiles: TStringList;
+  lHost: string;
+  lMicOutputMode: TRecorderMic140OutputMode;
+  lMicSources: TStringList;
+  lMic185Sources: TStringList;
+  lMcbusSources: TStringList;
+  lPollFrequencyHz: Double;
+  lPort: Word;
+  lPage: TRecorderFormPage;
+  lGenerator: TRecorderSignalGeneratorComponent;
+  lSource: IRecorderDataSource;
+  lSpecificConfigText: string;
+  lTag: TRecorderTag;
+  lTagNames: TStringList;
+  J: Integer;
+begin
+  if (ARecorder = nil) or (ARecorder.DataSources = nil) or
+    (ARecorder.TagRegistry = nil) then
+    Exit;
+  if ADataUpdateMs = 0 then
+    ADataUpdateMs := 300;
+
+  ARecorder.DataSources.Clear;
+  lSource := TRecorderDiagnosticsDataSource.Create('debug.diagnostics',
+    ADataUpdateMs, 'MemTag', 'CpuUsage');
+  ARecorder.DataSources.AddSource(lSource);
+
+  lFiles := TStringList.Create;
+  lMicSources := TStringList.Create;
+  lMic185Sources := TStringList.Create;
+  lMcbusSources := TStringList.Create;
+  try
+    lFiles.CaseSensitive := False;
+    lMicSources.CaseSensitive := False;
+    lMic185Sources.CaseSensitive := False;
+    lMcbusSources.CaseSensitive := False;
+
+    for I := 0 to ARecorder.TagRegistry.TagCount - 1 do
+    begin
+      lTag := ARecorder.TagRegistry.Tags[I];
+      { Detached tags intentionally preserve the old hardware address for a
+        possible later relink.  They must not recreate a runtime source: the
+        source was explicitly deleted by the user. }
+      if RecorderIsDetachedTagSource(lTag.SourceId) then
+        Continue;
+      if Pos(CMeraSourcePrefix, lTag.SourceId) = 1 then
+      begin
+        lFileName := Trim(Copy(lTag.SourceId,
+          Length(CMeraSourcePrefix) + 1, MaxInt));
+        if lFileName = '' then
+          Continue;
+        lTagNames := EnsureGroup(lFiles, lFileName);
+        if lTagNames.IndexOf(lTag.Address) < 0 then
+          lTagNames.Add(lTag.Address);
+        { Address в сохранённом проекте содержит индекс источника в дереве
+          (например, "5- 2- 1"), а MERA-файл хранит исходный адрес
+          ("1- 2- 1"). Имя тега не зависит от позиции источника и поэтому
+          является основной устойчивой связью с сигналом файла. }
+        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
+          lTagNames.Add(lTag.Name);
+      end
+      else if TryParseRecorderMic140SourceId(lTag.SourceId, lHost, lPort) then
+      begin
+        lTagNames := EnsureGroup(lMicSources, lTag.SourceId);
+        if (lTag.Address <> '') and (lTagNames.IndexOf(lTag.Address) < 0) then
+          lTagNames.Add(lTag.Address);
+        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
+          lTagNames.Add(lTag.Name);
+      end
+      else if TryParseRecorderMic185SourceId(lTag.SourceId, lHost, lPort) then
+      begin
+        lTagNames := EnsureGroup(lMic185Sources, lTag.SourceId);
+        if (lTag.Address <> '') and (lTagNames.IndexOf(lTag.Address) < 0) then
+          lTagNames.Add(lTag.Address);
+        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
+          lTagNames.Add(lTag.Name);
+      end
+      else if TryParseRecorderMc032SourceId(lTag.SourceId, lHost, lPort) then
+      begin
+        lTagNames := EnsureGroup(lMcbusSources, lTag.SourceId);
+        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
+          lTagNames.Add(lTag.Name);
+      end;
+    end;
+
+    for I := 0 to lFiles.Count - 1 do
+    begin
+      lTagNames := TStringList(lFiles.Objects[I]);
+      lSource := TRecorderMeraFileDataSource.Create(CMeraSourcePrefix +
+        lFiles[I], lFiles[I], ADataUpdateMs, lTagNames, 0);
+      ARecorder.DataSources.AddSource(lSource,
+        RecorderConfiguredDataSourceEnabled(ARecorder.TagRegistry,
+          CMeraSourcePrefix + lFiles[I]));
+      Log(ALog, Format('MERA playback source configured: %s (%d channels).',
+        [ExtractFileName(lFiles[I]), lTagNames.Count]));
+    end;
+
+    for I := 0 to lMicSources.Count - 1 do
+    begin
+      if not RecorderMic140ResolveEndpoint(ARecorder.TagRegistry, lMicSources[I],
+        lHost, lPort) then
+        Continue;
+      lTagNames := TStringList(lMicSources.Objects[I]);
+      lChannelCount := MIC140DefaultChannelCount;
+      lPollFrequencyHz := MIC140DefaultPollFrequencyHz;
+      lMicOutputMode := momMillivolts;
+      for J := 0 to lTagNames.Count - 1 do
+        if (not RecorderMic140IsUtsAddress(lTagNames[J])) and
+          ParseMic140ChannelNumber(lTagNames[J], lChannelNumber) and
+          (lChannelNumber > lChannelCount) then
+          lChannelCount := MIC140MaxChannelCount;
+      for J := 0 to ARecorder.TagRegistry.TagCount - 1 do
+      begin
+        lTag := ARecorder.TagRegistry.Tags[J];
+        if SameText(lTag.SourceId, lMicSources[I]) and
+          RecorderMic140TagDefinesScanFrequency(lTag) then
+        begin
+          lPollFrequencyHz := lTag.PollFrequencyHz;
+          if Trim(lTag.SourceValueMode) <> '' then
+            lMicOutputMode := RecorderMic140ConfigNameToOutputMode(
+              lTag.SourceValueMode);
+          Break;
+        end;
+      end;
+      lSource := TRecorderMic140DataSource.Create(
+        RecorderMic140SourceId(lHost, lPort), lHost, lPort,
+        lChannelCount, lPollFrequencyHz, ADataUpdateMs, lTagNames,
+        lMicOutputMode);
+      ARecorder.DataSources.AddSource(lSource,
+        RecorderConfiguredDataSourceEnabled(ARecorder.TagRegistry,
+          lMicSources[I]));
+      Log(ALog, Format('MIC-140 source configured: %s:%d (%d channels).',
+        [lHost, lPort, lChannelCount]));
+    end;
+
+    for I := 0 to lMic185Sources.Count - 1 do
+    begin
+      if not TryParseRecorderMic185SourceId(lMic185Sources[I], lHost, lPort) then
+        Continue;
+      lTagNames := TStringList(lMic185Sources.Objects[I]);
+      lPollFrequencyHz := MIC185DefaultPollFrequencyHz;
+      for J := 0 to ARecorder.TagRegistry.TagCount - 1 do
+      begin
+        lTag := ARecorder.TagRegistry.Tags[J];
+        if SameText(lTag.SourceId, lMic185Sources[I]) and
+          (lTag.PollFrequencyHz > 0) then
+        begin
+          lPollFrequencyHz := lTag.PollFrequencyHz;
+          Break;
+        end;
+      end;
+      lSource := TRecorderMic185DataSource.Create(lMic185Sources[I], lHost,
+        lPort, lPollFrequencyHz, ADataUpdateMs, lTagNames);
+      ARecorder.DataSources.AddSource(lSource,
+        RecorderConfiguredDataSourceEnabled(ARecorder.TagRegistry,
+          lMic185Sources[I]));
+      Log(ALog, Format('MIC183/185 source configured: %s:%d (%d channels).',
+        [lHost, lPort, lTagNames.Count]));
+    end;
+
+    for I := 0 to lMcbusSources.Count - 1 do
+    begin
+      if not TryParseRecorderMc032SourceId(lMcbusSources[I], lHost, lPort) then
+        Continue;
+      lTagNames := TStringList(lMcbusSources.Objects[I]);
+      lSpecificConfigText := '';
+      lConfigured := RecorderConfiguredDataSourcesFind(ARecorder.TagRegistry,
+        lMcbusSources[I]);
+      if lConfigured <> nil then
+        lSpecificConfigText := lConfigured.SpecificConfigText;
+      lPollFrequencyHz := 0;
+      for J := 0 to ARecorder.TagRegistry.TagCount - 1 do
+      begin
+        lTag := ARecorder.TagRegistry.Tags[J];
+        if SameText(lTag.SourceId, lMcbusSources[I]) and
+          (lTag.PollFrequencyHz > 0) then
+          lPollFrequencyHz := Max(lPollFrequencyHz, lTag.PollFrequencyHz);
+      end;
+      if (lPollFrequencyHz <= 0) and (lConfigured <> nil) and
+        (lConfigured.DefaultPollFrequencyHz > 0) then
+        lPollFrequencyHz := lConfigured.DefaultPollFrequencyHz;
+      if lPollFrequencyHz <= 0 then
+        lPollFrequencyHz := 57600;
+      lSource := TRecorderMcbusDataSource.Create(lMcbusSources[I], lHost,
+        lPort, lPollFrequencyHz, ADataUpdateMs, lTagNames,
+        lSpecificConfigText);
+      ARecorder.DataSources.AddSource(lSource,
+        RecorderConfiguredDataSourceEnabled(ARecorder.TagRegistry,
+          lMcbusSources[I]));
+      Log(ALog, Format('MC-032/MC-201 source configured: %s:%d (%d channels).',
+        [lHost, lPort, lTagNames.Count]));
+    end;
+
+    { OPC UA server sources may export existing Recorder tags and therefore
+      legitimately have no tags owned by their SourceId. Build OPC sources
+      from the canonical configured-source list, not from tag grouping. }
+    for I := 0 to ARecorder.TagRegistry.ConfiguredDataSources.Count - 1 do
+    begin
+      lConfigured := TRecorderConfiguredDataSource(
+        ARecorder.TagRegistry.ConfiguredDataSources[I]);
+      if SameText(lConfigured.ModuleType, CRcMx248ModuleType) then
+      begin
+        lSource := RecorderCreatePxiMx248DataSource(lConfigured, ADataUpdateMs);
+        ARecorder.DataSources.AddSource(lSource, lConfigured.Enabled);
+        Log(ALog, 'PXI MX-248 source configured: ' + lConfigured.SourceId);
+        Continue;
+      end;
+      if RecorderIsModbusSource(lConfigured.SourceId) then
+      begin
+        lSource := RecorderCreateModbusDataSource(lConfigured, ADataUpdateMs);
+        ARecorder.DataSources.AddSource(lSource, lConfigured.Enabled);
+        Log(ALog, 'Modbus source configured: ' + lConfigured.SourceId);
+        Continue;
+      end;
+      if not RecorderIsOpcUaSource(lConfigured.SourceId,
+        lConfigured.ModuleType) then
+      begin
+        if not SameText(lConfigured.ModuleType,
+          CRecorderSqlSourceModuleType) then Continue;
+        lSource := TRecorderSqlDataSource.Create(
+          ARecorder.SqlDbManager.ConfigFileName,
+          lConfigured.SpecificConfigText, ADataUpdateMs);
+      end
+      else
+        lSource := RecorderCreateOpcUaDataSource(lConfigured.SourceId,
+          lConfigured.SpecificConfigText, ADataUpdateMs);
+      ARecorder.DataSources.AddSource(lSource, lConfigured.Enabled);
+      Log(ALog, lConfigured.ModuleType + ' source configured: ' +
+        lConfigured.SourceId);
+    end;
+  finally
+    FreeGroupedLists(lFiles);
+    FreeGroupedLists(lMicSources);
+    FreeGroupedLists(lMic185Sources);
+    FreeGroupedLists(lMcbusSources);
+  end;
+
+  if AForms <> nil then
+    for I := 0 to AForms.PageCount - 1 do
+    begin
+      lPage := AForms.Pages[I];
+      for K := 0 to lPage.ComponentCount - 1 do
+        if lPage.Components[K] is TRecorderSignalGeneratorComponent then
+        begin
+          lGenerator := TRecorderSignalGeneratorComponent(lPage.Components[K]);
+          if not lGenerator.Enabled then Continue;
+          lSource := TRecorderSignalGeneratorSource.Create(
+            'signal-generator:' + lPage.Id + ':' + lGenerator.Id,
+            ADataUpdateMs, lGenerator);
+          ARecorder.DataSources.AddSource(lSource, True);
+          Log(ALog, Format('Signal generator configured: %s (%d signals).',
+            [lGenerator.Name, lGenerator.SignalCount]));
+        end;
+    end;
+
+  ARecorder.DataSources.ConfigureTagsAll(ARecorder.TagRegistry,
+    ARecorder.Messages);
+end;
+
+procedure RecorderReplaceRuntimeSource(ARecorder: TRecorder;
+  const ASourceId: string; ADataUpdateMs: Cardinal;
+  ALog: TRecorderRuntimeSourceLogEvent; APrepareNow: Boolean);
+var
+  I: Integer;
+  lChannelCount: Integer;
+  lChannelNumber: Integer;
+  lConfigured: TRecorderConfiguredDataSource;
+  lFileName: string;
+  lHost: string;
+  lMicOutputMode: TRecorderMic140OutputMode;
+  lPollFrequencyHz: Double;
+  lPort: Word;
+  lSource: IRecorderDataSource;
+  lSpecificConfigText: string;
+  lTag: TRecorderTag;
+  lTagNames: TStringList;
+begin
+  if (ARecorder = nil) or (ARecorder.DataSources = nil) or
+    (ARecorder.TagRegistry = nil) or (Trim(ASourceId) = '') then
+    Exit;
+  if ADataUpdateMs = 0 then
+    ADataUpdateMs := 300;
+
+  lConfigured := RecorderConfiguredDataSourcesFind(ARecorder.TagRegistry,
+    ASourceId);
+  if lConfigured = nil then
+  begin
+    ARecorder.DataSources.RemoveSource(ASourceId);
+    Exit;
+  end;
+
+  lTagNames := TStringList.Create;
+  try
+    lTagNames.CaseSensitive := False;
+    for I := 0 to ARecorder.TagRegistry.TagCount - 1 do
+    begin
+      lTag := ARecorder.TagRegistry.Tags[I];
+      if not SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
+        RecorderNormalizeTagSourceId(ASourceId)) then
+        Continue;
+      if Pos(CMeraSourcePrefix, ASourceId) = 1 then
+      begin
+        if lTagNames.IndexOf(lTag.Address) < 0 then
+          lTagNames.Add(lTag.Address);
+      end
+      else
+      begin
+        if (lTag.Address <> '') and (lTagNames.IndexOf(lTag.Address) < 0) then
+          lTagNames.Add(lTag.Address);
+        if (lTag.Name <> '') and (lTagNames.IndexOf(lTag.Name) < 0) then
+          lTagNames.Add(lTag.Name);
+      end;
+    end;
+
+    if Pos(CMeraSourcePrefix, ASourceId) = 1 then
+    begin
+      lFileName := Trim(Copy(ASourceId, Length(CMeraSourcePrefix) + 1, MaxInt));
+      lSource := TRecorderMeraFileDataSource.Create(ASourceId, lFileName,
+        ADataUpdateMs, lTagNames, 0);
+    end
+    else if RecorderMic140ResolveEndpoint(ARecorder.TagRegistry, ASourceId,
+      lHost, lPort) then
+    begin
+      lChannelCount := MIC140DefaultChannelCount;
+      lPollFrequencyHz := MIC140DefaultPollFrequencyHz;
+      lMicOutputMode := momMillivolts;
+      for I := 0 to ARecorder.TagRegistry.TagCount - 1 do
+      begin
+        lTag := ARecorder.TagRegistry.Tags[I];
+        if not SameText(lTag.SourceId, ASourceId) then
+          Continue;
+        if (not RecorderMic140IsUtsAddress(lTag.Address)) and
+          ParseMic140ChannelNumber(lTag.Address, lChannelNumber) and
+          (lChannelNumber > lChannelCount) then
+          lChannelCount := MIC140MaxChannelCount;
+        if RecorderMic140TagDefinesScanFrequency(lTag) then
+          lPollFrequencyHz := lTag.PollFrequencyHz;
+        if RecorderMic140TagDefinesScanFrequency(lTag) and
+          (Trim(lTag.SourceValueMode) <> '') then
+          lMicOutputMode := RecorderMic140ConfigNameToOutputMode(
+            lTag.SourceValueMode);
+      end;
+      lSource := TRecorderMic140DataSource.Create(
+        RecorderMic140SourceId(lHost, lPort), lHost, lPort, lChannelCount,
+        lPollFrequencyHz, ADataUpdateMs, lTagNames, lMicOutputMode);
+    end
+    else if TryParseRecorderMic185SourceId(ASourceId, lHost, lPort) then
+    begin
+      { An empty explicit tag list means that the user removed every MIC-185
+        channel.  Do not instantiate the runtime source: its legacy empty-list
+        convention means "all channels" and ConfigureTags would recreate the
+        tags that have just been deleted.  Keep the configured source itself so
+        it remains available in the hardware tree. }
+      if lTagNames.Count = 0 then
+      begin
+        ARecorder.DataSources.RemoveSource(ASourceId);
+        Log(ALog, 'MIC183/185 runtime source removed: no selected channels.');
+        Exit;
+      end;
+      { The channel model is authoritative.  A stale configured-source
+        default must not reset an imported/edited MIC185 frequency when the
+        runtime source is rebuilt (notably before a device reset). }
+      lPollFrequencyHz := 0;
+      for I := 0 to ARecorder.TagRegistry.TagCount - 1 do
+      begin
+        lTag := ARecorder.TagRegistry.Tags[I];
+        if SameText(RecorderNormalizeTagSourceId(lTag.SourceId),
+          RecorderNormalizeTagSourceId(ASourceId)) and
+          (lTag.PollFrequencyHz > 0) then
+        begin
+          lPollFrequencyHz := lTag.PollFrequencyHz;
+          Break;
+        end;
+      end;
+      if (lPollFrequencyHz <= 0) and
+        (lConfigured.DefaultPollFrequencyHz > 0) then
+        lPollFrequencyHz := lConfigured.DefaultPollFrequencyHz;
+      if lPollFrequencyHz <= 0 then
+        lPollFrequencyHz := MIC185DefaultPollFrequencyHz;
+      lConfigured.DefaultPollFrequencyHz := lPollFrequencyHz;
+      lSource := TRecorderMic185DataSource.Create(ASourceId, lHost, lPort,
+        lPollFrequencyHz, ADataUpdateMs, lTagNames);
+    end
+    else if TryParseRecorderMc032SourceId(ASourceId, lHost, lPort) then
+    begin
+      lPollFrequencyHz := 0;
+      lSpecificConfigText := lConfigured.SpecificConfigText;
+      for I := 0 to ARecorder.TagRegistry.TagCount - 1 do
+      begin
+        lTag := ARecorder.TagRegistry.Tags[I];
+        if SameText(lTag.SourceId, ASourceId) and
+          (lTag.PollFrequencyHz > 0) then
+          lPollFrequencyHz := Max(lPollFrequencyHz, lTag.PollFrequencyHz);
+      end;
+      if (lPollFrequencyHz <= 0) and
+        (lConfigured.DefaultPollFrequencyHz > 0) then
+        lPollFrequencyHz := lConfigured.DefaultPollFrequencyHz;
+      if lPollFrequencyHz <= 0 then
+        lPollFrequencyHz := 57600;
+      lSource := TRecorderMcbusDataSource.Create(ASourceId, lHost, lPort,
+        lPollFrequencyHz, ADataUpdateMs, lTagNames, lSpecificConfigText);
+    end
+    else if SameText(lConfigured.ModuleType, CRcMx248ModuleType) then
+      lSource := RecorderCreatePxiMx248DataSource(lConfigured, ADataUpdateMs)
+    else if RecorderIsModbusSource(ASourceId) then
+      lSource := RecorderCreateModbusDataSource(lConfigured, ADataUpdateMs)
+    else if RecorderIsOpcUaSource(ASourceId, lConfigured.ModuleType) then
+      lSource := RecorderCreateOpcUaDataSource(ASourceId,
+        lConfigured.SpecificConfigText, ADataUpdateMs)
+    else if SameText(lConfigured.ModuleType,
+      CRecorderSqlSourceModuleType) then
+      lSource := TRecorderSqlDataSource.Create(
+        ARecorder.SqlDbManager.ConfigFileName,
+        lConfigured.SpecificConfigText, ADataUpdateMs)
+    else
+      Exit;
+
+    ARecorder.DataSources.ReplaceSource(lSource, lConfigured.Enabled,
+      APrepareNow);
+    Log(ALog, 'Runtime source reconfigured: ' + ASourceId);
+  finally
+    lTagNames.Free;
+  end;
+end;
+
+end.

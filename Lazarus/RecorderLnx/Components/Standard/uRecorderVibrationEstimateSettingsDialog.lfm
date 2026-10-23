@@ -1,0 +1,203 @@
+object RecorderVibrationEstimateSettingsForm: TRecorderVibrationEstimateSettingsForm
+  Left = 300
+  Height = 470
+  Top = 150
+  Width = 560
+  Caption = 'Настройка виброоценки'
+  ClientHeight = 470
+  ClientWidth = 560
+  Constraints.MinHeight = 470
+  Constraints.MinWidth = 560
+  Position = poScreenCenter
+  object SourceLabel: TLabel
+    Left = 12
+    Top = 20
+    Caption = 'Исходный тег'
+  end
+  object TagEdit: TEdit
+    Left = 180
+    Top = 14
+    Width = 320
+    Height = 28
+    Anchors = [akTop, akLeft, akRight]
+    ReadOnly = True
+    TabOrder = 0
+  end
+  object SelectTagButton: TButton
+    Left = 508
+    Top = 14
+    Width = 36
+    Height = 28
+    Anchors = [akTop, akRight]
+    Caption = '...'
+    OnClick = SelectTagClick
+    TabOrder = 1
+  end
+  object CaptionLabel: TLabel
+    Left = 12
+    Top = 60
+    Caption = 'Подпись'
+  end
+  object CaptionEdit: TEdit
+    Left = 180
+    Top = 54
+    Width = 364
+    Height = 28
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 2
+  end
+  object UseTagNameCheck: TCheckBox
+    Left = 180
+    Top = 90
+    Width = 360
+    Height = 24
+    Caption = 'Использовать имя исходного тега'
+    TabOrder = 3
+  end
+  object QuantityLabel: TLabel
+    Left = 12
+    Top = 130
+    Caption = 'Величина'
+  end
+  object QuantityCombo: TComboBox
+    Left = 180
+    Top = 124
+    Width = 364
+    Height = 28
+    Anchors = [akTop, akLeft, akRight]
+    Style = csDropDownList
+    TabOrder = 4
+  end
+  object BandLabel: TLabel
+    Left = 12
+    Top = 170
+    Caption = 'Полоса'
+  end
+  object BandCombo: TComboBox
+    Left = 180
+    Top = 164
+    Width = 364
+    Height = 28
+    Anchors = [akTop, akLeft, akRight]
+    Style = csDropDownList
+    TabOrder = 5
+    OnChange = BandChange
+  end
+  object FromLabel: TLabel
+    Left = 180
+    Top = 210
+    Caption = 'От, Гц'
+  end
+  object FromEdit: TEdit
+    Left = 230
+    Top = 204
+    Width = 110
+    Height = 28
+    TabOrder = 6
+  end
+  object ToLabel: TLabel
+    Left = 350
+    Top = 210
+    Caption = 'До, Гц'
+  end
+  object ToEdit: TEdit
+    Left = 410
+    Top = 204
+    Width = 134
+    Height = 28
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 7
+  end
+  object ModeLabel: TLabel
+    Left = 12
+    Top = 250
+    Caption = 'Представление'
+  end
+  object ValueModeCombo: TComboBox
+    Left = 180
+    Top = 244
+    Width = 160
+    Height = 28
+    Style = csDropDownList
+    Items.Strings = (
+      'СКО'
+      'Амплитуда'
+    )
+    TabOrder = 8
+  end
+  object FormatLabel: TLabel
+    Left = 350
+    Top = 250
+    Caption = 'Формат'
+  end
+  object FormatEdit: TEdit
+    Left = 424
+    Top = 244
+    Width = 120
+    Height = 28
+    Anchors = [akTop, akRight]
+    TabOrder = 9
+  end
+  object PresetLabel: TLabel
+    Left = 12
+    Top = 290
+    Caption = 'Преднастроенный шрифт'
+  end
+  object FontPresetCombo: TComboBox
+    Left = 180
+    Top = 284
+    Width = 364
+    Height = 28
+    Anchors = [akTop, akLeft, akRight]
+    OnChange = FontPresetChange
+    TabOrder = 10
+  end
+  object FontLabel: TLabel
+    Left = 12
+    Top = 330
+    Caption = 'Параметры шрифта'
+  end
+  object SelectFontButton: TButton
+    Left = 180
+    Top = 324
+    Width = 364
+    Height = 30
+    Anchors = [akTop, akLeft, akRight]
+    OnClick = SelectFontClick
+    TabOrder = 11
+  end
+  object HoldMaximumCheck: TCheckBox
+    Left = 180
+    Top = 364
+    Width = 364
+    Height = 40
+    Caption = 'Запоминать максимум до нового старта'
+    TabOrder = 12
+  end
+  object OkButton: TButton
+    Left = 366
+    Top = 424
+    Width = 82
+    Height = 30
+    Anchors = [akRight, akBottom]
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 13
+  end
+  object CancelButton: TButton
+    Left = 458
+    Top = 424
+    Width = 86
+    Height = 30
+    Anchors = [akRight, akBottom]
+    Caption = 'Отмена'
+    Cancel = True
+    ModalResult = 2
+    TabOrder = 14
+  end
+  object FontDialog: TFontDialog
+    left = 24
+    top = 380
+  end
+end

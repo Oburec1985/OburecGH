@@ -257,6 +257,7 @@ type
     fPendingValues: array of Double;
     fSettings: TRecorderSpectrumSettings;
     fSourceTagName: string;
+    fSourceTagId: Int64;
     procedure EmitFrame;
     procedure ShiftAfterFrame;
   public
@@ -266,6 +267,8 @@ type
     procedure Clear;
     procedure FeedSamples(const ATimes, AValues: array of Double; ACount: Integer);
     property SourceTagName: string read fSourceTagName;
+    { Resolved once by the tag-owning runtime; the engine stays tag-independent. }
+    property SourceTagId: Int64 read fSourceTagId write fSourceTagId;
     property Settings: TRecorderSpectrumSettings read fSettings;
     property PendingCount: Integer read fPendingCount;
     property OnFrame: TRecorderSpectrumFrameEvent read fOnFrame write fOnFrame;

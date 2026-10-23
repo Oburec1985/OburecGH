@@ -11,11 +11,12 @@ interface
 
 uses
   Classes, SysUtils, Math, u3dScene, u3dMotionContracts, uRecorder3dModel,
-  uRecorderImpactHammerContracts;
+  uRecorderImpactHammerContracts, u3dMeshTopology;
 
 type
   TRecorder3dImpactBindingController = class(TInterfacedObject,
-    IRecorderModelPointCatalog, IRecorderModelPointBindingSink)
+    IRecorderModelPointCatalog, IRecorderModelLabeledPointCatalog,
+    IRecorderModelPointBindingSink, IRecorderModelVertexLabelMode)
   private
     fComponent: TRecorder3dComponent;
     fScene: T3dScene;
@@ -34,12 +35,17 @@ type
     function ResolvePoint(const APointGroup: string; APointNumber: Integer;
       out ATargetNodeId: QWord): Boolean;
     function ObjectCount: Integer;
+    function PointCount(ANodeId:QWord):Integer;
+    function PointInfo(ANodeId:QWord; AIndex:Integer;
+      out AInfo:TRecorderModelPointInfo):Boolean;
     function ObjectInfo(AIndex: Integer;
       out AInfo: TRecorderModelObjectInfo): Boolean;
     procedure PublishBindings(const ASourceBindingId,
       ATargetComponentId: string;
       const ABindings: array of TRecorderModelPointBinding);
     procedure RemoveBindings(const ASourceBindingId: string);
+    procedure SetVertexLabelMode(AOnlyCurrentStep:Boolean);
+    procedure SetCurrentStepPoints(const ABindings:array of TRecorderModelPointBinding);
     procedure ConfigureAnimation(const ASourceBindingId: string;
       AScale, AFrequencyHz: Double);
     procedure PlayAnimation(const ASourceBindingId: string);
@@ -60,6 +66,44 @@ type
   end;
 
 implementation
+
+function TRecorder3dImpactBindingController.PointCount(ANodeId:QWord):Integer;
+var N:T3dNode; I:Integer; T:T3dMeshTopology;
+begin
+  Result:=0;
+  if fScene=nil then Exit;
+  N:=fScene.FindNode(ANodeId);
+  if (N=nil) or (N.Mesh=nil) then Exit;
+  if (Length(N.Mesh.Positions)=0) and (N.Mesh.SourceNodeId<>0) then
+    N:=fScene.FindNode(N.Mesh.SourceNodeId);
+  if (N=nil) or (N.Mesh=nil) then Exit;
+  T:=BuildMeshTopology(N.Mesh);
+  for I:=0 to High(T.Vertices) do
+    if fComponent.PointLabel(ANodeId,I+1)<>'' then Inc(Result);
+end;
+
+function TRecorder3dImpactBindingController.PointInfo(ANodeId:QWord;
+  AIndex:Integer; out AInfo:TRecorderModelPointInfo):Boolean;
+var N:T3dNode; I:Integer; S:string; T:T3dMeshTopology;
+begin
+  Result:=False;
+  AInfo.PointNumber:=0; AInfo.LabelText:='';
+  if fScene=nil then Exit;
+  N:=fScene.FindNode(ANodeId);
+  if (N=nil) or (N.Mesh=nil) then Exit;
+  if (Length(N.Mesh.Positions)=0) and (N.Mesh.SourceNodeId<>0) then
+    N:=fScene.FindNode(N.Mesh.SourceNodeId);
+  if (N=nil) or (N.Mesh=nil) then Exit;
+  T:=BuildMeshTopology(N.Mesh);
+  for I:=0 to High(T.Vertices) do
+  begin
+    S:=fComponent.PointLabel(ANodeId,I+1);
+    if S='' then Continue;
+    if AIndex=0 then
+    begin AInfo.PointNumber:=I+1; AInfo.LabelText:=S; Exit(True) end;
+    Dec(AIndex);
+  end;
+end;
 
 function TRecorder3dImpactBindingController.BindingsAreValid(
   const ABindings: array of TRecorderModelPointBinding): Boolean;
@@ -124,12 +168,28 @@ end;
 
 constructor TRecorder3dImpactBindingController.Create(
   AComponent: TRecorder3dComponent; AScene: T3dScene);
+var I,J:Integer; B:TRecorder3dFrfBinding; O:TRecorder3dNodeRenderOverride;
+  N:T3dNode; T:T3dMeshTopology;
 begin
   inherited Create;
   fComponent := AComponent;
   fScene := AScene;
   fAnimationScale := 1;
   fAnimationFrequencyHz := 1;
+  if (fComponent=nil) or (fScene=nil) then Exit;
+  { Import old per-binding captions once; explicit empty labels are deliberate. }
+  for I:=0 to fComponent.FrfBindingCount-1 do
+  begin
+    B:=fComponent.FrfBindings[I];
+    if B.PointLabel='' then Continue;
+    O:=fComponent.FindNodeRenderOverride(B.ModifierTargetNodeId);
+    if (O<>nil) and (O.VertexLabels.IndexOfName(IntToStr(B.PointNumber))>=0) then Continue;
+    N:=fScene.FindNode(B.ModifierTargetNodeId);
+    if (N=nil) or (N.Mesh=nil) then Continue;
+    T:=BuildMeshTopology(N.Mesh);
+    J:=Length(T.Vertices);
+    fComponent.SetPointLabel(N.Id,B.PointNumber,J,B.PointLabel);
+  end;
 end;
 
 function TRecorder3dImpactBindingController.ResolvePoint(
@@ -167,9 +227,14 @@ var
 begin
   if (fComponent = nil) or (ASourceBindingId = '') or
     (ATargetComponentId = '') or
-    (fComponent.Id <> ATargetComponentId) or
-    not BindingsAreValid(ABindings) then
+    (fComponent.Id <> ATargetComponentId) then
     Exit;
+  if Length(ABindings)=0 then
+  begin
+    RemoveBindings(ASourceBindingId);
+    Exit;
+  end;
+  if not BindingsAreValid(ABindings) then Exit;
   SetLength(Specs, Length(ABindings));
   for I := 0 to High(ABindings) do
   begin
@@ -194,6 +259,7 @@ begin
     Specs[I].CreateColorModifier:=ABindings[I].CreateColorModifier;
     Specs[I].HideAnchors:=ABindings[I].HideAnchors;
     Specs[I].OnlySensors:=ABindings[I].OnlySensors;
+    Specs[I].ShowIntensityValues:=ABindings[I].ShowIntensityValues;
     Specs[I].EnvelopeXEnabled:=ABindings[I].EnvelopeXEnabled;
     Specs[I].EnvelopeYEnabled:=ABindings[I].EnvelopeYEnabled;
     Specs[I].EnvelopeZEnabled:=ABindings[I].EnvelopeZEnabled;
@@ -278,6 +344,23 @@ begin
     lAnchor.EnvelopeY:=lBinding.EnvelopeY;
     lAnchor.EnvelopeZ:=lBinding.EnvelopeZ;
   end;
+end;
+
+procedure TRecorder3dImpactBindingController.SetVertexLabelMode(
+  AOnlyCurrentStep:Boolean);
+begin
+  if (fComponent=nil) or
+    (fComponent.VertexLabelsOnlyBound=AOnlyCurrentStep) then Exit;
+  fComponent.VertexLabelsOnlyBound:=AOnlyCurrentStep;
+  if Assigned(fOnBindingsChanged) then fOnBindingsChanged(Self);
+end;
+
+procedure TRecorder3dImpactBindingController.SetCurrentStepPoints(
+  const ABindings:array of TRecorderModelPointBinding);
+begin
+  if fComponent=nil then Exit;
+  fComponent.SetCurrentStepPoints(ABindings);
+  if Assigned(fOnBindingsChanged) then fOnBindingsChanged(Self);
 end;
 
 procedure TRecorder3dImpactBindingController.RemoveBindings(

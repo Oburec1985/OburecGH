@@ -3,6 +3,9 @@ unit uRecorderImpactHammerSettingsDialog;
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 
+{ Редактирует копию настроек компонента. Изменения попадают в модель только
+  после подтверждения; отмена отбрасывает черновик. }
+
 interface
 
 uses
@@ -487,8 +490,8 @@ var
   Item: Integer;
   lPoint: TPoint;
 begin
-  // Native extended selection collapses a selected group on the next plain
-  // mouse-down. Starting a drag from inside that group must preserve it.
+  // Обычный щелчок снимает множественное выделение; при начале перетаскивания
+  // из выбранной строки сохраняем всю группу.
   if (AMessage.Msg = LM_LBUTTONDOWN) and (lbAvailableTags.SelCount > 1) and
     ((AMessage.WParam and (MK_CONTROL or MK_SHIFT)) = 0) then
   begin

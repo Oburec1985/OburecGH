@@ -16,8 +16,8 @@ program RecorderTimeSystemTest;
 
 uses
   Classes,
-  SysUtils,
-  uRecorderTimeSystem;
+  SysUtils, DateUtils,
+  uRecorderTimeSystem, uRecorderBlockClock, Math;
 
 var
   g_Log: TextFile;
@@ -129,6 +129,44 @@ begin
   end;
 end;
 
+procedure TestBlockTimeMapping;
+var lMap: TRecorderDeviceTimeMap; lTime: TRecorderTimeSystem;
+  lBefore: Double; lGeneration: QWord;
+  lUtc: TDateTime;
+begin
+  lMap := Default(TRecorderDeviceTimeMap);
+  AssertTrue(not lMap.Valid, 'unbound device clock');
+  lMap.BeginSession(120, 1000, 0.001);
+  AssertTrue(Abs(lMap.ToRecorder(123) - 1003) < 1E-9, 'device to recorder');
+  AssertTrue(Abs(lMap.ToDevice(1003) - 123) < 1E-9, 'recorder to device');
+  lGeneration := lMap.Generation;
+  lMap.BeginSession(0, 1010, 0.002);
+  AssertTrue((lMap.Generation = lGeneration + 1) and
+    (Abs(lMap.ToRecorder(1) - 1011) < 1E-9), 'restart creates new clock epoch');
+  lMap.BeginSession(NaN, 0, 0);
+  AssertTrue(not lMap.Valid, 'invalid clock anchor rejected');
+  lTime := TRecorderTimeSystem.Create;
+  try
+    lBefore := lTime.RecorderSeconds;
+    lUtc := lTime.SampleTimeToUtc(lBefore, btRecorderMonotonic);
+    AssertTrue(Abs((lUtc - LocalTimeToUniversal(Now)) * 86400) < 0.1,
+      'process clock maps to current UTC rather than session plus uptime');
+    lTime.Start;
+    AssertTrue(Abs(lTime.SampleTimeToSession(lBefore, btRecorderMonotonic)) < 0.1,
+      'mapped sample display uses current session origin');
+    AssertTrue(lTime.SampleTimeToSession(2.5, btSessionRelative) = 2.5,
+      'legacy session-relative sample time unchanged');
+    lTime.Stop;
+    lTime.Reset;
+    Sleep(5);
+    AssertTrue(lTime.RecorderSeconds > lBefore,
+      'block clock keeps advancing through recorder UI lifecycle');
+    AssertTrue(Abs(lTime.MonotonicTimeToUtc(lBefore) - lUtc) < 1E-10,
+      'UTC anchor survives recorder start stop reset');
+    AssertTrue(RecorderClockResolution > 0, 'block clock resolution available');
+  finally lTime.Free end;
+end;
+
 procedure TestElapsedStartStop;
 var
   lSystem: TRecorderTimeSystem;
@@ -164,6 +202,7 @@ begin
     TestFormatDuration;
     TestExternalTimes;
     TestElapsedStartStop;
+    TestBlockTimeMapping;
     LogLine('RESULT time system test passed.');
   finally
     CloseLog;

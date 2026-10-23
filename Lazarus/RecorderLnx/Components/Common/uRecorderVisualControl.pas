@@ -173,6 +173,8 @@ type
     fQuantityButton: TSpeedButton;
     fUnitButton: TSpeedButton;
     fLastFrameIndex: Int64;
+    fLastRuntimeRevision: QWord;
+    function SourceUnit: string;
     procedure LayoutSelectorButtons;
     procedure StepBand(ADelta: Integer);
     procedure UpdateSelectorButtons;
@@ -992,6 +994,7 @@ var
 begin
   fComponent := TRecorderVibrationEstimateComponent(AComponent);
   fTagRegistry := ATagRegistry;
+  fComponent.ConfigureRuntime(ATagRegistry);
   fComponent.GetFontSnapshot(lFont);
   fValueLabel.Font.Name := lFont.Name;
   fValueLabel.Font.Size := lFont.Size;
@@ -1032,18 +1035,41 @@ begin
       lUnitWidth, lButtonHeight);
 end;
 
+function TRecorderVibrationEstimateView.SourceUnit: string;
+var
+  lTag: TRecorderTag;
+begin
+  Result := '';
+  if (fComponent = nil) or (fTagRegistry = nil) then Exit;
+  lTag := RecorderResolveTag(fTagRegistry, fComponent.TagId, fComponent.TagName);
+  if lTag <> nil then Result := lTag.UnitName;
+end;
+
 procedure TRecorderVibrationEstimateView.UpdateSelectorButtons;
+var
+  lVibration: Boolean;
 begin
   if (fComponent = nil) or (fQuantityButton = nil) or
     (fUnitButton = nil) then Exit;
+  lVibration := RecorderIsVibrationUnit(SourceUnit);
   case fComponent.Quantity of
     rvqAcceleration: fQuantityButton.Caption := 'A';
     rvqVelocity: fQuantityButton.Caption := 'V';
     rvqDisplacement: fQuantityButton.Caption := 'S';
+    rvqAmplitude: fQuantityButton.Caption := 'A';
   else
     fQuantityButton.Caption := 'F';
   end;
   fUnitButton.Caption := fComponent.OutputUnit;
+  fUnitButton.Enabled := lVibration and (fComponent.Quantity <> rvqAmplitude);
+  if not lVibration then
+    if fComponent.Quantity = rvqDominantFrequency then
+      fUnitButton.Caption := 'Hz'
+    else
+    begin
+      fQuantityButton.Caption := 'A';
+      fUnitButton.Caption := SourceUnit;
+    end;
   LayoutSelectorButtons;
 end;
 
@@ -1063,6 +1089,7 @@ begin
       Break;
     end;
   { Position -1 is the full spectrum, named bands follow it. }
+  fComponent.ManualBand := False;
   lNext := lCurrent + ADelta;
   if lNext < -1 then lNext := lCount - 1;
   if lNext >= lCount then lNext := -1;
@@ -1070,6 +1097,7 @@ begin
     fComponent.BandName := ''
   else
     fComponent.BandName := fTagRegistry.FrequencyBands.Bands[lNext].Name;
+  fComponent.ConfigureRuntime(fTagRegistry);
   fLastFrameIndex := -1;
   RefreshControl(fTagRegistry, 0.0);
 end;
@@ -1087,11 +1115,19 @@ end;
 procedure TRecorderVibrationEstimateView.QuantityClick(Sender: TObject);
 begin
   if fComponent = nil then Exit;
-  if fComponent.Quantity = High(TRecorderVibrationQuantity) then
+  if not RecorderIsVibrationUnit(SourceUnit) then
+  begin
+    if fComponent.Quantity = rvqDominantFrequency then
+      fComponent.Quantity := rvqAmplitude
+    else
+      fComponent.Quantity := rvqDominantFrequency;
+  end
+  else if fComponent.Quantity >= rvqDominantFrequency then
     fComponent.Quantity := Low(TRecorderVibrationQuantity)
   else
     fComponent.Quantity := Succ(fComponent.Quantity);
   fComponent.OutputUnit := RecorderVibrationDefaultUnit(fComponent.Quantity);
+  fComponent.ConfigureRuntime(fTagRegistry);
   fLastFrameIndex := -1;
   UpdateSelectorButtons;
   RefreshControl(fTagRegistry, 0.0);
@@ -1099,7 +1135,8 @@ end;
 
 procedure TRecorderVibrationEstimateView.UnitClick(Sender: TObject);
 begin
-  if fComponent = nil then Exit;
+  if (fComponent = nil) or not RecorderIsVibrationUnit(SourceUnit) or
+    (fComponent.Quantity = rvqAmplitude) then Exit;
   case fComponent.Quantity of
     rvqAcceleration:
       if SameText(fComponent.OutputUnit, 'm/s2') then fComponent.OutputUnit := 'g'
@@ -1117,6 +1154,7 @@ begin
       if SameText(fComponent.OutputUnit, 'Hz') then fComponent.OutputUnit := 'kHz'
       else fComponent.OutputUnit := 'Hz';
   end;
+  fComponent.ConfigureRuntime(fTagRegistry);
   fLastFrameIndex := -1;
   UpdateSelectorButtons;
   RefreshControl(fTagRegistry, 0.0);
@@ -1131,7 +1169,10 @@ var
   lLabelText, lBandText, lError, lValueText, lFrequencyText: string;
   lBandIndex, I: Integer;
   lValue, lDominantFrequency: Double;
-  lSourceUnit: string;
+  lSourceUnit, lOutputUnit: string;
+  lQuantity: TRecorderVibrationQuantity;
+  lHasValue: Boolean;
+  lCalculation, lFrequencyCalculation: TRecorderVibrationCalculation;
 
   function ValueWithUnit(const AValueText, AUnit: string): string;
   const
@@ -1153,28 +1194,6 @@ var
         FormatSignificant(AF1), FormatSignificant(AF2)]);
   end;
 
-  function EffectiveSourceUnit: string;
-  var
-    lCalibration: TRecorderCalibration;
-    lCalibrationIndex: Integer;
-  begin
-    Result := lTag.UnitName;
-    if Trim(lTag.SensorCalibrationName) <> '' then
-    begin
-      lCalibration := ATagRegistry.FindCalibrationByName(
-        lTag.SensorCalibrationName);
-      if (lCalibration <> nil) and (Trim(lCalibration.UnitOut) <> '') then
-        Result := lCalibration.UnitOut;
-    end;
-    if lTag.CalibrationNames = nil then Exit;
-    for lCalibrationIndex := 0 to lTag.CalibrationNames.Count - 1 do
-    begin
-      lCalibration := ATagRegistry.FindCalibrationByName(
-        lTag.CalibrationNames[lCalibrationIndex]);
-      if (lCalibration <> nil) and (Trim(lCalibration.UnitOut) <> '') then
-        Result := lCalibration.UnitOut;
-    end;
-  end;
 begin
   if (fComponent = nil) or (ATagRegistry = nil) then Exit;
   fTagRegistry := ATagRegistry;
@@ -1208,7 +1227,10 @@ begin
   lBandIndex := -1;
   lBandText := BandCaption('вся полоса', 0.0,
     Max(0.0, (Length(lFrame.RectRms) - 1) * lFrame.FrequencyStepHz));
-  if Trim(fComponent.BandName) <> '' then
+  if fComponent.ManualBand then
+    lBandText := BandCaption('заданная полоса', fComponent.BandFromHz,
+      fComponent.BandToHz)
+  else if Trim(fComponent.BandName) <> '' then
     for I := 0 to Length(lFrame.Bands) - 1 do
       if SameText(lFrame.Bands[I].BandName, fComponent.BandName) then
       begin
@@ -1219,33 +1241,65 @@ begin
       end;
   lLabelText := lLabelText + ' [' + lBandText + ']';
   if (fLastFrameIndex = lFrame.FrameIndex) and
+    (fLastRuntimeRevision = fComponent.RuntimeRevision) and
     (Pos(lBandText, fValueLabel.Caption) > 0) then Exit;
   fLastFrameIndex := lFrame.FrameIndex;
-  lSourceUnit := EffectiveSourceUnit;
-  if RecorderTryCalculateVibrationEstimate(lFrame, lSourceUnit,
-    fComponent.Quantity, lBandIndex, fComponent.OutputUnit, lValue, lError) then
+  fLastRuntimeRevision := fComponent.RuntimeRevision;
+  { The tag unit already describes the effective calibrated signal. Disabled
+    calibration definitions must not change the estimator's physical type. }
+  lSourceUnit := lTag.UnitName;
+  lQuantity := fComponent.Quantity;
+  lOutputUnit := fComponent.OutputUnit;
+  if not RecorderIsVibrationUnit(lSourceUnit) then
+    if lQuantity = rvqDominantFrequency then
+      lOutputUnit := 'Hz'
+    else
+    begin
+      lQuantity := rvqAmplitude;
+      lOutputUnit := lSourceUnit;
+    end;
+  if lQuantity = rvqAmplitude then lOutputUnit := lSourceUnit;
+  UpdateSelectorButtons;
+  lCalculation := RecorderPrepareVibrationCalculation(lSourceUnit, lQuantity, lOutputUnit);
+  lCalculation.ManualBand := fComponent.ManualBand;
+  lCalculation.BandFromHz := fComponent.BandFromHz;
+  lCalculation.BandToHz := fComponent.BandToHz;
+  lFrequencyCalculation := lCalculation;
+  lFrequencyCalculation.Quantity := rvqDominantFrequency;
+  lFrequencyCalculation.FrequencyScale := 1;
+  if fComponent.HoldMaximum then
   begin
-    if fComponent.AmplitudeMode and
-      (fComponent.Quantity <> rvqDominantFrequency) then
+    lHasValue := fComponent.TryGetRuntimeEstimate(lValue, lDominantFrequency);
+    lError := 'ожидание спектра';
+  end
+  else
+    lHasValue := RecorderCalculatePreparedVibration(lFrame, lCalculation,
+      lBandIndex, lValue, lError);
+  if lHasValue then
+  begin
+    if not fComponent.HoldMaximum and fComponent.AmplitudeMode and
+      (lQuantity <> rvqDominantFrequency) then
       lValue := lValue * Sqrt(2.0);
-    if fComponent.Quantity = rvqDominantFrequency then
+    if lQuantity = rvqDominantFrequency then
       lValueText := FormatSignificant(lValue)
     else
       lValueText := FormatFloat(fComponent.DisplayFormat, lValue);
-    lValueText := ValueWithUnit(lValueText, fComponent.OutputUnit);
-    if (fComponent.Quantity <> rvqDominantFrequency) and
-      RecorderTryGetDominantFrequency(lFrame, lBandIndex, 'Hz',
-        lDominantFrequency, lError) then
+    lValueText := ValueWithUnit(lValueText, lOutputUnit);
+    if (lQuantity <> rvqDominantFrequency) and
+      (fComponent.HoldMaximum or
+      RecorderCalculatePreparedVibration(lFrame, lFrequencyCalculation, lBandIndex,
+        lDominantFrequency, lError)) then
     begin
       lFrequencyText := 'F:' + #194#160 +
         ValueWithUnit(FormatSignificant(lDominantFrequency), 'Hz');
       lValueText := lValueText + '  ' + lFrequencyText;
     end;
-    if fComponent.Quantity <> rvqDominantFrequency then
+    if lQuantity <> rvqDominantFrequency then
       if fComponent.AmplitudeMode then
         lValueText := 'A: ' + lValueText
       else
         lValueText := 'СКО: ' + lValueText;
+    if fComponent.HoldMaximum then lValueText := 'MAX ' + lValueText;
     fValueLabel.Caption := lLabelText + LineEnding + lValueText;
     Hint := '';
   end

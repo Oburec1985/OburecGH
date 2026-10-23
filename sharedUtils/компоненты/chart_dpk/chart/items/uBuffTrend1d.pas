@@ -182,7 +182,8 @@ begin
   begin
     if chart <> nil then
     begin
-      if cchart(chart).m_ShaderMng.m_shaders.Count > 1 then
+      if cchart(chart).m_UseShaders and
+         (cchart(chart).m_ShaderMng.m_shaders.Count > 1) then
         result := cLineLgShader1d(cchart(chart).m_ShaderMng.getshader(1));
     end;
   end;
@@ -321,6 +322,8 @@ begin
   //glBindBuffer(GL_ARRAY_buffer,0);
   BindVBA(sh);
   // включаем перед загрузкой параметров
+  if g_ShaderCheckGlErrors then
+    while glGetError <> GL_NO_ERROR do ; // сбросить накопленные ошибки драйвера
   glUseProgramObjectARB(sh.m_program);
   glUniform2i(sh.aLocLg, glBool[0], glBool[1]);
   vertexData[0] := a.min.X;
@@ -334,6 +337,15 @@ begin
   m_LinePar.y := dx;
   //
   glUniform2f(sh.aLocLineParams, m_LinePar.X, m_LinePar.y);
+  // драйвер мог не принять uniform-ы: гасим шейдеры и выходим обычной веткой
+  // (проверка под флагом, см. uShader.g_ShaderCheckGlErrors)
+  if g_ShaderCheckGlErrors and (glGetError <> GL_NO_ERROR) then
+  begin
+    glUseProgramObjectARB(0);
+    glBindBuffer(gl_array_buffer, 0);
+    cchart(chart).DisableShaders;
+    exit;
+  end;
 
   glBindVertexArray(sh.m_VAO);
   glDrawArrays(GL_LINE_STRIP, 0, flength);

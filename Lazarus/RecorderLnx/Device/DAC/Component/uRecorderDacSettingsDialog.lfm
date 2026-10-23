@@ -33,9 +33,10 @@ object RecorderDacSettingsDialog: TRecorderDacSettingsDialog
       Height = 15
       Top = 28
       Width = 48
-      Caption = 'Backend'
+      Caption = 'Выходное устройство'
     end
     object cbBackend: TComboBox
+      OnChange = DeviceChange
       Left = 12
       Height = 23
       Top = 47
@@ -51,6 +52,7 @@ object RecorderDacSettingsDialog: TRecorderDacSettingsDialog
       Caption = 'Endpoint'
     end
     object edEndpoint: TEdit
+      ReadOnly = True
       Left = 226
       Height = 23
       Top = 47
@@ -63,7 +65,7 @@ object RecorderDacSettingsDialog: TRecorderDacSettingsDialog
       Height = 15
       Top = 83
       Width = 70
-      Caption = 'Частота, Гц'
+      Caption = 'Частота ЦАП, Гц'
     end
     object edSampleRate: TFloatSpinEdit
       Left = 12
@@ -217,24 +219,33 @@ object RecorderDacSettingsDialog: TRecorderDacSettingsDialog
       TabOrder = 0
     end
     object edMirrorSearch: TEdit
+      Left = 12
+      Height = 23
+      Top = 50
+      Width = 672
+      Anchors = [akTop, akLeft, akRight]
+      OnChange = MirrorSearchChange
+      TabOrder = 2
+      TextHint = 'Поиск виртуального тега по имени, адресу или описанию'
+    end
+    object edMirrorName: TEdit
       Left = 190
       Height = 23
       Top = 21
       Width = 494
       Anchors = [akTop, akLeft, akRight]
-      OnChange = MirrorSearchChange
       TabOrder = 1
-      TextHint = 'Поиск тега зеркала'
+      TextHint = 'Имя выходного тега — отсутствующий будет создан'
     end
     object lbMirror: TListBox
       Left = 12
-      Height = 84
-      Top = 50
+      Height = 54
+      Top = 80
       Width = 672
       Anchors = [akTop, akLeft, akRight, akBottom]
       ItemHeight = 0
       OnClick = MirrorTagClick
-      TabOrder = 2
+      TabOrder = 3
     end
   end
   object btnOk: TButton

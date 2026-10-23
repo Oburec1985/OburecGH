@@ -24,12 +24,20 @@ Type
    name:string; // имя шейдера. Определяет имя файла
    b_vShader, b_fShader:boolean;
    m_vShader, // вершинный
-   m_fShader // фрагментный
-   :glHandleARB;
+   m_fShader: glHandleARB; // фрагментный
+   // результаты компиляции этапов и линковки программы
+   m_vCompiled,
+   m_fCompiled,
+   m_linked: boolean;
+   m_error: string;
  private
    procedure LoadShader(const src: ansiString; var shader:GLhandleARB);
    procedure LoadShaderFromFile(const filename: AnsiString; stype:byte);
  public
+  // программа скомпилирована и слинкована, её можно включать в отрисовку
+  property Ready: boolean read m_linked;
+  // текст последней ошибки компиляции/линковки (для журнала)
+  property LastError: string read m_error;
   constructor Create(path,pname:string);
   // Загрузить шейдер из файла.
   procedure CreateShader(const filename:string;const ShaderType:byte);
@@ -70,6 +78,14 @@ Type
    procedure GetInfo;
    function AddShader(folder:string;name:string):cshader;
  end;
+
+var
+  // Разрешить рантайм-проверку glGetError после установки uniform-ов (по умолчанию
+  // выключена): внутри glNewList команды шейдеров сами по себе могут давать
+  // GL_INVALID_OPERATION на части драйверов, хотя отрисовка при этом исправна.
+  // Включать true только для разбора проблем на конкретной машине.
+  g_ShaderCheckGlErrors: boolean = false;
+
 implementation
 
 function cShaderManager.AddShader(folder:string;name:string):cshader;
@@ -104,12 +120,25 @@ begin
 
   m_Extensions := glGetString(GL_EXTENSIONS);
 
-  if Pos('GL_ARB_shader_objects', m_Extensions)>0 then
-  begin
-    m_ExtSupported:=true;
-  end
-  else
-    m_ExtSupported:=false;
+  // Строки расширений недостаточно: она говорит о наличии API, но не о том,
+  // что реально доступны вызываемые функции. Поэтому дополнительно требуем
+  // наличие точек входа, которые использует отрисовка трендов. glUniform2i и
+  // glUniform4f - это уже GL 2.0, а не ARB-варианты, и именно их отсутствие
+  // даёт "шейдер включён, но не работает" на части драйверов.
+  m_ExtSupported :=
+    (Pos('GL_ARB_shader_objects', m_Extensions)>0) and
+    Assigned(glCreateShaderObjectARB) and
+    Assigned(glShaderSourceARB) and
+    Assigned(glCompileShaderARB) and
+    Assigned(glGetObjectParameterivARB) and
+    Assigned(glCreateProgramObjectARB) and
+    Assigned(glAttachObjectARB) and
+    Assigned(glLinkProgramARB) and
+    Assigned(glUseProgramObjectARB) and
+    Assigned(glGetUniformLocationARB) and
+    Assigned(glUniform1fARB) and
+    Assigned(glUniform2i) and
+    Assigned(glUniform4f);
 end;
 
 procedure cShaderManager.disableShaders;
@@ -172,6 +201,10 @@ Constructor cshader.Create(path,pname:string);
 begin
  b_fShader:=false;
  b_vShader:=false;
+ m_vCompiled:=false;
+ m_fCompiled:=false;
+ m_linked:=false;
+ m_error:='';
  name:=pname;
  if path[length(path)]<>'\' then
  begin
@@ -215,22 +248,43 @@ var
   txt: TStringList;
 begin
   txt := TStringList.Create;
-  txt.LoadFromFile(filename);
   try
-    if stype = 0 then
-    begin
-       b_vShader:=true;
-       LoadShader(txt.Text, m_vShader);
-    end
-    else
-    begin
-       b_fShader:=true;
-       LoadShader(txt.Text, m_fShader);
+    try
+      txt.LoadFromFile(filename);
+      if stype = 0 then
+      begin
+         b_vShader:=true;
+         LoadShader(txt.Text, m_vShader);
+         m_vCompiled:=m_vShader<>0;
+      end
+      else
+      begin
+         b_fShader:=true;
+         LoadShader(txt.Text, m_fShader);
+         m_fCompiled:=m_fShader<>0;
+      end;
+    except
+      on E: Exception do
+      begin
+        // ошибку не бросаем: LoadShaders проверит Ready и откатится на fixed-function
+        if m_error<>'' then
+          m_error:=m_error+#13#10;
+        m_error:=m_error+filename+': '+E.Message;
+        if stype = 0 then
+        begin
+          b_vShader:=true;
+          m_vCompiled:=false;
+        end
+        else
+        begin
+          b_fShader:=true;
+          m_fCompiled:=false;
+        end;
+      end;
     end;
-  except on E: Exception do
-    raise Exception.Create(filename + ' contains errors!' + #10 + e.Message);
+  finally
+    txt.Free;
   end;
-  txt.Free;
 end;
 
 // Загрузить шейдер, и скомпилять. Если не удается то выпленуть ошибку.
@@ -248,8 +302,11 @@ begin
   log := GetInfoLog(shader);
   if compiled <> 1 then
   begin
+    // ошибку не бросаем: LoadShaders проверит Ready и откатится на fixed-function
+    if m_error<>'' then
+      m_error:=m_error+#13#10;
+    m_error:=m_error+log;
     shader:=0;
-    //raise Exception.Create(log);
   end;
 end;
 
@@ -291,8 +348,14 @@ begin
   glLinkProgramARB(m_program);// слинковать программу
   glGetObjectParameterivARB(m_program,GL_OBJECT_LINK_STATUS_ARB,@linked);
   log := GetInfoLog(m_program);
-  if linked <> 1 then
-    raise Exception.Create(log);
+  // Программа годна, если слинковалась и все фактически загруженные этапы
+  // скомпилировались. Исключение не бросаем: решение принимает вызывающая
+  // сторона (cChart.LoadShaders) - при Ready=false остаётся обычная отрисовка.
+  m_linked:=((linked = 1) and
+            ((not b_vShader) or m_vCompiled) and
+            ((not b_fShader) or m_fCompiled));
+  if (not m_linked) and (log <> '') then
+    m_error:=m_error+#13#10+log;
 end;
 
 function cShader.GetErrorInfo(obj:GLhandleARB):string;

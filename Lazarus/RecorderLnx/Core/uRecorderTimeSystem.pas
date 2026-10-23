@@ -23,7 +23,7 @@ unit uRecorderTimeSystem;
 interface
 
 uses
-  Classes, SysUtils, DateUtils;
+  Classes, SysUtils, DateUtils, uRecorderBlockClock;
 
 type
   { TRecorderTimeSourceKind
@@ -73,6 +73,8 @@ type
     fStartUtcTime: TDateTime;        { Астрономическое UTC-время старта }
     fStartTickMs: QWord;             { Монотонное время старта в миллисекундах }
     
+    fClockAnchorSeconds, fSessionClockStart: Double;
+    fClockAnchorUtc: TDateTime;
     function GetDisplayUpdateMs: Integer;
     function GetResetAtStart: Boolean;
     function GetSourceKind: TRecorderTimeSourceKind;
@@ -105,10 +107,18 @@ type
 
     { Возвращает потокобезопасную копию состояния, отформатированную для строки статуса. }
     function Snapshot: TRecorderTimeSnapshot;
+    { Common producer block clock; unlike the UI elapsed counter, it does not
+      pause or reset on Preview transitions. Device maps convert both ways. }
+    function RecorderSeconds: Double;
 
     { Переводит время канала в секундах от старта текущего сеанса в
       абсолютное астрономическое время UTC (TDateTime). }
     function ChannelTimeToUtc(AChannelTimeSec: Double): TDateTime;
+    function MonotonicTimeToUtc(ATimeSec: Double): TDateTime;
+    function SampleTimeToUtc(ATimeSec: Double;
+      ADomain: TRecorderBlockTimeDomain): TDateTime;
+    function SampleTimeToSession(ATimeSec: Double;
+      ADomain: TRecorderBlockTimeDomain): Double;
 
     { Возвращает текущее UTC-время на монотонной шкале текущего сеанса. }
     function CurrentUtc: TDateTime;
@@ -123,6 +133,11 @@ type
   end;
 
 implementation
+
+function TRecorderTimeSystem.RecorderSeconds: Double;
+begin
+  Result := RecorderClockSeconds;
+end;
 
 const
   CDefaultDisplayUpdateMs = 100;
@@ -141,6 +156,9 @@ constructor TRecorderTimeSystem.Create;
 begin
   inherited Create;
   InitCriticalSection(fLock);
+  { Immutable process-clock/UTC anchor; recorder Start/Stop must not move it. }
+  fClockAnchorSeconds := RecorderClockSeconds;
+  fClockAnchorUtc := LocalTimeToUniversal(Now);
   fDisplayUpdateMs := CDefaultDisplayUpdateMs;
   fResetAtStart := True;
   fSourceKind := rtskElapsedTime;
@@ -307,6 +325,7 @@ begin
     fStartLocalTime := lLocalNow;
     fStartUtcTime := LocalTimeToUniversal(lLocalNow);
     fStartTickMs := GetTickCount64;
+    fSessionClockStart := RecorderClockSeconds;
     if fResetAtStart then
     begin
       fLastTagTimeSec := 0;
@@ -350,6 +369,7 @@ begin
     fStartLocalTime := Now;
     fStartUtcTime := LocalTimeToUniversal(fStartLocalTime);
     fStartTickMs := 0;
+    fSessionClockStart := RecorderClockSeconds;
     fLastTagTimeSec := 0;
     fLastUtsTimeSec := 0;
     fLastUtsUpdateTickMs := 0;
@@ -366,6 +386,33 @@ begin
   EnterCriticalSection(fLock);
   try
     Result := fStartUtcTime + (AChannelTimeSec / SecsPerDay);
+  finally
+    LeaveCriticalSection(fLock);
+  end;
+end;
+
+function TRecorderTimeSystem.MonotonicTimeToUtc(ATimeSec: Double): TDateTime;
+begin
+  Result := fClockAnchorUtc + (ATimeSec - fClockAnchorSeconds) / SecsPerDay;
+end;
+
+function TRecorderTimeSystem.SampleTimeToUtc(ATimeSec: Double;
+  ADomain: TRecorderBlockTimeDomain): TDateTime;
+begin
+  if ADomain = btRecorderMonotonic then
+    Result := MonotonicTimeToUtc(ATimeSec)
+  else
+    Result := ChannelTimeToUtc(ATimeSec);
+end;
+
+function TRecorderTimeSystem.SampleTimeToSession(ATimeSec: Double;
+  ADomain: TRecorderBlockTimeDomain): Double;
+begin
+  Result := ATimeSec;
+  if ADomain <> btRecorderMonotonic then Exit;
+  EnterCriticalSection(fLock);
+  try
+    Result := ATimeSec - fSessionClockStart;
   finally
     LeaveCriticalSection(fLock);
   end;

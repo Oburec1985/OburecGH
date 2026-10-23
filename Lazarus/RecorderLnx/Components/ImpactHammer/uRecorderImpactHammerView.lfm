@@ -55,15 +55,6 @@ object RecorderImpactHammerView: TRecorderImpactHammerView
       OnClick = btnNextImpactClick
       TabOrder = 1
     end
-    object btnSaveSession: TButton
-      Left = 440
-      Height = 30
-      Top = 8
-      Width = 88
-      Caption = 'Сохранить'
-      OnClick = sessionCommandClick
-      TabOrder = 4
-    end
     object btnSaveCsv: TButton
       Left = 534
       Height = 30
@@ -106,73 +97,65 @@ object RecorderImpactHammerView: TRecorderImpactHammerView
   end
   object pnlCommands: TPanel
     Left = 0
-    Height = 80
+    Height = 132
     Top = 572
     Width = 720
     Align = alBottom
     BevelOuter = bvNone
-    ClientHeight = 80
+    ClientHeight = 132
     ClientWidth = 920
     TabOrder = 3
-    object btnStart: TButton
+    object chkTrigger: TCheckBox
       Left = 12
-      Height = 32
-      Top = 8
-      Width = 104
-      Caption = 'Старт'
-      Enabled = False
-      OnClick = btnStartClick
+      Height = 23
+      Top = 12
+      Width = 150
+      Caption = 'По триггеру'
+      OnClick = TriggerChange
       TabOrder = 0
     end
-    object btnArm: TButton
-      Left = 124
+    object btnCapturePortion: TButton
+      Left = 180
       Height = 32
       Top = 8
-      Width = 104
-      Caption = 'Взвести'
+      Width = 128
+      Caption = 'Снять порцию'
+      Hint = 'Снять накопленные данные кольцевых буферов; при нехватке показать доступный участок'
+      ShowHint = True
       Enabled = False
-      OnClick = btnArmClick
+      OnClick = btnCapturePortionClick
       TabOrder = 1
     end
-    object btnStop: TButton
-      Left = 236
+    object btnGeometryBindings: TButton
+      Left = 316
       Height = 32
       Top = 8
-      Width = 104
-      Caption = 'Стоп'
-      Enabled = False
-      OnClick = btnStopClick
+      Width = 152
+      Caption = 'Отображение FRF'
+      OnClick = btnGeometryBindingsClick
       TabOrder = 2
     end
-    object btnGeometryBindings: TButton
-      Left = 356
-      Height = 32
-      Top = 8
-      Width = 184
-      Caption = 'Привязка к геометрии'
-      OnClick = btnGeometryBindingsClick
-      TabOrder = 3
-    end
     object btnRoute: TButton
-      Left = 548
+      Left = 476
       Height = 32
       Top = 8
       Width = 128
       Caption = 'Маршрут FRF'
       OnClick = btnRouteClick
-      TabOrder = 4
+      TabOrder = 3
     end
     object chkScenario: TCheckBox
+      Visible = False
       Left = 12
       Top = 48
       Height = 23
       Width = 220
       Caption = 'Работа по сценарию'
       OnClick = ScenarioChange
-      TabOrder = 5
+      TabOrder = 4
     end
     object seRoutePoint: TSpinEdit
-      Left = 236
+      Left = 12
       Top = 46
       Width = 76
       Height = 26
@@ -181,15 +164,76 @@ object RecorderImpactHammerView: TRecorderImpactHammerView
       Value = 1
       Enabled = False
       OnChange = RoutePointChange
+      TabOrder = 5
+    end
+    object btnSaveSession: TButton
+      Left = 98
+      Top = 44
+      Height = 30
+      Width = 88
+      Caption = 'Сохранить'
+      OnClick = sessionCommandClick
       TabOrder = 6
     end
+    object chkRouteTagSync: TCheckBox
+      Left = 198
+      Top = 48
+      Width = 148
+      Height = 23
+      Caption = 'Синхро с тегом'
+      Enabled = False
+      OnClick = RouteTagSyncChange
+      TabOrder = 7
+    end
     object lblRoutePoint: TLabel
-      Left = 322
+      Left = 354
       Top = 52
-      Width = 348
+      Width = 354
       Height = 20
+      Anchors = [akTop, akLeft, akRight]
       AutoSize = False
-      Caption = 'Точки маршрута не заданы'
+      Caption = 'Шаги маршрута не заданы'
+    end
+    object chkResultReview: TCheckBox
+      Left = 12
+      Top = 80
+      Width = 182
+      Height = 23
+      Caption = 'Просмотр результата'
+      OnClick = ResultReviewChange
+      TabOrder = 8
+    end
+    object chkResultValues: TCheckBox
+      Visible = False
+      Left = 198
+      Top = 80
+      Width = 188
+      Height = 23
+      Caption = 'Отображать значения'
+      Enabled = False
+      OnClick = ResultReviewChange
+      TabOrder = 9
+    end
+    object lblCaptureStatus: TLabel
+      Left = 12
+      Top = 108
+      Width = 696
+      Height = 20
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = False
+      Caption = ''
+      EllipsisPosition = epEndEllipsis
+      ShowHint = True
+    end
+    object chkRouteAuto: TCheckBox
+      Left = 198
+      Top = 80
+      Width = 150
+      Height = 23
+      Caption = 'Авто режим'
+      Enabled = False
+      OnClick = RouteAutoChange
+      TabOrder = 10
     end
   end
   object RightPan: TScrollBox
@@ -405,70 +449,10 @@ object RecorderImpactHammerView: TRecorderImpactHammerView
       Top = 418
       Width = 220
       Caption = 'Применить окно и маркеры'
+      Hint = 'Синие курсоры: первый отсекает воздействие слева, второй справа; синие квадраты снизу — их ручки. Оранжевые квадраты — экспонента отклика. Пересчёт при перемещении; Esc — отмена.'
+      ShowHint = True
       OnChange = filterWindowChange
       TabOrder = 11
-    end
-    object lblWindowStart: TLabel
-      Left = 8
-      Top = 454
-      Caption = 'Начало окна'
-    end
-    object tbWindowStart: TTrackBar
-      Left = 102
-      Height = 28
-      Top = 446
-      Width = 156
-      Anchors = [akTop, akLeft, akRight]
-      Max = 1000
-      OnChange = filterWindowChange
-      TabOrder = 12
-    end
-    object lblWindowEnd: TLabel
-      Left = 8
-      Top = 486
-      Caption = 'Конец окна'
-    end
-    object tbWindowEnd: TTrackBar
-      Left = 102
-      Height = 28
-      Top = 478
-      Width = 156
-      Anchors = [akTop, akLeft, akRight]
-      Max = 1000
-      Position = 1000
-      OnChange = filterWindowChange
-      TabOrder = 13
-    end
-    object lblExponentialStart: TLabel
-      Left = 8
-      Top = 518
-      Caption = 'Начало спада'
-    end
-    object tbExponentialStart: TTrackBar
-      Left = 102
-      Height = 28
-      Top = 510
-      Width = 156
-      Anchors = [akTop, akLeft, akRight]
-      Max = 1000
-      OnChange = filterWindowChange
-      TabOrder = 14
-    end
-    object lblExponentialLevel: TLabel
-      Left = 8
-      Top = 550
-      Caption = 'Уровень спада'
-    end
-    object tbExponentialLevel: TTrackBar
-      Left = 102
-      Height = 28
-      Top = 542
-      Width = 156
-      Anchors = [akTop, akLeft, akRight]
-      Max = 100
-      Position = 50
-      OnChange = filterWindowChange
-      TabOrder = 15
     end
   end
   object RightSplitter: TSplitter

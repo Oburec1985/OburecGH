@@ -1068,6 +1068,7 @@ begin
       end;
 
       lChannel := TRecorderSpectrumChannel.Create(lTagName, lSettings);
+      if lTag <> nil then lChannel.SourceTagId := lTag.Id;
       lChannel.OnFrame := @HandleChannelFrame;
       fChannels.Add(lChannel);
       { Four full FFT portions absorb ordinary UI/acquisition jitter while all
@@ -1217,7 +1218,9 @@ begin
     if fEventBus = nil then Exit;
     lEventData := TRecorderSpectrumFrameEventData.Create(lFrame);
     try
-      lEvent := TRecorderEventBus.MakeEvent(rceSpectrumFrame, Self, lFrame.SourceTagName, '', 0, lEventData);
+      lEvent := TRecorderEventBus.MakeEvent(rceSpectrumFrame, Self,
+        lFrame.SourceTagName, '', TRecorderSpectrumChannel(ASender).SourceTagId,
+        lEventData);
       fEventBus.Publish(lEvent);
     finally
       lEventData.Free;

@@ -396,7 +396,7 @@ begin
       lValue := lEstimate.Value;
     end;
     if fTimeSystem <> nil then
-      lTimeUtc := fTimeSystem.ChannelTimeToUtc(lTimeSec)
+      lTimeUtc := fTimeSystem.SampleTimeToUtc(lTimeSec, D.Tag.BlockTimeDomain)
     else
       lTimeUtc := LocalTimeToUniversal(Now);
     if not fRuntime.SubmitValue(D.Tag.Name, lTimeUtc, lValue, 0,
@@ -414,7 +414,8 @@ begin
        (not fConfig.AlarmEventEnabled(lAlarmData.Tag.Name)) then Exit;
     if fTimeSystem <> nil then
     begin
-      lTimeUtc := fTimeSystem.ChannelTimeToUtc(lAlarmData.TimeSec);
+      lTimeUtc := fTimeSystem.SampleTimeToUtc(lAlarmData.TimeSec,
+        lAlarmData.Tag.BlockTimeDomain);
     end
     else
       lTimeUtc := LocalTimeToUniversal(Now);

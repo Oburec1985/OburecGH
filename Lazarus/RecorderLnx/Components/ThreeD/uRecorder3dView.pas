@@ -87,6 +87,7 @@ type
     procedure EditorVertexSelected(ANodeId:QWord;
       const APrimaryCorners,AAdjacentCorners:array of LongWord);
     procedure EditorSettingsApplied(Sender:TObject);
+    procedure EditorLabelsChanged(Sender:TObject);
     procedure EditorGeometryChanged(Sender:TObject);
     procedure EditorSkinChanged(Sender:TObject);
     procedure EditorVertexColorChanged(Sender:TObject);
@@ -109,6 +110,7 @@ type
     procedure IntensityPlayClick(Sender:TObject);
     procedure IntensityTimerTick(Sender:TObject);
     procedure DrawIntensityMarkers;
+    procedure DrawCurrentStepFrames;
     procedure BuildViewSelector;
     procedure ViewPresetClick(Sender:TObject);
     procedure ApplyViewPreset(AView:T3dStandardView);
@@ -138,6 +140,7 @@ type
   protected
     procedure Paint; override;
     procedure DrawFrameOverlay; override;
+    function ObjectGizmoVisible:Boolean; override;
     procedure KeyDown(var Key:Word; Shift:TShiftState); override;
     procedure MouseDown(Button:TMouseButton; Shift:TShiftState;
       X,Y:Integer); override;
@@ -316,7 +319,13 @@ begin
 end;
 
 procedure TRecorder3dView.SceneSelectionChanged(Sender:TObject);
+var S:TRecorderModelPointSelection;
 begin
+  if fComponent<>nil then
+  begin
+    S.SceneComponentId:=fComponent.Id; S.NodeId:=SelectedNodeId; S.PointNumber:=0;
+    PublishRecorderModelPointSelection(S);
+  end;
   UpdateSelectedHelperOverlay;
   ClearVertexHighlight;
   if fSceneTreeDialog<>nil then
@@ -378,7 +387,14 @@ end;
 
 procedure TRecorder3dView.SceneVertexPicked(Sender:TObject; ANodeId:QWord;
   ALogicalVertex:Integer);
+var S:TRecorderModelPointSelection;
 begin
+  if fComponent<>nil then
+  begin
+    S.SceneComponentId:=fComponent.Id; S.NodeId:=ANodeId;
+    S.PointNumber:=ALogicalVertex+1;
+    PublishRecorderModelPointSelection(S);
+  end;
   HighlightLogicalVertex(ANodeId,ALogicalVertex);
   if (fSceneEditor<>nil) and fSceneEditor.Visible then
     fSceneEditor.SelectVertexFromView(ANodeId,ALogicalVertex);
@@ -546,6 +562,18 @@ begin
       HideLabel(I);
       Continue;
     end;
+    { Perspective projection near the eye plane may produce arbitrarily
+      large coordinates. Never pass off-screen values to native LCL windows:
+      Win32 move/size messages have a signed 16-bit position range. }
+    if IsNan(ScreenPoint.X) or IsInfinite(ScreenPoint.X) or
+       IsNan(ScreenPoint.Y) or IsInfinite(ScreenPoint.Y) or
+       (Depth<0) or (Depth>1) or
+       (ScreenPoint.X<0) or (ScreenPoint.X>=ClientWidth) or
+       (ScreenPoint.Y<0) or (ScreenPoint.Y>=ClientHeight) then
+    begin
+      HideLabel(I);
+      Continue;
+    end;
     LabelControl:=fHelperNameLabels[I];
     if LabelControl.Font.Size<>SceneLabelFontSize then
       LabelControl.Font.Size:=SceneLabelFontSize;
@@ -604,9 +632,6 @@ var
 begin
   if (fOverlayCanvas=nil) or (fComponent=nil) or (Scene=nil) or
     (ClientWidth<=0) or (ClientHeight<=0) then Exit;
-  for I:=0 to fComponent.FrfBindingCount-1 do
-    if fComponent.FrfBindings[I].Enabled and
-      fComponent.FrfBindings[I].OnlySensors then Exit;
   CellWidth:=Max(28,SceneLabelFontSize*4);
   CellHeight:=Max(20,SceneLabelFontSize*2+4);
   Columns:=(ClientWidth+CellWidth-1) div CellWidth;
@@ -619,7 +644,11 @@ begin
   for I:=0 to fComponent.PrimitiveCount-1 do
   begin
     Spec:=fComponent.Primitives[I];
-    if (Spec.Kind<>pkPointCloud) or not Spec.DrawPointNumbers then Continue;
+    if fComponent.ShowVertexLabels then
+    begin
+      if Spec.NodeId<>SelectedNodeId then Continue;
+    end
+    else if not Spec.DrawPointNumbers then Continue;
     Node:=Scene.FindNode(Spec.NodeId);
     if (Node=nil) or (Node.Mesh=nil) then Continue;
     Mesh:=Node.Mesh;
@@ -646,7 +675,7 @@ begin
             begin
               Occupied[CellIndex]:=True;
               if not FrfPointHasLabel(Node.Id,J+1) then
-                DrawOverlayText(IntToStr(J+1),Point,clBlack,8,-8);
+                DrawOverlayText(fComponent.PointLabel(Node.Id,J+1),Point,clBlack,8,-8);
             end;
           end;
         end;
@@ -709,9 +738,19 @@ end;
 
 procedure TRecorder3dView.DrawFrameOverlay;
 var I:Integer; P:T3dVector; S:T3dPoint; D:Single; V:T3dViewport;
+  M:TRecorderIntensityMarker;
 begin
   DrawIntensityMarkers;
-  if Scene<>nil then
+  DrawCurrentStepFrames;
+  if fFrfIntensity<>nil then
+    for I:=0 to fFrfIntensity.MarkerCount-1 do
+    begin
+      M:=fFrfIntensity.Marker(I);
+      if M.Visible and M.ShowValue and ResolveMarkerPosition(M) then
+        DrawOverlayText(M.PointLabel,M.Position,clBlack,8,8);
+    end;
+  if (Scene<>nil) and ((fComponent=nil) or
+    (fComponent.ShowVertexLabels and not fComponent.VertexLabelsOnlyBound)) then
   begin
     V.Width:=ClientWidth; V.Height:=ClientHeight;
     for I:=0 to Scene.LabelCount-1 do
@@ -722,6 +761,11 @@ begin
   end;
   DrawValueLabels;
   DrawPointNumberLabels;
+end;
+
+function TRecorder3dView.ObjectGizmoVisible:Boolean;
+begin
+  Result:=(fSceneEditor=nil) or not fSceneEditor.Visible;
 end;
 
 procedure TRecorder3dView.ImpactBindingsChanged(Sender:TObject);
@@ -798,6 +842,43 @@ begin
       lNode.WorldTransform);
   end;
   Result:=True;
+end;
+
+procedure TRecorder3dView.DrawCurrentStepFrames;
+var I:Integer; Key:TRecorder3dStepPoint; Marker:TRecorderIntensityMarker;
+  Viewport:T3dViewport; Point:T3dPoint; Depth:Single;
+begin
+  if (fComponent=nil) or (fComponent.CurrentStepPointCount=0) then Exit;
+  Viewport.Width:=ClientWidth; Viewport.Height:=ClientHeight;
+  glPushAttrib(GL_ENABLE_BIT or GL_CURRENT_BIT or GL_LINE_BIT);
+  glDisable(GL_DEPTH_TEST); glDisable(GL_LIGHTING); glDisable(GL_TEXTURE_2D);
+  glMatrixMode(GL_PROJECTION); glPushMatrix; glLoadIdentity;
+  glOrtho(0,ClientWidth,ClientHeight,0,-1,1);
+  glMatrixMode(GL_MODELVIEW); glPushMatrix; glLoadIdentity;
+  glColor3ub(0,200,0); glLineWidth(2);
+  for I:=0 to fComponent.CurrentStepPointCount-1 do
+  begin
+    Key:=fComponent.CurrentStepPoint(I);
+    Marker.TargetNodeId:=Key.NodeId; Marker.PointNumber:=Key.PointNumber;
+    if not ResolveMarkerPosition(Marker) then Continue;
+    if not ProjectWorldToScreen(Marker.Position,CurrentOrbitCamera,Viewport,
+      Point,Depth) then Continue;
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(Point.X-6,Point.Y-6); glVertex2f(Point.X+6,Point.Y-6);
+    glVertex2f(Point.X+6,Point.Y+6); glVertex2f(Point.X-6,Point.Y+6);
+    glEnd;
+  end;
+  glPopMatrix; glMatrixMode(GL_PROJECTION); glPopMatrix;
+  glMatrixMode(GL_MODELVIEW); glPopAttrib;
+  if fComponent.ShowVertexLabels and fComponent.VertexLabelsOnlyBound then
+    for I:=0 to fComponent.CurrentStepPointCount-1 do
+    begin
+      Key:=fComponent.CurrentStepPoint(I);
+      Marker.TargetNodeId:=Key.NodeId; Marker.PointNumber:=Key.PointNumber;
+      if ResolveMarkerPosition(Marker) then
+        DrawOverlayText(fComponent.PointLabel(Key.NodeId,Key.PointNumber),
+          Marker.Position,clBlack,8,-8);
+    end;
 end;
 
 procedure TRecorder3dView.DrawIntensityMarkers;
@@ -1008,6 +1089,7 @@ begin
     fSceneEditor.OnNodeSelected:=@EditorNodeSelected;
     fSceneEditor.OnVertexSelected:=@EditorVertexSelected;
     fSceneEditor.OnSettingsApplied:=@EditorSettingsApplied;
+    fSceneEditor.OnLabelsChanged:=@EditorLabelsChanged;
     fSceneEditor.OnGeometryChanged:=@EditorGeometryChanged;
     fSceneEditor.OnSkinChanged:=@EditorSkinChanged;
     fSceneEditor.OnVertexColorChanged:=@EditorVertexColorChanged;
@@ -1218,6 +1300,13 @@ end;
 procedure TRecorder3dView.EditorSettingsApplied(Sender:TObject);
 begin
   ApplyComponentConfiguration;
+end;
+
+procedure TRecorder3dView.EditorLabelsChanged(Sender:TObject);
+begin
+  { Labels do not change mesh ownership: never reload the scene during editing. }
+  ConfigureFrf;
+  MarkDirty;
 end;
 
 procedure TRecorder3dView.EditorGeometryChanged(Sender:TObject);
@@ -1452,9 +1541,11 @@ end;
 procedure TRecorder3dView.ApplyComponentConfiguration;
 var
   SceneTreeWasVisible:Boolean;
+  lSelectedNodeId:QWord;
 begin
   if (fComponent=nil) or (fBindings=nil) or (fFrfAdapter=nil) then
     Exit;
+  lSelectedNodeId:=SelectedNodeId;
   if fSceneEditor<>nil then
     fSceneEditor.AttachLiveScene(nil,0);
   SceneTreeWasVisible:=(fSceneTreeDialog<>nil) and fSceneTreeDialog.Visible;
@@ -1497,6 +1588,8 @@ begin
   UpdateValueLabels;
   fBindings.AttachScene(Scene);
   ConfigureFrf;
+  if (Scene<>nil) and (Scene.FindNode(lSelectedNodeId)<>nil) then
+    SelectNode(lSelectedNodeId);
   if fSceneEditor<>nil then
     fSceneEditor.AttachLiveScene(Scene,SelectedNodeId);
   if SceneTreeWasVisible then
@@ -1632,10 +1725,10 @@ begin
       IntensityBindings[IntensityCount].BandRms:=F.BandRms;
       IntensityBindings[IntensityCount].BandTolerancePercent:=F.BandTolerancePercent;
       IntensityBindings[IntensityCount].GradientEnabled:=F.GradientEnabled;
-      IntensityBindings[IntensityCount].PointLabel:=F.PointLabel;
-      if IntensityBindings[IntensityCount].PointLabel='' then
-        IntensityBindings[IntensityCount].PointLabel:=IntToStr(F.PointNumber);
+      IntensityBindings[IntensityCount].PointLabel:=fComponent.PointLabel(
+        F.ModifierTargetNodeId,F.PointNumber);
       IntensityBindings[IntensityCount].HideAnchors:=F.HideAnchors;
+      IntensityBindings[IntensityCount].ShowIntensityValues:=F.ShowIntensityValues;
       IntensityBindings[IntensityCount].EnvelopeXEnabled:=F.EnvelopeXEnabled;
       IntensityBindings[IntensityCount].EnvelopeYEnabled:=F.EnvelopeYEnabled;
       IntensityBindings[IntensityCount].EnvelopeZEnabled:=F.EnvelopeZEnabled;

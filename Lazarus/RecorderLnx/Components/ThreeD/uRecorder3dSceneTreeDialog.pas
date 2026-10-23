@@ -210,6 +210,7 @@ begin
     Exit;
   FillChar(Spec,SizeOf(Spec),0);
   Spec.Kind := PrimitiveKind;
+  Spec.DrawPointNumbers:=False;
   Spec.Iterations := seIterations.Value;
   Spec.CrossSectionIterations:=seCrossSection.Value;
   Spec.NodeId := fComponent.AllocatePrimitiveNodeId(fScene);

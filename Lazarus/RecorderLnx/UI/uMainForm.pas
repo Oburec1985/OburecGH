@@ -44,7 +44,7 @@ uses
   uRecorderFormModel, uRecorderPluginRuntime, uRecorderPluginConfig,
   uRecorderPluginApi,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources, uRecorder,
-  uRecorderEventQueue, uRecorderTimeSystem, uRecorderUiTestData, uFormPagesDialog,
+  uRecorderEventQueue, uRecorderTimeSystem, uRecorderBlockClock, uRecorderUiTestData, uFormPagesDialog,
   uFormEditorController, uDetachedMnemonicForm, uRecorderSettingsDialog, uTagSettingsDialog,
   uRecorderTagRefs,
   uRecorderCommandImages, uRcIconIds, uRecorderProjectFiles,
@@ -914,7 +914,8 @@ begin
     for I := 0 to lSources.Count - 1 do
     begin
       lSourceId := lSources[I];
-      if RecorderHardwareSourceLinkOk(fRecorder.TagRegistry, lSourceId) then
+      if RecorderConfiguredDataSourceEnabled(fRecorder.TagRegistry,lSourceId) and
+        RecorderHardwareSourceLinkOk(fRecorder.TagRegistry, lSourceId) then
         fRecorder.TagRegistry.RegisterActiveSource(lSourceId)
       else
         fRecorder.TagRegistry.UnregisterActiveSource(lSourceId);
@@ -2595,6 +2596,7 @@ var
   lFiles: TRecorderProjectFileSet;
 begin
   fProjectConfigDir := RecorderNormalizeProjectDir(ADirectoryName);
+  RecorderSetProjectConfigurationDirectory(fProjectConfigDir);
   if fPluginRuntime <> nil then
     fPluginRuntime.ProjectDirectory := fProjectConfigDir;
   lFiles := RecorderProjectFileSet(fProjectConfigDir, CProjectBaseName);
@@ -2827,7 +2829,9 @@ begin
     fRecordTagBlocks[I].Count := 0;
     fRecordTagMetadata[I] := lMetadataService.Resolve(
       fRecorder.TagRegistry, lTag);
-    if fRecordTagMetadata[I].IsUts then
+    if lTag.BlockTimeDomain = btRecorderMonotonic then
+      lDomainKey := 'recorder-monotonic'
+    else if fRecordTagMetadata[I].IsUts then
       lDomainKey := 'uts:' + lTag.Name
     else if fRecordTagMetadata[I].UtsChannelName <> '' then
       lDomainKey := 'uts:' + fRecordTagMetadata[I].UtsChannelName
@@ -3278,6 +3282,7 @@ begin
     fRecorder.DataSources.StopAll;
     ConsumeTagDataCycle(nil);
     DrainUiEventQueue(nil);
+    fComponentManager.EndAcquisitionSession;
     AddLog('Data sources stopped.');
   end;
 end;
@@ -3520,7 +3525,9 @@ begin
 
   fLatestTagValues.Values[ASnapshot.TagName] :=
     FormatFloat('0.000', ASnapshot.Value);
-  fRecorder.TimeSystem.UpdateFromTagSample(ASnapshot.TimeSec);
+  fRecorder.TimeSystem.UpdateFromTagSample(
+    fRecorder.TimeSystem.SampleTimeToSession(ASnapshot.TimeSec,
+      ASnapshot.BlockTimeDomain));
 end;
 
 { Настройка шрифтов баннера состояния/времени под высоту pnRightStatus }

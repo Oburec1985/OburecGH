@@ -87,6 +87,7 @@ type
     procedure CancelInteraction;
     procedure Paint; override;
     procedure DrawFrameOverlay; virtual;
+    function ObjectGizmoVisible:Boolean; virtual;
     procedure Resize; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
@@ -309,6 +310,7 @@ begin
   fOptions.ShowAxes := fShowAxes;
   fOptions.BackgroundColor := fBackgroundColor;
   fOptions.SelectedNodeId := fSelectedNodeId;
+  if not ObjectGizmoVisible then fOptions.SelectedNodeId:=0;
   fOptions.OverlayNodeId := fOverlayNodeId;
   fOptions.SelectedAxis := Ord(fGizmo.SelectedAxis);
   fOptions.CameraOverlayVisible := fCameraOverlay.State <> crosHidden;
@@ -1091,9 +1093,15 @@ function T3dLclWidget.ScreenGizmoHit(X,Y:Integer): T3dGizmoAxis;
 
 var V: T3dViewport;
 begin
+  if not ObjectGizmoVisible then Exit(gaNone);
   V.Width := ClientWidth;
   V.Height := ClientHeight;
   Result := fGizmo.HitTestScreen(OrbitCamera,V,Point3d(X,Y));
+end;
+
+function T3dLclWidget.ObjectGizmoVisible:Boolean;
+begin
+  Result:=True;
 end;
 
 function T3dLclWidget.SelectedNode: T3dNode;

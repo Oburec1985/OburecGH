@@ -19,6 +19,7 @@ type
     fConfig: TRecorderDacConfig;
     fFloatBuffer: array of Single;
     fPortAudioInitialized: Boolean;
+    fSampleRateHz: Double;
     function Check(AError: TPaError; AStage: TRecorderDacStage;
       out AResult: TRecorderDacResult): Boolean;
     function RequireState(AExpected: TRecorderDacState;
@@ -33,6 +34,7 @@ type
     function Connect(out AResult: TRecorderDacResult): Boolean;
     function Initialize(out AResult: TRecorderDacResult): Boolean;
     function ReadProperties(out AResult: TRecorderDacResult): Boolean;
+    function SampleRateHz: Double;
     function Configure(const AConfig: TRecorderDacConfig;
       out AResult: TRecorderDacResult): Boolean;
     function Start(out AResult: TRecorderDacResult): Boolean;
@@ -135,9 +137,30 @@ end;
 
 function TRecorderAudioDacBackend.ReadProperties(
   out AResult: TRecorderDacResult): Boolean;
+var
+  lIndex: Integer;
+  lInfo: PPaDeviceInfo;
 begin
-  Result := RequireState(rdsInitialized, rdsgReadProperties, AResult);
-  if Result then AResult := RecorderDacOk;
+  if not RequireState(rdsInitialized, rdsgReadProperties, AResult) then Exit(False);
+  if SameText(fEndpoint, 'default') then lIndex := fApi.GetDefaultOutputDevice()
+  else if not TryStrToInt(fEndpoint, lIndex) then lIndex := CPaNoDevice;
+  lInfo := fApi.GetDeviceInfo(lIndex);
+  Result := (lInfo <> nil);
+  if Result then Result := (lInfo^.MaxOutputChannels > 0) and
+    (lInfo^.DefaultSampleRate > 0);
+  if not Result then
+  begin
+    AResult := RecorderDacFailed(rdeDriver, rdsgReadProperties,
+      'Cannot read output device sample rate: ' + fEndpoint);
+    Exit;
+  end;
+  fSampleRateHz := lInfo^.DefaultSampleRate;
+  AResult := RecorderDacOk;
+end;
+
+function TRecorderAudioDacBackend.SampleRateHz: Double;
+begin
+  Result := fSampleRateHz;
 end;
 
 function TRecorderAudioDacBackend.Configure(const AConfig: TRecorderDacConfig;
@@ -331,6 +354,7 @@ begin
         else
           AEndpoints[lOutputCount].Endpoint := IntToStr(I);
         AEndpoints[lOutputCount].DisplayName := lText;
+        AEndpoints[lOutputCount].SampleRateHz := lInfo^.DefaultSampleRate;
         Inc(lOutputCount);
       end;
       { Equal captions may be separate HDMI ports. Preserve both endpoints and

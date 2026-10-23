@@ -191,6 +191,7 @@ begin
   lObjectGroup.Parent := lLeft;
   lObjectGroup.Align := alTop;
   lObjectGroup.Height := 120;
+  lObjectGroup.Top := 0;
   lObjectGroup.Caption := 'Объект';
   AddLabel(lObjectGroup, 'Наименование:', 12, 25);
   fObjectCombo := TComboBox.Create(Self);
@@ -210,6 +211,7 @@ begin
   lTestGroup.Parent := lLeft;
   lTestGroup.Align := alTop;
   lTestGroup.Height := 145;
+  lTestGroup.Top := lObjectGroup.Top + lObjectGroup.Height;
   lTestGroup.Caption := 'Испытание';
   AddLabel(lTestGroup, 'Наименование:', 12, 25);
   fTestCombo := TComboBox.Create(Self);
@@ -662,6 +664,7 @@ begin
     fManager.SelectContext(fObjects[lObjectIndex], fTests[lTestIndex]);
     fComponent.ObjectId := fManager.Context.ObjectId;
     fComponent.TestId := fManager.Context.TestId;
+    fComponent.ActivateContext;
     SetStatus('Контекст применён: ' + fObjects[lObjectIndex].Name + ' / ' +
       fTests[lTestIndex].Name);
   except
@@ -683,6 +686,7 @@ begin
     begin
       fComponent.ObjectId := fManager.Context.ObjectId;
       fComponent.TestId := fManager.Context.TestId;
+      fComponent.ActivateContext;
       LoadObjects;
       SetStatus('Контекст применён: ' + fManager.Context.ObjectName + ' / ' +
         fManager.Context.TestName);
@@ -717,9 +721,19 @@ begin
   if lObjectName = '' then Exit;
 
   lObjectId := '';
+  lTestId := '';
+  lRegistrationId := '';
+  { Capture stable identities before replacing the list arrays. Display names
+    are not unique and must never redirect an already selected context. }
+  lIndex := SelectedObjectIndex;
+  if lIndex >= 0 then lObjectId := fObjects[lIndex].Id;
+  lIndex := SelectedTestIndex;
+  if lIndex >= 0 then lTestId := fTests[lIndex].Id;
+  lIndex := ItemDataIndex(fRegistrationCombo);
+  if lIndex >= 0 then lRegistrationId := fMeasurements[lIndex].RegistrationId;
   fManager.Repository.ListObjects(fObjects);
   for I := 0 to High(fObjects) do
-    if SameText(fObjects[I].Name, lObjectName) then
+    if (lObjectId = '') and SameText(fObjects[I].Name, lObjectName) then
     begin
       lObjectId := fObjects[I].Id;
       Break;
@@ -729,12 +743,11 @@ begin
       Trim(fObjectType.Text), '');
   SaveObjectProperties(lObjectId);
 
-  lTestId := '';
   if lTestName <> '' then
   begin
     fManager.Repository.ListTests(lObjectId, fTests);
     for I := 0 to High(fTests) do
-      if SameText(fTests[I].Name, lTestName) then
+      if (lTestId = '') and SameText(fTests[I].Name, lTestName) then
       begin
         lTestId := fTests[I].Id;
         Break;
@@ -744,12 +757,11 @@ begin
         Trim(fTestType.Text), LocalTimeToUniversal(Now));
   end;
 
-  lRegistrationId := '';
   if (lTestId <> '') and (lRegistrationName <> '') then
   begin
     fManager.Repository.ListMeasurements(lObjectId, lTestId, fMeasurements);
     for I := 0 to High(fMeasurements) do
-      if SameText(fMeasurements[I].Reason, lRegistrationName) then
+      if (lRegistrationId = '') and SameText(fMeasurements[I].Reason, lRegistrationName) then
       begin
         lRegistrationId := fMeasurements[I].RegistrationId;
         Break;
@@ -784,6 +796,7 @@ begin
       fTests[SelectedTestIndex]);
     fComponent.ObjectId := fManager.Context.ObjectId;
     fComponent.TestId := fManager.Context.TestId;
+    fComponent.ActivateContext;
   end;
   UpdateDraftColors;
   UpdateDetails;

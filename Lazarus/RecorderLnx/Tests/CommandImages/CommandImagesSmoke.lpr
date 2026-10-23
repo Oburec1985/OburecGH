@@ -12,6 +12,8 @@ var
   I: Integer;
 begin
   Application.Initialize;
+  if RcIconIndex('plugin-visual-component') <> CIconPluginOscillogram then
+    raise Exception.Create('Generic plugin palette icon is missing');
   lImages := TImageList.Create(nil);
   try
     lImages.Width := 42;

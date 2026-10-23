@@ -78,6 +78,9 @@ type
     procedure ClearAxes;
     procedure ClearLines;
     procedure DeleteLine(AIndex: Integer);
+    { Cold editing operation: retain populated axes and their object identity,
+      compact indices, and keep one existing axis for an empty configuration. }
+    procedure RemoveUnusedAxes;
     procedure Assign(ASource: TOscModel);
     function Clone: TOscModel;
     function SaveUtf8: UTF8String;
@@ -213,6 +216,27 @@ procedure TOscModel.DeleteLine(AIndex: Integer);
 begin
   if (AIndex < 0) or (AIndex >= LineCount) then Exit;
   Lines[AIndex].Free; fLines.Delete(AIndex);
+end;
+
+procedure TOscModel.RemoveUnusedAxes;
+var
+  lAxis, lLine: Integer;
+  lUsed: Boolean;
+begin
+  for lAxis := AxisCount - 1 downto 0 do
+  begin
+    lUsed := ((TagId <> 0) or (TagName <> '')) and
+      (PrimaryAxisIndex = lAxis);
+    for lLine := 0 to LineCount - 1 do
+      if Lines[lLine].AxisIndex = lAxis then lUsed := True;
+    if lUsed or (AxisCount = 1) then Continue;
+    Axes[lAxis].Free;
+    fAxes.Delete(lAxis);
+    if PrimaryAxisIndex > lAxis then Dec(PrimaryAxisIndex)
+    else if PrimaryAxisIndex = lAxis then PrimaryAxisIndex := 0;
+    for lLine := 0 to LineCount - 1 do
+      if Lines[lLine].AxisIndex > lAxis then Dec(Lines[lLine].AxisIndex);
+  end;
 end;
 
 procedure TOscModel.Assign(ASource: TOscModel);

@@ -2,6 +2,9 @@ unit uOglChartCursorListener;
 {
   Модуль uOglChartCursorListener
   Описание: Слушатель событий мыши для управления интерактивным курсором графика.
+  Shift выбирает максимум видимого ряда в окне ±10 экранных пикселей,
+  Ctrl+Shift — минимум. Ряд принадлежит текущей странице; Y мыши не меняет
+  тип экстремума. Поиск не выделяет память и пропускает NaN/Infinity.
 }
 {$mode objfpc}{$H+}
 interface
@@ -11,7 +14,7 @@ uses
   uOglChartAxis, uOglChartPage, uOglChartRenderer, uOglChartChart,
   uOglChartCursor, uOglChartTrend, uOglChartFontMng;
 type
-  TDragCursorState = (dcsNone, dcsX1, dcsX2, dcsLabel1, dcsLabel2);
+  TDragCursorState = (dcsNone, dcsX1, dcsX2, dcsLabel1, dcsLabel2, dcsHorizontal);
   { TChartCursorListener }
   // Слушатель событий для интерактивного измерительного курсора.
   // Обрабатывает перемещение линий курсора, перетаскивание меток,
@@ -20,13 +23,13 @@ type
   private
     fDragState: TDragCursorState;
     fActivePage: TChartPage;
+    fHorizontal: TChartHorizontalCursor;
     fLastMouseX: Integer;
     fLastMouseY: Integer;
     fStartX: Integer;
     fStartY: Integer;
 
     function GetCursorLabelRect(ACursor: TChartCursor; ALabelIdx: Integer; AXPixel, AYPixel: Single; ARenderer: TOpenGLChartRenderer; APage: TChartPage): TChartPixelRect;
-    function GetSnappedX(ATrend: cBaseTrend; AMouseWorldX, AMouseWorldY, ADeltaXWorld: Double; const AMode: string): Double;
     function SpectrumCursorXAtFraction(APage: TChartPage;
       AFraction: Double): Double;
 public
@@ -37,6 +40,9 @@ procedure MouseUp(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X,
 
 procedure KeyDown(ASender: TObject; var Key: Word; Shift: TShiftState; var Handled: Boolean); override;
   end;
+// Allocation-free extremum search; bounds are world X (caller supplies log-aware window).
+function ChartSnapXToExtremum(ATrend: cBaseTrend; AX, ALeftX,
+  ARightX: Double; AMinimum: Boolean): Double;
 implementation
 constructor TChartCursorListener.Create;
 begin
@@ -83,15 +89,15 @@ begin
       lTextWidth := Max(lTextWidth, lFont.TextPixelWidth(lLines[I]));
     lTextHeight := lLines.Count * lFont.TextPixelHeight + (lLines.Count - 1) * 2;
 
-    Result.Left := Round(AXPixel + 2);
-    Result.Right := Round(AXPixel + 2 + lTextWidth + 12);
-    Result.Top := Round(AYPixel - lTextHeight / 2 - 4);
-    Result.Bottom := Round(AYPixel + lTextHeight / 2 + 4);
+    Result := ChartCursorLabelRect(AXPixel, AYPixel, lTextWidth, lTextHeight,
+      ((ALabelIdx = 1) and ACursor.Label1OnLeft) or
+      ((ALabelIdx = 2) and ACursor.Label2OnLeft));
   finally
     lLines.Free;
   end;
 end;
-function TChartCursorListener.GetSnappedX(ATrend: cBaseTrend; AMouseWorldX, AMouseWorldY, ADeltaXWorld: Double; const AMode: string): Double;
+function ChartSnapXToExtremum(ATrend: cBaseTrend;
+  AX, ALeftX, ARightX: Double; AMinimum: Boolean): Double;
 var
   lLine: cLineSeries;
   lBuff: cBuffTrend1d;
@@ -101,12 +107,15 @@ var
   lMinX, lMaxX: Double;
   lFound: Boolean;
   lIdxStart, lIdxEnd: Integer;
+  lIndexA, lIndexB: Double;
+  AMouseWorldX: Double;
 begin
+  AMouseWorldX := AX;
   Result := AMouseWorldX;
   if not Assigned(ATrend) then Exit;
 
-  lMinY := 1e30;
-  lMaxY := -1e30;
+  lMinY := Infinity;
+  lMaxY := NegInfinity;
   lMinX := AMouseWorldX;
   lMaxX := AMouseWorldX;
   lFound := False;
@@ -118,15 +127,19 @@ begin
     begin
       lValX := lLine.Points[I].X;
       lValY := lLine.Points[I].Y;
-      if Abs(lValX - AMouseWorldX) <= ADeltaXWorld then
+      if not IsNan(lValX) and not IsInfinite(lValX) and
+        not IsNan(lValY) and not IsInfinite(lValY) and
+        (lValX >= ALeftX) and (lValX <= ARightX) then
       begin
         lFound := True;
-        if lValY < lMinY then
+        if (lValY < lMinY) or ((lValY = lMinY) and
+          (Abs(lValX - AMouseWorldX) < Abs(lMinX - AMouseWorldX))) then
         begin
           lMinY := lValY;
           lMinX := lValX;
         end;
-        if lValY > lMaxY then
+        if (lValY > lMaxY) or ((lValY = lMaxY) and
+          (Abs(lValX - AMouseWorldX) < Abs(lMaxX - AMouseWorldX))) then
         begin
           lMaxY := lValY;
           lMaxX := lValX;
@@ -137,26 +150,34 @@ begin
   else if ATrend is cBuffTrend1d then
   begin
     lBuff := cBuffTrend1d(ATrend);
-    if (lBuff.DX <> 0) and (lBuff.Count > 0) then
+    if (lBuff.DX <> 0) and (lBuff.Count > 0) and
+      not IsNan(lBuff.DX) and not IsInfinite(lBuff.DX) and
+      not IsNan(lBuff.X0) and not IsInfinite(lBuff.X0) then
     begin
-      lIdxStart := Trunc((AMouseWorldX - ADeltaXWorld - lBuff.X0) / lBuff.DX);
-      lIdxEnd := Trunc((AMouseWorldX + ADeltaXWorld - lBuff.X0) / lBuff.DX) + 1;
-      if lIdxStart < 0 then lIdxStart := 0;
-      if lIdxEnd >= lBuff.Count then lIdxEnd := lBuff.Count - 1;
+      lIndexA := (ALeftX - lBuff.X0) / lBuff.DX;
+      lIndexB := (ARightX - lBuff.X0) / lBuff.DX;
+      if (Max(lIndexA, lIndexB) < 0) or
+        (Min(lIndexA, lIndexB) > lBuff.Count - 1) then Exit;
+      lIdxStart := Floor(Max(0, Min(lIndexA, lIndexB)));
+      lIdxEnd := Ceil(Min(lBuff.Count - 1, Max(lIndexA, lIndexB)));
 
       for I := lIdxStart to lIdxEnd do
       begin
         lValX := lBuff.X0 + I * lBuff.DX;
         lValY := lBuff.Values[I];
-        if Abs(lValX - AMouseWorldX) <= ADeltaXWorld then
+        if not IsNan(lValY) and not IsInfinite(lValY) and
+          not IsNan(lValX) and not IsInfinite(lValX) and
+          (lValX >= ALeftX) and (lValX <= ARightX) then
         begin
           lFound := True;
-          if lValY < lMinY then
+          if (lValY < lMinY) or ((lValY = lMinY) and
+            (Abs(lValX - AMouseWorldX) < Abs(lMinX - AMouseWorldX))) then
           begin
             lMinY := lValY;
             lMinX := lValX;
           end;
-          if lValY > lMaxY then
+          if (lValY > lMaxY) or ((lValY = lMaxY) and
+            (Abs(lValX - AMouseWorldX) < Abs(lMaxX - AMouseWorldX))) then
           begin
             lMaxY := lValY;
             lMaxX := lValX;
@@ -168,17 +189,10 @@ begin
 
   if lFound then
   begin
-    if AMode = 'min' then
+    if AMinimum then
       Result := lMinX
-    else if AMode = 'max' then
-      Result := lMaxX
     else
-    begin
-      if Abs(AMouseWorldY - lMinY) < Abs(AMouseWorldY - lMaxY) then
-        Result := lMinX
-      else
-        Result := lMaxX;
-    end;
+      Result := lMaxX;
   end;
 end;
 procedure TChartCursorListener.MouseDown(ASender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer; var Handled: Boolean);
@@ -193,6 +207,7 @@ var
   lPixelX1, lPixelX2: Single;
   lLabelY1, lLabelY2: Single;
   lLabelRect1, lLabelRect2: TChartPixelRect;
+  lHorizontal: TChartHorizontalCursor;
 begin
   if not Enabled then Exit;
   if (Button = mbLeft) and Supports(ASender, IChartControl, lControl) then
@@ -202,6 +217,7 @@ begin
     lModel := TChartModel(lControl.GetModel);
     if not Assigned(lModel) then Exit;
     fActivePage := nil;
+    fHorizontal := nil;
     fDragState := dcsNone;
 
     for I := 0 to lModel.ChildCount - 1 do
@@ -219,9 +235,13 @@ begin
       end;
     end;
     if not Assigned(fActivePage) then Exit;
-    lCursor := GetOrCreatePageCursor(fActivePage);
-    if not lCursor.Visible then Exit;
+    lCursor := nil;
+    for I := 0 to fActivePage.ChildCount - 1 do
+      if fActivePage.Children[I] is TChartCursor then
+        lCursor := TChartCursor(fActivePage.Children[I]);
     lContentRect := lRenderer.GetPageContentRect(fActivePage);
+    if Assigned(lCursor) and lCursor.Visible then
+    begin
     lPixelX1 := lRenderer.XValueToPixel(fActivePage, nil, lCursor.X1, lContentRect.Left, lContentRect.Right);
     lPixelX2 := lRenderer.XValueToPixel(fActivePage, nil, lCursor.X2, lContentRect.Left, lContentRect.Right);
 
@@ -255,6 +275,7 @@ begin
       fDragState := dcsX1;
       fStartX := X;
       fStartY := Y;
+      if ssShift in Shift then MouseMove(ASender, Shift, X, Y, Handled);
       Handled := True;
       Exit;
     end;
@@ -263,9 +284,25 @@ begin
       fDragState := dcsX2;
       fStartX := X;
       fStartY := Y;
+      if ssShift in Shift then MouseMove(ASender, Shift, X, Y, Handled);
       Handled := True;
       Exit;
     end;
+    end;
+    if (X < lContentRect.Left) or (X > lContentRect.Right) or
+      (Y < lContentRect.Top) or (Y > lContentRect.Bottom) then Exit;
+    for I := 0 to fActivePage.ChildCount - 1 do
+      if fActivePage.Children[I] is TChartHorizontalCursor then
+      begin
+        lHorizontal := TChartHorizontalCursor(fActivePage.Children[I]);
+        if not lHorizontal.Visible or (lHorizontal.Axis = nil) then Continue;
+        if Abs(Y - lRenderer.AxisValueToPixel(lHorizontal.Axis,
+          lHorizontal.Y, lContentRect.Bottom, lContentRect.Top)) > 5 then Continue;
+        fHorizontal := lHorizontal;
+        fDragState := dcsHorizontal;
+        Handled := True;
+        Exit;
+      end;
   end;
 end;
 procedure TChartCursorListener.MouseMove(ASender: TObject; Shift: TShiftState; X, Y: Integer; var Handled: Boolean);
@@ -276,14 +313,12 @@ var
   lPage: TChartPage;
   lPageRect, lContentRect: TChartPixelRect;
   lCursor: TChartCursor;
-  I: Integer;
+  I, J: Integer;
   lPixelX1, lPixelX2: Single;
   lLabelY1, lLabelY2: Single;
   lLabelRect1, lLabelRect2: TChartPixelRect;
   lHoverLine, lHoverLabel: Boolean;
-  lMouseWorldX, lMouseWorldY: Double;
-  lMouseWorldXPlus5: Double;
-  lDeltaXWorld: Double;
+  lMouseWorldX, lLeftX, lRightX: Double;
   lTrend: cBaseTrend;
   lAxis: TChartAxis;
   lSnappedX: Double;
@@ -301,6 +336,42 @@ begin
     if fDragState <> dcsNone then
     begin
       if not Assigned(fActivePage) then Exit;
+      // Configuration can remove a page/overlay between mouse messages.
+      I := 0;
+      while (I < lModel.ChildCount) and (lModel.Children[I] <> fActivePage) do Inc(I);
+      if I = lModel.ChildCount then
+      begin
+        fDragState := dcsNone; fActivePage := nil; fHorizontal := nil;
+        Exit;
+      end;
+      if fDragState = dcsHorizontal then
+      begin
+        I := 0;
+        while (I < fActivePage.ChildCount) and
+          (fActivePage.Children[I] <> fHorizontal) do Inc(I);
+        if I = fActivePage.ChildCount then
+        begin
+          fDragState := dcsNone; fHorizontal := nil;
+          Exit;
+        end;
+        if not fHorizontal.Visible or (fHorizontal.Axis = nil) then Exit;
+        I := 0;
+        while (I < fActivePage.ChildCount) and
+          (fActivePage.Children[I] <> fHorizontal.Axis) do Inc(I);
+        if I = fActivePage.ChildCount then
+        begin
+          fDragState := dcsNone; fHorizontal := nil;
+          Exit;
+        end;
+        lContentRect := lRenderer.GetPageContentRect(fActivePage);
+        fHorizontal.Y := lRenderer.PixelToAxisValue(fHorizontal.Axis,
+          EnsureRange(Y, lContentRect.Top, lContentRect.Bottom),
+          lContentRect.Bottom, lContentRect.Top);
+        lControl.NotifyCursorChanged(fHorizontal);
+        lControl.Redraw;
+        Handled := True;
+        Exit;
+      end;
       lCursor := GetOrCreatePageCursor(fActivePage);
       lContentRect := lRenderer.GetPageContentRect(fActivePage);
       if fDragState in [dcsX1, dcsX2] then
@@ -310,18 +381,26 @@ begin
         if ssShift in Shift then
         begin
           // Вычисляем радиус примагничивания 10 пикселей
-          lMouseWorldXPlus5 := lRenderer.PixelToXValue(fActivePage, nil, X + 10, lContentRect.Left, lContentRect.Right);
-          lDeltaXWorld := Abs(lMouseWorldXPlus5 - lMouseWorldX);
+          { Both pixel boundaries must be transformed separately on logarithmic X. }
+          lLeftX := lRenderer.PixelToXValue(fActivePage, nil, X - 10, lContentRect.Left, lContentRect.Right);
+          lRightX := lRenderer.PixelToXValue(fActivePage, nil, X + 10, lContentRect.Left, lContentRect.Right);
           // Определяем активный объект по правилам приоритета
           lTrend := nil;
           if Assigned(lRenderer.SelectedObject) then
           begin
-            if lRenderer.SelectedObject is cBaseTrend then
+            if (lRenderer.SelectedObject is cBaseTrend) and
+              cBaseTrend(lRenderer.SelectedObject).Visible and
+              (lRenderer.SelectedObject.Parent is TChartAxis) and
+              TChartAxis(lRenderer.SelectedObject.Parent).Visible and
+              (lRenderer.SelectedObject.Parent.Parent = fActivePage) then
               lTrend := cBaseTrend(lRenderer.SelectedObject)
-            else if lRenderer.SelectedObject is TChartAxis then
+            else if (lRenderer.SelectedObject is TChartAxis) and
+              TChartAxis(lRenderer.SelectedObject).Visible and
+              (lRenderer.SelectedObject.Parent = fActivePage) then
             begin
               for I := 0 to TChartAxis(lRenderer.SelectedObject).ChildCount - 1 do
-                if TChartAxis(lRenderer.SelectedObject).Children[I] is cBaseTrend then
+                if (TChartAxis(lRenderer.SelectedObject).Children[I] is cBaseTrend) and
+                  cBaseTrend(TChartAxis(lRenderer.SelectedObject).Children[I]).Visible then
                 begin
                   lTrend := cBaseTrend(TChartAxis(lRenderer.SelectedObject).Children[I]);
                   Break;
@@ -334,22 +413,32 @@ begin
           begin
             // Ищем активную ось (которая выделена) или первую в списке на активной странице
             lAxis := nil;
-            if Assigned(lRenderer.SelectedObject) and (lRenderer.SelectedObject is TChartAxis) and (TChartAxis(lRenderer.SelectedObject).Parent = fActivePage) then
+            if Assigned(lRenderer.SelectedObject) and (lRenderer.SelectedObject is TChartAxis) and
+              TChartAxis(lRenderer.SelectedObject).Visible and
+              (TChartAxis(lRenderer.SelectedObject).Parent = fActivePage) then
               lAxis := TChartAxis(lRenderer.SelectedObject)
             else
             begin
               for I := 0 to fActivePage.ChildCount - 1 do
-                if fActivePage.Children[I] is TChartAxis then
+                if (fActivePage.Children[I] is TChartAxis) and
+                  TChartAxis(fActivePage.Children[I]).Visible then
                 begin
-                  lAxis := TChartAxis(fActivePage.Children[I]);
-                  Break;
+                  for J := 0 to fActivePage.Children[I].ChildCount - 1 do
+                    if (fActivePage.Children[I].Children[J] is cBaseTrend) and
+                      cBaseTrend(fActivePage.Children[I].Children[J]).Visible then
+                    begin
+                      lAxis := TChartAxis(fActivePage.Children[I]);
+                      Break;
+                    end;
+                  if lAxis <> nil then Break;
                 end;
             end;
 
             if Assigned(lAxis) then
             begin
               for I := 0 to lAxis.ChildCount - 1 do
-                if lAxis.Children[I] is cBaseTrend then
+                if (lAxis.Children[I] is cBaseTrend) and
+                  cBaseTrend(lAxis.Children[I]).Visible then
                 begin
                   lTrend := cBaseTrend(lAxis.Children[I]);
                   Break;
@@ -358,18 +447,8 @@ begin
           end;
           if Assigned(lTrend) then
           begin
-            lAxis := nil;
-            if Assigned(lTrend.Parent) and (lTrend.Parent is TChartAxis) then
-              lAxis := TChartAxis(lTrend.Parent);
-            lMouseWorldY := lRenderer.PixelToAxisValue(lAxis, Y,
-              lContentRect.Bottom, lContentRect.Top);
-            if ssCtrl in Shift then
-              lSnappedX := GetSnappedX(lTrend, lMouseWorldX, lMouseWorldY, lDeltaXWorld, 'min')
-            else
-              { Обычный Shift выбирает ближайший к указателю локальный минимум
-                или максимум выбранной линии. Ctrl+Shift оставляет явный минимум. }
-              lSnappedX := GetSnappedX(lTrend, lMouseWorldX, lMouseWorldY,
-                lDeltaXWorld, 'nearest');
+            lSnappedX := ChartSnapXToExtremum(lTrend, lMouseWorldX,
+              Min(lLeftX, lRightX), Max(lLeftX, lRightX), ssCtrl in Shift);
             lMouseWorldX := lSnappedX;
           end;
         end;
@@ -380,6 +459,10 @@ begin
       end
       else if fDragState in [dcsLabel1, dcsLabel2] then
       begin
+        lPixelX1 := lRenderer.XValueToPixel(fActivePage, nil, lCursor.X1,
+          lContentRect.Left, lContentRect.Right);
+        lPixelX2 := lRenderer.XValueToPixel(fActivePage, nil, lCursor.X2,
+          lContentRect.Left, lContentRect.Right);
         if lContentRect.Top <> lContentRect.Bottom then
         begin
           lNewOffset := (Y - lContentRect.Bottom) / (lContentRect.Top - lContentRect.Bottom);
@@ -387,9 +470,15 @@ begin
           if lNewOffset > 1.0 then lNewOffset := 1.0;
 
           if fDragState = dcsLabel1 then
-            lCursor.LabelY1Offset := lNewOffset
+          begin
+            lCursor.LabelY1Offset := lNewOffset;
+            lCursor.Label1OnLeft := X < lPixelX1;
+          end
           else
+          begin
             lCursor.LabelY2Offset := lNewOffset;
+            lCursor.Label2OnLeft := X < lPixelX2;
+          end;
         end;
       end;
       lControl.NotifyCursorChanged(lCursor);
@@ -467,6 +556,7 @@ begin
   if fDragState <> dcsNone then
   begin
     fDragState := dcsNone;
+    fHorizontal := nil;
     Handled := True;
   end;
 end;

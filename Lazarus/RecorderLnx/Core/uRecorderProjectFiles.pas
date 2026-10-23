@@ -58,6 +58,13 @@ type
 function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
   TRecorderProjectFileSet;
 
+function RecorderFrfRouteConfigFileName(const AProjectDirectory,
+  AComponentId: string): string;
+{ Explicit active application context; never reads a persisted default project.
+  Empty context keeps standalone controls/tests away from user configuration. }
+procedure RecorderSetProjectConfigurationDirectory(const ADirectory: string);
+function RecorderProjectConfigurationDirectory: string;
+
 { Загружает конфигурацию тегов из JSON-файла }
 procedure SaveRecorderProjectConfig(const AFileName: string;
   ATags: TRecorderTagRegistry);
@@ -107,6 +114,19 @@ var
   g_ProjectConfigExtensions: array[0..CRecorderProjectConfigExtensionMax - 1]
     of TRecorderProjectConfigExtension;
   g_ProjectConfigExtensionCount: Integer = 0;
+  g_ProjectConfigurationDirectory: string = '';
+
+procedure RecorderSetProjectConfigurationDirectory(const ADirectory: string);
+begin
+  if Trim(ADirectory) = '' then g_ProjectConfigurationDirectory := ''
+  else g_ProjectConfigurationDirectory :=
+    ExcludeTrailingPathDelimiter(ExpandFileName(ADirectory));
+end;
+
+function RecorderProjectConfigurationDirectory: string;
+begin
+  Result := g_ProjectConfigurationDirectory;
+end;
 
 function SkinAxisName(AAxis:TRecorder3dSkinAxis):string;
 begin
@@ -167,6 +187,21 @@ begin
   g_ProjectConfigExtensions[g_ProjectConfigExtensionCount].TagLoadedProc := ATagLoadedProc;
   g_ProjectConfigExtensions[g_ProjectConfigExtensionCount].BeforeSaveProc := ABeforeSaveProc;
   Inc(g_ProjectConfigExtensionCount);
+end;
+
+function RecorderFrfRouteConfigFileName(const AProjectDirectory,
+  AComponentId: string): string;
+var lFolder: string; I: Integer;
+begin
+  Result := '';
+  if (Trim(AProjectDirectory) = '') or (AComponentId = '') then Exit;
+  { Encode identity rather than replacing forbidden characters: distinct IDs
+    must not silently share a route, and no component may escape the project. }
+  lFolder := '';
+  for I := 1 to Length(AComponentId) do
+    lFolder := lFolder + IntToHex(Ord(AComponentId[I]), 2);
+  Result := IncludeTrailingPathDelimiter(ExpandFileName(AProjectDirectory)) +
+    'frf-routes' + PathDelim + lFolder + PathDelim + 'route.ini';
 end;
 
 function RecorderProjectFileSet(const ADirectoryName, ABaseName: string):
@@ -1246,6 +1281,7 @@ begin
   if AForms = nil then
     raise ERecorderFormError.Create('Form manager is not assigned');
 
+  RecorderSetProjectConfigurationDirectory(ExtractFileDir(ExpandFileName(AFileName)));
   ForceDirectories(ExtractFileDir(AFileName));
   lIni := TIniFile.Create(AFileName);
   try
@@ -1352,6 +1388,8 @@ begin
             TRecorder3dComponent(lComponent).BackgroundColor);
           lIni.WriteInteger(lSection, 'LabelFontSize',
             TRecorder3dComponent(lComponent).LabelFontSize);
+          lIni.WriteBool(lSection, 'ShowVertexLabels',
+            TRecorder3dComponent(lComponent).ShowVertexLabels);
           lIni.WriteFloat(lSection, 'CameraDistance',
             TRecorder3dComponent(lComponent).CameraDistance);
           lIni.WriteFloat(lSection,'CameraTargetX',TRecorder3dComponent(lComponent).CameraTargetX);
@@ -1430,6 +1468,8 @@ begin
            for K:=0 to TRecorder3dComponent(lComponent).NodeRenderOverrideCount-1 do
            begin
              lIni.WriteInt64(lSection,Format('NodeRender%dId',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].NodeId);
+             lIni.WriteString(lSection,Format('NodeRender%dVertexLabels',[K]),
+               TRecorder3dComponent(lComponent).NodeRenderOverrides[K].VertexLabels.DelimitedText);
              lIni.WriteBool(lSection,Format('NodeRender%dFill',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawFill);
              lIni.WriteBool(lSection,Format('NodeRender%dWire',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawWireframe);
              lIni.WriteBool(lSection,Format('NodeRender%dPoints',[K]),TRecorder3dComponent(lComponent).NodeRenderOverrides[K].DrawPoints);
@@ -1822,6 +1862,9 @@ begin
             Ord(TRecorderDacComponent(lComponent).UnderrunPolicy));
           lIni.WriteFloat(lSection, 'DacFrequencyHz',
             TRecorderDacComponent(lComponent).FrequencyHz);
+          lIni.WriteFloat(lSection, 'DacPulseIntervalSec', TRecorderDacComponent(lComponent).PulseIntervalSec);
+          lIni.WriteInteger(lSection, 'DacPulsePeriods', TRecorderDacComponent(lComponent).PulsePeriods);
+          lIni.WriteInteger(lSection, 'DacPulseCount', TRecorderDacComponent(lComponent).PulseCount);
           lIni.WriteFloat(lSection, 'DacAmplitude',
             TRecorderDacComponent(lComponent).Amplitude);
           lIni.WriteFloat(lSection, 'DacSweepStartHz',
@@ -1869,6 +1912,14 @@ begin
             TRecorderVibrationEstimateComponent(lComponent).DisplayFormat);
           lIni.WriteBool(lSection, 'AmplitudeMode',
             TRecorderVibrationEstimateComponent(lComponent).AmplitudeMode);
+          lIni.WriteBool(lSection, 'HoldMaximum',
+            TRecorderVibrationEstimateComponent(lComponent).HoldMaximum);
+          lIni.WriteBool(lSection, 'ManualBand',
+            TRecorderVibrationEstimateComponent(lComponent).ManualBand);
+          lIni.WriteFloat(lSection, 'BandFromHz',
+            TRecorderVibrationEstimateComponent(lComponent).BandFromHz);
+          lIni.WriteFloat(lSection, 'BandToHz',
+            TRecorderVibrationEstimateComponent(lComponent).BandToHz);
           lIni.WriteString(lSection, 'FontName',
             TRecorderVibrationEstimateComponent(lComponent).FontName);
           lIni.WriteInteger(lSection, 'FontSize',
@@ -1963,6 +2014,8 @@ begin
         if lComponent is TRecorderImpactHammerComponent then
         begin
           lImpactHammer := TRecorderImpactHammerComponent(lComponent);
+          lImpactHammer.RouteConfigFileName := RecorderFrfRouteConfigFileName(
+            ExtractFileDir(AFileName), lComponent.Id);
           lImpactValues := TStringList.Create;
           try
             lImpactHammer.SaveToStrings(lImpactValues, 'Impact.');
@@ -1992,11 +2045,13 @@ begin
           lIni.WriteFloat(lSection, 'FrFrequencyStepHz', lFrequencyResponse.FrequencyStepHz);
           lIni.WriteInteger(lSection, 'FrMergeMode', Ord(lFrequencyResponse.MergeMode));
           lIni.WriteBool(lSection, 'FrLegendVisible', lFrequencyResponse.LegendVisible);
+          lIni.WriteBool(lSection, 'FrLogFrequency', lFrequencyResponse.LogFrequency);
           lIni.WriteInteger(lSection, 'FrAxisCount', lFrequencyResponse.AxisCount);
           for K := 0 to lFrequencyResponse.AxisCount - 1 do
           begin
             lFrAxis := lFrequencyResponse.Axes[K];
             lIni.WriteString(lSection, Format('FrAxis%dName', [K]), lFrAxis.Name);
+            lIni.WriteInteger(lSection, Format('FrAxis%dKind', [K]), Ord(lFrAxis.Kind));
             lIni.WriteFloat(lSection, Format('FrAxis%dMin', [K]), lFrAxis.MinValue);
             lIni.WriteFloat(lSection, Format('FrAxis%dMax', [K]), lFrAxis.MaxValue);
             lIni.WriteBool(lSection, Format('FrAxis%dLog', [K]), lFrAxis.Logarithmic);
@@ -2014,6 +2069,7 @@ begin
             lIni.WriteString(lSection, Format('FrLine%dFrequencyName', [K]), lFrLine.FrequencyTagName);
             lIni.WriteInt64(lSection, Format('FrLine%dFrequencyId', [K]), lFrLine.FrequencyTagId);
             lIni.WriteInteger(lSection, Format('FrLine%dKind', [K]), Ord(lFrLine.Kind));
+            lIni.WriteInteger(lSection, Format('FrLine%dFrequencyMode', [K]), Ord(lFrLine.FrequencyMode));
             lIni.WriteInteger(lSection, Format('FrLine%dBuffer', [K]), lFrLine.BufferSize);
             lIni.WriteBool(lSection, Format('FrLine%dUniform', [K]), lFrLine.UniformX);
             lIni.WriteFloat(lSection, Format('FrLine%dStep', [K]), lFrLine.FrequencyStepHz);
@@ -2067,6 +2123,8 @@ begin
             lIni.WriteBool(lSection, 'SqlShowEvents', TRecorderSqlTrendComponent(lComponent).ShowEvents);
             lIni.WriteBool(lSection, 'SqlShowRecordingEvents', TRecorderSqlTrendComponent(lComponent).ShowRecordingEvents);
             lIni.WriteBool(lSection, 'SqlShowTagAlarmEvents', TRecorderSqlTrendComponent(lComponent).ShowTagAlarmEvents);
+            lIni.WriteBool(lSection, 'SqlShowTagRangeEvents', TRecorderSqlTrendComponent(lComponent).ShowTagRangeEvents);
+            lIni.WriteBool(lSection, 'SqlShowOnlyUnresolvedEventPoints', TRecorderSqlTrendComponent(lComponent).ShowOnlyUnresolvedEventPoints);
             lIni.WriteInteger(lSection, 'SqlDisplayCount', TRecorderSqlTrendComponent(lComponent).DisplayCount);
             lIni.WriteInteger(lSection, 'SqlActiveDisplay', TRecorderSqlTrendComponent(lComponent).ActiveDisplayIndex);
             for K := 0 to TRecorderSqlTrendComponent(lComponent).DisplayCount - 1 do
@@ -2108,6 +2166,7 @@ end;
 procedure LoadRecorderGuiConfig(const AFileName: string;
   AForms: TRecorderFormManager; AFactory: TRecorderComponentFactory);
 var
+  lFrAxisIndex, lFrLineIndex: Integer;
   I: Integer;
   J: Integer;
   K: Integer;
@@ -2149,6 +2208,7 @@ begin
   if (AForms = nil) or (AFactory = nil) then
     raise ERecorderFormError.Create('Form manager or component factory is not assigned');
 
+  RecorderSetProjectConfigurationDirectory(ExtractFileDir(ExpandFileName(AFileName)));
   lIni := TIniFile.Create(AFileName);
   try
     AForms.Clear;
@@ -2292,6 +2352,8 @@ begin
               lIni.ReadInt64(lSection, 'BackgroundColor', $0033291F);
             TRecorder3dComponent(lComponent).LabelFontSize :=
               EnsureRange(lIni.ReadInteger(lSection, 'LabelFontSize', 8), 4, 48);
+            TRecorder3dComponent(lComponent).ShowVertexLabels :=
+              lIni.ReadBool(lSection, 'ShowVertexLabels', True);
             TRecorder3dComponent(lComponent).CameraDistance :=
               lIni.ReadFloat(lSection, 'CameraDistance', 6);
             TRecorder3dComponent(lComponent).CameraTargetX:=lIni.ReadFloat(lSection,'CameraTargetX',0);
@@ -2382,6 +2444,8 @@ begin
              for K:=0 to lCount-1 do with TRecorder3dComponent(lComponent).AddNodeRenderOverride do
              begin
                NodeId:=lIni.ReadInt64(lSection,Format('NodeRender%dId',[K]),0);
+               VertexLabels.DelimitedText:=lIni.ReadString(lSection,
+                 Format('NodeRender%dVertexLabels',[K]),'');
                DrawFill:=lIni.ReadBool(lSection,Format('NodeRender%dFill',[K]),True);
                DrawWireframe:=lIni.ReadBool(lSection,Format('NodeRender%dWire',[K]),False);
                 DrawPoints:=lIni.ReadBool(lSection,Format('NodeRender%dPoints',[K]),False);
@@ -2861,6 +2925,9 @@ begin
                 Ord(High(TRecorderDacUnderrunPolicy))));
             TRecorderDacComponent(lComponent).FrequencyHz :=
               lIni.ReadFloat(lSection, 'DacFrequencyHz', 440);
+            TRecorderDacComponent(lComponent).PulseIntervalSec := lIni.ReadFloat(lSection, 'DacPulseIntervalSec', 1);
+            TRecorderDacComponent(lComponent).PulsePeriods := lIni.ReadInteger(lSection, 'DacPulsePeriods', 10);
+            TRecorderDacComponent(lComponent).PulseCount := lIni.ReadInteger(lSection, 'DacPulseCount', 5);
             TRecorderDacComponent(lComponent).Amplitude :=
               lIni.ReadFloat(lSection, 'DacAmplitude', 0.5);
             TRecorderDacComponent(lComponent).SweepStartHz :=
@@ -2913,6 +2980,14 @@ begin
               lIni.ReadString(lSection, 'DisplayFormat', '0.###');
             TRecorderVibrationEstimateComponent(lComponent).AmplitudeMode :=
               lIni.ReadBool(lSection, 'AmplitudeMode', False);
+            TRecorderVibrationEstimateComponent(lComponent).HoldMaximum :=
+              lIni.ReadBool(lSection, 'HoldMaximum', False);
+            TRecorderVibrationEstimateComponent(lComponent).ManualBand :=
+              lIni.ReadBool(lSection, 'ManualBand', False);
+            TRecorderVibrationEstimateComponent(lComponent).BandFromHz :=
+              lIni.ReadFloat(lSection, 'BandFromHz', 0);
+            TRecorderVibrationEstimateComponent(lComponent).BandToHz :=
+              lIni.ReadFloat(lSection, 'BandToHz', 1000);
             TRecorderVibrationEstimateComponent(lComponent).FontName :=
               lIni.ReadString(lSection, 'FontName', 'Tahoma');
             TRecorderVibrationEstimateComponent(lComponent).FontSize :=
@@ -3041,14 +3116,14 @@ begin
           if lComponent is TRecorderImpactHammerComponent then
           begin
             lImpactHammer := TRecorderImpactHammerComponent(lComponent);
+            lImpactHammer.RouteConfigFileName := RecorderFrfRouteConfigFileName(
+              ExtractFileDir(AFileName), lComponent.Id);
             lImpactValues := TStringList.Create;
             try
               lIni.ReadSectionValues(lSection, lImpactValues);
               if not lImpactHammer.LoadFromStrings(lImpactValues, 'Impact.',
                 lImpactError) then
-                raise ERecorderFormError.CreateFmt(
-                  'Invalid impact-hammer component in %s: %s',
-                  [lSection, lImpactError]);
+                raise ERecorderFormError.CreateFmt( 'Invalid impact-hammer component in %s: %s',[lSection, lImpactError]);
             finally
               lImpactValues.Free;
             end;
@@ -3093,6 +3168,8 @@ begin
               TRecorderFrequencyResponseMergeMode(lItemCount);
             lFrequencyResponse.LegendVisible := lIni.ReadBool(lSection,
               'FrLegendVisible', lFrequencyResponse.LegendVisible);
+            lFrequencyResponse.LogFrequency := lIni.ReadBool(lSection,
+              'FrLogFrequency', False);
             lCount := lIni.ReadInteger(lSection, 'FrAxisCount', -1);
             if lCount >= 0 then
             begin
@@ -3101,6 +3178,9 @@ begin
               begin
                 lFrAxis := lFrequencyResponse.AddAxis;
                 lFrAxis.Name := lIni.ReadString(lSection, Format('FrAxis%dName', [K]), Format('Ось %d', [K + 1]));
+                lFrAxis.Kind := TRecorderFrequencyResponseKind(EnsureRange(
+                  lIni.ReadInteger(lSection, Format('FrAxis%dKind', [K]),
+                    Ord(lFrequencyResponse.Kind)), 0, 2));
                 lFrAxis.MinValue := lIni.ReadFloat(lSection, Format('FrAxis%dMin', [K]), 0);
                 lFrAxis.MaxValue := lIni.ReadFloat(lSection, Format('FrAxis%dMax', [K]), 10);
                 lFrAxis.Logarithmic := lIni.ReadBool(lSection, Format('FrAxis%dLog', [K]), False);
@@ -3119,6 +3199,11 @@ begin
                 lFrLine.FrequencyTagName := lIni.ReadString(lSection, Format('FrLine%dFrequencyName', [K]), '');
                 lFrLine.FrequencyTagId := lIni.ReadInt64(lSection, Format('FrLine%dFrequencyId', [K]), 0);
                 lFrLine.Kind := TRecorderFrequencyResponseKind(EnsureRange(lIni.ReadInteger(lSection, Format('FrLine%dKind', [K]), 0), 0, 2));
+                lFrLine.FrequencyMode := TRecorderFrequencyResponseFrequencyMode(
+                  EnsureRange(lIni.ReadInteger(lSection,
+                    Format('FrLine%dFrequencyMode', [K]), Ord(frfmAutomatic)),
+                    Ord(Low(TRecorderFrequencyResponseFrequencyMode)),
+                    Ord(High(TRecorderFrequencyResponseFrequencyMode))));
                 lFrLine.BufferSize := Max(1, lIni.ReadInteger(lSection, Format('FrLine%dBuffer', [K]), 1024));
                 lFrLine.UniformX := lIni.ReadBool(lSection, Format('FrLine%dUniform', [K]), False);
                 lFrLine.FrequencyStepHz := lIni.ReadFloat(lSection, Format('FrLine%dStep', [K]), 1);
@@ -3128,10 +3213,24 @@ begin
                 lFrLine.DrawLine := lIni.ReadBool(lSection, Format('FrLine%dDrawLine', [K]), True);
                 lFrLine.DrawPoints := lIni.ReadBool(lSection, Format('FrLine%dDrawPoints', [K]), True);
               end;
+              { Old projects stored kind on each line only. Infer the node's
+                kind from its first line rather than resetting phase to ACHX. }
+              for lFrAxisIndex := 0 to lFrequencyResponse.AxisCount - 1 do
+                if not lIni.ValueExists(lSection,
+                  Format('FrAxis%dKind', [lFrAxisIndex])) then
+                  for lFrLineIndex := 0 to lFrequencyResponse.LineCount - 1 do
+                    if SameText(lFrequencyResponse.Lines[lFrLineIndex].AxisName,
+                      lFrequencyResponse.Axes[lFrAxisIndex].Name) then
+                    begin
+                      lFrequencyResponse.Axes[lFrAxisIndex].Kind :=
+                        lFrequencyResponse.Lines[lFrLineIndex].Kind;
+                      Break;
+                    end;
             end;
             if (lCount < 0) and (lFrequencyResponse.LineCount > 0) then
             begin
               lFrAxis := lFrequencyResponse.Axes[0];
+              lFrAxis.Kind := lFrequencyResponse.Kind;
               lFrAxis.MinValue := lFrequencyResponse.MinValue;
               lFrAxis.MaxValue := lFrequencyResponse.MaxValue;
               lFrLine := lFrequencyResponse.Lines[0];
@@ -3216,6 +3315,10 @@ begin
                 lIni.ReadBool(lSection, 'SqlShowRecordingEvents', True);
               TRecorderSqlTrendComponent(lComponent).ShowTagAlarmEvents :=
                 lIni.ReadBool(lSection, 'SqlShowTagAlarmEvents', True);
+              TRecorderSqlTrendComponent(lComponent).ShowTagRangeEvents :=
+                lIni.ReadBool(lSection, 'SqlShowTagRangeEvents', True);
+              TRecorderSqlTrendComponent(lComponent).ShowOnlyUnresolvedEventPoints :=
+                lIni.ReadBool(lSection, 'SqlShowOnlyUnresolvedEventPoints', False);
               lItemCount := lIni.ReadInteger(lSection, 'SqlDisplayCount', -1);
               if lItemCount < 0 then
                 TRecorderSqlTrendComponent(lComponent).ImportLegacyTrend

@@ -489,27 +489,47 @@ end;
 procedure TEditFrfFrm.SignalsTVKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
-  next,n, Node: PVirtualNode;
+  next, n, Node: PVirtualNode;
   Data, parentdata: PNodeData;
   I: Integer;
-  del:boolean;
+  del: boolean;
+  s: cSRSres;
 begin
   if Key = VK_DELETE then
   begin
     Node := SignalsTV.GetFirstSelected(true);
+    if Node = nil then
+      exit;
+    Data := SignalsTV.GetNodeData(Node);
+    // корневой узел - это тахо (молоток): его удаление убирает и все сигналы,
+    // поэтому спрашиваем подтверждение и перестраиваем список целиком
+    if (Data <> nil) and (tobject(Data.Data) is cSRSTaho) then
+    begin
+      if MessageDlg('Удалить "' + cSRSTaho(Data.Data).name +
+        '" вместе со всеми сигналами?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      begin
+        m_SRS.DelTaho(cSRSTaho(Data.Data));
+        ShowSrsCfg;
+      end;
+      exit;
+    end;
     while Node <> nil do
     begin
-      del:=false;
+      del := false;
       Data := SignalsTV.GetNodeData(Node);
-      if tobject(data.data) is cSRSres then
+      if (Data <> nil) and (tobject(data.data) is cSRSres) then
       begin
-        del:=true;
-        cSRSres(data.data).Destroy;
+        del := true;
+        s := cSRSres(data.data);
+        // убрать сигнал из конфигурации, иначе в списке останется битый указатель
+        if s.cfg <> nil then
+          s.cfg.delSRS(s);
+        s.Destroy;
       end;
       next := SignalsTV.GetNextSelected(Node, false);
       if next = nil then
       begin
-        if Data.Data<>nil then
+        if Data.Data <> nil then
         begin
 
         end;

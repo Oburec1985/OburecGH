@@ -7,7 +7,8 @@ unit uOglChartCursor;
 {$codepage UTF8}
 interface
 uses
-  Classes, SysUtils, fpjson, uOglChartBaseObj, uOglChartTypes, uOglChartAxis;
+  Classes, SysUtils, fpjson, uOglChartBaseObj, uOglChartTypes, uOglChartAxis,
+  uOglChartDrawObj;
 type
   TChartCursorType = (cctSingle, cctDouble);
   { TChartCursor }
@@ -22,6 +23,7 @@ type
     fX2: Double;
     fLabelY1Offset: Double;
     fLabelY2Offset: Double;
+    fLabel1OnLeft, fLabel2OnLeft: Boolean;
     fShowLabel: Boolean;
     fColor: Cardinal;
     fMultiLineMode: TMultiLineMode;
@@ -36,6 +38,8 @@ type
     property X2: Double read fX2 write fX2;
     property LabelY1Offset: Double read fLabelY1Offset write fLabelY1Offset;
     property LabelY2Offset: Double read fLabelY2Offset write fLabelY2Offset;
+    property Label1OnLeft: Boolean read fLabel1OnLeft write fLabel1OnLeft;
+    property Label2OnLeft: Boolean read fLabel2OnLeft write fLabel2OnLeft;
     property ShowLabel: Boolean read fShowLabel write fShowLabel;
     property Color: Cardinal read fColor write fColor;
     property MultiLineMode: TMultiLineMode read fMultiLineMode write fMultiLineMode;
@@ -43,6 +47,7 @@ type
   { Horizontal overlay spanning the axis content rectangle in screen space. }
   TChartHorizontalCursor = class(TChartBaseObject)
   private
+    fShowLabel: Boolean;
     fVisible: Boolean;
     fY: Double;
     fAxis: TChartAxis;
@@ -58,6 +63,7 @@ type
     property Color: Cardinal read fColor write fColor;
     property LineWidth: Single read fLineWidth write fLineWidth;
     property StipplePattern: Word read fStipplePattern write fStipplePattern;
+    property ShowLabel: Boolean read fShowLabel write fShowLabel;
   end;
   { TChartFrequencyBand }
   TChartFrequencyBand = class(TChartBaseObject)
@@ -85,7 +91,26 @@ type
   end;
 // Возвращает существующий или создаёт новый курсор для страницы.
 function GetOrCreatePageCursor(APage: TChartBaseObject): TChartCursor;
+// Shared screen geometry: drawing and hit testing must use identical bounds.
+function ChartCursorLabelRect(AX, AY, AWidth, AHeight: Single;
+  AOnLeft: Boolean): TChartPixelRect;
 implementation
+function ChartCursorLabelRect(AX, AY, AWidth, AHeight: Single;
+  AOnLeft: Boolean): TChartPixelRect;
+begin
+  if AOnLeft then
+  begin
+    Result.Right := Round(AX - 2);
+    Result.Left := Round(AX - 2 - AWidth - 12);
+  end
+  else
+  begin
+    Result.Left := Round(AX + 2);
+    Result.Right := Round(AX + 2 + AWidth + 12);
+  end;
+  Result.Top := Round(AY - AHeight / 2 - 4);
+  Result.Bottom := Round(AY + AHeight / 2 + 4);
+end;
 function GetOrCreatePageCursor(APage: TChartBaseObject): TChartCursor;
 var
   I: Integer;
@@ -114,6 +139,8 @@ begin
   fX2 := 1.0;
   fLabelY1Offset := 0.5;
   fLabelY2Offset := 0.4;
+  fLabel1OnLeft := False;
+  fLabel2OnLeft := False;
   fShowLabel := True;
   fColor := 4294901760;
   fMultiLineMode := mlDisabled;
@@ -127,6 +154,8 @@ begin
   AJson.Add('x2', fX2);
   AJson.Add('label_y1_offset', fLabelY1Offset);
   AJson.Add('label_y2_offset', fLabelY2Offset);
+  AJson.Add('label_1_on_left', fLabel1OnLeft);
+  AJson.Add('label_2_on_left', fLabel2OnLeft);
   AJson.Add('show_label', fShowLabel);
   AJson.Add('color', Int64(fColor));
   AJson.Add('multiline_mode', Ord(fMultiLineMode));
@@ -141,6 +170,8 @@ begin
   if AJson.IndexOfName('x2') <> -1 then fX2 := AJson.Floats['x2'];
   if AJson.IndexOfName('label_y1_offset') <> -1 then fLabelY1Offset := AJson.Floats['label_y1_offset'];
   if AJson.IndexOfName('label_y2_offset') <> -1 then fLabelY2Offset := AJson.Floats['label_y2_offset'];
+  fLabel1OnLeft := AJson.Get('label_1_on_left', False);
+  fLabel2OnLeft := AJson.Get('label_2_on_left', False);
   if AJson.IndexOfName('show_label') <> -1 then fShowLabel := AJson.Booleans['show_label'];
   if AJson.IndexOfName('color') <> -1 then fColor := Cardinal(AJson.Integers['color']);
   if AJson.IndexOfName('multiline_mode') <> -1 then fMultiLineMode := TMultiLineMode(AJson.Integers['multiline_mode'])
@@ -154,6 +185,7 @@ procedure TChartHorizontalCursor.AssignDefaultProperties;
 begin
   inherited AssignDefaultProperties;
   Name := 'HorizontalCursor';
+  fShowLabel := False;
   Caption := '';
   fVisible := True;
   fY := 0;

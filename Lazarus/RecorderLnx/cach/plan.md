@@ -1,3 +1,80 @@
+# OPC UA — редактор имён используемых тегов — 2026-10-23
+
+- [x] Заменить кнопку адреса на галку: включение дописывает NodeId выбранным тегам, снятие удаляет его из имён.
+- [x] Для множественного выбора показывать самую длинную общую подстроку в любом месте имён; `***` отмечает найденную часть.
+- [x] При замене общей части не вставлять маркер `***` в итоговые имена.
+- [x] Forced Win64 build (`RecorderLnx-opc-name-check.exe`), exit 0.
+- [x] Компактно добавлять OPC UA NodeId: оставить сегмент устройства и конечный узел, скрыть промежуточные path-сегменты вроде `Application.GVL`.
+- [x] При удалении общей подстроки автоматически сбрасывать галку без повторного изменения имён; мигрировать сохранённые полные NodeId при открытии.
+- [x] Пересобрать проверочную Win64-сборку (`RecorderLnx-opc-address.exe`), exit 0; штатный exe остаётся запущен.
+
+# OPC UA: стабильная связь тега и офлайн-дерево — 2026-10-23
+
+- [x] Разделить серверный NodeId/имя узла и имя тега Recorder.
+- [x] Хранить stable `recorderTagId` и подтягивать живое имя после переименования.
+- [x] Сохранять Browse-дерево в конфиге и загружать его без сети.
+- [x] Повторный Browse запускать только кнопкой `Обновить дерево`.
+- [x] В общем диалоге тега показывать `SourceId | NodeId`.
+- [x] Forced Win64 build и smoke-запуск.
+
+# FRF: живые окна и mouse-release — 2026-10-19
+
+- [x] Воспроизвести откат через LCL LM_LBUTTONUP, а не прямой вызов handler.
+- [x] Независимые маски EXC/RESP, latest-wins worker для RAM/ring/saved.
+- [ ] Production timer/реальный dispatch: линии до release, stale snapshots, Esc.
+- [ ] Forced Windows/Linux main builds и профильные регрессии.
+
+# FRF: графическое редактирование окон — 2026-10-19
+
+- [x] Сверить два курсора и два маркера с оригинальным plgEvalFRF.
+- [x] Удалить четыре native trackbar; preview, release commit, Escape/captureloss.
+- [x] Передать независимый конец экспоненты в DSP и проверить численно.
+- [x] Forced Windows/Linux main builds, DSP и focused service regressions.
+- [x] Итоговый gesture/GL readback smoke и визуальная приёмка.
+
+# FRF: авторежим маршрута — 2026-10-16
+
+- [x] Поиск/подсказки внутри ComboBox тегов, без отдельных Edit, Enter/Select/Escape.
+- [x] На точке → съём → MERA → импульс След. шаг; отдельная перезапись/skip.
+- [x] Searchable combos, runtime checkbox, ручная отмена и сброс команды.
+- [x] Headless step sync, сохранность RAM, регрессии ошибок и pulse lifecycle.
+- [x] Route.ini в конфигурации проекта, v3 и read-only миграция.
+- [x] Design-time регистрация общей таблицы, package/IDE build и установка IDE.
+- [x] Числовые значения в FRF display, Auto под Sync; main и тесты OK.
+
+# АФЧХ: умные привязки и редактор — 2026-10-16
+
+- [x] Узлы АЧХ/Фаза/FRF, таблица имя/Fs справа, общий поиск, групповой drag.
+- [x] Автоподбор полосового RMS/тахо, скаляр last и вектор МО/спектр/тахо.
+- [x] Оси X/Y внизу, lg projection, валидация и сохранение/миграция.
+- [x] Forced main/UI/binding builds, UI и runtime regressions, Windows visual.
+
+# MX-248: групповая настройка каналов — 2026-10-16
+
+- [x] Ctrl/Shift multiselect и ПКМ → «Редактировать».
+- [x] Общие/смешанные поля, сохранность неизменённых и невыбранных каналов.
+- [x] Отмена без изменения черновика; существующий IEPE dblclick.
+- [x] Forced main build и расширенный UI smoke с modal automation.
+
+# FRF: единые шаги и подписи геометрии — 2026-10-16
+
+- [x] Кнопка одной порции АКА после нажатия без порогового триггера.
+
+- [x] АКА при разных Fs: воздействие приводится к Fs каждого отклика.
+
+- [x] Смена объекта MDB сбрасывает дисковую сохранённость/просмотр, не RAM.
+
+- [x] Просмотр частично сохранённого маршрута без потери runtime-ударов.
+- [x] Нормировка по преднастроенному диапазону, маршрутный IntensityOnly.
+- [x] Сквозная saved/runtime проверка источника, курсора, возврата без потери RAM.
+- [x] Форма только отображения FRF, состав связей редактируется в маршруте.
+
+- [x] Немодальные onTop редакторы с применением Enter и подписками на выбор сцены.
+- [x] Авторитетные подписи вершин, очистка дубликата, розовое предупреждение, сохранение/глубокое копирование.
+- [x] Route v2: несколько привязок на шаг, миграция v1, один шаг для испытания всего объекта.
+- [x] Синхронизация текущего шага с геометрическим редактором и сохранёнными каналами.
+- [x] Forced app/UI builds и пять целевых регрессий.
+
 # ЦАП: перечисление аппаратных выходов — 2026-10-15
 
 - [x] Заменить список идентификаторов backend-ов на реальные endpoint-ы устройств.
@@ -2153,3 +2230,10 @@ Linux-сборка выполнена по SSH на Astra VM `192.168.112.128`.
 - [x] Add transactional Bus/Device/Tag editor and substring search.
 - [x] Add deterministic automated checks and forced application build.
 - [ ] Run physical TCP and RTU stand acceptance when endpoint/map are supplied.
+# 2026-10-23 OPC UA cache compatibility
+
+- [x] Restore a useful offline tree for pre-`browseCache` configurations.
+- [x] Add selected used-channel properties and an adjustable splitter.
+- [x] Build and smoke-test RecorderLnx.
+- [ ] Manually refresh and save each old project once to persist its complete server Browse tree.
+

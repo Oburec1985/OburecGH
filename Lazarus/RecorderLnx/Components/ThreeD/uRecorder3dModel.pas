@@ -16,6 +16,12 @@ uses
   u3dVertexColors, uRecorderImpactHammerContracts;
 
 type
+  TRecorder3dStepPoint = record
+    NodeId:QWord;
+    PointNumber:Integer;
+  end;
+  TRecorder3dStepPoints = array of TRecorder3dStepPoint;
+
   TRecorder3dBindingSlot = (r3bPointX, r3bPointY, r3bPointZ, r3bColor,
     r3bNormalLength);
   TRecorder3dSkinAxis = (r3sX, r3sY, r3sZ);
@@ -41,6 +47,7 @@ type
     PointLabel:string;
     CreateColorModifier,HideAnchors:Boolean;
     OnlySensors:Boolean;
+    ShowIntensityValues:Boolean;
     EnvelopeXEnabled,EnvelopeYEnabled,EnvelopeZEnabled:Boolean;
     EnvelopeX,EnvelopeY,EnvelopeZ:Double;
   end;
@@ -72,6 +79,7 @@ type
     PointLabel:string;
     CreateColorModifier,HideAnchors:Boolean;
     OnlySensors:Boolean;
+    ShowIntensityValues:Boolean;
     EnvelopeXEnabled,EnvelopeYEnabled,EnvelopeZEnabled:Boolean;
     EnvelopeX,EnvelopeY,EnvelopeZ:Double;
     constructor Create;
@@ -87,6 +95,9 @@ type
     HasRenderSettings: Boolean;
     HasTransform: Boolean;
     LocalTransform: T3dMatrix;
+    VertexLabels:TStringList;
+    constructor Create;
+    destructor Destroy; override;
   end;
 
   { One durable point-to-helper influence. Repeating PointName and HelperNodeId
@@ -173,6 +184,9 @@ type
   private
     fSceneFileName: string;
     fShowAxes: Boolean;
+    fShowVertexLabels: Boolean;
+    fVertexLabelsOnlyBound: Boolean;
+    fCurrentStepPoints:TRecorder3dStepPoints;
     fLabelFontSize: Integer;
     fBackgroundColor: LongInt;
     fCameraDistance: Double;
@@ -239,6 +253,9 @@ type
     function AddNodeRenderOverride:TRecorder3dNodeRenderOverride;
     procedure ClearNodeRenderOverrides;
     function FindNodeRenderOverride(ANodeId:QWord):TRecorder3dNodeRenderOverride;
+    function PointLabel(ANodeId:QWord; APointNumber:Integer):string;
+    procedure SetPointLabel(ANodeId:QWord; APointNumber,APointCount:Integer;
+      const ALabel:string);
     function AddSkinBinding:TRecorder3dSkinBinding;
     procedure DeleteSkinBinding(AIndex:Integer);
     procedure ClearSkinBindings;
@@ -273,6 +290,12 @@ type
     property ShowAxes: Boolean read fShowAxes write fShowAxes;
     property BackgroundColor: LongInt read fBackgroundColor write fBackgroundColor;
     property LabelFontSize: Integer read fLabelFontSize write SetLabelFontSize;
+    property ShowVertexLabels: Boolean read fShowVertexLabels write fShowVertexLabels;
+    procedure SetCurrentStepPoints(const ABindings:array of TRecorderModelPointBinding);
+    function CurrentStepPointCount:Integer;
+    function CurrentStepPoint(AIndex:Integer):TRecorder3dStepPoint;
+    property VertexLabelsOnlyBound: Boolean read fVertexLabelsOnlyBound
+      write fVertexLabelsOnlyBound;
     property CameraDistance: Double read fCameraDistance write fCameraDistance;
     property CameraTargetX:Double read fCameraTargetX write fCameraTargetX;
     property CameraTargetY:Double read fCameraTargetY write fCameraTargetY;
@@ -343,6 +366,78 @@ type
 procedure RegisterRecorder3dFactory(AFactory: TRecorderComponentFactory);
 
 implementation
+
+procedure TRecorder3dComponent.SetCurrentStepPoints(
+  const ABindings:array of TRecorderModelPointBinding);
+var I,J,Count:Integer;
+begin
+  SetLength(fCurrentStepPoints,Length(ABindings));
+  Count:=0;
+  for I:=0 to High(ABindings) do
+  begin
+    if (ABindings[I].TargetNodeId=0) or (ABindings[I].PointNumber<=0) then Continue;
+    J:=0;
+    while (J<Count) and not ((fCurrentStepPoints[J].NodeId=ABindings[I].TargetNodeId)
+      and (fCurrentStepPoints[J].PointNumber=ABindings[I].PointNumber)) do Inc(J);
+    if J<Count then Continue;
+    fCurrentStepPoints[Count].NodeId:=ABindings[I].TargetNodeId;
+    fCurrentStepPoints[Count].PointNumber:=ABindings[I].PointNumber;
+    Inc(Count);
+  end;
+  SetLength(fCurrentStepPoints,Count);
+end;
+
+function TRecorder3dComponent.CurrentStepPointCount:Integer;
+begin
+  Result:=Length(fCurrentStepPoints);
+end;
+
+function TRecorder3dComponent.CurrentStepPoint(AIndex:Integer):TRecorder3dStepPoint;
+begin
+  Result:=fCurrentStepPoints[AIndex];
+end;
+
+constructor TRecorder3dNodeRenderOverride.Create;
+begin
+  inherited Create;
+  VertexLabels:=TStringList.Create;
+  VertexLabels.NameValueSeparator:='=';
+end;
+
+destructor TRecorder3dNodeRenderOverride.Destroy;
+begin
+  VertexLabels.Free;
+  inherited Destroy;
+end;
+
+function TRecorder3dComponent.PointLabel(ANodeId:QWord; APointNumber:Integer):string;
+var O:TRecorder3dNodeRenderOverride; I:Integer;
+begin
+  Result:=IntToStr(APointNumber);
+  O:=FindNodeRenderOverride(ANodeId);
+  if O=nil then Exit;
+  I:=O.VertexLabels.IndexOfName(IntToStr(APointNumber));
+  if I>=0 then Result:=O.VertexLabels.ValueFromIndex[I];
+end;
+
+procedure TRecorder3dComponent.SetPointLabel(ANodeId:QWord;
+  APointNumber,APointCount:Integer; const ALabel:string);
+var O:TRecorder3dNodeRenderOverride; I,J:Integer; S:string;
+begin
+  O:=FindNodeRenderOverride(ANodeId);
+  if O=nil then begin O:=AddNodeRenderOverride; O.NodeId:=ANodeId end;
+  S:=Trim(ALabel);
+  for I:=1 to APointCount do
+    if (I<>APointNumber) and (S<>'') and (PointLabel(ANodeId,I)=S) then
+    begin
+      J:=O.VertexLabels.IndexOfName(IntToStr(I));
+      if J<0 then O.VertexLabels.Add(IntToStr(I)+'=')
+      else O.VertexLabels[J]:=IntToStr(I)+'=';
+    end;
+  J:=O.VertexLabels.IndexOfName(IntToStr(APointNumber));
+  if J<0 then O.VertexLabels.Add(IntToStr(APointNumber)+'='+S)
+  else O.VertexLabels[J]:=IntToStr(APointNumber)+'='+S;
+end;
 
 constructor TRecorder3dGradientStrip.Create;
 begin
@@ -494,6 +589,8 @@ begin
   fShowAxes := True;
   fBackgroundColor := $0033291F;
   fLabelFontSize := 8;
+  fShowVertexLabels := True;
+  fVertexLabelsOnlyBound := False;
   fCameraDistance := 6;
   fCameraTargetX := 0;
   fCameraTargetY := 0;
@@ -556,6 +653,9 @@ begin
   fShowAxes:=ASource.fShowAxes;
   fBackgroundColor:=ASource.fBackgroundColor;
   fLabelFontSize:=ASource.fLabelFontSize;
+  fShowVertexLabels:=ASource.fShowVertexLabels;
+  fVertexLabelsOnlyBound:=ASource.fVertexLabelsOnlyBound;
+  fCurrentStepPoints:=Copy(ASource.fCurrentStepPoints);
   fCameraDistance:=ASource.fCameraDistance;
   fCameraTargetX:=ASource.fCameraTargetX;
   fCameraTargetY:=ASource.fCameraTargetY;
@@ -621,6 +721,7 @@ begin
     TargetFrf.CreateColorModifier:=SourceFrf.CreateColorModifier;
     TargetFrf.HideAnchors:=SourceFrf.HideAnchors;
     TargetFrf.OnlySensors:=SourceFrf.OnlySensors;
+    TargetFrf.ShowIntensityValues:=SourceFrf.ShowIntensityValues;
     TargetFrf.EnvelopeXEnabled:=SourceFrf.EnvelopeXEnabled;
     TargetFrf.EnvelopeYEnabled:=SourceFrf.EnvelopeYEnabled;
     TargetFrf.EnvelopeZEnabled:=SourceFrf.EnvelopeZEnabled;
@@ -641,6 +742,7 @@ begin
     TargetOverride.HasRenderSettings:=SourceOverride.HasRenderSettings;
     TargetOverride.HasTransform:=SourceOverride.HasTransform;
     TargetOverride.LocalTransform:=SourceOverride.LocalTransform;
+    TargetOverride.VertexLabels.Assign(SourceOverride.VertexLabels);
   end;
   fPrimitives := Copy(ASource.fPrimitives);
   fRemovedNodeIds := Copy(ASource.fRemovedNodeIds);
@@ -1185,6 +1287,7 @@ begin
       Binding.CreateColorModifier:=ASpecs[I].CreateColorModifier;
       Binding.HideAnchors:=ASpecs[I].HideAnchors;
       Binding.OnlySensors:=ASpecs[I].OnlySensors;
+      Binding.ShowIntensityValues:=ASpecs[I].ShowIntensityValues;
       Binding.EnvelopeXEnabled:=ASpecs[I].EnvelopeXEnabled;
       Binding.EnvelopeYEnabled:=ASpecs[I].EnvelopeYEnabled;
       Binding.EnvelopeZEnabled:=ASpecs[I].EnvelopeZEnabled;

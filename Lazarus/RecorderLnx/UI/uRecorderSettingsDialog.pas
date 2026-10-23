@@ -191,6 +191,8 @@ type
     procedure fAlgorithmOverlapComboChange(Sender: TObject);
     procedure fHardwareTreeDblClick(Sender: TObject);
     procedure fHardwareTreeChange(Sender: TObject; Node: TTreeNode);
+    procedure fHardwareTreeCustomDrawItem(Sender: TCustomTreeView;
+      Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure HardwareSourceAddressApplyClick(Sender: TObject);
     procedure fHardwareTreeMouseMove(Sender: TObject; Shift: TShiftState;
       X, Y: Integer);
@@ -5345,6 +5347,29 @@ begin
   { Это изменение состава сбора, а не аппаратной конфигурации. }
   PopulateHardwareTree;
   PopulateChannelGrids;
+end;
+
+procedure TRecorderSettingsDialog.fHardwareTreeCustomDrawItem(
+  Sender: TCustomTreeView; Node: TTreeNode; State: TCustomDrawState;
+  var DefaultDraw: Boolean);
+var lSourceId: string;
+begin
+  { Module/channel descendants inherit the source's disabled appearance. }
+  if (fRecorder = nil) or (Node = nil) then Exit;
+  lSourceId := '';
+  while Node <> nil do
+  begin
+    lSourceId := RecorderHardwareTreeSourceId(Node);
+    if lSourceId <> '' then Break;
+    Node := Node.Parent;
+  end;
+  if (lSourceId <> '') and not RecorderConfiguredDataSourceEnabled(
+    fRecorder.TagRegistry,lSourceId) then
+    Sender.Canvas.Font.Color := clGrayText
+  else if cdsSelected in State then
+    Sender.Canvas.Font.Color := clHighlightText
+  else
+    Sender.Canvas.Font.Color := fHardwareTree.Font.Color;
 end;
 
 procedure TRecorderSettingsDialog.HardwareEditSourceClick(Sender: TObject);

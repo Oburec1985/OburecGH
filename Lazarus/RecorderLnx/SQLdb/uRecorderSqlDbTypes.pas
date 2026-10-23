@@ -90,8 +90,18 @@ type
     State: string;
     PackageCount: Integer;
     TotalSize: Int64;
+    { Число файлов пакета в mera_recording_files. 0 у события
+      mera.recording означает, что данные замера в базе не зарегистрированы
+      и WinПОС их не найдёт. }
+    MeraFileCount: Integer;
   end;
   TRecorderSqlDbMeraEvents = array of TRecorderSqlDbMeraEvent;
+
+  TRecorderSqlDbEventFileCount = record
+    EventId: string;
+    FileCount: Integer;
+  end;
+  TRecorderSqlDbEventFileCounts = array of TRecorderSqlDbEventFileCount;
 
   TRecorderSqlDbMeraFile = record
     FileId: string;

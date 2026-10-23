@@ -8,7 +8,8 @@ uses
   uRecorderDeviceInterfaces, uRecorderDriverContractsV2,
   uRecorderPxiMx248Device, uRecorderPxiMx248Types,
   uRecorderPxiMx248RuntimeTransport, uRecorderPxiMx248DeviceAdapter,
-  uRecorderPxiMx248DataSource, uRecorderHardwareLiveDevices;
+  uRecorderPxiMx248DataSource, uRecorderHardwareLiveDevices,
+  uRecorderBlockClock;
 
 type
   TFakeTransport = class(TInterfacedObject, IPxiMx248BlockTransport,
@@ -141,7 +142,7 @@ end;
 
 procedure TestAdapterAndDataSource;
 var
-  lAdapter: TRecorderPxiMx248DeviceAdapter;
+  lAdapter: TRcPxiMx248DeviceAdapter;
   lDevice: IRecorderDevice;
   lFake: TFakeTransport;
   lRegistry: TRecorderTagRegistry;
@@ -151,9 +152,10 @@ var
   lResult: TRcOperationResult;
   lReadback: string;
   lSourceRef: IRecorderDataSource;
+  lBeforeStart, lAfterStart, lFirstMapped, lRestartBefore: Double;
 begin
   lFake := TFakeTransport.Create;
-  lAdapter := TRecorderPxiMx248DeviceAdapter.Create('pxi-0-2', 'PXI MX-248', lFake);
+  lAdapter := TRcPxiMx248DeviceAdapter.Create('pxi-0-2', 'PXI MX-248', lFake);
   lDevice := lAdapter;
   Check(lDevice.SetProp('sample-rate-hz=422;block-samples=4'),
     'string properties rejected');
@@ -184,18 +186,34 @@ begin
       Check(lFake.InitializeCount = 1,
         'live apply opened a second exclusive session (error 20)');
       Check((lFake.ModulePropertiesCount = 2) and (lFake.ProgramCount = 2) and
-        (lFake.ConfigurePxiCount = 1),
+        (lFake.ConfigurePxiCount = 2),
         'dirty runtime configuration was not programmed once');
+      lBeforeStart := RecorderClockSeconds;
       lSource.Start;
+      lAfterStart := RecorderClockSeconds;
       lResult := lRuntime.RuntimeApplyLive(
         'sample-rate-hz=512000;block-samples=4', 0, 1, 0, 0, 1,
         lReadback);
       Check(lResult.Code = rocInvalidState,
         'running source must reject live Apply');
-      Check(lFake.ConfigurePxiCount = 1,
+      Check(lFake.ConfigurePxiCount = 2,
         'running rejection touched the transport');
       lSource.Tick;
+      lSnapshot := lRegistry.FindByName('PXI:0:2 AIn8').LastBlockSnapshot;
+      lFirstMapped := lSnapshot.Times[0];
+      Check((lFirstMapped >= lBeforeStart + 10.0 - 1e-6) and
+        (lFirstMapped <= lAfterStart + 10.0 + 1e-6),
+        'native first time must be mapped using the session Start anchor');
+      Check(Abs(lSnapshot.Times[3] - lFirstMapped - 0.003) < 1e-8,
+        'mapping changed native sample spacing');
+      Sleep(20);
+      lSource.Tick;
+      lSnapshot := lRegistry.FindByName('PXI:0:2 AIn8').LastBlockSnapshot;
+      Check(Abs(lSnapshot.Times[0] - lFirstMapped) < 1e-8,
+        'late delivery must not re-anchor native block timestamps');
       lSource.Stop;
+      Sleep(20);
+      lRestartBefore := RecorderClockSeconds;
       lSource.Start;
       lSource.Tick;
       lSource.Stop;
@@ -204,6 +222,9 @@ begin
       Check((lFake.InitializeCount = 1) and (lFake.ProgramCount = 2),
         'Start/Stop must not initialize or configure again');
       lSnapshot := lRegistry.FindByName('PXI:0:2 AIn8').LastBlockSnapshot;
+      Check((lSnapshot.Times[0] >= lRestartBefore + 10.0 - 1e-6) and
+        (lSnapshot.Times[0] > lFirstMapped + 0.02),
+        'restart must create a new mapping and retain the recorder time gap');
       Check((lSnapshot.Count = 4) and (Abs(lSnapshot.Values[3] - 703.0) < 1e-9),
         'eighth tag block publication mismatch');
     finally
@@ -227,7 +248,7 @@ var
 begin
   lFake := TFakeTransport.Create;
   lFake.SamplesPerRead := 256;
-  lDevice := TRecorderPxiMx248DeviceAdapter.Create('pxi-2-14', 'PXI MX-248',
+  lDevice := TRcPxiMx248DeviceAdapter.Create('pxi-2-14', 'PXI MX-248',
     lFake);
   Check(lDevice.SetProp('sample-rate-hz=512000;block-samples=256'),
     'high-rate test configuration rejected');

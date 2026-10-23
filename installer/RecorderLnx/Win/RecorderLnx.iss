@@ -114,8 +114,12 @@ Filename: "{sys}\netsh.exe"; \
 Filename: "{sys}\netsh.exe"; \
   Parameters: "advfirewall firewall add rule name=""Mera RecorderHostAgent API"" dir=in action=allow program=""{app}\RecorderHostAgent.exe"" protocol=TCP localport=8766 profile=domain,private enable=yes"; \
   Flags: runhidden; StatusMsg: "Разрешение управления компьютером RecorderLnx..."
-Filename: "{app}\RecorderHostAgent.exe"; WorkingDir: "{app}"; \
-  Flags: runhidden nowait; StatusMsg: "Запуск фонового агента RecorderLnx..."
+Filename: "{sys}\schtasks.exe"; \
+  Parameters: "/Create /F /TN ""Mera Recorder Host Agent"" /TR ""\""{app}\RecorderHostAgent.exe\"""" /SC ONSTART /RU SYSTEM /RL HIGHEST"; \
+  Flags: runhidden; StatusMsg: "Регистрация агента в автозапуске..."
+Filename: "{sys}\schtasks.exe"; \
+  Parameters: "/Run /TN ""Mera Recorder Host Agent"""; \
+  Flags: runhidden; StatusMsg: "Запуск фонового агента RecorderLnx..."
 Filename: "{sys}\netsh.exe"; \
   Parameters: "advfirewall firewall delete rule name=""Mera RecorderLnx discovery"""; \
   Flags: runhidden; StatusMsg: "Обновление правила сетевого обнаружения..."
@@ -126,6 +130,10 @@ Filename: "{app}\RecorderLnx.exe"; Description: "Запустить RecorderLnx"
   WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
+Filename: "{sys}\schtasks.exe"; Parameters: "/End /TN ""Mera Recorder Host Agent"""; \
+  Flags: runhidden; RunOnceId: "EndRecorderHostAgentTask"
+Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /F /TN ""Mera Recorder Host Agent"""; \
+  Flags: runhidden; RunOnceId: "DeleteRecorderHostAgentTask"
 Filename: "{sys}\taskkill.exe"; Parameters: "/IM PxiMx248Bridge.exe /T /F"; \
   Flags: runhidden; RunOnceId: "StopPxiMx248Bridge"
 Filename: "{sys}\taskkill.exe"; Parameters: "/IM RecorderHostAgent.exe /T /F"; \

@@ -30,7 +30,7 @@ uses
   Classes, SysUtils,
   uRecorderCoreServices,
   uRecorderTags,
-  uRecorderAlarms;
+  uRecorderAlarms, uRecorderBlockClock;
 
 type
   { Класс исключения для очереди событий }
@@ -50,6 +50,7 @@ type
       TRecorderTagUpdateEventData. }
   TRecorderEventSnapshot = class
   private
+    fBlockTimeDomain: TRecorderBlockTimeDomain;
     fHasTagData: Boolean;          { Флаг наличия данных тега }
     fAlarmActive: Boolean;         { Флаг входа в тревогу; False - выход }
     fAlarmKind: TRecorderTagSetpointKind; { Тип сработавшей уставки }
@@ -84,6 +85,7 @@ type
     property HasAlarmData: Boolean read fHasAlarmData;
     property TagName: string read fTagName;
     property TimeSec: Double read fTimeSec;
+    property BlockTimeDomain: TRecorderBlockTimeDomain read fBlockTimeDomain;
     property Value: Double read fValue;
     property SampleCount: Integer read fSampleCount;
     property Times: TRecorderDoubleArray read fTimes;
@@ -150,6 +152,8 @@ begin
   if AEvent.Data is TRecorderTagUpdateEventData then
   begin
     lTagData := TRecorderTagUpdateEventData(AEvent.Data);
+    if lTagData.Tag <> nil then
+      fBlockTimeDomain := lTagData.Tag.BlockTimeDomain;
     fHasTagData := True;
     if lTagData.Tag <> nil then
       fTagName := lTagData.Tag.Name

@@ -3,8 +3,8 @@ unit uRecorderImpactHammerModel;
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 
-{ Persistent configuration for impact-hammer FRF measurement. This unit owns
-  configuration only; acquisition and DSP belong to an application service. }
+{ Настройки FRF-измерения ударным молотком: триггер, каналы, обработка,
+  маршрут и отображение. Сбор данных и DSP выполняет сервис приложения. }
 
 interface
 
@@ -13,7 +13,7 @@ uses
   uRecorderImpactHammerContracts;
 
 const
-  RECORDER_IMPACT_HAMMER_CONFIG_VERSION = 14;
+  RECORDER_IMPACT_HAMMER_CONFIG_VERSION = 16;
 
 type
   TImpactTriggerPolarity = (itpPositive, itpNegative, itpAbsolute);
@@ -58,6 +58,13 @@ type
   private
     fHammerTagId: TRecorderTagId;
     fHammerTagName: string;
+    fRoutePointTagId: TRecorderTagId;
+    fRoutePointTagName: string;
+    fRouteConfigFileName: string;
+    fRouteAutoEnabled, fRouteTagSyncEnabled, fRouteAutoOverwrite: Boolean;
+    fRouteAtPointTagId, fRouteNextStepTagId: TRecorderTagId;
+    fRouteAtPointTagName, fRouteNextStepTagName: string;
+    fRouteNextStepPulseMs: Integer;
     fTriggerPolarity: TImpactTriggerPolarity;
     fTriggerThreshold: Double;
     fTriggerHysteresis: Double;
@@ -94,6 +101,7 @@ type
     fCreateColorModifier: Boolean;
     fShowAnchorMarkers: Boolean;
     fOnlySensors:Boolean;
+    fResultValuesVisible: Boolean;
     fAnimationScale: Double;
     fAnimationFrequencyHz: Double;
     fExportPath: string;
@@ -113,12 +121,26 @@ type
     procedure Assign(ASource: TRecorderImpactHammerComponent);
     function AddResponse: TImpactResponseBinding;
     procedure ClearResponses;
+    { ARequireTags=False разрешает черновик без назначенных тегов; при True
+      проверяются теги молотка и всех каналов отклика. }
     function Validate(out AError: string; ARequireTags: Boolean = True): Boolean;
     procedure SaveToStrings(AValues: TStrings; const APrefix: string);
     function LoadFromStrings(AValues: TStrings; const APrefix: string;
       out AError: string): Boolean;
     property HammerTagId: TRecorderTagId read fHammerTagId write fHammerTagId;
     property HammerTagName: string read fHammerTagName write fHammerTagName;
+    property RoutePointTagId: TRecorderTagId read fRoutePointTagId write fRoutePointTagId;
+    property RoutePointTagName: string read fRoutePointTagName write fRoutePointTagName;
+    { Контекст хост-проекта; абсолютный путь конкретной машины не сохраняется. }
+    property RouteConfigFileName: string read fRouteConfigFileName write fRouteConfigFileName;
+    property RouteAutoEnabled: Boolean read fRouteAutoEnabled write fRouteAutoEnabled;
+    property RouteTagSyncEnabled: Boolean read fRouteTagSyncEnabled write fRouteTagSyncEnabled;
+    property RouteAutoOverwrite: Boolean read fRouteAutoOverwrite write fRouteAutoOverwrite;
+    property RouteAtPointTagId: TRecorderTagId read fRouteAtPointTagId write fRouteAtPointTagId;
+    property RouteAtPointTagName: string read fRouteAtPointTagName write fRouteAtPointTagName;
+    property RouteNextStepTagId: TRecorderTagId read fRouteNextStepTagId write fRouteNextStepTagId;
+    property RouteNextStepTagName: string read fRouteNextStepTagName write fRouteNextStepTagName;
+    property RouteNextStepPulseMs: Integer read fRouteNextStepPulseMs write fRouteNextStepPulseMs;
     property TriggerPolarity: TImpactTriggerPolarity read fTriggerPolarity
       write fTriggerPolarity;
     property TriggerThreshold: Double read fTriggerThreshold write fTriggerThreshold;
@@ -170,6 +192,7 @@ type
     property CreateColorModifier: Boolean read fCreateColorModifier write fCreateColorModifier;
     property ShowAnchorMarkers: Boolean read fShowAnchorMarkers write fShowAnchorMarkers;
     property OnlySensors:Boolean read fOnlySensors write fOnlySensors;
+    property ResultValuesVisible: Boolean read fResultValuesVisible write fResultValuesVisible;
     property AnimationScale: Double read fAnimationScale
       write fAnimationScale;
     property AnimationFrequencyHz: Double read fAnimationFrequencyHz
@@ -190,22 +213,26 @@ procedure RegisterRecorderImpactHammerFactory(AFactory: TRecorderComponentFactor
 
 implementation
 
+{ Проверяет, что сохранённое ordinal-значение перечисления находится в допустимом диапазоне. }
 function EnumInRange(AValue, AHigh: Integer): Boolean;
 begin
   Result := (AValue >= 0) and (AValue <= AHigh);
 end;
 
+{ Записывает значение параметра конфигурации по ключу. }
 procedure Put(AValues: TStrings; const AKey, AValue: string);
 begin
   AValues.Values[AKey] := AValue;
 end;
 
+{ Читает целое значение AKey; при неверном формате возвращает ADefault. }
 function ReadInt(AValues: TStrings; const AKey: string; ADefault: Int64): Int64;
 begin
   if not TryStrToInt64(AValues.Values[AKey], Result) then
     Result := ADefault;
 end;
 
+{ Читает беззнаковый идентификатор AKey; при неверном формате возвращает ADefault. }
 function ReadQWord(AValues: TStrings; const AKey: string;
   ADefault: QWord): QWord;
 begin
@@ -213,12 +240,14 @@ begin
     Result := ADefault;
 end;
 
+{ Читает число с настройками формата приложения; при ошибке возвращает ADefault. }
 function ReadFloat(AValues: TStrings; const AKey: string; ADefault: Double): Double;
 begin
   if not TryStrToFloat(AValues.Values[AKey], Result, DefaultFormatSettings) then
     Result := ADefault;
 end;
 
+{ Копирует все параметры привязки отклика из ASource. }
 procedure TImpactResponseBinding.Assign(ASource: TImpactResponseBinding);
 begin
   TagId := ASource.TagId;
@@ -254,17 +283,20 @@ begin
   GradientEnabled := ASource.GradientEnabled;
 end;
 
+{ Возвращает стабильный тип компонента для сериализации и фабрики. }
 class function TRecorderImpactHammerComponent.GetTypeId: string;
 begin
   Result := 'ImpactHammer';
 end;
 
+{ Создаёт модель молотка с начальными настройками триггера, FRF, осей и визуализации. }
 constructor TRecorderImpactHammerComponent.Create;
 var
   ResultType: TRecorderImpactResultType;
 begin
   inherited Create;
   fResponses := TList.Create;
+  fRouteNextStepPulseMs := 200;
   fTriggerPolarity := itpPositive;
   fTriggerThreshold := 1.0;
   fTriggerHysteresis := 0.1;
@@ -306,11 +338,12 @@ begin
     fAxisStates[ResultType].YMin := 0;
     fAxisStates[ResultType].YMax := 1;
   end;
-  { The time-domain capture always fits itself to the acquired block. Only
-    frequency-domain axes expose persistent display settings. }
+  { Временной график всегда подгоняется под захваченный блок; настройки осей
+    сохраняются только для частотных представлений. }
   fAxisStates[irtTime].AutoScale := True;
 end;
 
+{ Освобождает список привязок отклика и сам список. }
 destructor TRecorderImpactHammerComponent.Destroy;
 begin
   ClearResponses;
@@ -318,6 +351,7 @@ begin
   inherited Destroy;
 end;
 
+{ Копирует настройки и привязки откликов из модели ASource. }
 procedure TRecorderImpactHammerComponent.Assign(
   ASource: TRecorderImpactHammerComponent);
 var
@@ -328,6 +362,17 @@ begin
     Exit;
   fHammerTagId := ASource.fHammerTagId;
   fHammerTagName := ASource.fHammerTagName;
+  fRoutePointTagId := ASource.fRoutePointTagId;
+  fRoutePointTagName := ASource.fRoutePointTagName;
+  fRouteConfigFileName := ASource.fRouteConfigFileName;
+  fRouteAutoEnabled := ASource.fRouteAutoEnabled;
+  fRouteTagSyncEnabled := ASource.fRouteTagSyncEnabled;
+  fRouteAutoOverwrite := ASource.fRouteAutoOverwrite;
+  fRouteAtPointTagId := ASource.fRouteAtPointTagId;
+  fRouteAtPointTagName := ASource.fRouteAtPointTagName;
+  fRouteNextStepTagId := ASource.fRouteNextStepTagId;
+  fRouteNextStepTagName := ASource.fRouteNextStepTagName;
+  fRouteNextStepPulseMs := ASource.fRouteNextStepPulseMs;
   fTriggerPolarity := ASource.fTriggerPolarity;
   fTriggerThreshold := ASource.fTriggerThreshold;
   fTriggerHysteresis := ASource.fTriggerHysteresis;
@@ -362,6 +407,7 @@ begin
   fCreateColorModifier := ASource.fCreateColorModifier;
   fShowAnchorMarkers := ASource.fShowAnchorMarkers;
   fOnlySensors:=ASource.fOnlySensors;
+  fResultValuesVisible := ASource.fResultValuesVisible;
   fAnimationScale := ASource.fAnimationScale;
   fAnimationFrequencyHz := ASource.fAnimationFrequencyHz;
   fExportPath := ASource.fExportPath;
@@ -374,6 +420,7 @@ begin
     AddResponse.Assign(ASource.Responses[I]);
 end;
 
+{ Создаёт отклик со значениями по умолчанию и добавляет его в модель. }
 function TRecorderImpactHammerComponent.AddResponse: TImpactResponseBinding;
 begin
   Result := TImpactResponseBinding.Create;
@@ -400,6 +447,7 @@ begin
   fResponses.Add(Result);
 end;
 
+{ Освобождает и удаляет все привязки откликов. }
 procedure TRecorderImpactHammerComponent.ClearResponses;
 begin
   while fResponses.Count > 0 do
@@ -409,29 +457,34 @@ begin
   end;
 end;
 
+{ Возвращает принадлежащую компоненту привязку отклика с нулевым индексом AIndex. }
 function TRecorderImpactHammerComponent.GetResponse(
   AIndex: Integer): TImpactResponseBinding;
 begin
   Result := TImpactResponseBinding(fResponses[AIndex]);
 end;
 
+{ Возвращает число настроенных привязок отклика. }
 function TRecorderImpactHammerComponent.GetResponseCount: Integer;
 begin
   Result := fResponses.Count;
 end;
 
+{ Возвращает параметры оси для указанного типа результата. }
 function TRecorderImpactHammerComponent.GetAxisState(
   AType: TRecorderImpactResultType): TImpactResultAxisState;
 begin
   Result := fAxisStates[AType];
 end;
 
+{ Сохраняет параметры оси для указанного типа результата. }
 procedure TRecorderImpactHammerComponent.SetAxisState(
   AType: TRecorderImpactResultType; const AValue: TImpactResultAxisState);
 begin
   fAxisStates[AType] := AValue;
 end;
 
+{ Проверяет настройки; ARequireTags включает обязательность выбранного молотка и хотя бы одного отклика. }
 function TRecorderImpactHammerComponent.Validate(out AError: string;
   ARequireTags: Boolean): Boolean;
 var
@@ -448,6 +501,8 @@ begin
     AError := 'Не выбран тег ударного молотка.'
   else if ARequireTags and (fResponses.Count = 0) then
     AError := 'Добавьте хотя бы один канал отклика.'
+  else if (fRouteNextStepPulseMs < 1) or (fRouteNextStepPulseMs > 60000) then
+    AError := 'Длительность импульса следующего шага должна быть от 1 до 60000 мс.'
   else if fTriggerThreshold <= 0 then
     AError := 'Порог запуска должен быть больше нуля.'
   else if (fTriggerHysteresis < 0) or (fTriggerHysteresis >= fTriggerThreshold) then
@@ -516,8 +571,10 @@ begin
       else if (Responses[I].PointIncrement < 0) or
         (Responses[I].PointIncrement > 255) then
         AError := 'Приращение номера точки должно быть от 0 до 255.'
-      else if Responses[I].PointNumber < 1 then
-        AError := 'Номер точки должен быть положительным.'
+      // Ноль означает, что новая точка маршрута ещё не привязана к геометрии;
+      // канал измерения и его настройки при этом остаются допустимыми.
+      else if Responses[I].PointNumber < 0 then
+        AError := 'Номер точки не может быть отрицательным.'
       else if (Responses[I].EnvelopeXEnabled and
         (IsNan(Responses[I].EnvelopeX) or IsInfinite(Responses[I].EnvelopeX) or
          (Responses[I].EnvelopeX <= 0))) or
@@ -542,6 +599,7 @@ begin
   Result := AError = '';
 end;
 
+{ Сериализует настройки в AValues под APrefix, чтобы сосуществовать с другими компонентами. }
 procedure TRecorderImpactHammerComponent.SaveToStrings(AValues: TStrings;
   const APrefix: string);
 var
@@ -553,6 +611,16 @@ var
 begin
   Put(AValues, APrefix + 'HammerTagId', IntToStr(fHammerTagId));
   Put(AValues, APrefix + 'HammerTagName', fHammerTagName);
+  Put(AValues, APrefix + 'RoutePointTagId', IntToStr(fRoutePointTagId));
+  Put(AValues, APrefix + 'RoutePointTagName', fRoutePointTagName);
+  Put(AValues, APrefix + 'RouteAutoEnabled', BoolToStr(fRouteAutoEnabled, True));
+  Put(AValues, APrefix + 'RouteTagSyncEnabled', BoolToStr(fRouteTagSyncEnabled, True));
+  Put(AValues, APrefix + 'RouteAutoOverwrite', BoolToStr(fRouteAutoOverwrite, True));
+  Put(AValues, APrefix + 'RouteAtPointTagId', IntToStr(fRouteAtPointTagId));
+  Put(AValues, APrefix + 'RouteAtPointTagName', fRouteAtPointTagName);
+  Put(AValues, APrefix + 'RouteNextStepTagId', IntToStr(fRouteNextStepTagId));
+  Put(AValues, APrefix + 'RouteNextStepTagName', fRouteNextStepTagName);
+  Put(AValues, APrefix + 'RouteNextStepPulseMs', IntToStr(fRouteNextStepPulseMs));
   Put(AValues, APrefix + 'TriggerPolarity', IntToStr(Ord(fTriggerPolarity)));
   Put(AValues, APrefix + 'TriggerThreshold', FloatToStr(fTriggerThreshold, DefaultFormatSettings));
   Put(AValues, APrefix + 'TriggerHysteresis', FloatToStr(fTriggerHysteresis, DefaultFormatSettings));
@@ -591,6 +659,7 @@ begin
   Put(AValues, APrefix + 'CreateColorModifier', BoolToStr(fCreateColorModifier, True));
   Put(AValues, APrefix + 'ShowAnchorMarkers', BoolToStr(fShowAnchorMarkers, True));
   Put(AValues, APrefix + 'OnlySensors', BoolToStr(fOnlySensors, True));
+  Put(AValues, APrefix + 'ResultValuesVisible', BoolToStr(fResultValuesVisible, True));
   Put(AValues, APrefix + 'GeometryBindingMode',
     IntToStr(Ord(fGeometryBindingMode)));
   Put(AValues, APrefix + 'AnimationScale', FloatToStr(fAnimationScale,
@@ -654,6 +723,7 @@ begin
   end;
 end;
 
+{ Читает настройки из AValues под APrefix с запасными значениями; вызывающий отдельно выполняет валидацию. }
 function TRecorderImpactHammerComponent.LoadFromStringsUnchecked(AValues: TStrings;
   const APrefix: string; out AError: string): Boolean;
 var
@@ -677,6 +747,16 @@ begin
   end;
   fHammerTagId := ReadInt(AValues, APrefix + 'HammerTagId', 0);
   fHammerTagName := AValues.Values[APrefix + 'HammerTagName'];
+  fRoutePointTagId := ReadInt(AValues, APrefix + 'RoutePointTagId', 0);
+  fRoutePointTagName := AValues.Values[APrefix + 'RoutePointTagName'];
+  fRouteAutoEnabled := StrToBoolDef(AValues.Values[APrefix + 'RouteAutoEnabled'], False);
+  fRouteTagSyncEnabled := StrToBoolDef(AValues.Values[APrefix + 'RouteTagSyncEnabled'], False);
+  fRouteAutoOverwrite := StrToBoolDef(AValues.Values[APrefix + 'RouteAutoOverwrite'], False);
+  fRouteAtPointTagId := ReadInt(AValues, APrefix + 'RouteAtPointTagId', 0);
+  fRouteAtPointTagName := AValues.Values[APrefix + 'RouteAtPointTagName'];
+  fRouteNextStepTagId := ReadInt(AValues, APrefix + 'RouteNextStepTagId', 0);
+  fRouteNextStepTagName := AValues.Values[APrefix + 'RouteNextStepTagName'];
+  fRouteNextStepPulseMs := ReadInt(AValues, APrefix + 'RouteNextStepPulseMs', 200);
   V := ReadInt(AValues, APrefix + 'TriggerPolarity', Ord(itpPositive));
   if EnumInRange(V, Ord(High(TImpactTriggerPolarity))) then
     fTriggerPolarity := TImpactTriggerPolarity(V);
@@ -727,6 +807,7 @@ begin
   fCreateColorModifier := StrToBoolDef(AValues.Values[APrefix + 'CreateColorModifier'], False);
   fShowAnchorMarkers := StrToBoolDef(AValues.Values[APrefix + 'ShowAnchorMarkers'], False);
   fOnlySensors:=StrToBoolDef(AValues.Values[APrefix+'OnlySensors'],False);
+  fResultValuesVisible := StrToBoolDef(AValues.Values[APrefix + 'ResultValuesVisible'], False);
   Ordinal := ReadInt(AValues, APrefix + 'GeometryBindingMode',
     Ord(rgbmIntensity));
   if not EnumInRange(Ordinal, Ord(High(TRecorderGeometryBindingMode))) then
@@ -772,7 +853,8 @@ begin
       fBasePointNumber + R.PointIncrement + 1);
     R.Target3dNodeId := ReadQWord(AValues, P + 'Target3dNodeId', fTarget3dNodeId);
     R.PointLabel := AValues.Values[P + 'PointLabel'];
-    if Trim(R.PointLabel) = '' then R.PointLabel := IntToStr(R.PointNumber);
+    if (Trim(R.PointLabel) = '') and (R.PointNumber > 0) then
+      R.PointLabel := IntToStr(R.PointNumber);
     R.EnvelopeXEnabled := StrToBoolDef(AValues.Values[P + 'EnvelopeXEnabled'], False);
     R.EnvelopeYEnabled := StrToBoolDef(AValues.Values[P + 'EnvelopeYEnabled'], False);
     R.EnvelopeZEnabled := StrToBoolDef(AValues.Values[P + 'EnvelopeZEnabled'], False);
@@ -824,9 +906,9 @@ begin
   if (ModelVersion<=12) and (ResponseCount>0) then
     fMarkerVisualization:=Responses[0].Visualization;
   Result := Validate(AError);
-  { A newly placed component is deliberately persisted before its channels are
-    selected. Loading must restore that editable draft; runtime Configure and
-    the settings dialog still require full validation before measurement. }
+  { Новый компонент сохраняется до выбора каналов: загрузка должна вернуть
+    редактируемый черновик. Перед измерением сервис и диалог выполняют полную
+    проверку настроек. }
   if not Result and (((fHammerTagId = 0) and
     (Trim(fHammerTagName) = '')) or (ResponseCount = 0)) then
   begin
@@ -835,6 +917,7 @@ begin
   end;
 end;
 
+{ Загружает настройки из AValues под APrefix, затем проверяет их; при ошибке восстанавливает безопасную конфигурацию. }
 function TRecorderImpactHammerComponent.LoadFromStrings(AValues: TStrings;
   const APrefix: string; out AError: string): Boolean;
 var
@@ -850,6 +933,7 @@ begin
   end;
 end;
 
+{ Создаёт фабрику с типом, названием и размером плитки компонента. }
 constructor TRecorderImpactHammerFactory.Create;
 begin
   inherited Create(TRecorderImpactHammerComponent.TypeId, 'Ударный FRF',
@@ -858,6 +942,7 @@ begin
     'impact-hammer', 46, rppGroup, CRecorderPaletteGroupCharts);
 end;
 
+{ Инициализирует новый компонент по контексту; выбранный тег важнее тега по умолчанию. }
 procedure TRecorderImpactHammerFactory.ConfigureNewComponent(
   AComponent: TRecorderVisualComponent;
   const AContext: TRecorderComponentCreateContext);
@@ -865,6 +950,7 @@ begin
   AComponent.Name := Format('ImpactHammer%d', [AContext.ComponentNo]);
 end;
 
+{ Регистрирует фабрику компонента, если она ещё не зарегистрирована. }
 procedure RegisterRecorderImpactHammerFactory(AFactory: TRecorderComponentFactory);
 begin
   if (AFactory <> nil) and

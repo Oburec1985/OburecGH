@@ -20,7 +20,8 @@ unit uRecorderPxiMx248SettingsDialog;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, Grids, ComCtrls,
+  Classes, SysUtils, Types, Forms, Controls, StdCtrls, ExtCtrls, Grids, ComCtrls, Menus,
+  uRecorderPxiMx248ChannelDialog,
   uRecorderDriverContractsV2, uRecorderPxiMx248Properties,
   uRecorderPxiMx248Types, uRecorderPxiMx248SettingsService;
 
@@ -46,6 +47,8 @@ type
     edSourceId: TEdit;
     edSourceAddress: TEdit;
     gridChannels: TStringGrid;
+    popupChannels: TPopupMenu;
+    miEditChannels: TMenuItem;
     lblCalibrationMode: TLabel;
     lblChassis: TLabel;
     lblDiscovered: TLabel;
@@ -77,6 +80,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure GridDblClick(Sender: TObject);
+    procedure GridMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure EditChannelsClick(Sender: TObject);
     procedure LocationChange(Sender: TObject);
     procedure AddressRuleChange(Sender: TObject);
     procedure SourceAddressChange(Sender: TObject);
@@ -100,6 +106,8 @@ type
     fRangeIndices: array[1..CPxiMx248ChannelCount] of Integer;
     procedure ConfigureChoices;
     procedure ConfigureGrid;
+    function ReadChannel(AChannel: Integer): TMx248ChannelValues;
+    procedure PatchChannel(AChannel: Integer; const AValues: TMx248ChannelValues);
     function ChannelRangeText(AChannel: Integer): string;
     procedure UpdateChannelRangeText(AChannel: Integer);
     function FloatingText(const ARawValue: string): string;
@@ -132,6 +140,7 @@ type
     function ValidateDraft(out ACanonicalProperties: string;
       out AErrorText: string): Boolean;
     function ApplyDraft(out AErrorText: string): Boolean;
+    function IsChannelSelected(AChannel: Integer): Boolean;
   end;
 
 function ShowPxiMx248SettingsDialog(AOwner: TComponent;
@@ -144,7 +153,7 @@ implementation
 
 uses
   Graphics, uRecorderPxiMx248DiscoveryWorker,
-  uRecorderPxiMx248ChannelDialog, uRecorderPxiMx248Addressing;
+  uRecorderPxiMx248Addressing;
 
 const
   CColChannel = 0;
@@ -1019,6 +1028,94 @@ begin
   if SelectedAddressRule <> CPxiMx248AddressRuleManual then
     AddressRuleChange(nil)
   else UpdateAddressPreview;
+end;
+
+function TPxiMx248SettingsDialog.IsChannelSelected(AChannel: Integer): Boolean;
+var
+  I: Integer;
+  lRange: TGridRect;
+begin
+  Result := False;
+  if (AChannel < 1) or (AChannel > CPxiMx248ChannelCount) then Exit;
+  for I := 0 to gridChannels.SelectedRangeCount - 1 do
+  begin
+    lRange := gridChannels.SelectedRange[I];
+    if (AChannel >= lRange.Top) and (AChannel <= lRange.Bottom) then Exit(True);
+  end;
+end;
+
+procedure TPxiMx248SettingsDialog.GridMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  lCol, lRow: Integer;
+begin
+  if Button <> mbRight then Exit;
+  gridChannels.MouseToCell(X, Y, lCol, lRow);
+  miEditChannels.Enabled := (lRow >= 1) and
+    (lRow <= CPxiMx248ChannelCount) and not fIoBusy;
+  if not miEditChannels.Enabled or IsChannelSelected(lRow) then Exit;
+  { LCL ignores right clicks for selection; keep a selected group intact. }
+  gridChannels.ClearSelections;
+  gridChannels.Row := lRow;
+  gridChannels.Selection := Rect(gridChannels.FixedCols, lRow,
+    gridChannels.ColCount - 1, lRow);
+end;
+
+function TPxiMx248SettingsDialog.ReadChannel(AChannel: Integer): TMx248ChannelValues;
+begin
+  Result[mcfAmplifier] := gridChannels.Cells[CColAmplifier, AChannel];
+  Result[mcfInputMode] := gridChannels.Cells[CColInputMode, AChannel];
+  Result[mcfRange] := IntToStr(fRangeIndices[AChannel]);
+  Result[mcfLpf] := gridChannels.Cells[CColLpf, AChannel];
+  Result[mcfIcp] := gridChannels.Cells[CColIcp, AChannel];
+  Result[mcfCalibration] := gridChannels.Cells[CColCalibration, AChannel];
+  Result[mcfFloating] := FloatingRawValue(gridChannels.Cells[CColFloating, AChannel]);
+end;
+
+procedure TPxiMx248SettingsDialog.PatchChannel(AChannel: Integer;
+  const AValues: TMx248ChannelValues);
+begin
+  if AValues[mcfAmplifier] <> '' then
+    gridChannels.Cells[CColAmplifier, AChannel] := AValues[mcfAmplifier];
+  if AValues[mcfInputMode] <> '' then
+    gridChannels.Cells[CColInputMode, AChannel] := AValues[mcfInputMode];
+  if AValues[mcfRange] <> '' then
+    fRangeIndices[AChannel] := StrToIntDef(AValues[mcfRange], 0);
+  if AValues[mcfLpf] <> '' then
+    gridChannels.Cells[CColLpf, AChannel] := AValues[mcfLpf];
+  if AValues[mcfIcp] <> '' then
+    gridChannels.Cells[CColIcp, AChannel] := AValues[mcfIcp];
+  if AValues[mcfCalibration] <> '' then
+    gridChannels.Cells[CColCalibration, AChannel] := AValues[mcfCalibration];
+  if AValues[mcfFloating] <> '' then
+    gridChannels.Cells[CColFloating, AChannel] := FloatingText(AValues[mcfFloating]);
+  UpdateChannelRangeText(AChannel);
+end;
+
+procedure TPxiMx248SettingsDialog.EditChannelsClick(Sender: TObject);
+var
+  I, lCount: Integer;
+  lValues, lChannel: TMx248ChannelValues;
+  lField: TMx248ChannelField;
+begin
+  if fIoBusy then Exit;
+  lCount := 0;
+  for I := 1 to CPxiMx248ChannelCount do
+    if IsChannelSelected(I) then
+    begin
+      lChannel := ReadChannel(I);
+      if lCount = 0 then lValues := lChannel
+      else
+        for lField := Low(lField) to High(lField) do
+          if lValues[lField] <> lChannel[lField] then lValues[lField] := '';
+      Inc(lCount);
+    end;
+  if lCount = 0 then Exit;
+  if not EditPxiMx248Channels(Self, lCount, lValues) then Exit;
+  for I := 1 to CPxiMx248ChannelCount do
+    if IsChannelSelected(I) then PatchChannel(I, lValues);
+  SetStatus(Format('Изменён черновик каналов: %d. Для записи в плату нажмите «Применить».',
+    [lCount]), False);
 end;
 
 procedure TPxiMx248SettingsDialog.GridDblClick(Sender: TObject);

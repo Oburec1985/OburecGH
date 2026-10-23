@@ -26,6 +26,7 @@ type
     edMax: TFloatSpinEdit;
     edMin: TFloatSpinEdit;
     edMirrorSearch: TEdit;
+    edMirrorName: TEdit;
     edSafe: TFloatSpinEdit;
     edSampleRate: TFloatSpinEdit;
     gbDevice: TGroupBox;
@@ -48,11 +49,13 @@ type
     procedure MirrorSearchChange(Sender: TObject);
     procedure MirrorTagClick(Sender: TObject);
     procedure OkClick(Sender: TObject);
+    procedure DeviceChange(Sender: TObject);
   private
     fComponent: TRecorderDacComponent;
     fFactory: TRecorderDacComponentFactory;
     fRegistry: TRecorderTagRegistry;
     fLoaded: Boolean;
+    fEndpoints: TRecorderDacEndpoints;
     fInputSelectedId: TRecorderTagId;
     fMirrorSelectedId: TRecorderTagId;
     procedure FillTagList(AList: TListBox; const AFilter: string;
@@ -100,19 +103,33 @@ end;
 
 procedure TRecorderDacSettingsDialog.LoadSettings;
 var
-  lIndex: Integer;
+  I, lIndex: Integer;
+  lResult: TRecorderDacResult;
 begin
-  fFactory.GetBackendIds(cbBackend.Items);
-  lIndex := cbBackend.Items.IndexOf(fComponent.BackendId);
+  fFactory.DiscoverEndpoints(fEndpoints, lResult);
+  cbBackend.Items.Clear;
+  lIndex := -1;
+  for I := 0 to High(fEndpoints) do
+  begin
+    cbBackend.Items.Add(fEndpoints[I].DisplayName);
+    if SameText(fEndpoints[I].BackendId, fComponent.BackendId) and
+      SameText(fEndpoints[I].Endpoint, fComponent.Endpoint) then lIndex := I;
+  end;
   if lIndex < 0 then
   begin
-    cbBackend.Items.Add(fComponent.BackendId);
+    SetLength(fEndpoints, Length(fEndpoints) + 1);
+    I := High(fEndpoints);
+    fEndpoints[I].BackendId := fComponent.BackendId;
+    fEndpoints[I].Endpoint := fComponent.Endpoint;
+    fEndpoints[I].SampleRateHz := 0;
+    cbBackend.Items.Add(fComponent.BackendId + ': ' + fComponent.Endpoint + ' (недоступно)');
     lIndex := cbBackend.Items.Count - 1;
   end;
   cbBackend.ItemIndex := lIndex;
   cbEnabled.Checked := fComponent.Enabled;
   edEndpoint.Text := fComponent.Endpoint;
   edSampleRate.Value := fComponent.SampleRateHz;
+  DeviceChange(nil);
   edBlockSize.Value := fComponent.FramesPerBlock;
   edMin.Value := fComponent.MinimumValue;
   edMax.Value := fComponent.MaximumValue;
@@ -121,9 +138,22 @@ begin
   cbMirror.Checked := fComponent.MirrorEnabled;
   fInputSelectedId := fComponent.InputTagId;
   fMirrorSelectedId := fComponent.MirrorTagId;
+  edMirrorName.Text := fComponent.MirrorTagName;
   FillTagList(lbInput, '', fInputSelectedId);
   FillTagList(lbMirror, '', fMirrorSelectedId);
   UpdateMirrorControls;
+end;
+
+procedure TRecorderDacSettingsDialog.DeviceChange(Sender: TObject);
+var
+  I: Integer;
+begin
+  I := cbBackend.ItemIndex;
+  if (I < 0) or (I >= Length(fEndpoints)) then Exit;
+  edEndpoint.Text := fEndpoints[I].Endpoint;
+  edSampleRate.Enabled := fEndpoints[I].SampleRateHz <= 0;
+  if fEndpoints[I].SampleRateHz > 0 then
+    edSampleRate.Value := fEndpoints[I].SampleRateHz;
 end;
 
 procedure TRecorderDacSettingsDialog.FillTagList(AList: TListBox;
@@ -142,6 +172,7 @@ begin
     for I := 0 to fRegistry.TagCount - 1 do
     begin
       lTag := fRegistry.Tags[I];
+      if (AList = lbMirror) and not lTag.IsVirtual then Continue;
       if (AList = lbMirror) and (lTag.Id = fInputSelectedId) then Continue;
       lText := lTag.Name + '  ' + lTag.Address + '  ' + lTag.Description;
       if (lNeedle <> '') and
@@ -195,8 +226,12 @@ begin
 end;
 
 procedure TRecorderDacSettingsDialog.MirrorTagClick(Sender: TObject);
+var
+  lTag: TRecorderTag;
 begin
   fMirrorSelectedId := SelectedTagId(lbMirror);
+  lTag := SelectedTag(lbMirror);
+  if lTag <> nil then edMirrorName.Text := lTag.Name;
 end;
 
 procedure TRecorderDacSettingsDialog.MirrorClick(Sender: TObject);
@@ -207,6 +242,7 @@ end;
 procedure TRecorderDacSettingsDialog.UpdateMirrorControls;
 begin
   edMirrorSearch.Enabled := cbMirror.Checked;
+  edMirrorName.Enabled := cbMirror.Checked;
   lbMirror.Enabled := cbMirror.Checked;
 end;
 
@@ -215,22 +251,32 @@ function TRecorderDacSettingsDialog.ValidateSettings(
 var
   lConfig: TRecorderDacConfig;
   lResult: TRecorderDacResult;
+  lTag: TRecorderTag;
 begin
   Result := False;
+  if cbMirror.Checked then
+  begin
+    if fRegistry = nil then
+    begin
+      AMessage := 'Реестр тегов недоступен.';
+      Exit;
+    end;
+    lTag := fRegistry.FindByName(Trim(edMirrorName.Text));
+    if (lTag <> nil) and not lTag.IsVirtual then
+    begin
+      AMessage := 'Для зеркала разрешены только виртуальные теги. Укажите другое имя.';
+      Exit;
+    end;
+    if (lTag <> nil) and (fComponent.SourceMode = rdsmTag) and
+      (lTag.Id = SelectedTagId(lbInput)) then
+    begin
+      AMessage := 'Входной тег и зеркало должны различаться.';
+      Exit;
+    end;
+  end;
   if (fComponent.SourceMode = rdsmTag) and (SelectedTag(lbInput) = nil) then
   begin
     AMessage := 'Выберите входной тег ЦАП.';
-    Exit;
-  end;
-  if cbMirror.Checked and (SelectedTag(lbMirror) = nil) then
-  begin
-    AMessage := 'Выберите тег зеркала или выключите зеркалирование.';
-    Exit;
-  end;
-  if cbMirror.Checked and
-    (SelectedTagId(lbInput) = SelectedTagId(lbMirror)) then
-  begin
-    AMessage := 'Входной тег и тег зеркала должны различаться.';
     Exit;
   end;
   lConfig.SampleRateHz := edSampleRate.Value;
@@ -246,12 +292,12 @@ end;
 
 procedure TRecorderDacSettingsDialog.ApplySettings;
 var
-  lInput, lMirror: TRecorderTag;
+  lInput: TRecorderTag;
 begin
   lInput := SelectedTag(lbInput);
-  lMirror := SelectedTag(lbMirror);
   fComponent.Enabled := cbEnabled.Checked;
-  fComponent.BackendId := cbBackend.Text;
+  if (cbBackend.ItemIndex >= 0) and (cbBackend.ItemIndex < Length(fEndpoints)) then
+    fComponent.BackendId := fEndpoints[cbBackend.ItemIndex].BackendId;
   fComponent.Endpoint := Trim(edEndpoint.Text);
   if lInput <> nil then
   begin
@@ -261,13 +307,8 @@ begin
   fComponent.MirrorEnabled := cbMirror.Checked;
   if cbMirror.Checked then
   begin
-    fComponent.MirrorTagId := lMirror.Id;
-    fComponent.MirrorTagName := lMirror.Name;
-  end
-  else
-  begin
+    fComponent.MirrorTagName := Trim(edMirrorName.Text);
     fComponent.MirrorTagId := 0;
-    fComponent.MirrorTagName := '';
   end;
   fComponent.SampleRateHz := edSampleRate.Value;
   fComponent.FramesPerBlock := edBlockSize.Value;
@@ -275,6 +316,7 @@ begin
   fComponent.MaximumValue := edMax.Value;
   fComponent.SafeValue := edSafe.Value;
   fComponent.UnderrunPolicy := TRecorderDacUnderrunPolicy(cbUnderrun.ItemIndex);
+  if cbMirror.Checked then fComponent.EnsureMirrorTag(fRegistry);
 end;
 
 procedure TRecorderDacSettingsDialog.OkClick(Sender: TObject);

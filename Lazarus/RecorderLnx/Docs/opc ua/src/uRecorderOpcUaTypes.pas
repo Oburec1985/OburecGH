@@ -28,6 +28,7 @@ type
   public
     NodeId: string;
     TagName: string;
+    RecorderTagId: Int64;
     DataTypeNodeId: string;
     Readable: Boolean;
     Writable: Boolean;
@@ -38,6 +39,7 @@ type
 
   TRecorderOpcUaConfig = class
   private
+    fBrowseCache: TStringList;
     fNodes: TObjectList;
   public
     Mode: TRecorderOpcUaMode;
@@ -67,6 +69,7 @@ type
     function ToJson: string;
     function LoadJson(const AText: string; out AError: string): Boolean;
     property Nodes: TObjectList read fNodes;
+    property BrowseCache: TStringList read fBrowseCache;
   end;
 
 function RecorderOpcUaSourceId(const AEndpoint: string;
@@ -79,6 +82,7 @@ implementation
 constructor TRecorderOpcUaConfig.Create;
 begin
   inherited Create;
+  fBrowseCache := TStringList.Create;
   fNodes := TObjectList.Create(True);
   Mode := oumClient;
   AuthenticationMode := ouamAnonymous;
@@ -101,6 +105,7 @@ end;
 
 destructor TRecorderOpcUaConfig.Destroy;
 begin
+  fBrowseCache.Free;
   fNodes.Free;
   inherited Destroy;
 end;
@@ -112,6 +117,7 @@ begin
   Result := TRecorderOpcUaNode.Create;
   Result.NodeId := Trim(ANodeId);
   Result.TagName := Trim(ATagName);
+  Result.RecorderTagId := 0;
   Result.DataTypeNodeId := Trim(ADataTypeNodeId);
   Result.Readable := AReadable;
   Result.Writable := AWritable;
@@ -124,7 +130,7 @@ end;
 function TRecorderOpcUaConfig.ToJson: string;
 var
   I: Integer;
-  lArray: TJSONArray;
+  lArray, lBrowseArray: TJSONArray;
   lNode: TRecorderOpcUaNode;
   lObject, lRoot: TJSONObject;
 begin
@@ -164,6 +170,10 @@ begin
     lRoot.Add('archivePollingRate', Integer(ArchivePollingRate));
     lRoot.Add('showAdditionalSettings', ShowAdditionalSettings);
     lRoot.Add('simplifiedTree', SimplifiedTree);
+    lBrowseArray := TJSONArray.Create;
+    lRoot.Add('browseCache', lBrowseArray);
+    for I := 0 to fBrowseCache.Count - 1 do
+      lBrowseArray.Add(fBrowseCache[I]);
     lArray := TJSONArray.Create;
     lRoot.Add('nodes', lArray);
     for I := 0 to fNodes.Count - 1 do
@@ -172,6 +182,7 @@ begin
       lObject := TJSONObject.Create;
       lObject.Add('nodeId', lNode.NodeId);
       lObject.Add('tagName', lNode.TagName);
+      lObject.Add('recorderTagId', lNode.RecorderTagId);
       lObject.Add('dataTypeNodeId', lNode.DataTypeNodeId);
       lObject.Add('readable', lNode.Readable);
       lObject.Add('writable', lNode.Writable);
@@ -197,11 +208,12 @@ var
   I: Integer;
   lData: TJSONData;
   lItem, lRoot: TJSONObject;
-  lNodes: TJSONArray;
+  lNodes, lBrowseCache: TJSONArray;
 begin
   Result := False;
   AError := '';
   fNodes.Clear;
+  fBrowseCache.Clear;
   try
     lData := GetJSON(AText);
     try
@@ -262,6 +274,10 @@ begin
       ArchivePollingRate := Cardinal(lRoot.Get('archivePollingRate', 1));
       ShowAdditionalSettings := lRoot.Get('showAdditionalSettings', True);
       SimplifiedTree := lRoot.Get('simplifiedTree', True);
+      if lRoot.Find('browseCache', lBrowseCache) and
+        (lBrowseCache is TJSONArray) then
+        for I := 0 to lBrowseCache.Count - 1 do
+          fBrowseCache.Add(lBrowseCache.Strings[I]);
       if lRoot.Find('nodes', lNodes) and (lNodes is TJSONArray) then
         for I := 0 to lNodes.Count - 1 do
           if lNodes.Items[I] is TJSONObject then
@@ -272,6 +288,8 @@ begin
               AddNode(lItem.Get('nodeId', ''), lItem.Get('tagName', ''),
                 lItem.Get('writable', False), lItem.Get('readable', True),
                 lItem.Get('dataTypeNodeId', ''));
+              TRecorderOpcUaNode(fNodes[fNodes.Count - 1]).RecorderTagId :=
+                lItem.Get('recorderTagId', Int64(0));
               if SameText(lItem.Get('role', 'auto'), 'tag') then
                 TRecorderOpcUaNode(fNodes[fNodes.Count - 1]).Role := ounrTag
               else if SameText(lItem.Get('role', 'auto'), 'message') then

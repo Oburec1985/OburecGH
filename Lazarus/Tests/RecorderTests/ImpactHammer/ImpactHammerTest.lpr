@@ -357,6 +357,235 @@ begin
   end;
 end;
 
+procedure TestExponentialEndpointPosition;
+const
+  CImpulse = 8;
+  CStartSeconds = 0.0035;
+var
+  lSettings: TRecorderImpactDspSettings;
+  lPipeline: TRecorderImpactDspPipeline;
+  lMoments: TRecorderImpactSpectralMoments;
+  lError: string;
+  lPass, lI: Integer;
+  lEndSeconds, lExpected, lFirstPower: Double;
+begin
+  lSettings := Default(TRecorderImpactDspSettings);
+  lSettings.SampleRateHz := 1000;
+  lSettings.CaptureSamples := 32;
+  lSettings.FftSize := 32;
+  lSettings.ResponseCount := 1;
+  lSettings.WindowKind := iwkRectangular;
+  lSettings.ForceWindowFraction := 1;
+  lSettings.ExponentialEndFraction := 0.1;
+  lSettings.ResponseUnitNames := ['a.u.'];
+  lSettings.WindowEnabled := True;
+  lSettings.WindowEndFraction := 1;
+  lSettings.ExponentialStartFraction := CStartSeconds / 0.032;
+  lFirstPower := 0;
+  lPipeline := TRecorderImpactDspPipeline.Create;
+  try
+    // Third case references a physical endpoint beyond a partial capture.
+    for lPass := 0 to 4 do
+    begin
+      case lPass of
+        0: lEndSeconds := 0.012;
+        1: lEndSeconds := 0.024;
+        2: lEndSeconds := 0.048;
+        3: lEndSeconds := 0.006;
+        else lEndSeconds := 0;
+      end;
+      lSettings.ExponentialEndPositionFraction := lEndSeconds / 0.032;
+      Check(lPipeline.Configure(lSettings, lError), lError);
+      for lI := 0 to 31 do
+      begin
+        Check(lPipeline.AddSample(0, Ord(lI = CImpulse)), 'endpoint excitation');
+        Check(lPipeline.AddSample(1, Ord(lI = CImpulse)), 'endpoint response');
+      end;
+      Check(lPipeline.PrepareResponse(0, lMoments), 'endpoint prepare');
+      if lEndSeconds > 0 then
+        lExpected := Exp(Ln(0.1) * (CImpulse / 1000 - CStartSeconds) /
+          (lEndSeconds - CStartSeconds))
+      else
+        lExpected := Exp(Ln(0.1) * (CImpulse - Round(3.5)) /
+          (31 - Round(3.5)));
+      CheckNear(lMoments.ResponsePower[0], Sqr(lExpected),
+        'response decay must match physical time overlay, including fractional start');
+      CheckNear(lMoments.ExcitationPower[0], 1, 'response window leaves excitation unchanged');
+      if lPass = 0 then lFirstPower := lMoments.ResponsePower[0];
+      if lPass = 1 then Check(lMoments.ResponsePower[0] > lFirstPower,
+        'moving endpoint X independently changes decay');
+    end;
+  finally
+    lPipeline.Free;
+  end;
+end;
+
+procedure TestWindowChannelIsolation(AWindowKind: TRecorderImpactWindowKind);
+var
+  lSettings: TRecorderImpactDspSettings;
+  lPipeline: TRecorderImpactDspPipeline;
+  lMoments: array[0..2] of TRecorderImpactSpectralMoments;
+  lError: string;
+  lPass, lI, lBin: Integer;
+begin
+  lSettings := Default(TRecorderImpactDspSettings);
+  lSettings.SampleRateHz := 1000;
+  lSettings.CaptureSamples := 32;
+  lSettings.FftSize := 32;
+  lSettings.ResponseCount := 1;
+  lSettings.WindowKind := AWindowKind;
+  lSettings.ForceWindowFraction := 1;
+  lSettings.ExponentialEndFraction := 0.1;
+  lSettings.ResponseExponentialEndLevel := 0.1;
+  lSettings.ResponseUnitNames := ['a.u.'];
+  lSettings.WindowEnabled := True;
+  lSettings.WindowEndFraction := 0.5;
+  lSettings.ExponentialStartFraction := 4 / 32;
+  lSettings.ExponentialEndPositionFraction := 24 / 32;
+  lPipeline := TRecorderImpactDspPipeline.Create;
+  try
+    for lPass := 0 to 2 do
+    begin
+      if lPass = 1 then
+      begin
+        lSettings.WindowStartFraction := 0.5;
+        lSettings.WindowEndFraction := 1;
+      end;
+      if lPass = 2 then
+      begin
+        lSettings.ExponentialEndPositionFraction := 16 / 32;
+        lSettings.ResponseExponentialEndLevel := 0.01;
+      end;
+      Check(lPipeline.Configure(lSettings, lError), lError);
+      for lI := 0 to 31 do
+      begin
+        Check(lPipeline.AddSample(0, 2 * Ord(lI = 8) + Ord(lI = 20)), 'isolated X');
+        Check(lPipeline.AddSample(1, Ord(lI = 8) + Ord(lI = 20)), 'isolated Y');
+      end;
+      Check(lPipeline.PrepareResponse(0, lMoments[lPass]), 'isolated prepare');
+    end;
+    CheckNear(lMoments[0].ExcitationPower[0],
+      4 * Sqr(ReferenceWindow(AWindowKind, 8, 32, 1, 0.1)), 'left excitation rectangle');
+    CheckNear(lMoments[1].ExcitationPower[0],
+      Sqr(ReferenceWindow(AWindowKind, 20, 32, 1, 0.1)), 'right excitation rectangle');
+    for lBin := 0 to High(lMoments[0].ResponsePower) do
+    begin
+      CheckNear(lMoments[0].ResponsePower[lBin], lMoments[1].ResponsePower[lBin],
+        'rectangle must not gate response, including response tail');
+      CheckNear(lMoments[1].ExcitationPower[lBin], lMoments[2].ExcitationPower[lBin],
+        'exponential must not modify excitation');
+    end;
+    Check(Abs(lMoments[1].ResponsePower[0] - lMoments[2].ResponsePower[0]) > 1E-4,
+      'response decay must change response spectrum');
+  finally lPipeline.Free end;
+end;
+
+procedure TestRectangularPhysicalBoundaries;
+var
+  lSettings: TRecorderImpactDspSettings;
+  lPipeline: TRecorderImpactDspPipeline;
+  lMoments: TRecorderImpactSpectralMoments;
+  lError: string;
+  lRate, lI: Integer;
+begin
+  lSettings := Default(TRecorderImpactDspSettings);
+  lSettings.ResponseCount := 1;
+  lSettings.WindowKind := iwkRectangular;
+  lSettings.ForceWindowFraction := 1;
+  lSettings.ExponentialEndFraction := 1;
+  lSettings.ResponseUnitNames := ['a.u.'];
+  lSettings.WindowEnabled := True;
+  lSettings.WindowStartFraction := 0.13;
+  lSettings.WindowEndFraction := 0.6;
+  lSettings.ExponentialEndPositionFraction := 1;
+  lPipeline := TRecorderImpactDspPipeline.Create;
+  try
+    lRate := 8;
+    while lRate <= 16 do
+    begin
+      lSettings.SampleRateHz := lRate;
+      lSettings.CaptureSamples := lRate;
+      lSettings.FftSize := lRate;
+      Check(lPipeline.Configure(lSettings, lError), lError);
+      for lI := 0 to lRate - 1 do
+      begin
+        lPipeline.AddSample(0, 3 * Ord(lI = lRate div 8) +
+          5 * Ord(lI = lRate div 4) + 7 * Ord(lI = lRate * 5 div 8));
+        lPipeline.AddSample(1, 3 * Ord(lI = lRate div 8) +
+          5 * Ord(lI = lRate div 4) + 7 * Ord(lI = lRate * 5 div 8));
+      end;
+      Check(lPipeline.PrepareResponse(0, lMoments), 'physical rectangle prepare');
+      CheckNear(lMoments.ExcitationPower[0], 25,
+        'left rectangle must exclude sample at 0.125s before start0.13s');
+      CheckNear(lMoments.ResponsePower[0], 225,
+        'rectangular physical bounds must leave response untouched');
+      lSettings.WindowEndFraction := 0.2;
+      Check(lPipeline.Configure(lSettings, lError), lError);
+      for lI := 0 to lRate - 1 do
+      begin
+        lPipeline.AddSample(0, Ord(lI = lRate div 4));
+        lPipeline.AddSample(1, Ord(lI = lRate div 4));
+      end;
+      Check(lPipeline.PrepareResponse(0, lMoments), 'subsample rectangle prepare');
+      CheckNear(lMoments.ExcitationPower[0], 0,
+        'narrow rectangle must not force a sample outside its physical support');
+      lSettings.WindowEndFraction := 0.6;
+      lRate := lRate * 2;
+    end;
+  finally lPipeline.Free end;
+end;
+
+procedure TestLargeWindowRebuild;
+const
+  CCount = 57600;
+var
+  lSettings: TRecorderImpactDspSettings;
+  lPipeline: TRecorderImpactDspPipeline;
+  lMoments: TRecorderImpactSpectralMoments;
+  lError: string;
+  lPass, lI: Integer;
+  lStarted, lMaxMs, lElapsed: QWord;
+  lIdentity: PtrUInt;
+  lValue: Double;
+begin
+  lSettings := Default(TRecorderImpactDspSettings);
+  lSettings.SampleRateHz := CCount;
+  lSettings.CaptureSamples := CCount;
+  lSettings.FftSize := 65536;
+  lSettings.ResponseCount := 1;
+  lSettings.WindowKind := iwkRectangular;
+  lSettings.ForceWindowFraction := 1;
+  lSettings.ExponentialEndFraction := 0.1;
+  lSettings.ResponseUnitNames := ['a.u.'];
+  lSettings.WindowEnabled := True;
+  lSettings.WindowEndFraction := 0.5;
+  lSettings.ExponentialEndPositionFraction := 1;
+  lPipeline := TRecorderImpactDspPipeline.Create;
+  try
+    lIdentity := 0;
+    lMaxMs := 0;
+    for lPass := 0 to 7 do
+    begin
+      lStarted := GetTickCount64;
+      lSettings.ResponseExponentialEndLevel := 0.01 + lPass * 0.01;
+      Check(lPipeline.Configure(lSettings, lError), lError);
+      if lPass = 0 then lIdentity := lPipeline.BufferIdentity(0)
+      else Check(lPipeline.BufferIdentity(0) = lIdentity,
+        'window-only configure replaced the preallocated sample buffer');
+      for lI := 0 to CCount - 1 do
+      begin
+        lValue := Sin(2 * Pi * 80 * lI / CCount);
+        lPipeline.AddSample(0, lValue);
+        lPipeline.AddSample(1, 2 * lValue);
+      end;
+      Check(lPipeline.PrepareResponse(0, lMoments), 'large window prepare');
+      lElapsed := GetTickCount64 - lStarted;
+      if lElapsed > lMaxMs then lMaxMs := lElapsed;
+    end;
+    WriteLn('MEASURE 1s 57600Hz 8 window rebuilds max-ms=', lMaxMs);
+  finally lPipeline.Free end;
+end;
+
 procedure TestLegacyEstimatorMigration;
 var
   Model: TRecorderImpactHammerComponent;
@@ -987,13 +1216,72 @@ begin
   end;
 end;
 
+procedure TestResponseRateConversion;
+var
+  Series:TRecorderSampleSeries;
+  Values:array of Double;
+  I, CaseIndex, SourceRate, TargetRate:Integer;
+  T, ErrorSum, Expected:Double;
+  Started:QWord;
+begin
+  for CaseIndex:=0 to 2 do
+  begin
+    case CaseIndex of
+      0:begin SourceRate:=1000; TargetRate:=250 end;
+      1:begin SourceRate:=250; TargetRate:=1000 end;
+      else begin SourceRate:=800; TargetRate:=1000 end;
+    end;
+    SetLength(Series,Round(SourceRate*1.2)+1);
+    SetLength(Values,TargetRate);
+    for I:=0 to High(Series) do
+    begin
+      T:=-0.1+I/SourceRate;
+      Series[I].TimeSeconds:=T;
+      Series[I].Value:=Sin(2*Pi*20*T+0.37);
+      if CaseIndex=0 then Series[I].Value:=Series[I].Value+Sin(2*Pi*180*T);
+    end;
+    Check(ResampleImpactSeries(Series,0,TargetRate,TargetRate,Values),'response-Fs resample');
+    ErrorSum:=0;
+    for I:=0 to High(Values) do
+    begin
+      Expected:=Sin(2*Pi*20*I/TargetRate+0.37);
+      ErrorSum:=ErrorSum+Sqr(Values[I]-Expected);
+    end;
+    Check(Sqrt(ErrorSum/TargetRate)<0.002,
+      Format('rate %d->%d RMS/phase/alias error=%g',[SourceRate,TargetRate,Sqrt(ErrorSum/TargetRate)]));
+    Check(not ResampleImpactSeries(Series,-0.2,TargetRate,TargetRate,Values),
+      'resampler must not extrapolate outside capture');
+  end;
+  SourceRate:=57600; TargetRate:=14400;
+  SetLength(Series,SourceRate+1); SetLength(Values,TargetRate);
+  for I:=0 to High(Series) do
+  begin
+    Series[I].TimeSeconds:=I/SourceRate;
+    Series[I].Value:=Sin(2*Pi*100*I/SourceRate);
+  end;
+  Started:=GetTickCount64;
+  Check(ResampleImpactSeries(Series,0,TargetRate,TargetRate,Values),'typical capture resampling');
+  WriteLn('MEASURE resample 57600->14400 1s ms=',GetTickCount64-Started);
+end;
+
 begin
   try
+    if (ParamCount > 0) and (ParamStr(1) = '--window-performance-only') then
+    begin
+      TestLargeWindowRebuild;
+      WriteLn('RESULT WindowPerformance passed');
+      Halt(0);
+    end;
+    TestResponseRateConversion;
     TestFrfThresholdPeaks;
     TestAllWindowsZeroPadAndWelchGolden;
     TestCaptureLongerThanFft;
     TestFullSizeHammerSpectrumParity;
     TestImpactBaselineAndForcePosition;
+    TestExponentialEndpointPosition;
+    TestWindowChannelIsolation(iwkRectangular);
+    TestWindowChannelIsolation(iwkExponential);
+    TestRectangularPhysicalBoundaries;
     TestLegacyEstimatorMigration;
     TestSteadyStateIngestAllocations;
     TestValidationAndLifecycle;

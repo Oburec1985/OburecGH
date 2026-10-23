@@ -19,7 +19,8 @@ interface
 uses
   Classes, SysUtils, Math, uRecorderDataSources, uRecorderTags,
   uRecorderDeviceInterfaces, uRecorderAcquisitionTypes,
-  uRecorderDriverContractsV2, uRecorderPxiMx248RuntimeTransport;
+  uRecorderDriverContractsV2, uRecorderPxiMx248RuntimeTransport,
+  uRecorderBlockClock;
 
 type
   TRecorderPxiMx248DataSource = class(TRecorderDataSourceBase,
@@ -33,6 +34,7 @@ type
     fSampleDebt: Double;
     fPublishedBlocks: Int64;
     fLastReadError: string;
+    fDeviceTimeMap: TRecorderDeviceTimeMap;
     function FindChannelTag(ARegistry: TRecorderTagRegistry;
       const AAddress: string): TRecorderTag;
     procedure PublishBlock(const ABlock: TRcAcquisitionBlock);
@@ -270,6 +272,8 @@ begin
 end;
 
 procedure TRecorderPxiMx248DataSource.Start;
+var
+  lStartBefore, lStartAfter: Double;
 begin
   inherited Start;
   if fDevice.State <> rdsProgrammed then
@@ -277,7 +281,17 @@ begin
   fSampleDebt := 0;
   fPublishedBlocks := 0;
   fLastReadError := '';
+  lStartBefore := RecorderClockSeconds;
   fDevice.Start;
+  lStartAfter := RecorderClockSeconds;
+  { The native sample cursor resets at Start. Its fixed session mapping avoids
+    arrival-time jitter; the host command bracket is not a hardware phase sync. }
+  fDeviceTimeMap.BeginSession(0, (lStartBefore + lStartAfter) * 0.5,
+    (lStartAfter - lStartBefore) * 0.5 + RecorderClockResolution);
+  RecorderDebugLog(Format('[MX248] source=%s stage=clock-anchor '+
+    'generation=%d recorder=%g uncertainty_seconds=%g approximate_host_anchor=1',
+    [SourceId, fDeviceTimeMap.Generation, fDeviceTimeMap.ToRecorder(0),
+      fDeviceTimeMap.UncertaintySeconds]));
   RecorderDebugLog(Format('[MX248] source=%s stage=start rate=%g block=%d',
     [SourceId, Double(fDevice.GetDeviceProperty(rdpPollFrequencyHz)),
       Length(fTimes)]));
@@ -307,7 +321,8 @@ begin
     begin
       lCount := RecorderBlockChannelSampleCount(ABlock, I);
       lRate := RecorderBlockChannelSampleRate(ABlock, I);
-      lFirstTime := RecorderBlockChannelFirstTime(ABlock, I);
+      lFirstTime := fDeviceTimeMap.ToRecorder(
+        RecorderBlockChannelFirstTime(ABlock, I));
       if (lCount <= 0) or (lRate <= 0) or
         (lCount > Length(fTimes)) or (lCount > Length(ABlock.Values[I])) then
         raise ERecorderDataSourceError.Create('MX-248 block exceeds prepared buffers');
@@ -321,6 +336,7 @@ begin
         lPreparedFirstTime := lFirstTime;
         lPreparedRate := lRate;
       end;
+      fTags[I].BlockTimeDomain := btRecorderMonotonic;
       Registry.PublishBlock(fTags[I], fTimes, ABlock.Values[I], lCount, False);
     end;
 end;

@@ -6,7 +6,7 @@ unit uRecorderDacContracts;
 interface
 
 uses
-  Classes, uRecorderDacTypes;
+  Classes, uRecorderDacTypes, uRecorderBlockClock;
 
 type
   { Provider writes interleaved engineering values into caller-owned memory. }
@@ -34,6 +34,14 @@ type
     function SourceIdentity: QWord;
   end;
 
+  { Submission-time metadata travels with the queued samples. Legacy mirrors
+    can still consume WriteBlock, but cannot reconstruct clock gaps. }
+  IRecorderDacTimedMirror = interface
+    ['{82910C45-638D-4C79-B9A5-08BE249EF851}']
+    function WriteTimedBlock(ABuffer: PDouble; const ATime: TRecorderBlockTime;
+      out AResult: TRecorderDacResult): Boolean;
+  end;
+
   IRecorderDacMirrorIdentity = interface
     ['{DBEAE561-057C-40E1-A13D-E9F174337F5E}']
     function MirrorIdentity: QWord;
@@ -48,6 +56,7 @@ type
     function Connect(out AResult: TRecorderDacResult): Boolean;
     function Initialize(out AResult: TRecorderDacResult): Boolean;
     function ReadProperties(out AResult: TRecorderDacResult): Boolean;
+    function SampleRateHz: Double;
     function Configure(const AConfig: TRecorderDacConfig;
       out AResult: TRecorderDacResult): Boolean;
     function Start(out AResult: TRecorderDacResult): Boolean;

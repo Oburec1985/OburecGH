@@ -145,3 +145,53 @@ forced-сборки RecorderLnx, RecorderHostAgent и plugins прошли, Inno
 **Проверка:** forced-сборки RecorderLnx и RecorderHostAgent — OK; Inno Setup 7 — successful compile без предупреждений, агент включён в архив.
 
 **Статус:** готово; фактическая установка не запускалась, чтобы не менять автозапуск и firewall рабочей системы.
+
+## 2026-10-22 — установка Windows-сборки на MIC-315
+
+**Запрос:** установить Windows-версию RecorderLnx на MIC315.
+
+**Сделано:** запущен `deploy-recorderlnx-to-mic315.bat` (хост `192.168.15.84`,
+пользователь `user`). Скрипт взял самый свежий по дате установщик
+`RecorderLnx-Setup-0.1.180+localbuild20261016.exe` (SHA-256
+`179CBE232FD8E1AA2749DA554F1560C8DF13BB23FF955DDDC8375C665A4D699A`), скопировал
+его в `\\192.168.15.84\Mera Files\screens`, сверил SHA-256, и выполнил
+тихую установку Inno Setup с `/MERAFILES="C:\Mera Files"`.
+
+**Проверка:** `DisplayVersion` в реестре — `0.1.180+localbuild20261016`
+(было `0.1.180`). `RecorderLnx.exe` 136 153 954 байта и
+`RecorderHostAgent.exe` от 2026-10-16 17:16; на месте `mx248\vendor` целиком
+(PxiMx248Bridge.exe, DevAPI.dll, MDProtocol.dll, mx224v14.dll, private VC90),
+плагины `LuaCalcPlugin.dll` / `SampleInfoPlugin.dll`, `portaudio.dll`.
+Журнал установки заканчивается «Need to restart Windows? No» и
+«Deinitializing Setup» без ошибок.
+
+**Статус:** установлено и проверено. `RecorderHostAgent` после установки не
+запущен — отдельной автозадачи нет, агент поднимается приложением.
+
+**Замечание:** `FileVersion` у `RecorderLnx.exe` пустой — версия берётся из
+`CRecorderLnxVersion` в исходниках и в ресурс EXE не попадает.
+
+## 2026-10-22 — свежая Windows-сборка 0.1.190 на MIC-315
+
+**Запрос:** на MIC315 должен работать свежий exe; конфигурацию не менять.
+
+**Сделано:** полная сборка `build-installer.ps1 -SkipLuaHelpBuild` на этом ПК
+(lazbuild 4.2, Inno Setup 7): пересобраны `RecorderLnx-package.exe`,
+`RecorderHostAgent.exe`, плагины и MX-248 bridge, затем `collect-files.bat` и
+ISCC. Получен `Output\RecorderLnx-Setup-0.1.190.exe`, SHA-256
+`993F471820C96D2F4DE3A56809FD17E6F7D7BF56C0D0F0578CEFC97593289BCD`.
+Установка на `192.168.15.84` через `deploy-recorderlnx-to-mic315.bat`:
+SHA-256 сверен, тихая установка прошла, exit 0.
+
+**Проверка:** `DisplayVersion` = `0.1.190` (было `0.1.180+localbuild20261016`).
+Все файлы на машине от 2026-10-22 12:36–12:37: `RecorderLnx.exe` 136 593 451,
+`RecorderHostAgent.exe` 1 565 916, `PxiMx248Bridge.exe` 1 044 992,
+`LuaCalcPlugin.dll` 967 054, `SampleInfoPlugin.dll` 31 403 701. Журнал
+установки заканчивается «Deinitializing Setup» без ошибок.
+
+**Конфигурация не менялась:** `C:\Mera Files\RecorderLnx\app.ini` (21.10) и
+`coordinator-client.ini` (09.10) сохранены, установщик их не перезаписывал.
+
+**Статус:** приложение обновлено. Отдельно зафиксирован дефект
+`RecorderHostAgent` (сразу завершается после старта) — см. журнал
+`Lazarus\RecorderHostAgent\iteration-log.md` от 2026-10-22.

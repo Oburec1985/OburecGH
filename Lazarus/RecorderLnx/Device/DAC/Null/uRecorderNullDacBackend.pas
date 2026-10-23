@@ -26,6 +26,7 @@ type
     function Connect(out AResult: TRecorderDacResult): Boolean;
     function Initialize(out AResult: TRecorderDacResult): Boolean;
     function ReadProperties(out AResult: TRecorderDacResult): Boolean;
+    function SampleRateHz: Double;
     function Configure(const AConfig: TRecorderDacConfig;
       out AResult: TRecorderDacResult): Boolean;
     function Start(out AResult: TRecorderDacResult): Boolean;
@@ -46,6 +47,11 @@ type
   end;
 
 implementation
+
+function TRecorderNullDacBackend.SampleRateHz: Double;
+begin
+  Result := 0; { No hardware clock: retain the requested rate. }
+end;
 
 constructor TRecorderNullDacBackend.Create(const AEndpoint: string);
 begin
@@ -174,6 +180,7 @@ begin
   AEndpoints[0].BackendId := BackendId;
   AEndpoints[0].Endpoint := 'default';
   AEndpoints[0].DisplayName := 'Без аппаратного вывода (тест)';
+  AEndpoints[0].SampleRateHz := 0;
   AResult := RecorderDacOk;
   Result := True;
 end;

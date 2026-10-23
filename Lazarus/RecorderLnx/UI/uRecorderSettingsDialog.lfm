@@ -716,6 +716,7 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
           TabOrder = 2
           Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
           OnChange = fHardwareTreeChange
+          OnCustomDrawItem = fHardwareTreeCustomDrawItem
           OnDblClick = fHardwareTreeDblClick
         end
       end

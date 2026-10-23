@@ -79,12 +79,14 @@ object RecorderMeraEventDialog: TRecorderMeraEventDialog
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goRowSelect, goThumbTracking]
     RowCount = 2
     OnDblClick = grdPackagesDblClick
+    OnDrawCell = grdPackagesDrawCell
     OnSelectCell = grdPackagesSelectCell
   end
   object lblStatus: TLabel
     Align = alBottom
     BorderSpacing.Around = 10
     Height = 20
+    ShowAccelChar = False
     Caption = 'Загрузка...'
   end
   object pnlButtons: TPanel
@@ -99,6 +101,7 @@ object RecorderMeraEventDialog: TRecorderMeraEventDialog
       Width = 160
       Caption = 'Открыть выбранные'
       OnClick = btnOpenSelectedClick
+      ShowHint = True
     end
     object btnOpenAll: TButton
       Left = 178
@@ -107,6 +110,7 @@ object RecorderMeraEventDialog: TRecorderMeraEventDialog
       Width = 130
       Caption = 'Открыть все'
       OnClick = btnOpenAllClick
+      ShowHint = True
     end
     object btnTransferSelected: TButton
       Left = 330

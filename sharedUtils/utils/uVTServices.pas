@@ -95,6 +95,10 @@ function TVTree.DoGetImageIndex(Node: PVirtualNode; Kind: TVTImageKind;
 var
   data: PNodeData;
 begin
+  // Результат функции — список изображений для узла. Если его не задать,
+  // VirtualTrees подставит в PaintInfo.ImageInfo[].Images мусорное значение
+  // и упадёт в PaintImage. nil = рисовать списком Images самого дерева.
+  Result := nil;
   if not Assigned(OnGetImageIndexEx) then
   begin
     // For this demo only the normal image is shown, you can easily

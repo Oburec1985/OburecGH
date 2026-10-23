@@ -10,7 +10,8 @@ implementation
 uses
   Classes, SysUtils, Math, DateUtils, Forms, Controls, StdCtrls, ExtCtrls, Dialogs,
   ComCtrls, Grids, Contnrs, Graphics, ImgList, Menus, LazUTF8, LCLType,
-  uRecorderTags, uRecorderMessages, uRecorderConfiguredDataSources,
+  uRecorderTags, uRecorderDataSources, uRecorderMessages,
+  uRecorderConfiguredDataSources,
   uRecorderConfiguredSourceEditor, uRecorderOpcUaTypes, uRecorderOpcUaApi;
 
 type
@@ -108,6 +109,14 @@ type
     fPropertiesGrid: TStringGrid;
     fProtocolSettings: TStringGrid;
     fUsedTree: TTreeView;
+    fUsedContentPanel: TPanel;
+    fUsedPropertiesSplitter: TSplitter;
+    fUsedPropertiesGrid: TStringGrid;
+    fUsedPropertiesHost: TPanel;
+    fRemoveNameSubstring: TEdit;
+    fRemoveNameSubstringButton: TButton;
+    fAddNamePrefixButton: TButton;
+    fAddConnectionAddressButton: TButton;
     fDetailsPages: TPageControl;
     fPropertiesTab: TTabSheet;
     fUsedTab: TTabSheet;
@@ -136,11 +145,21 @@ type
     procedure ProbeFinished(Sender: TObject);
     procedure ProtocolSettingsSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    procedure PropertiesGridEditingDone(Sender: TObject);
+    procedure PropertiesGridSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
     procedure RebuildBrowseTree;
     procedure SetProbeRunning(ARunning: Boolean);
     procedure SimplifiedTreeChange(Sender: TObject);
     procedure TreeSearchChange(Sender: TObject);
     procedure UsedSearchChange(Sender: TObject);
+    procedure UsedTreeSelectionChanged(Sender: TObject);
+    procedure UsedPropertiesGridEditingDone(Sender: TObject);
+    procedure UsedPropertiesGridSelectCell(Sender: TObject; ACol,
+      ARow: Integer; var CanSelect: Boolean);
+    procedure RemoveNameSubstringClick(Sender: TObject);
+    procedure AddNamePrefixClick(Sender: TObject);
+    procedure AddConnectionAddressClick(Sender: TObject);
     procedure UsedTreeDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure UsedTreeDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -155,6 +174,8 @@ type
     procedure ReadClick(Sender: TObject);
   private
     fProbeThread: TRecorderOpcUaProbeThread;
+    fBrowseCache: TStringList;
+    fRegistry: TRecorderTagRegistry;
     fTreeItems: TObjectList;
     fUsedItems: TObjectList;
     fAutoBrowsePending: Boolean;
@@ -162,6 +183,8 @@ type
     fUsedMouseAnchor: TTreeNode;
     fUsedMouseDownY: Integer;
     fUsedMouseSelecting: Boolean;
+    fUpdatingProperties: Boolean;
+    fUpdatingUsedProperties: Boolean;
     function AppendTagRow(AItem: TRecorderOpcUaTreeItem): Integer;
     procedure AddTreeItemToGrid(AItem: TRecorderOpcUaTreeItem);
     procedure AddSelectedTreeNode;
@@ -173,6 +196,8 @@ type
     function SelectionContainsUsableItem: Boolean;
     procedure AddDiagnostic(const AText: string);
     function AddOrFindTagRow(AItem: TRecorderOpcUaTreeItem): Integer;
+    function FindTagRow(AItem: TRecorderOpcUaTreeItem): Integer;
+    function FindTagRowByNodeId(const ANodeId: string): Integer;
     procedure BuildReadInputs(out ANodeIds, ATagNames: TStringList);
     function DataTypeImageIndex(const ADataTypeNodeId: string;
       AValueRank: Integer): Integer;
@@ -183,6 +208,8 @@ type
       const ATagName, ANodeId: string): Boolean;
     procedure InitializeNodeImages;
     procedure LinkIndexedArrayItems;
+    procedure LoadBrowseLines(ALines: TStrings);
+    procedure LoadConfiguredNodesAsOfflineTree;
     function FindTreeItemByNodeId(const ANodeId: string): TRecorderOpcUaTreeItem;
     procedure RebuildUsedTree;
     function UsedTreeNodeKey(ANode: TTreeNode): string;
@@ -194,14 +221,16 @@ type
     procedure SelectUsedVisibleRange(AFirst, ALast: TTreeNode);
     procedure RemoveSelectedUsedChannels;
     procedure ShowSelectedNodeProperties;
+    procedure ShowSelectedUsedProperties;
+    procedure ApplyNameOperationToSelected(ARemove: Boolean);
     function SelectedUsableTreeNodeCount: Integer;
     function SelectedTagCount: Integer;
     procedure ExpandConfiguredTreeNodes;
     procedure StartProbe(AOperation: TRecorderOpcUaProbeOperation);
     procedure UpdateControlState;
   public
-    constructor CreateEditor(AOwner: TComponent;
-      AConfig: TRecorderOpcUaConfig);
+    constructor CreateEditor(AOwner: TComponent; AConfig: TRecorderOpcUaConfig;
+      ARegistry: TRecorderTagRegistry; const ASourceId: string);
     destructor Destroy; override;
     procedure SaveToConfig(AConfig: TRecorderOpcUaConfig);
   end;
@@ -214,7 +243,8 @@ type
   public
     function SupportsSource(const ASourceId, AModuleType: string): Boolean;
     function EditSource(AOwner: TComponent; ARegistry: TRecorderTagRegistry;
-      const ASourceId: string; out ANewSourceId: string): Boolean;
+      const ASourceId: string; out ANewSourceId: string;
+      ADataSources: TRecorderDataSourceManager): Boolean;
   end;
 
 const
@@ -311,15 +341,28 @@ begin
   for I := 0 to AConfig.Nodes.Count - 1 do
   begin
     lNode := TRecorderOpcUaNode(AConfig.Nodes[I]);
-    lTag := FindOpcUaTagByAddress(ARegistry, AOldSourceId, ANewSourceId,
-      lNode.NodeId);
+    if lNode.RecorderTagId <> 0 then
+      lTag := ARegistry.FindById(lNode.RecorderTagId)
+    else
+      lTag := nil;
+    if lTag = nil then
+      lTag := FindOpcUaTagByAddress(ARegistry, AOldSourceId, ANewSourceId,
+        lNode.NodeId);
     if lTag = nil then
     begin
       lNode.TagName := UniqueOpcUaTagName(ARegistry, lNode.TagName);
       lTag := ARegistry.CreateTag(lNode.TagName, 4096);
     end
     else
+    begin
+      if (Trim(lNode.TagName) <> '') and
+        not SameText(lNode.TagName, lTag.Name) and
+        ((ARegistry.FindByName(Trim(lNode.TagName)) = nil) or
+         (ARegistry.FindByName(Trim(lNode.TagName)) = lTag)) then
+        ARegistry.RenameTag(lTag, Trim(lNode.TagName));
       lNode.TagName := lTag.Name;
+    end;
+    lNode.RecorderTagId := lTag.Id;
     lTag.SourceId := ANewSourceId;
     lTag.ModuleType := CRecorderOpcUaModuleType;
     lTag.Address := lNode.NodeId;
@@ -461,14 +504,19 @@ begin
 end;
 
 constructor TRecorderOpcUaEditorForm.CreateEditor(AOwner: TComponent;
-  AConfig: TRecorderOpcUaConfig);
+  AConfig: TRecorderOpcUaConfig; ARegistry: TRecorderTagRegistry;
+  const ASourceId: string);
 var
   I: Integer;
   lButtonPanel, lConfigPanel, lDiagnosticPanel, lNodePanel: TPanel;
   lNode: TRecorderOpcUaNode;
+  lTag: TRecorderTag;
   lText: string;
 begin
   inherited Create(AOwner);
+  fRegistry := ARegistry;
+  fBrowseCache := TStringList.Create;
+  fBrowseCache.Assign(AConfig.BrowseCache);
   fTreeItems := TObjectList.Create(True);
   fUsedItems := TObjectList.Create(True);
   fProtocolSettings.ColWidths[0] := 260;
@@ -526,8 +574,7 @@ begin
   fBrowseTree.MultiSelect := True;
   fBrowseTree.MultiSelectStyle := [msControlSelect, msShiftSelect,
     msVisibleOnly];
-  fAutoBrowsePending := (AConfig.Mode = oumClient) and
-    (AConfig.Nodes.Count > 0);
+  fAutoBrowsePending := False;
   fValueGrid.RowCount := 1;
   fValueGrid.Cells[0, 0] := 'Тег';
   fValueGrid.Cells[1, 0] := 'Тип';
@@ -540,6 +587,7 @@ begin
   fValueGrid.Cells[8, 0] := 'Role';
   fValueGrid.Cells[9, 0] := 'Message kind';
   fValueGrid.Cells[10, 0] := 'Message color';
+  fValueGrid.Cells[11, 0] := 'Recorder tag id';
   fValueGrid.ColWidths[0] := 130;
   fValueGrid.ColWidths[1] := 100;
   fValueGrid.ColWidths[2] := 120;
@@ -551,13 +599,34 @@ begin
   fValueGrid.ColWidths[8] := 0;
   fValueGrid.ColWidths[9] := 0;
   fValueGrid.ColWidths[10] := 0;
+  fValueGrid.ColWidths[11] := 0;
   fPropertiesGrid.Cells[0, 0] := 'Свойство';
   fPropertiesGrid.Cells[1, 0] := 'Значение';
   fPropertiesGrid.ColWidths[0] := 170;
   fPropertiesGrid.ColWidths[1] := 360;
+  fUsedPropertiesGrid.Cells[0, 0] := 'Свойство';
+  fUsedPropertiesGrid.Cells[1, 0] := 'Значение';
+  fUsedPropertiesGrid.ColWidths[0] := 170;
+  fUsedPropertiesGrid.ColWidths[1] := 360;
   for I := 0 to AConfig.Nodes.Count - 1 do
   begin
     lNode := TRecorderOpcUaNode(AConfig.Nodes[I]);
+    if (fRegistry <> nil) and (lNode.RecorderTagId <> 0) then
+    begin
+      lTag := fRegistry.FindById(lNode.RecorderTagId);
+      if lTag <> nil then
+        lNode.TagName := lTag.Name;
+    end;
+    if (fRegistry <> nil) and (lNode.RecorderTagId = 0) then
+    begin
+      lTag := FindOpcUaTagByAddress(fRegistry, ASourceId, ASourceId,
+        lNode.NodeId);
+      if lTag <> nil then
+      begin
+        lNode.RecorderTagId := lTag.Id;
+        lNode.TagName := lTag.Name;
+      end;
+    end;
     fValueGrid.RowCount := fValueGrid.RowCount + 1;
     fValueGrid.Cells[0, fValueGrid.RowCount - 1] := lNode.TagName;
     fValueGrid.Cells[1, fValueGrid.RowCount - 1] := '';
@@ -572,7 +641,13 @@ begin
       RecorderMessageKindName(lNode.MessageKind);
     fValueGrid.Cells[10, fValueGrid.RowCount - 1] :=
       IntToStr(lNode.MessageColor);
+    fValueGrid.Cells[11, fValueGrid.RowCount - 1] :=
+      IntToStr(lNode.RecorderTagId);
   end;
+  if fBrowseCache.Count > 0 then
+    LoadBrowseLines(fBrowseCache)
+  else
+    LoadConfiguredNodesAsOfflineTree;
   RebuildUsedTree;
   AddDiagnostic(UTF8Encode('Готово. Endpoint: ') + AConfig.Endpoint);
   UpdateControlState;
@@ -630,7 +705,7 @@ begin
   fValueGrid.Parent := lDiagnosticPanel;
   fValueGrid.SetBounds(16, 91, lDiagnosticPanel.Width - 32, 111);
   fValueGrid.Anchors := [akLeft, akRight, akBottom];
-  fValueGrid.ColCount := 11;
+  fValueGrid.ColCount := 12;
   fValueGrid.FixedRows := 1;
   fValueGrid.RowCount := 1;
   fValueGrid.Cells[0, 0] := 'Тег';
@@ -699,7 +774,7 @@ begin
   fProbeButton.OnClick := @ProbeClick;
   fBrowseButton := TButton.Create(Self);
   fBrowseButton.Parent := lConfigPanel;
-  fBrowseButton.Caption := 'Найти теги';
+  fBrowseButton.Caption := 'Обновить дерево';
   fBrowseButton.SetBounds(300, 205, 130, 30);
   fBrowseButton.OnClick := @BrowseClick;
   fReadButton := TButton.Create(Self);
@@ -760,6 +835,7 @@ begin
   end;
   fTreeItems.Free;
   fUsedItems.Free;
+  fBrowseCache.Free;
   inherited Destroy;
 end;
 
@@ -862,12 +938,26 @@ end;
 
 function TRecorderOpcUaEditorForm.AddOrFindTagRow(
   AItem: TRecorderOpcUaTreeItem): Integer;
+begin
+  Result := FindTagRow(AItem);
+  if Result = 0 then Result := AppendTagRow(AItem);
+end;
+
+function TRecorderOpcUaEditorForm.FindTagRow(
+  AItem: TRecorderOpcUaTreeItem): Integer;
+begin
+  if AItem = nil then Exit(0);
+  Result := FindTagRowByNodeId(AItem.NodeId);
+end;
+
+function TRecorderOpcUaEditorForm.FindTagRowByNodeId(
+  const ANodeId: string): Integer;
 var
   I: Integer;
 begin
+  Result := 0;
   for I := 1 to fValueGrid.RowCount - 1 do
-    if fValueGrid.Cells[3, I] = AItem.NodeId then Exit(I);
-  Result := AppendTagRow(AItem);
+    if fValueGrid.Cells[3, I] = ANodeId then Exit(I);
 end;
 
 function TRecorderOpcUaEditorForm.AppendTagRow(
@@ -890,6 +980,7 @@ begin
   fValueGrid.Cells[8, Result] := IntToStr(Ord(ounrAuto));
   fValueGrid.Cells[9, Result] := RecorderMessageKindName(rmkInformation);
   fValueGrid.Cells[10, Result] := '-1';
+  fValueGrid.Cells[11, Result] := '0';
 end;
 
 procedure TRecorderOpcUaEditorForm.BuildReadInputs(out ANodeIds,
@@ -1176,6 +1267,7 @@ begin
       fUsedTree.Items.EndUpdate;
     end;
     RestoreUsedTreeState(lExpandedKeys, lSelectedKeys, lFocusedKey, lTopKey);
+    ShowSelectedUsedProperties;
   finally
     lSelectedKeys.Free;
     lExpandedKeys.Free;
@@ -1266,6 +1358,217 @@ begin
   RebuildUsedTree;
 end;
 
+procedure TRecorderOpcUaEditorForm.UsedTreeSelectionChanged(Sender: TObject);
+begin
+  ShowSelectedUsedProperties;
+end;
+
+procedure TRecorderOpcUaEditorForm.ShowSelectedUsedProperties;
+var
+  lItem: TRecorderOpcUaTreeItem;
+  lNodeId, lRole, lQualityTime: string;
+  lRow, I, lCommonLength, lSelectionCount: Integer;
+  lNames: TStringList;
+  lName, lCommon: string;
+
+  procedure SetProperty(ARow: Integer; const AName, AValue: string);
+  begin
+    fUsedPropertiesGrid.Cells[0, ARow] := AName;
+    fUsedPropertiesGrid.Cells[1, ARow] := AValue;
+  end;
+begin
+  if fUsedPropertiesGrid = nil then Exit;
+  fUpdatingUsedProperties := True;
+  try
+    fUsedPropertiesGrid.Clean;
+    fUsedPropertiesGrid.RowCount := 14;
+    SetProperty(0, 'Свойство', 'Значение');
+    lNames := TStringList.Create;
+    try
+      lSelectionCount := 0;
+      for I := 0 to Integer(fUsedTree.SelectionCount) - 1 do
+      begin
+        if fUsedTree.Selections[I].Data = nil then Continue;
+        lNodeId := TRecorderOpcUaUsedItem(
+          fUsedTree.Selections[I].Data).NodeId;
+        lRow := FindTagRowByNodeId(lNodeId);
+        if lRow = 0 then Continue;
+        lNames.Add(fValueGrid.Cells[0, lRow]);
+        Inc(lSelectionCount);
+      end;
+      if (lSelectionCount > 1) and (lNames.Count > 0) then
+      begin
+        lCommon := lNames[0];
+        lCommonLength := Length(lCommon);
+        for I := 1 to lNames.Count - 1 do
+        begin
+          lName := lNames[I];
+          while (lCommonLength > 0) and
+            (Copy(lName, 1, lCommonLength) <>
+             Copy(lCommon, 1, lCommonLength)) do
+            Dec(lCommonLength);
+        end;
+        lCommon := Copy(lCommon, 1, lCommonLength);
+        fRemoveNameSubstring.Text := lCommon + '***';
+      end
+      else if lSelectionCount = 1 then
+        fRemoveNameSubstring.Text := lNames[0]
+      else
+        fRemoveNameSubstring.Clear;
+    finally
+      lNames.Free;
+    end;
+    if (fUsedTree.Selected = nil) or (fUsedTree.Selected.Data = nil) then Exit;
+    lNodeId := TRecorderOpcUaUsedItem(fUsedTree.Selected.Data).NodeId;
+    lRow := FindTagRowByNodeId(lNodeId);
+    if lRow = 0 then Exit;
+    lItem := FindTreeItemByNodeId(lNodeId);
+    SetProperty(1, 'Имя тега Recorder', fValueGrid.Cells[0, lRow]);
+    SetProperty(2, 'Endpoint URL', fEndpoint.Text);
+    SetProperty(3, 'Строка подключения', fEndpoint.Text + ' | ' + lNodeId);
+    SetProperty(4, 'NodeId', lNodeId);
+    if lItem <> nil then
+    begin
+      SetProperty(5, 'Имя узла сервера', lItem.TagName);
+      SetProperty(6, 'Browse path', lItem.BrowsePath);
+    end;
+    SetProperty(7, 'Тип данных', fValueGrid.Cells[1, lRow]);
+    SetProperty(8, 'DataType NodeId', fValueGrid.Cells[7, lRow]);
+    SetProperty(9, 'Доступ', fValueGrid.Cells[2, lRow]);
+    lRole := fValueGrid.Cells[8, lRow];
+    if lRole = IntToStr(Ord(ounrMessage)) then lRole := 'Сообщение'
+    else lRole := 'Тег';
+    SetProperty(10, 'Роль канала', lRole);
+    SetProperty(11, 'Значение', fValueGrid.Cells[4, lRow]);
+    lQualityTime := fValueGrid.Cells[5, lRow];
+    if fValueGrid.Cells[6, lRow] <> '' then
+      lQualityTime := lQualityTime + ' / ' + fValueGrid.Cells[6, lRow];
+    SetProperty(12, 'Качество / время', lQualityTime);
+    SetProperty(13, 'Recorder tag id', fValueGrid.Cells[11, lRow]);
+  finally
+    fUpdatingUsedProperties := False;
+  end;
+end;
+
+procedure TRecorderOpcUaEditorForm.UsedPropertiesGridSelectCell(
+  Sender: TObject; ACol, ARow: Integer; var CanSelect: Boolean);
+begin
+  CanSelect := True;
+  if (ACol = 1) and (ARow = 1) and (fUsedTree.Selected <> nil) and
+    (fUsedTree.Selected.Data <> nil) then
+    fUsedPropertiesGrid.Options := fUsedPropertiesGrid.Options + [goEditing]
+  else
+    fUsedPropertiesGrid.Options := fUsedPropertiesGrid.Options - [goEditing];
+end;
+
+procedure TRecorderOpcUaEditorForm.UsedPropertiesGridEditingDone(
+  Sender: TObject);
+var
+  lName, lNodeId: string;
+  lRow: Integer;
+begin
+  if fUpdatingUsedProperties or (fUsedPropertiesGrid.Row <> 1) or
+    (fUsedPropertiesGrid.Col <> 1) or (fUsedTree.Selected = nil) or
+    (fUsedTree.Selected.Data = nil) then Exit;
+  lNodeId := TRecorderOpcUaUsedItem(fUsedTree.Selected.Data).NodeId;
+  lRow := FindTagRowByNodeId(lNodeId);
+  if lRow = 0 then Exit;
+  lName := Trim(fUsedPropertiesGrid.Cells[1, 1]);
+  if lName = '' then
+  begin
+    fUsedPropertiesGrid.Cells[1, 1] := fValueGrid.Cells[0, lRow];
+    Exit;
+  end;
+  fValueGrid.Cells[0, lRow] := lName;
+  RebuildUsedTree;
+end;
+
+procedure TRecorderOpcUaEditorForm.RemoveNameSubstringClick(Sender: TObject);
+begin
+  ApplyNameOperationToSelected(True);
+end;
+
+procedure TRecorderOpcUaEditorForm.AddNamePrefixClick(Sender: TObject);
+begin
+  ApplyNameOperationToSelected(False);
+end;
+
+procedure TRecorderOpcUaEditorForm.AddConnectionAddressClick(Sender: TObject);
+var
+  I, lRow, lChanged: Integer;
+  lNodeIds: TStringList;
+  lName, lAddress: string;
+begin
+  lNodeIds := TStringList.Create;
+  try
+    lNodeIds.CaseSensitive := True;
+    lNodeIds.Sorted := True;
+    lNodeIds.Duplicates := dupIgnore;
+    for I := 0 to Integer(fUsedTree.SelectionCount) - 1 do
+      CollectUsedNodeIds(fUsedTree.Selections[I], lNodeIds);
+    lChanged := 0;
+    for I := 0 to lNodeIds.Count - 1 do
+    begin
+      lRow := FindTagRowByNodeId(lNodeIds[I]);
+      if lRow = 0 then Continue;
+      lName := fValueGrid.Cells[0, lRow];
+      lAddress := lNodeIds[I];
+      if Pos(lAddress, lName) > 0 then Continue;
+      if lName <> '' then lName := lName + ' ';
+      fValueGrid.Cells[0, lRow] := lName + lAddress;
+      Inc(lChanged);
+    end;
+  finally
+    lNodeIds.Free;
+  end;
+  RebuildUsedTree;
+  AddDiagnostic(Format('Адрес добавлен в имена тегов: %d', [lChanged]));
+end;
+
+procedure TRecorderOpcUaEditorForm.ApplyNameOperationToSelected(
+  ARemove: Boolean);
+var
+  I, lRow, lChanged: Integer;
+  lNodeIds: TStringList;
+  lReplacement, lNeedle, lName: string;
+begin
+  if fUsedTree.SelectionCount = 0 then Exit;
+  lReplacement := Trim(fRemoveNameSubstring.Text);
+  lNeedle := lReplacement;
+  if lNeedle = '' then Exit;
+  if (Length(lNeedle) >= 3) and
+    (Copy(lNeedle, Length(lNeedle) - 2, 3) = '***') then
+    Delete(lNeedle, Length(lNeedle) - 2, 3);
+  if lNeedle = '' then Exit;
+  lNodeIds := TStringList.Create;
+  try
+    lNodeIds.CaseSensitive := True;
+    lNodeIds.Sorted := True;
+    lNodeIds.Duplicates := dupIgnore;
+    for I := 0 to Integer(fUsedTree.SelectionCount) - 1 do
+      CollectUsedNodeIds(fUsedTree.Selections[I], lNodeIds);
+    lChanged := 0;
+    for I := 0 to lNodeIds.Count - 1 do
+    begin
+      lRow := FindTagRowByNodeId(lNodeIds[I]);
+      if lRow = 0 then Continue;
+      lName := fValueGrid.Cells[0, lRow];
+      if Pos(lNeedle, lName) = 0 then Continue;
+      if ARemove then
+        fValueGrid.Cells[0, lRow] := StringReplace(lName, lNeedle, '',
+          [rfReplaceAll])
+      else
+        fValueGrid.Cells[0, lRow] := StringReplace(lName, lNeedle,
+          lReplacement, [rfReplaceAll]);
+      Inc(lChanged);
+    end;
+  finally
+    lNodeIds.Free;
+  end;
+  RebuildUsedTree;
+  AddDiagnostic(Format('Изменено имён Recorder: %d', [lChanged]));
+end;
+
 procedure TRecorderOpcUaEditorForm.RemoveSelectedUsedChannels;
 var
   I, J: Integer;
@@ -1311,6 +1614,7 @@ end;
 
 procedure TRecorderOpcUaEditorForm.ShowSelectedNodeProperties;
 var
+  lRow: Integer;
   lItem: TRecorderOpcUaTreeItem;
   lAccess, lClassName, lTypeName: string;
 
@@ -1322,10 +1626,15 @@ var
 
 begin
   fPropertiesGrid.Clean;
-  fPropertiesGrid.RowCount := 14;
+  fUpdatingProperties := True;
+  fPropertiesGrid.RowCount := 15;
   SetProperty(0, 'Свойство', 'Значение');
   if (fBrowseTree.Selected = nil) or
-    (fBrowseTree.Selected.Data = nil) then Exit;
+    (fBrowseTree.Selected.Data = nil) then
+  begin
+    fUpdatingProperties := False;
+    Exit;
+  end;
   lItem := TRecorderOpcUaTreeItem(fBrowseTree.Selected.Data);
   case lItem.NodeClass of
     1: lClassName := 'Object';
@@ -1353,6 +1662,46 @@ begin
   SetProperty(11, 'Historizing', BoolToStr(lItem.Historizing, True));
   SetProperty(12, 'HDA read', BoolToStr(lItem.HistoryReadable, True));
   SetProperty(13, 'HDA write', BoolToStr(lItem.HistoryWritable, True));
+  lRow := FindTagRow(lItem);
+  if lRow > 0 then
+    SetProperty(14, 'Имя тега Recorder', fValueGrid.Cells[0, lRow])
+  else
+    SetProperty(14, 'Имя тега Recorder', '(канал не используется)');
+  fUpdatingProperties := False;
+end;
+
+procedure TRecorderOpcUaEditorForm.PropertiesGridSelectCell(Sender: TObject;
+  ACol, ARow: Integer; var CanSelect: Boolean);
+begin
+  CanSelect := True;
+  if (ACol = 1) and (ARow = 14) and
+    (fBrowseTree.Selected <> nil) and (fBrowseTree.Selected.Data <> nil) and
+    (FindTagRow(TRecorderOpcUaTreeItem(fBrowseTree.Selected.Data)) > 0) then
+    fPropertiesGrid.Options := fPropertiesGrid.Options + [goEditing]
+  else
+    fPropertiesGrid.Options := fPropertiesGrid.Options - [goEditing];
+end;
+
+procedure TRecorderOpcUaEditorForm.PropertiesGridEditingDone(Sender: TObject);
+var
+  lItem: TRecorderOpcUaTreeItem;
+  lName: string;
+  lRow: Integer;
+begin
+  if fUpdatingProperties or (fPropertiesGrid.Row <> 14) or
+    (fPropertiesGrid.Col <> 1) or (fBrowseTree.Selected = nil) or
+    (fBrowseTree.Selected.Data = nil) then Exit;
+  lItem := TRecorderOpcUaTreeItem(fBrowseTree.Selected.Data);
+  lRow := FindTagRow(lItem);
+  if lRow < 1 then Exit;
+  lName := Trim(fPropertiesGrid.Cells[1, 14]);
+  if lName = '' then
+  begin
+    fPropertiesGrid.Cells[1, 14] := fValueGrid.Cells[0, lRow];
+    Exit;
+  end;
+  fValueGrid.Cells[0, lRow] := lName;
+  RebuildUsedTree;
 end;
 
 procedure TRecorderOpcUaEditorForm.AddSelectedTreeNode;
@@ -1690,6 +2039,78 @@ begin
   end;
   if Result.DataTypeName = '' then Result.DataTypeName := Result.DataTypeNodeId;
   if Result.DataTypeName = '' then Result.DataTypeName := 'Неизвестный';
+end;
+
+procedure TRecorderOpcUaEditorForm.LoadBrowseLines(ALines: TStrings);
+var
+  I: Integer;
+  lFields: TStringList;
+begin
+  fTreeItems.Clear;
+  if ALines = nil then Exit;
+  lFields := TStringList.Create;
+  try
+    lFields.Delimiter := #9;
+    lFields.StrictDelimiter := True;
+    for I := 0 to ALines.Count - 1 do
+    begin
+      lFields.DelimitedText := ALines[I];
+      if lFields.Count >= 6 then
+        fTreeItems.Add(CreateTreeItem(lFields));
+    end;
+  finally
+    lFields.Free;
+  end;
+  LinkIndexedArrayItems;
+  RebuildBrowseTree;
+  RebuildUsedTree;
+  if ALines.Count > 0 then
+    AddDiagnostic(Format('Загружено сохранённое дерево OPC UA: %d узлов. ' +
+      'Для повторного чтения нажмите «Обновить дерево».', [ALines.Count]));
+end;
+
+function OfflineNodeName(const ANodeId, ARecorderName: string): string;
+var
+  I: Integer;
+begin
+  Result := Trim(ANodeId);
+  I := LastDelimiter('.|/', Result);
+  if I > 0 then Result := Copy(Result, I + 1, MaxInt);
+  if Result = '' then Result := Trim(ARecorderName);
+  if Result = '' then Result := ANodeId;
+end;
+
+procedure TRecorderOpcUaEditorForm.LoadConfiguredNodesAsOfflineTree;
+var
+  I: Integer;
+  lAccess: string;
+  lItem: TRecorderOpcUaTreeItem;
+begin
+  fTreeItems.Clear;
+  for I := 1 to fValueGrid.RowCount - 1 do
+  begin
+    if Trim(fValueGrid.Cells[3, I]) = '' then Continue;
+    lItem := TRecorderOpcUaTreeItem.Create;
+    lItem.NodeId := fValueGrid.Cells[3, I];
+    lItem.TagName := OfflineNodeName(lItem.NodeId, fValueGrid.Cells[0, I]);
+    lItem.BrowsePath := 'Сохранённые используемые каналы/' + lItem.TagName;
+    lItem.DataTypeNodeId := fValueGrid.Cells[7, I];
+    lItem.DataTypeName := lItem.DataTypeNodeId;
+    if lItem.DataTypeName = '' then lItem.DataTypeName := 'Неизвестный';
+    lAccess := fValueGrid.Cells[2, I];
+    lItem.Readable := Pos('Чтение', lAccess) > 0;
+    lItem.Writable := Pos('запись', UTF8LowerCase(lAccess)) > 0;
+    lItem.NodeClass := 2;
+    fTreeItems.Add(lItem);
+  end;
+  RebuildBrowseTree;
+  if fTreeItems.Count > 0 then
+    AddDiagnostic(Format('Полный Browse-кэш отсутствует. Восстановлены ' +
+      '%d используемых каналов из конфигурации. Для полного дерева ' +
+      'нажмите «Обновить дерево» и сохраните настройки.', [fTreeItems.Count]))
+  else
+    AddDiagnostic('Browse-кэш и сохранённые используемые каналы отсутствуют. ' +
+      'Нажмите «Обновить дерево».');
 end;
 
 function OpcUaDeviceName(const APath: string): string;
@@ -2116,23 +2537,8 @@ begin
   begin
     if fProbeThread.Operation = opoBrowse then
     begin
-      fTreeItems.Clear;
-      lFields := TStringList.Create;
-      try
-        lFields.Delimiter := #9;
-        lFields.StrictDelimiter := True;
-        for I := 0 to fProbeThread.Lines.Count - 1 do
-        begin
-          lFields.DelimitedText := fProbeThread.Lines[I];
-          if lFields.Count >= 6 then
-            fTreeItems.Add(CreateTreeItem(lFields));
-        end;
-      finally
-        lFields.Free;
-      end;
-      LinkIndexedArrayItems;
-      RebuildBrowseTree;
-      RebuildUsedTree;
+      fBrowseCache.Assign(fProbeThread.Lines);
+      LoadBrowseLines(fBrowseCache);
       AddDiagnostic(Format('Найдено узлов: %d; выберите рабочие двойным щелчком; %d мс.',
         [fProbeThread.Lines.Count, fProbeThread.ElapsedMs]));
     end
@@ -2197,10 +2603,8 @@ end;
 
 procedure TRecorderOpcUaEditorForm.FormShow(Sender: TObject);
 begin
-  if not fAutoBrowsePending then Exit;
-  fAutoBrowsePending := False;
-  AddDiagnostic('Восстановление сохранённого дерева OPC UA...');
-  StartProbe(opoBrowse);
+  { Browse is explicit. The saved cache is loaded by the constructor, so
+    opening settings never touches an unavailable controller. }
 end;
 
 procedure TRecorderOpcUaEditorForm.SaveToConfig(
@@ -2263,6 +2667,7 @@ begin
   AConfig.PollingType := ouptRead;
   AConfig.ArchiveEnabled := False;
   AConfig.SimplifiedTree := fSimplifiedTree.Checked;
+  AConfig.BrowseCache.Assign(fBrowseCache);
   AConfig.Nodes.Clear;
   for I := 1 to fValueGrid.RowCount - 1 do
   begin
@@ -2279,6 +2684,7 @@ begin
     lNode.MessageKind := RecorderMessageKindFromName(
       fValueGrid.Cells[9, I]);
     lNode.MessageColor := StrToIntDef(fValueGrid.Cells[10, I], -1);
+    lNode.RecorderTagId := StrToInt64Def(fValueGrid.Cells[11, I], 0);
   end;
 end;
 
@@ -2290,7 +2696,7 @@ end;
 
 function TRecorderOpcUaSourceEditor.EditSource(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const ASourceId: string;
-  out ANewSourceId: string): Boolean;
+  out ANewSourceId: string; ADataSources: TRecorderDataSourceManager): Boolean;
 var
   lConfig: TRecorderOpcUaConfig;
   lEntry, lOldEntry: TRecorderConfiguredDataSource;
@@ -2309,7 +2715,8 @@ begin
         mtError, [mbOK], 0);
       Exit;
     end;
-    lForm := TRecorderOpcUaEditorForm.CreateEditor(AOwner, lConfig);
+    lForm := TRecorderOpcUaEditorForm.CreateEditor(AOwner, lConfig,
+      ARegistry, ASourceId);
     try
       if lForm.ShowModal <> mrOk then Exit;
       lForm.SaveToConfig(lConfig);

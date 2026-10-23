@@ -1,5 +1,22 @@
 # Production Oscillogram DLL native smoke
 
+## Regression 2026-10-16: installed DLL loads but native view is unavailable
+
+- MIC-315 had the correct DLL and successful V2 factory registration. Metadata,
+  state and lifecycle probe passed, but these tests never create a native view.
+- The production native harness failed before the fix: no native root.
+- A forced direct OscViewSmoke exposed the underlying resource error:
+  `Error reading fToolBar.ParentBiDiMode: Unknown property: ParentBiDiMode`.
+  This Lazarus TToolBar does not publish ParentBiDiMode/BiDiMode. Removed only
+  those two unsupported entries from uOscView.lfm; no configuration migration.
+- After removal direct OscViewSmoke and production DLL native harness passed,
+  including waveform readback, clear/refill, independent views and recreation.
+- Missing icon was separate: runtime requested `plugin-visual-component`, while
+  RcIconIndex returned -1. Added a generic ID mapping to the existing icon and
+  an assertion to CommandImagesSmoke; no plugin-type branch added to host.
+- Do not accept metadata/state success as proof of a visual DLL: force-build
+  the actual package DLL and instantiate its embedded native form with data.
+
 ## Scope and criterion
 
 Load the real SampleInfoPlugin through the standard V2 loader, configure a

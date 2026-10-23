@@ -11,7 +11,7 @@ uses Classes, SysUtils, Forms, Controls, StdCtrls, Grids, Dialogs,
 type
   TRcPeakSelectedEvent = procedure(Sender: TObject) of object;
 
-  { In-memory FRF peak table. Closing hides it; the view retains its rows. }
+  { Таблица пиков FRF находится в памяти. Закрытие скрывает окно, строки остаются. }
   TRcFrfPeakForm = class(TForm)
     btnReport: TButton;
     lblFormula: TLabel;

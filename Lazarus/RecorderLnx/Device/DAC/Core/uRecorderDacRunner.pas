@@ -112,7 +112,7 @@ begin
     begin
       StoreResult(lResult);
       lFailure := lResult;
-      lFailed := True;
+      lFailed := lResult.Error <> rdeCompleted;
       Break;
     end;
     fMirrorWake.SetEvent;
@@ -131,8 +131,10 @@ end;
 procedure TRecorderDacRunner.RequestStop;
 begin
   Terminate;
-  if fSession.State = rdsRunning then
-    fSession.Abort;
+  { Only the worker may call the native stream API. Aborting here races with
+    its blocking WriteStream, and rapid parameter edits can then close/unload
+    the driver while its stop path is still executing. The worker observes
+    Terminated after the current block and performs Stop itself. }
   fMirrorWake.SetEvent;
 end;
 

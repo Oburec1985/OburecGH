@@ -59,6 +59,7 @@ type
     procedure PaintToolButton(Sender: TToolButton; State: Integer);
     procedure ToolButtonClick(Sender: TObject);
     procedure XCursorModeClick(Sender: TObject);
+  published
     fChart: TOglChart;
     fInfoPanel: TPanel;
     fControlPanel: TScrollBox;

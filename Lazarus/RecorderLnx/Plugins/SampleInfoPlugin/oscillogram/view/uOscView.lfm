@@ -16,8 +16,6 @@ object OscView: TOscView
     AutoSize = True
     EdgeBorders = []
     Images = fToolImages
-    ParentBiDiMode = False
-    BiDiMode = bdLeftToRight
     OnPaintButton = PaintToolButton
     ShowCaptions = False
     object fLevelButton: TToolButton

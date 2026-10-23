@@ -213,7 +213,7 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
   object gbAxes: TGroupBox
     Left = 8
     Height = 130
-    Top = 418
+    Top = 352
     Width = 1164
     Anchors = [akLeft, akRight, akBottom]
     Caption = 'Оси Y'
@@ -250,11 +250,11 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
   end
   object gbTime: TGroupBox
     Left = 8
-    Height = 94
-    Top = 556
+    Height = 168
+    Top = 482
     Width = 1164
     Anchors = [akLeft, akRight, akBottom]
-    Caption = 'Астрономическое время UTC'
+    Caption = 'Астрономическое время UTC и события'
     object cbTimeMode: TComboBox
       Left = 12 Height = 25 Top = 36 Width = 180 Style = csDropDownList
       Items.Strings = ('Фиксированный интервал' 'Последнее окно времени')
@@ -281,20 +281,57 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
     object lblWindowHours: TLabel Left = 820 Top = 18 Caption = 'Окно, дней' end
     object edWindowHours: TEdit Left = 820 Height = 25 Top = 40 Width = 130 OnEditingDone = TimeWindowEditingDone end
     object cbShowEvents: TCheckBox
-      Left = 1032
+      Left = 12
       Height = 23
-      Top = 40
-      Width = 122
-      Caption = 'Отображать события'
+      Top = 84
+      Width = 210
+      Caption = 'Отображать события на тренде'
+      OnChange = ShowEventsChange
+    end
+    object cbShowRecordingEvents: TCheckBox
+      Left = 12
+      Height = 23
+      Top = 108
+      Width = 250
+      Caption = 'Записи (точки WinПОС)'
+    end
+    object cbShowTagAlarmEvents: TCheckBox
+      Left = 12
+      Height = 23
+      Top = 132
+      Width = 250
+      Caption = 'Аварии по тегам'
+    end
+    object cbShowTagRangeEvents: TCheckBox
+      Left = 272
+      Height = 23
+      Top = 108
+      Width = 250
+      Caption = 'Уставки по тегам'
+    end
+    object cbShowOnlyUnresolvedEvents: TCheckBox
+      Left = 272
+      Height = 23
+      Top = 132
+      Width = 380
+      Caption = 'Только события без замера в WinПОС (замер не резолвится)'
+    end
+    object lblEventsHint: TLabel
+      Left = 668
+      Top = 86
+      Width = 480
+      ShowAccelChar = False
+      Anchors = [akTop, akLeft, akRight]
+      Caption = 'События без данных записи помечаются иконкой «нет данных».'
     end
   end
   object btnOk: TButton
-    Left = 988 Height = 30 Top = 678 Width = 88 Caption = 'OK'
+    Left = 988 Height = 30 Top = 660 Width = 88 Caption = 'OK'
     Anchors = [akRight, akBottom]
     Default = True OnClick = btnOkClick
   end
   object btnCancel: TButton
-    Left = 1084 Height = 30 Top = 678 Width = 88 Caption = 'Отмена'
+    Left = 1084 Height = 30 Top = 660 Width = 88 Caption = 'Отмена'
     Anchors = [akRight, akBottom]
     Cancel = True ModalResult = 2
   end

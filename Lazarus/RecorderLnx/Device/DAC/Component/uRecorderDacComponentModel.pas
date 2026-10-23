@@ -14,7 +14,7 @@ uses
 
 type
   TRecorderDacSourceMode = (rdsmTag, rdsmSine, rdsmAccurateSine,
-    rdsmSweepSine);
+    rdsmSweepSine, rdsmPulse);
 
   TRecorderDacRuntimeSnapshot = record
     State: TRecorderDacState;
@@ -54,6 +54,12 @@ type
     fSweepEndHz: Double;
     fSweepTimeSec: Double;
     fRevision: LongInt;
+    fPulseIntervalSec: Double;
+    fPulsePeriods: Integer;
+    fPulseCount: Integer;
+    procedure SetPulseIntervalSec(AValue: Double);
+    procedure SetPulsePeriods(AValue: Integer);
+    procedure SetPulseCount(AValue: Integer);
     procedure Changed;
     procedure SetBackendId(const AValue: string);
     procedure SetEnabled(AValue: Boolean);
@@ -81,7 +87,12 @@ type
     constructor Create; override;
     procedure AssignDac(ASource: TRecorderDacComponent);
     function BuildConfig: TRecorderDacConfig;
+    { Called on the GUI/configuration thread, before starting the DAC worker. }
+    function EnsureMirrorTag(ARegistry: TRecorderTagRegistry): TRecorderTag;
     property Revision: LongInt read fRevision;
+    property PulseIntervalSec: Double read fPulseIntervalSec write SetPulseIntervalSec;
+    property PulsePeriods: Integer read fPulsePeriods write SetPulsePeriods;
+    property PulseCount: Integer read fPulseCount write SetPulseCount;
     property Enabled: Boolean read fEnabled write SetEnabled;
     property BackendId: string read fBackendId write SetBackendId;
     property Endpoint: string read fEndpoint write SetEndpoint;
@@ -163,7 +174,17 @@ begin
   fSweepEndHz := 10000;
   fSweepTimeSec := 10;
   fRevision := 1;
+  fPulseIntervalSec := 1;
+  fPulsePeriods := 10;
+  fPulseCount := 5;
 end;
+
+procedure TRecorderDacComponent.SetPulseIntervalSec(AValue: Double);
+begin if fPulseIntervalSec = AValue then Exit; fPulseIntervalSec := AValue; Changed; end;
+procedure TRecorderDacComponent.SetPulsePeriods(AValue: Integer);
+begin if fPulsePeriods = AValue then Exit; fPulsePeriods := AValue; Changed; end;
+procedure TRecorderDacComponent.SetPulseCount(AValue: Integer);
+begin if fPulseCount = AValue then Exit; fPulseCount := AValue; Changed; end;
 
 procedure TRecorderDacComponent.Changed;
 begin
@@ -215,6 +236,9 @@ procedure TRecorderDacComponent.AssignDac(ASource: TRecorderDacComponent);
 begin
   if ASource = nil then Exit;
   Enabled := ASource.Enabled;
+  PulseIntervalSec := ASource.PulseIntervalSec;
+  PulsePeriods := ASource.PulsePeriods;
+  PulseCount := ASource.PulseCount;
   BackendId := ASource.BackendId;
   Endpoint := ASource.Endpoint;
   SourceMode := ASource.SourceMode;
@@ -247,12 +271,40 @@ begin
   Result.UnderrunPolicy := fUnderrunPolicy;
 end;
 
+function TRecorderDacComponent.EnsureMirrorTag(
+  ARegistry: TRecorderTagRegistry): TRecorderTag;
+var
+  lName: string;
+begin
+  Result := nil;
+  if not MirrorEnabled or (ARegistry = nil) then Exit;
+  if (FramesPerBlock <= 0) or (SampleRateHz <= 0) then Exit;
+  if MirrorTagId <> 0 then Result := ARegistry.FindById(MirrorTagId);
+  lName := Trim(MirrorTagName);
+  if lName = '' then lName := Name + '.out';
+  if Result = nil then Result := ARegistry.FindByName(lName);
+  if (Result <> nil) and not Result.IsVirtual then Exit(nil);
+  if (Result <> nil) and (SourceMode = rdsmTag) and
+    ((Result.Id = InputTagId) or SameText(Result.Name, InputTagName)) then Exit(nil);
+  if Result = nil then
+  begin
+    Result := ARegistry.CreateTag(lName, FramesPerBlock, True);
+    Result.PollFrequencyHz := SampleRateHz;
+    Result.SignalBuffer.ConfigureBlockRing(FramesPerBlock, 8);
+  end;
+  Result.PollFrequencyHz := SampleRateHz;
+  if not Result.IsVector then
+    Result.SignalBuffer.ConfigureBlockRing(FramesPerBlock, 8);
+  MirrorTagId := Result.Id;
+  MirrorTagName := Result.Name;
+end;
+
 constructor TRecorderDacComponentFactory.Create;
 var
   lRegistry: TRecorderDacBackendRegistry;
 begin
   inherited Create(TRecorderDacComponent.TypeId, 'DAC output',
-    TRecorderDacComponent, 458, 266, False);
+    TRecorderDacComponent, 458, 330, False);
   ConfigurePalette('ЦАП', 'Добавить управление ЦАП', 'digital-indicator',
     70, rppGroup, CRecorderPaletteGroupSignals);
   fRuntimes := TInterfaceList.Create;

@@ -1,0 +1,20 @@
+object SpectrumCommands: TSpectrumCommands
+  Height = 150
+  Width = 215
+  object Popup: TPopupMenu
+    Left = 24
+    Top = 20
+    object FollowPeakItem: TMenuItem
+      Caption = 'Следящий курсор'
+      OnClick = FollowPeakClick
+    end
+    object SetLevelItem: TMenuItem
+      Caption = 'Горизонтальный курсор здесь'
+      OnClick = SetLevelClick
+    end
+    object HideLevelItem: TMenuItem
+      Caption = 'Скрыть горизонтальный курсор'
+      OnClick = HideLevelClick
+    end
+  end
+end

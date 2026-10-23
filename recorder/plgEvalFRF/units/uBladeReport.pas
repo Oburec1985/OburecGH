@@ -225,18 +225,19 @@ var
   blade: cBladeFolder;
   err:boolean;
 begin
-  KillAllExcelProcesses;
   if tmpl='' then
   begin
     tmpl:=g_mbase.root.Absolutepath+'Template\Report_tmpl.xlsx';
   end;
+  // не убиваем чужие процессы Excel: свой экземпляр создаём с проверкой
   if VarIsEmpty(E) then
   begin
-    // if not CheckExcelRun then
+    if not CreateExcel then
     begin
-      CreateExcel;
-      VisibleExcel(true);
+      ShowMessage('Не удалось запустить MS Excel: ' + ExcelLastError);
+      exit;
     end;
+    VisibleExcel(true);
   end;
   turb := g_mbase.SelectTurb;
   if fileexists(tmpl) then
@@ -362,18 +363,18 @@ var
   stage: cStageFolder;
   blade: cBladeFolder;
 begin
-  KillAllExcelProcesses;
   if tmpl='' then
   begin
     tmpl:=g_mbase.root.Absolutepath+'Template\шаблон ОТК.xlsx';
   end;
   if VarIsEmpty(E) then
   begin
-    // if not CheckExcelRun then
+    if not CreateExcel then
     begin
-      CreateExcel;
-      VisibleExcel(true);
+      ShowMessage('Не удалось запустить MS Excel: ' + ExcelLastError);
+      exit;
     end;
+    VisibleExcel(true);
   end;
   turb := g_mbase.SelectTurb;
   if fileexists(tmpl) then
@@ -533,12 +534,13 @@ end;
 procedure SaveBladeReport(repname, meraFileName: string; slist:tlist; bands:blist;
                       chart:cchart; bl: cBladeFolder; fPress: double; hideExcel:boolean);
 var
-  r0, i, j, k, r,r2, c: integer;
+  r0, i, j, k, r, r2, row, c, bi: integer;
   b: tspmband;
   extr: cExtremum;
   s:RepSignal;
   date: TDateTime;
   No_err, res: boolean;
+  saveRes: integer;
 
   rng, rng2, sh: olevariant;
   str, repPath: string;
@@ -548,14 +550,17 @@ var
   pict:tbitmap;
   m_ReportBmp:TBitmap;
 begin
-  KillAllExcelProcesses;
+  // Не убиваем все процессы Excel: это ломает уже открытые книги пользователя и
+  // на части машин приводит к "Отказано в доступе" при подключении к Excel.
+  // Если свой экземпляр умер - просто отцепляемся и создаём новый.
   if not CheckVarObj(E) then
   begin
-    if not CheckExcelRun then
+    if (not CheckExcelRun) and (not CreateExcel) then
     begin
-      CreateExcel;
-      VisibleExcel(true);
+      ShowMessage('Не удалось запустить MS Excel: ' + ExcelLastError);
+      exit;
     end;
+    VisibleExcel(true);
   end;
 
   if fileexists(repname) then
@@ -613,70 +618,76 @@ begin
     SetCell(1, r, c + 5, 'Error, %');
     SetCell(1, r, c + 6, 'Res');
 
-    // проход по формам (полосам)
-    if s.m_BandExtremums.Count=0 then exit;
+    // проход по формам (полосам); если у сигнала нет экстремумов - шапка и
+    // колонка всё равно выводятся, а отчёт сохраняется
+    // В отчёт попадают все экстремумы выше триггера в пределах преднастроенного
+    // диапазона X; внеполосные (NumBand = -1) идут строкой с Band = 0..0.
+    row := 0;
     for j := 0 to s.m_BandExtremums.Count - 1 do
     begin
       extr := cExtremum(s.m_BandExtremums.items[j]);
       b := extr.m_b;
-      if b<>nil then
+      inc(row);
+      // экстремум может быть вне полосы (NumBand = -1): он тоже попадает в отчёт,
+      // просто без номера полосы и без оценки "годен/не годен"
+      if b = nil then
+        str := '0..0'
+      else
+        str := floattostr(b.m_f1) + '..' + floattostr(b.m_f2);
+      // Внеполосный пик (b = nil) выводится белой строкой только с полосой 0..0 и
+      // значениями; NumBand / Error / Res остаются пустыми, как в старом отчёте.
+      if b <> nil then
       begin
-        str:=floattostr(b.m_f1) + '..' + floattostr(b.m_f2);
-        SetCell(1, r + 1 + j, c + 4, extr.NumInBand+1);
-        SetCell(1, r + 1 + j, c + 5, extr.error);
+        SetCell(1, r + row, c + 4, extr.NumInBand+1);
+        SetCell(1, r + row, c + 5, extr.error);
         if extr.intol then
-        begin
-          SetCell(1, r + 1 + j, c + 6, 'Годен');
-        end
+          SetCell(1, r + row, c + 6, 'Годен')
         else
         begin
-          rng := GetRangeObj(1, point(r + 1 + j, c), point(r + 1 + j, c + 6));
+          rng := GetRangeObj(1, point(r + row, c), point(r + row, c + 6));
           rng.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
-          SetCell(1, r + 1 + j, c + 6, 'Не годен');
+          SetCell(1, r + row, c + 6, 'Не годен');
         end;
-      end
-      else
-      begin
-        str:='0..0';
       end;
       // полоса
-      SetCell(1, r + 1 + j, c, str);
+      SetCell(1, r + row, c, str);
       v1 := extr.Freq;
       v := extr.Value;
       d := extr.decrement;
-      SetCell(1, r + 1 + j, c + 1, v);
-      SetCell(1, r + 1 + j, c + 2, v1);
-      SetCell(1, r + 1 + j, c + 3, d);
+      SetCell(1, r + row, c + 1, v);
+      SetCell(1, r + row, c + 2, v1);
+      SetCell(1, r + row, c + 3, d);
     end;
-    c := c + 7;
-  end;
-  k:=0;
-  r2:=r+j;
-  // заполняем не найденые полосы
-  for I := 0 to bands.Count - 1 do
-  begin
-    b:=bands.getband(i);
-    find:=false;
-    for j := 0 to s.m_BandExtremums.Count - 1 do
+    // полосы, в которых пик не найден: оранжевые строки с нулями сразу под
+    // экстремумами этого сигнала (в его же колонках)
+    for bi := 0 to bands.Count - 1 do
     begin
-      extr := cextremum(s.m_BandExtremums.Items[j]);
-      if extr.m_b=b then
+      b:=bands.getband(bi);
+      // в списке полос может оказаться пустой элемент - дальше b.m_f1 даёт AV
+      if b = nil then
+        continue;
+      find:=false;
+      for j := 0 to s.m_BandExtremums.Count - 1 do
       begin
-        find:=true;
-        break;
+        extr := cextremum(s.m_BandExtremums.Items[j]);
+        if extr.m_b=b then
+        begin
+          find:=true;
+          break;
+        end;
+      end;
+      if not find then
+      begin
+        inc(row);
+        rng2:=getRangeObj(1, point(r + row, c), point(r + row, c + 3));
+        rng2.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
+        SetCell(1, r + row, c, floattostr(b.m_f1) + '..' + floattostr(b.m_f2));
+        SetCell(1, r + row, c + 1, 0);
+        SetCell(1, r + row, c + 2, 0);
+        SetCell(1, r + row, c + 3, 0);
       end;
     end;
-    if not find then
-    begin
-      // полоса
-      inc(k);
-      rng2:=getRangeObj(1, point(r2+k, 2), point(r2+k, 2+3));
-      rng2.Interior.Color := RGB(255, 165, 0); // Оранжевый цвет;
-      SetCell(1, r2+k, 2,  floattostr(b.m_f1) + '..' + floattostr(b.m_f2));
-      SetCell(1, r2+k, 2 + 1, 0);
-      SetCell(1, r2+k, 2 + 2, 0);
-      SetCell(1, r2+k, 2 + 3, 0);
-    end;
+    c := c + 7;
   end;
   // разметка заголовка
   rng := GetRangeObj(1, point(r, 2), point(r, c - 1));
@@ -684,15 +695,32 @@ begin
   rng.Interior.ColorIndex := 15;
   rng.Font.Bold := true;
   // ставим сетку всего блока
-  rng := GetRangeObj(1, point(r, 2), point(r + s.m_BandExtremums.Count +k, c - 1));
+  rng := GetRangeObj(1, point(r, 2), point(r + row, c - 1));
   SetRangeBorder(rng);
 
-  // ставим картинку
-  rng := GetRangeObj(1, point(r, 3+6), point(r + s.m_BandExtremums.Count +k, c - 1+1+6));
-  m_ReportBmp:=chart.getBitmap;
-  SetBmpToExcel(rng, m_ReportBmp);
+  // данные сохраняем ДО картинки: если картинка не вставится, отчёт уже цел
+  saveRes := SaveWorkBookAs(repname);
+  res := (saveRes = 0) or (saveRes = 3);
+  if saveRes = 3 then
+    // сохранили в профиль пользователя (нет прав на папку базы)
+    ShowMessage(ExcelLastError)
+  else if saveRes <> 0 then
+    ShowMessage('Не удалось сохранить отчёт: ' + repname + sLineBreak +
+      ExcelLastError);
+  // картинка не критична, её сбой не должен отменять сохранение данных
+  m_ReportBmp := nil;
+  try
+    rng := GetRangeObj(1, point(r, 3+6), point(r + row + k, c - 1+1+6));
+    m_ReportBmp := chart.getBitmap;
+    SetBmpToExcel(rng, m_ReportBmp);
+  except
+    on Ex: Exception do
+      ExcelLastError := 'Картинка: ' + Ex.Message;
+  end;
   m_ReportBmp.free;
-  SaveWorkBookAs(repname);
+  // повторное сохранение - уже с картинкой (только по штатному пути)
+  if saveRes = 0 then
+    SaveWorkBookAs(repname);
   if hideExcel then
   begin
     CloseWorkBook;

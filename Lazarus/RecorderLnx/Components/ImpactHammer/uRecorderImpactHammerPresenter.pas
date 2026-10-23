@@ -1,7 +1,7 @@
 unit uRecorderImpactHammerPresenter;
 
-{ Pure presenter for impact-hammer result tabs. It resolves visibility,
-  scaling and cursor interpolation before any OglChart paint callback. }
+{ Готовит кадр вкладки результата: отбирает видимые кривые, задаёт пределы осей
+  и вычисляет показания курсора до вызова отрисовки графика. }
 
 {$mode objfpc}{$H+}
 {$codepage UTF8}
@@ -24,6 +24,7 @@ type
   private
     fResultType: TRecorderImpactResultType;
     fAxisState: TImpactResultAxisState;
+    { Линейно интерполирует кривую в частотной точке; False возвращается вне диапазона. }
     class function Interpolate(const ACurve: TRecorderImpactPresentationCurve;
       AX: Double; out AY: Double): Boolean; static;
   public
@@ -37,6 +38,7 @@ type
 
 implementation
 
+{ Линейно интерполирует кривую в AX; возвращает False вне частотного диапазона или для пустых данных. }
 class function TRecorderImpactHammerPresenter.Interpolate(
   const ACurve: TRecorderImpactPresentationCurve; AX: Double;
   out AY: Double): Boolean;
@@ -63,6 +65,7 @@ begin
   Result := True;
 end;
 
+{ Сохраняет выбранный тип результата и режим осей для подготовки кадров. }
 procedure TRecorderImpactHammerPresenter.Configure(
   AResultType: TRecorderImpactResultType;
   const AAxisState: TImpactResultAxisState);
@@ -71,6 +74,7 @@ begin
   fAxisState := AAxisState;
 end;
 
+{ Формирует кадр выбранного результата: видимые кривые, значения двух курсоров и единицу X. }
 function TRecorderImpactHammerPresenter.Build(
   const ASnapshot: TRecorderImpactHammerSnapshot;
   out AFrame: TRecorderImpactPresentationFrame): Boolean;
@@ -114,6 +118,7 @@ begin
   Result := lTarget > 0;
 end;
 
+{ Пересчитывает показания курсоров только по видимым кривым текущего результата. }
 function TRecorderImpactHammerPresenter.BuildCursor(
   const ASnapshot: TRecorderImpactHammerSnapshot;
   var ACursor: TRecorderImpactCursorReadout): Boolean;

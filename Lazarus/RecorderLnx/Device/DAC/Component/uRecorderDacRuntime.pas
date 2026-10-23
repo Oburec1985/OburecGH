@@ -133,7 +133,7 @@ begin
   lMirror := nil;
   if fComponent.MirrorEnabled then
   begin
-    lMirrorTag := ResolveTag(fComponent.MirrorTagId, fComponent.MirrorTagName);
+    lMirrorTag := fComponent.EnsureMirrorTag(fRegistry);
     if lMirrorTag = nil then
     begin
       StoreResult(RecorderDacFailed(rdeInvalidConfig, rdsgConfigure,
@@ -149,6 +149,10 @@ begin
   end;
   lBackend := lBackendFactory.CreateBackend(fComponent.Endpoint);
   case fComponent.SourceMode of
+    rdsmPulse:
+      lProvider := TRecorderDacPulseProvider.Create(fComponent.FrequencyHz,
+        fComponent.Amplitude, fComponent.PulseIntervalSec,
+        fComponent.PulsePeriods, fComponent.PulseCount);
     rdsmSine:
       lProvider := TRecorderDacWaveProvider.Create(rdwmSine,
         fComponent.FrequencyHz, fComponent.Amplitude,
@@ -226,8 +230,8 @@ begin
   if fRunner = nil then Exit;
   lRunner := TRecorderDacRunner(fRunner);
   lRunner.RequestStop;
-  { Abort is immediate; joining/freeing is deferred until the runner has
-    actually finished, so a driver stop cannot freeze the GUI transition. }
+  { The worker stops its stream after the current block. Joining/freeing is
+    deferred until it finishes; the GUI never calls the driver concurrently. }
   if lRunner.Finished then
   begin
     StoreResult(lRunner.LastResult);

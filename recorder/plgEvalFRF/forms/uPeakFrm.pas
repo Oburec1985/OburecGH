@@ -14,12 +14,16 @@ type
     RatioStatusLabel: TLabel;
     RatioLimitLabel: TLabel;
     RatioLimitEdit: TEdit;
+    VisibleAreaCB: TCheckBox;
+    SigColorPanel: TPanel;
+    SigNameLabel: TLabel;
     ProfileSG: TStringGridExt;
     TrigStatusLabel: TLabel;
     procedure DebugLogBtnClick(Sender: TObject);
     procedure ProfileSGDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure RatioLimitEditChange(Sender: TObject);
+    procedure VisibleAreaCBClick(Sender: TObject);
   private
     { Private declarations }
     FBands: TObject;
@@ -28,7 +32,26 @@ type
     FBandRatioValid: boolean;
     FBandRatioBlocked: boolean;
     FUpdatingRatioLimit: boolean;
+    // цвет анализируемого сигнала (квадратик в таблице экстремумов)
+    FSigColor: TColor;
+    // объединённый список экстремумов отмеченных сигналов (объекты не освобождаем)
+    FPeaks: TList;
+    // владелец каждого элемента FPeaks (cSRSres)
+    FPeaksOwner: TList;
+    // владелец каждой строки таблицы (cSRSres) - для квадратика цветом
+    FRowOwner: TList;
+    // сколько сигналов попало в список и подпись для шапки
+    FSigCount: integer;
+    FSigName: string;
+
     procedure FillGrid(AExtremums: TList);
+    function IsXInPeaksRange(AFreq: double): boolean;
+    function PeaksRangeSuffix(AFRFFrm: TObject): string;
+    procedure EnsurePeaksLists;
+    // экстремумы отмеченных галочками сигналов (или активного, если галочек нет)
+    procedure CollectPeaks(AFRFFrm: TObject; ADebugLog: Boolean = false);
+    // шапка окна: какие сигналы и по какой линии
+    procedure UpdateHeader(AFRFFrm: TObject);
     procedure UpdateBandStatus(AExtremums: TList);
     procedure SetTrigStatus(const AText: string; AColor: TColor);
     function GetRatioLimit: double;
@@ -39,11 +62,22 @@ type
     function IsNearBandBoundary(AExtremum: TObject): boolean;
   public
     { Public declarations }
+    destructor Destroy; override;
     procedure ShowFRFPeaks(AFRFFrm: TObject);
   end;
 
+  // Какой диапазон по X ограничивает набор экстремумов
+  TPeaksXRange = (
+    // преднастроенный диапазон из настроек (Spm_minX..Spm_maxX) - логика отчёта
+    pxrConfigured,
+    // без ограничения: все экстремумы выше триггера (фильтр формы - галкой)
+    pxrNone);
+
 function EvalFRFPeaks(AFRFFrm, ASignal: TObject; AShowMessages: Boolean;
-  ADebugLog: Boolean = false): Boolean;
+  ADebugLog: Boolean = false; AXRange: TPeaksXRange = pxrConfigured): Boolean;
+
+// Подпись линии, по которой ищутся экстремумы: средняя/мгновенная и режим.
+function PeakLineKind(AFRFFrm: TObject): string;
 
 var
   PeakFrm: TPeakFrm;
@@ -65,6 +99,49 @@ const
   cPeakDebugLogLimit = 200;
   cDefaultBandRatioLimit = 0.2;
 
+procedure TPeakFrm.VisibleAreaCBClick(Sender: TObject);
+begin
+  if FFRFFrm <> nil then
+    ShowFRFPeaks(FFRFFrm);
+end;
+
+// Попадает ли частота в показываемый диапазон по X: галка "Видимая область"
+// ограничивает список текущей (с учётом зума) областью оси X.
+function TPeakFrm.IsXInPeaksRange(AFreq: double): boolean;
+var
+  f: TFRFFrm;
+  xMin, xMax: double;
+begin
+  result := true;
+  if (VisibleAreaCB = nil) or (not VisibleAreaCB.Checked) then
+    exit;
+  f := TFRFFrm(FFRFFrm);
+  if (f = nil) or (f.axSpm = nil) then
+    exit;
+  xMin := f.axSpm.min.x;
+  xMax := f.axSpm.max.x;
+  if xMax <= xMin then
+    exit;
+  result := (AFreq >= xMin) and (AFreq <= xMax);
+end;
+
+// Текст диапазона по X для шапки окна (когда включена галка "Видимая область")
+function TPeakFrm.PeaksRangeSuffix(AFRFFrm: TObject): string;
+var
+  f: TFRFFrm;
+begin
+  result := '';
+  if (VisibleAreaCB = nil) or (not VisibleAreaCB.Checked) then
+    exit;
+  f := TFRFFrm(AFRFFrm);
+  if (f = nil) or (f.axSpm = nil) then
+    exit;
+  if f.axSpm.max.x <= f.axSpm.min.x then
+    exit;
+  result := ' [' + FloatToStrF(f.axSpm.min.x, ffGeneral, 6, 2) + '..' +
+    FloatToStrF(f.axSpm.max.x, ffGeneral, 6, 2) + ' Гц]';
+end;
+
 procedure ClearBandExtremums(AList: TList);
 var
   i: integer;
@@ -77,7 +154,7 @@ begin
 end;
 
 function EvalFRFPeaks(AFRFFrm, ASignal: TObject; AShowMessages: Boolean;
-  ADebugLog: Boolean = false): Boolean;
+  ADebugLog: Boolean = false; AXRange: TPeaksXRange = pxrConfigured): Boolean;
 var
   f: TFRFFrm;
   s: cSRSres;
@@ -130,15 +207,25 @@ var
   procedure AddPeak(AIndex, AZoneStart, AZoneEnd: integer);
   var
     bandIndex: integer;
+    freq: double;
   begin
     if (AIndex <= 0) or (AIndex >= length(d)) or PeakExists(AIndex) then
+      exit;
+
+    freq := GetXByInd(AIndex);
+    // Логика отчёта (pxrConfigured): вне преднастроенного диапазона по X
+    // (Spm_minX..Spm_maxX) экстремумы не собираем. Для формы (pxrNone) собираем
+    // всё выше триггера, а показ ограничивает галка "Видимая область".
+    if (AXRange = pxrConfigured) and
+      (f.m_maxX > 0) and (f.m_minX < f.m_maxX) and
+      ((freq < f.m_minX) or (freq > f.m_maxX)) then
       exit;
 
     BandExtr := cExtremum.create;
     s.m_BandExtremums.Add(BandExtr);
     BandExtr.Index := AIndex;
     BandExtr.Value := d[AIndex];
-    BandExtr.Freq := GetXByInd(AIndex);
+    BandExtr.Freq := freq;
 
     for bandIndex := 0 to f.m_bands.Count - 1 do
     begin
@@ -271,10 +358,11 @@ begin
   else
     bl := nil;
 
-  b := f.m_bands.getband(f.m_bands.Count - 1);
-  maxIndex := trunc(b.m_f2 / dx);
-  if maxIndex >= high(d) then
-    maxIndex := high(d) - 1;
+  // Раньше поиск ограничивался правой границей последней настроенной полосы,
+  // из-за чего пики выше неё в список не попадали. Ищем по всему спектру:
+  // в список должны попадать все экстремумы выше триггера, а привязка к полосе
+  // (BandNum) остаётся только у тех, кто в полосу действительно попал.
+  maxIndex := high(d) - 1;
   if maxIndex <= 1 then
     exit;
 
@@ -549,16 +637,21 @@ end;
 
 procedure TPeakFrm.FillGrid(AExtremums: TList);
 var
-  i, c: integer;
+  i, c, rowCount, row: integer;
   extr: cExtremum;
 begin
+  EnsurePeaksLists;
+  FRowOwner.Clear;
   ProfileSG.ColCount := 4;
-  if AExtremums = nil then
-    ProfileSG.RowCount := 2
-  else
-    ProfileSG.RowCount := AExtremums.Count + 1;
-  if ProfileSG.RowCount < 2 then
-    ProfileSG.RowCount := 2;
+  // число строк с учётом галки "Видимая область"
+  rowCount := 0;
+  if AExtremums <> nil then
+    for i := 0 to AExtremums.Count - 1 do
+      if IsXInPeaksRange(cExtremum(AExtremums.Items[i]).Freq) then
+        inc(rowCount);
+  if rowCount < 1 then
+    rowCount := 1;
+  ProfileSG.RowCount := rowCount + 1;
   ProfileSG.FixedRows := 1;
   ProfileSG.ColWidths[cPeakColFreq] := 90;
   ProfileSG.ColWidths[cPeakColValue] := 90;
@@ -582,15 +675,26 @@ begin
     UpdateBandStatus(AExtremums);
     exit;
   end;
+  row := 1;
   for i := 0 to AExtremums.Count - 1 do
   begin
     extr := cExtremum(AExtremums.Items[i]);
+    if not IsXInPeaksRange(extr.Freq) then
+      continue;
+    if row > ProfileSG.RowCount - 1 then
+      break;
     for c := 0 to ProfileSG.ColCount - 1 do
-      ProfileSG.Objects[c, i + 1] := extr;
-    ProfileSG.Cells[cPeakColFreq, i + 1] := floattostr(extr.Freq);
-    ProfileSG.Cells[cPeakColValue, i + 1] := floattostr(extr.Value);
-    ProfileSG.Cells[cPeakColDec, i + 1] := floattostr(extr.decrement);
-    ProfileSG.Cells[cPeakColIndex, i + 1] := inttostr(extr.Index);
+      ProfileSG.Objects[c, row] := extr;
+    ProfileSG.Cells[cPeakColFreq, row] := floattostr(extr.Freq);
+    ProfileSG.Cells[cPeakColValue, row] := floattostr(extr.Value);
+    ProfileSG.Cells[cPeakColDec, row] := floattostr(extr.decrement);
+    ProfileSG.Cells[cPeakColIndex, row] := inttostr(extr.Index);
+    // владелец строки - сигнал этого экстремума (для квадратика цветом)
+    if (FPeaksOwner <> nil) and (i < FPeaksOwner.Count) then
+      FRowOwner.Add(FPeaksOwner.Items[i])
+    else
+      FRowOwner.Add(nil);
+    inc(row);
   end;
   UpdateBandStatus(AExtremums);
 end;
@@ -660,20 +764,120 @@ begin
   end;
 end;
 
+procedure TPeakFrm.EnsurePeaksLists;
+begin
+  if FPeaks = nil then
+    FPeaks := TList.Create;
+  if FPeaksOwner = nil then
+    FPeaksOwner := TList.Create;
+  if FRowOwner = nil then
+    FRowOwner := TList.Create;
+end;
+
+destructor TPeakFrm.Destroy;
+begin
+  FPeaks.Free;
+  FPeaksOwner.Free;
+  FRowOwner.Free;
+  inherited;
+end;
+
+// Собрать экстремумы по отмеченным галочками сигналам; если ни один не отмечен -
+// по активному сигналу (как раньше).
+procedure TPeakFrm.CollectPeaks(AFRFFrm: TObject; ADebugLog: Boolean);
+var
+  f: TFRFFrm;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s, act: cSRSres;
+  i, j: integer;
+  useChecked: boolean;
+begin
+  EnsurePeaksLists;
+  FPeaks.Clear;
+  FPeaksOwner.Clear;
+  FSigCount := 0;
+  FSigColor := clNone;
+  FSigName := '';
+  f := TFRFFrm(AFRFFrm);
+  if f = nil then
+    exit;
+  t := f.getTaho;
+  if t = nil then
+    exit;
+  c := t.cfg;
+  if c = nil then
+    exit;
+  // если отмечены галочки - показываем отмеченные, иначе активный сигнал
+  useChecked := false;
+  for i := 0 to c.SRSCount - 1 do
+    if (i < f.SignalsLV.Items.Count) and f.SignalsLV.Items[i].Checked then
+      useChecked := true;
+  act := f.ActiveSignal;
+  for i := 0 to c.SRSCount - 1 do
+  begin
+    s := c.GetSrs(i);
+    if s = nil then
+      continue;
+    if useChecked then
+    begin
+      if (i >= f.SignalsLV.Items.Count) or (not f.SignalsLV.Items[i].Checked) then
+        continue;
+    end
+    else if s <> act then
+      continue;
+    if not EvalFRFPeaks(f, s, true, ADebugLog, pxrNone) then
+      continue;
+    inc(FSigCount);
+    if FSigCount = 1 then
+    begin
+      FSigColor := TColor(RGBtoInt(s.m_color));
+      FSigName := s.name;
+    end;
+    for j := 0 to s.m_BandExtremums.Count - 1 do
+    begin
+      FPeaks.Add(s.m_BandExtremums.Items[j]);
+      FPeaksOwner.Add(s);
+    end;
+  end;
+end;
+
+// Шапка окна: какие сигналы и по какой линии ищутся экстремумы
+procedure TPeakFrm.UpdateHeader(AFRFFrm: TObject);
+var
+  f: TFRFFrm;
+  s: string;
+begin
+  if FSigCount > 1 then
+    s := 'выбрано сигналов: ' + inttostr(FSigCount)
+  else
+    s := FSigName;
+  if FSigColor = clNone then
+    SigColorPanel.Color := clBtnFace
+  else
+    SigColorPanel.Color := FSigColor;
+  SigNameLabel.Caption := s;
+  f := TFRFFrm(AFRFFrm);
+  if f = nil then
+  begin
+    Caption := 'Список экстремумов';
+    exit;
+  end;
+  Caption := 'Список экстремумов: ' + s + ' — ' + PeakLineKind(f) +
+    PeaksRangeSuffix(f);
+end;
+
 procedure TPeakFrm.DebugLogBtnClick(Sender: TObject);
 var
   f: TFRFFrm;
-  s: cSRSres;
 begin
   f := TFRFFrm(FFRFFrm);
   if f = nil then
     exit;
-  s := f.ActiveSignal;
-  if s = nil then
-    exit;
   FBands := f.m_bands;
-  EvalFRFPeaks(f, s, true, true);
-  FillGrid(s.m_BandExtremums);
+  CollectPeaks(f, true);
+  UpdateHeader(f);
+  FillGrid(FPeaks);
 end;
 
 procedure TPeakFrm.ProfileSGDrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -682,6 +886,10 @@ var
   extr: cExtremum;
   s: string;
   flags: integer;
+  sq: TRect;
+  bg: TColor;
+  swatch: TColor;
+  sig: cSRSres;
 begin
   if ARow = 0 then
     exit;
@@ -689,27 +897,49 @@ begin
   if extr = nil then
     exit;
 
+  // фон ячейки: зелёный - попал в полосу, светло-жёлтый - у границы, иначе окно
   if extr.BandNum >= 0 then
-    ProfileSG.Canvas.Brush.Color := RGB(181, 220, 150)
+    bg := RGB(181, 220, 150)
   else
   begin
     if IsNearBandBoundary(extr) then
-      ProfileSG.Canvas.Brush.Color := RGB(255, 250, 205)
+      bg := RGB(255, 250, 205)
     else
-      ProfileSG.Canvas.Brush.Color := clWindow;
+      bg := clWindow;
   end;
+  ProfileSG.Canvas.Brush.Color := bg;
   ProfileSG.Canvas.Font.Color := clWindowText;
   ProfileSG.Canvas.FillRect(Rect);
   s := ProfileSG.Cells[ACol, ARow];
   flags := DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS;
   InflateRect(Rect, -2, 0);
+  // в первой колонке - квадратик цветом сигнала этой строки
+  swatch := clNone;
+  if (ACol = cPeakColFreq) and (FRowOwner <> nil) and
+     (ARow - 1 < FRowOwner.Count) then
+  begin
+    sig := cSRSres(FRowOwner.Items[ARow - 1]);
+    if sig <> nil then
+      swatch := TColor(RGBtoInt(sig.m_color));
+  end;
+  if swatch <> clNone then
+  begin
+    sq.Left := Rect.Left + 1;
+    sq.Top := (Rect.Top + Rect.Bottom - 10) div 2;
+    sq.Right := sq.Left + 10;
+    sq.Bottom := sq.Top + 10;
+    ProfileSG.Canvas.Brush.Color := swatch;
+    ProfileSG.Canvas.FillRect(sq);
+    // возвращаем фон ячейки: иначе DrawText заливает текст цветом сигнала
+    ProfileSG.Canvas.Brush.Color := bg;
+    Rect.Left := Rect.Left + 13;
+  end;
   DrawText(ProfileSG.Canvas.Handle, PChar(s), length(s), Rect, flags);
 end;
 
 procedure TPeakFrm.RatioLimitEditChange(Sender: TObject);
 var
   f: TFRFFrm;
-  s: cSRSres;
 begin
   if FUpdatingRatioLimit then
     exit;
@@ -717,10 +947,8 @@ begin
   if f = nil then
     exit;
   f.m_peakRatioLimit := GetRatioLimit;
-  s := f.ActiveSignal;
-  if s = nil then
-    exit;
-  FillGrid(s.m_BandExtremums);
+  if FPeaks <> nil then
+    FillGrid(FPeaks);
 end;
 procedure TPeakFrm.SetTrigStatus(const AText: string; AColor: TColor);
 begin
@@ -733,17 +961,40 @@ begin
     TrigStatusLabel.Font.Color := clWindowText;
 end;
 
+// Что именно показано в списке: какая линия выбранного сигнала (средняя/мгновенная).
+function PeakLineKind(AFRFFrm: TObject): string;
+var
+  f: TFRFFrm;
+begin
+  result := 'линия';
+  f := TFRFFrm(AFRFFrm);
+  if f = nil then
+    exit;
+  case f.ResTypeRG.ItemIndex of
+    0:
+      if f.useAvrCb.Checked then
+        result := 'средняя АЧХ'
+      else
+        result := 'мгновенная АЧХ, удар ' + inttostr(f.GetShockNum + 1);
+    1:
+      result := 'когерентность';
+    2:
+      if f.useAvrCb.Checked then
+        result := 'средний спектр (SPM)'
+      else
+        result := 'мгновенный спектр (SPM), удар ' + inttostr(f.GetShockNum + 1);
+    3:
+      result := 'фаза';
+  end;
+end;
+
 procedure TPeakFrm.ShowFRFPeaks(AFRFFrm: TObject);
 var
   f: TFRFFrm;
-  s: cSRSres;
 begin
   FFRFFrm := AFRFFrm;
   f := TFRFFrm(AFRFFrm);
   if f = nil then
-    exit;
-  s := f.ActiveSignal;
-  if s = nil then
     exit;
   FBands := f.m_bands;
   FUpdatingRatioLimit := true;
@@ -752,8 +1003,11 @@ begin
   finally
     FUpdatingRatioLimit := false;
   end;
-  EvalFRFPeaks(f, s, true);
-  FillGrid(s.m_BandExtremums);
+  // экстремумы отмеченных сигналов (или активного), всё выше триггера;
+  // показ ограничивает галка "Видимая область"
+  CollectPeaks(f);
+  UpdateHeader(f);
+  FillGrid(FPeaks);
   show;
 end;
 

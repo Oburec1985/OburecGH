@@ -30,6 +30,10 @@ type
     cbLineAxis: TComboBox;
     cbLineVisible: TCheckBox;
     cbShowEvents: TCheckBox;
+    cbShowRecordingEvents: TCheckBox;
+    cbShowTagAlarmEvents: TCheckBox;
+    cbShowTagRangeEvents: TCheckBox;
+    cbShowOnlyUnresolvedEvents: TCheckBox;
     cbCurrentDate: TCheckBox;
     cbTimeMode: TComboBox;
     ColorDialog1: TColorDialog;
@@ -85,6 +89,7 @@ type
     procedure btnDeleteDisplayClick({%H-}Sender: TObject);
     procedure DisplayChange({%H-}Sender: TObject);
     procedure DisplayNameExit({%H-}Sender: TObject);
+    procedure ShowEventsChange({%H-}Sender: TObject);
   private
     fComponent: TRecorderSqlTrendComponent;
     fDraft: TRecorderSqlTrendComponent;
@@ -115,6 +120,7 @@ type
       APicker: TDateTimePicker; AValue: TDateTime);
     procedure SetTimeEdits(AFromUtc, AToUtc: TDateTime);
     procedure UpdateCurrentDateControls;
+    procedure UpdateEventFilterControls;
     function FromUtcValue: TDateTime;
     function ToUtcValue: TDateTime;
     function CurrentDisplay: TRecorderSqlTrendDisplay;
@@ -189,6 +195,11 @@ begin
   SetTimeEdits(fDraft.FromUtc, fDraft.ToUtc);
   edMaxPoints.Text := IntToStr(fDraft.MaxPointsPerLine);
   cbShowEvents.Checked := fDraft.ShowEvents;
+  cbShowRecordingEvents.Checked := fDraft.ShowRecordingEvents;
+  cbShowTagAlarmEvents.Checked := fDraft.ShowTagAlarmEvents;
+  cbShowTagRangeEvents.Checked := fDraft.ShowTagRangeEvents;
+  cbShowOnlyUnresolvedEvents.Checked := fDraft.ShowOnlyUnresolvedEventPoints;
+  UpdateEventFilterControls;
   edWindowHours.Text := FloatToStr(fDraft.DurationSec / SecsPerDay);
   FillAxes;
   FillLines;
@@ -610,6 +621,27 @@ begin
     fToDateEdit.Enabled := not cbCurrentDate.Checked;
 end;
 
+{
+  Галочки семейств событий дублируют контекстное меню тренда. Верхняя
+  «Отображать события» полностью отключает маркеры, остальные три доступны
+  только при ней. Имена записи/аварий/уставок совпадают с триггерами SQL.
+}
+procedure TRecorderSqlTrendSettingsDialog.UpdateEventFilterControls;
+var
+  lEnabled: Boolean;
+begin
+  lEnabled := cbShowEvents.Checked;
+  cbShowRecordingEvents.Enabled := lEnabled;
+  cbShowTagAlarmEvents.Enabled := lEnabled;
+  cbShowTagRangeEvents.Enabled := lEnabled;
+  cbShowOnlyUnresolvedEvents.Enabled := lEnabled;
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.ShowEventsChange(Sender: TObject);
+begin
+  UpdateEventFilterControls;
+end;
+
 procedure TRecorderSqlTrendSettingsDialog.TimeWindowEditingDone(Sender: TObject);
 var lDays: Double; lToUtc: TDateTime;
 begin
@@ -922,6 +954,10 @@ begin
   if not TryStrToInt(edMaxPoints.Text, N) then N := 4000;
   fDraft.MaxPointsPerLine := EnsureRange(N, 32, 100000);
   fDraft.ShowEvents := cbShowEvents.Checked;
+  fDraft.ShowRecordingEvents := cbShowRecordingEvents.Checked;
+  fDraft.ShowTagAlarmEvents := cbShowTagAlarmEvents.Checked;
+  fDraft.ShowTagRangeEvents := cbShowTagRangeEvents.Checked;
+  fDraft.ShowOnlyUnresolvedEventPoints := cbShowOnlyUnresolvedEvents.Checked;
   fComponent.AssignSqlTrend(fDraft);
   ModalResult := mrOk;
 end;

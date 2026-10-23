@@ -218,7 +218,7 @@ object PxiMx248SettingsDialog: TPxiMx248SettingsDialog
         Width = 892
         Align = alTop
         BevelOuter = bvNone
-        Caption = 'Двойной щелчок открывает канал; IEPE переключает: выкл. → 4 мА → 10 мА. Плавающий вход электрически отвязан от общей точки.'
+        Caption = 'Ctrl/Shift — выбор каналов; ПКМ → Редактировать — общие настройки. Двойной щелчок IEPE: выкл. → 4 мА → 10 мА.'
         TabOrder = 0
       end
       object gridChannels: TStringGrid
@@ -229,12 +229,15 @@ object PxiMx248SettingsDialog: TPxiMx248SettingsDialog
         Align = alClient
         ColCount = 8
         DefaultColWidth = 92
-        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goTabs]
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goTabs, goRowSelect, goRelaxedRowSelect]
+        RangeSelectMode = rsmMulti
+        PopupMenu = popupChannels
         RowCount = 9
         Hint = 'Диапазон показан в пКл при включённом усилителе и в вольтах при прямом входе. «Плавающий» — вход отвязан от общей точки.'
         ShowHint = True
         TabOrder = 1
         OnDblClick = GridDblClick
+        OnMouseDown = GridMouseDown
       end
     end
     object pageAdditional: TTabSheet
@@ -407,6 +410,14 @@ object PxiMx248SettingsDialog: TPxiMx248SettingsDialog
       Caption = 'Отмена'
       ModalResult = 2
       TabOrder = 2
+    end
+  end
+  object popupChannels: TPopupMenu
+    Left = 720
+    Top = 16
+    object miEditChannels: TMenuItem
+      Caption = 'Редактировать'
+      OnClick = EditChannelsClick
     end
   end
 end

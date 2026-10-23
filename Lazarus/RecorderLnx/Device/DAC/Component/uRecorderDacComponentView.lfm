@@ -1,20 +1,24 @@
 object RecorderDacComponentView: TRecorderDacComponentView
-  Height = 266
+  Height = 330
   Width = 458
-  ClientHeight = 266
+  ClientHeight = 330
   ClientWidth = 458
+  Constraints.MinHeight = 330
   TabOrder = 0
   object pnlTop: TPanel
     Align = alTop
     Height = 49
     BevelOuter = bvNone
     TabOrder = 0
-    object btnPlay: TButton
+    object btnPlay: TPanel
       Left = 12
       Top = 11
       Width = 78
       Height = 27
       Caption = 'Play'
+      ParentColor = False
+      Color = clBtnFace
+      Cursor = crHandPoint
       OnClick = PlayClick
       TabOrder = 0
     end
@@ -67,15 +71,70 @@ object RecorderDacComponentView: TRecorderDacComponentView
     object tsTag: TTabSheet
       Caption = 'Tag'
     end
+    object tsPulse: TTabSheet
+      Caption = 'Pulse'
+    end
   end
   object gbSignal: TGroupBox
     Left = 8
     Top = 105
     Width = 442
-    Height = 154
+    Height = 218
     Anchors = [akTop, akLeft, akRight, akBottom]
     Caption = 'Signal Parameters'
     TabOrder = 2
+    object lblPulseInterval: TLabel
+      Left = 218
+      Top = 27
+      Caption = 'Interval, s'
+    end
+    object edPulseInterval: TFloatSpinEdit
+      Left = 326
+      Top = 22
+      Width = 100
+      DecimalPlaces = 6
+      MinValue = 0.000001
+      MaxValue = 1000000
+      Value = 1
+      OnChange = ParametersChange
+    end
+    object lblPulsePeriods: TLabel
+      Left = 218
+      Top = 58
+      Caption = 'Periods'
+    end
+    object edPulsePeriods: TSpinEdit
+      Left = 326
+      Top = 53
+      Width = 100
+      MinValue = 1
+      MaxValue = 1000000
+      Value = 10
+      OnChange = ParametersChange
+    end
+    object lblPulseCount: TLabel
+      Left = 218
+      Top = 89
+      Caption = 'Pulses in series'
+    end
+    object edPulseCount: TSpinEdit
+      Left = 326
+      Top = 84
+      Width = 100
+      MinValue = 1
+      MaxValue = 1000000
+      Value = 5
+      OnChange = ParametersChange
+    end
+    object lblPulseDerived: TLabel
+      Left = 12
+      Top = 84
+      Width = 200
+      Height = 60
+      AutoSize = False
+      WordWrap = True
+      Caption = 'T1 — возбуждение; T0 — пауза; скважность T/T1'
+    end
     object lblInputTag: TLabel
       Left = 12
       Top = 27
@@ -184,22 +243,22 @@ object RecorderDacComponentView: TRecorderDacComponentView
     end
     object cbMirror: TCheckBox
       Left = 12
-      Top = 84
+      Top = 150
       Width = 176
       Height = 23
-      Caption = 'Duplicate to vector tag'
+      Caption = 'Зеркало в выходной тег'
       OnClick = MirrorClick
       TabOrder = 5
     end
     object lblMirrorTag: TLabel
       Left = 12
-      Top = 121
+      Top = 183
       Caption = 'Tag name'
     end
     object edMirrorTag: TEdit
       OnChange = ParametersChange
       Left = 96
-      Top = 116
+      Top = 178
       Width = 330
       Height = 25
       Anchors = [akTop, akLeft, akRight]
@@ -207,8 +266,11 @@ object RecorderDacComponentView: TRecorderDacComponentView
     end
     object lblState: TLabel
       Left = 218
-      Top = 121
+      Top = 145
       Width = 208
+      AutoSize = False
+      Height = 30
+      WordWrap = True
       Caption = 'Остановлен'
       Visible = False
     end

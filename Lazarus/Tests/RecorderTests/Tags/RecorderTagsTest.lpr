@@ -15,7 +15,7 @@ uses
   SysUtils,
   uRecorderCoreServices,
   uRecorderTags,
-  uRecorderAlarms;
+  uRecorderAlarms, uRecorderConfiguredDataSources;
 
 type
   TTagEventProbe = class
@@ -407,7 +407,46 @@ begin
   end;
 end;
 
+procedure TestDisabledSourceVisibility;
+var lRegistry: TRecorderTagRegistry; lTag: TRecorderTag;
+  lConfig: TRecorderConfiguredDataSource;
 begin
+  lRegistry := TRecorderTagRegistry.Create;
+  try
+    lTag := lRegistry.CreateTag('Disabled source test',16);
+    lTag.SourceId := 'mic185:127.0.0.1:4000';
+    lConfig := RecorderConfiguredDataSourcesEnsure(lRegistry,lTag.SourceId,'MIC-185',100);
+    lRegistry.RegisterActiveSource(lTag.SourceId);
+    AssertEquals(Ord(RecorderTagSourceIsVisible(lRegistry,lTag)),1,'enabled linked source visible');
+    lConfig.Enabled := False;
+    AssertEquals(Ord(RecorderTagSourceIsVisible(lRegistry,lTag)),0,'disabled source hides cached active tag');
+    lTag.IsVirtual := True;
+    AssertEquals(Ord(RecorderTagSourceIsVisible(lRegistry,lTag)),0,'virtual flag cannot bypass disabled source');
+    lConfig.Enabled := True;
+    AssertEquals(Ord(RecorderTagSourceIsVisible(lRegistry,lTag)),1,'reenabled source visible');
+    AssertEquals(lRegistry.TagCount,1,'disable preserves tag configuration');
+    lTag.IsVirtual := False;
+    { The executable is an existing file: visibility must not fall through to
+      FileExists for an explicitly disabled MERA source. No file is modified. }
+    lTag.SourceId := CMeraTagSourcePrefix + ExpandFileName(ParamStr(0));
+    lConfig := RecorderConfiguredDataSourcesEnsure(lRegistry,lTag.SourceId,'MERA',100);
+    AssertEquals(Ord(RecorderTagSourceIsVisible(lRegistry,lTag)),1,'existing file source visible');
+    lConfig.Enabled := False;
+    AssertEquals(Ord(RecorderTagSourceIsVisible(lRegistry,lTag)),0,'existing file cannot bypass disabled source');
+    lConfig.Enabled := True;
+    AssertEquals(Ord(RecorderTagSourceIsVisible(lRegistry,lTag)),1,'reenabled file visible');
+    lTag.SourceId := 'manual';
+    AssertEquals(Ord(RecorderTagSourceIsVisible(lRegistry,lTag)),1,'manual tag remains visible');
+    Writeln('RESULT disabled source visibility passed.');
+  finally lRegistry.Free; end;
+end;
+
+begin
+  if (ParamCount > 0) and SameText(ParamStr(1), '--disabled-source-only') then
+  begin
+    TestDisabledSourceVisibility;
+    Halt(0);
+  end;
   if (ParamCount > 0) and SameText(ParamStr(1), '--vector-only') then
   begin
     TestVectorDerivedFromFrequency;
@@ -424,6 +463,7 @@ begin
     Halt(0);
   end;
   TestTagRegistryAndSignalBuffer;
+  TestDisabledSourceVisibility;
   TestVectorDerivedFromFrequency;
   TestTagBlockEstimates;
   TestReusableRangeSnapshot;

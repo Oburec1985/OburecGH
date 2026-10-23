@@ -153,7 +153,7 @@ begin
       try
         ReadXMLFile(lDocument, lFileName);
         lRoot := lDocument.DocumentElement;
-        if (lRoot = nil) or (lRoot.TagName <> 'MeraDbNode') then Continue;
+        if lRoot = nil then Continue;
         lKind := lRoot.GetAttribute('Class');
         lParent := FindNode(AParentId);
         if lParent = nil then lParentKind := '' else lParentKind := lParent.Kind;
@@ -163,7 +163,20 @@ begin
         lNode.Id := lRoot.GetAttribute('Id');
         lNode.Name := lRoot.GetAttribute('Name');
         lNode.ParentId := AParentId;
-        lNode.RelativePath := lRoot.GetAttribute('Path');
+        { Descriptor location is authoritative, including legacy XML whose
+          root is the folder name and which has no Id/Name/Path attributes. }
+        lNode.RelativePath := ChangeFileExt(ExtractRelativePath(fBasePath,
+          ExpandFileName(lFileName)), '');
+        if lNode.Id = '' then lNode.Id := 'legacy:' + lNode.RelativePath;
+        if lNode.Name = '' then lNode.Name := UTF8Encode(lRoot.TagName);
+        if lRoot.TagName <> 'MeraDbNode' then
+        begin
+          lNode.Properties.Values['ObjectType'] := UTF8Encode(lRoot.GetAttribute('ObjType'));
+          lNode.Properties.Values['Metadata'] := UTF8Encode(lRoot.GetAttribute('TestType'));
+          lNode.Properties.Values['ObjectId'] := AParentId;
+          if (lParent <> nil) and (lParent.ParentId <> '') then
+            lNode.Properties.Values['ObjectId'] := lParent.ParentId;
+        end;
         lChild := lRoot.FirstChild;
         while lChild <> nil do
         begin
@@ -202,8 +215,20 @@ end;
 function TRecorderXmlDatabase.AddNode(const AKind, AParentId, AParentPath,
   APrefix, AName: string): TRecorderXmlDbNode;
 var lParent: TRecorderXmlDbNode; lParentKind: string;
+  lName, lRelativePath: string; I: Integer;
 begin
   if Trim(AName) = '' then raise ERecorderXmlDatabase.Create('Node name is empty');
+  lName := Trim(AName);
+  if (lName = '.') or (lName = '..') or
+    (lName[Length(lName)] = '.') then
+    raise ERecorderXmlDatabase.Create('Недопустимое имя каталога базы');
+  for I := 1 to Length(lName) do
+    if (Ord(lName[I]) < 32) or (Pos(lName[I], '\/:*?"<>|') > 0) then
+      raise ERecorderXmlDatabase.Create('Имя содержит недопустимый символ каталога');
+  lRelativePath := AParentPath + lName;
+  if FileExists(fBasePath + lRelativePath + '.xml') or
+    DirectoryExists(fBasePath + lRelativePath) then
+    raise ERecorderXmlDatabase.CreateFmt('Каталог уже существует: %s', [lRelativePath]);
   lParent := FindNode(AParentId);
   if lParent = nil then lParentKind := '' else lParentKind := lParent.Kind;
   if (AParentId <> '') and (lParent = nil) then
@@ -215,7 +240,7 @@ begin
   Result.Id := NewXmlId;
   Result.Name := Trim(AName);
   Result.ParentId := AParentId;
-  Result.RelativePath := UniqueRelativePath(AParentPath, APrefix);
+  Result.RelativePath := lRelativePath;
   fNodes.Add(Result);
   SaveNode(Result);
 end;

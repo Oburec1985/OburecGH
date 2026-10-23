@@ -31,7 +31,7 @@ unit uRecorderFormModel;
 interface
 
 uses
-  Classes, SysUtils, Contnrs, uRecorderTags, uOglChartColors,
+  Classes, SysUtils, Contnrs, SyncObjs, uRecorderCoreServices, uRecorderTags, uOglChartColors,
   uRecorderVibrationEstimate, uRecorderRunControlSettings;
 
 type
@@ -273,6 +273,26 @@ type
 
   TRecorderVibrationEstimateComponent = class(TRecorderVisualComponent)
   private
+    fHoldMaximum: Boolean;
+    fManualBand: Boolean;
+    fBandFromHz, fBandToHz: Double;
+    fRuntimeFrequencyCalculation: TRecorderVibrationCalculation;
+    fRuntimeRegistry: TRecorderTagRegistry;
+    fRuntimeTagId: TRecorderTagId;
+    fRuntimeCalculation, fRuntimeAmplitudeCalculation: TRecorderVibrationCalculation;
+    fRuntimeToken: Integer;
+    fRuntimeLock: TCriticalSection;
+    fRuntimeActive, fRuntimeHasValue: Boolean;
+    fRuntimeValue, fRuntimeFrequency: Double;
+    fRuntimeScore: Double;
+    fRuntimeRevision: QWord;
+    fRuntimeQuantity: TRecorderVibrationQuantity;
+    fRuntimeUnit, fRuntimeConfiguredBand: string;
+    fRuntimeAmplitudeMode, fRuntimeHold: Boolean;
+    fRuntimeTagName, fRuntimeSourceUnit, fRuntimeError: string;
+    fRuntimeBandIndex: Integer;
+    procedure HandleSpectrumEvent(ASender: TObject; const AEvent: TRecorderEvent);
+  private
     fCaption: string;
     fUseSourceTagName: Boolean;
     fQuantity: TRecorderVibrationQuantity;
@@ -289,6 +309,21 @@ type
     class function GetTypeId: string; override;
   public
     constructor Create; override;
+    destructor Destroy; override;
+    { Cold binding, then explicit acquisition lifecycle (not Record/Preview
+      transitions). Spectrum notifications update the paired amplitude/frequency
+      snapshot even for hidden pages; Stop freezes it, next Begin clears it.
+      Registry/EventBus must outlive this component. }
+    procedure ConfigureRuntime(ARegistry: TRecorderTagRegistry);
+    procedure BeginRuntimeSession;
+    procedure EndRuntimeSession;
+    function TryGetRuntimeEstimate(out AValue, AFrequencyHz: Double): Boolean;
+    property HoldMaximum: Boolean read fHoldMaximum write fHoldMaximum;
+    property ManualBand: Boolean read fManualBand write fManualBand;
+    property BandFromHz: Double read fBandFromHz write fBandFromHz;
+    property BandToHz: Double read fBandToHz write fBandToHz;
+    property RuntimeError: string read fRuntimeError;
+    property RuntimeRevision: QWord read fRuntimeRevision;
     procedure GetFontSnapshot(out AFont: TRecorderFontSnapshot);
     property Caption: string read fCaption write fCaption;
     property UseSourceTagName: Boolean read fUseSourceTagName write fUseSourceTagName;
@@ -1118,6 +1153,8 @@ function RecorderSignalCrossesTriggerLevel(APreviousValue, ACurrentValue,
 
 implementation
 
+uses uRecorderSpectrumRuntime, uRecorderSpectrumEngine, Math;
+
 function RecorderSignalCrossesTriggerLevel(APreviousValue, ACurrentValue,
   ALevel: Double; AEdge: TRecorderSignalEdge): Boolean;
 begin
@@ -1390,10 +1427,13 @@ end;
 constructor TRecorderVibrationEstimateComponent.Create;
 begin
   inherited Create;
+  fRuntimeLock := TCriticalSection.Create;
+  fRuntimeBandIndex := -1;
   fCaption := 'Виброоценка';
   fUseSourceTagName := True;
   fQuantity := rvqAcceleration;
   fBandName := '';
+  fBandToHz := 1000;
   fOutputUnit := RecorderVibrationDefaultUnit(fQuantity);
   fDisplayFormat := '0.###';
   fAmplitudeMode := False;
@@ -1402,6 +1442,185 @@ begin
   fFontColor := 0;
   fFontStyleBold := False;
   fFontStyleItalic := False;
+end;
+
+destructor TRecorderVibrationEstimateComponent.Destroy;
+begin
+  if (fRuntimeRegistry <> nil) and (fRuntimeToken <> 0) then
+    fRuntimeRegistry.EventBus.Unsubscribe(fRuntimeToken);
+  fRuntimeLock.Free;
+  inherited Destroy;
+end;
+
+procedure TRecorderVibrationEstimateComponent.ConfigureRuntime(
+  ARegistry: TRecorderTagRegistry);
+var
+  lTag: TRecorderTag;
+  lQuantity: TRecorderVibrationQuantity;
+  lUnit, lName, lSourceUnit: string;
+  lTagId: TRecorderTagId;
+  I: Integer;
+begin
+  if fRuntimeRegistry <> ARegistry then
+  begin
+    if (fRuntimeRegistry <> nil) and (fRuntimeToken <> 0) then
+      fRuntimeRegistry.EventBus.Unsubscribe(fRuntimeToken);
+    fRuntimeRegistry := ARegistry;
+    fRuntimeToken := 0;
+    if (ARegistry <> nil) and (ARegistry.EventBus <> nil) then
+      fRuntimeToken := ARegistry.EventBus.Subscribe(@HandleSpectrumEvent);
+  end;
+  lTag := nil;
+  if ARegistry <> nil then
+  begin
+    lTag := ARegistry.FindById(TagId);
+    if lTag = nil then lTag := ARegistry.FindByName(TagName);
+  end;
+  lName := '';
+  lSourceUnit := '';
+  lTagId := 0;
+  if lTag <> nil then
+  begin
+    lName := lTag.Name;
+    lSourceUnit := lTag.UnitName;
+    lTagId := lTag.Id;
+  end;
+  lQuantity := fQuantity;
+  lUnit := fOutputUnit;
+  if not RecorderIsVibrationUnit(lSourceUnit) and
+    (lQuantity <> rvqDominantFrequency) then lQuantity := rvqAmplitude;
+  if not RecorderIsVibrationUnit(lSourceUnit) and
+    (lQuantity = rvqDominantFrequency) then lUnit := 'Hz';
+  if lQuantity = rvqAmplitude then lUnit := lSourceUnit;
+  fRuntimeLock.Enter;
+  try
+    if (fRuntimeTagId <> lTagId) or (fRuntimeTagName <> lName) or
+      (fRuntimeQuantity <> lQuantity) or
+      (fRuntimeUnit <> lUnit) or (fRuntimeConfiguredBand <> fBandName) or
+      (fRuntimeAmplitudeMode <> fAmplitudeMode) or (fRuntimeHold <> fHoldMaximum) or
+      (fRuntimeSourceUnit <> lSourceUnit) or
+      (fRuntimeCalculation.ManualBand <> fManualBand) or
+      (fRuntimeCalculation.BandFromHz <> fBandFromHz) or
+      (fRuntimeCalculation.BandToHz <> fBandToHz) then
+    begin
+      fRuntimeHasValue := False;
+      Inc(fRuntimeRevision);
+    end;
+    fRuntimeQuantity := lQuantity;
+    fRuntimeUnit := lUnit;
+    fRuntimeConfiguredBand := fBandName;
+    fRuntimeAmplitudeMode := fAmplitudeMode;
+    fRuntimeHold := fHoldMaximum;
+    fRuntimeTagName := lName;
+    fRuntimeSourceUnit := lSourceUnit;
+    fRuntimeCalculation := RecorderPrepareVibrationCalculation(lSourceUnit,
+      lQuantity, lUnit);
+    fRuntimeAmplitudeCalculation := RecorderPrepareVibrationCalculation(
+      lSourceUnit, rvqAmplitude, lSourceUnit);
+    fRuntimeCalculation.ManualBand := fManualBand;
+    fRuntimeCalculation.BandFromHz := fBandFromHz;
+    fRuntimeCalculation.BandToHz := fBandToHz;
+    fRuntimeAmplitudeCalculation.ManualBand := fManualBand;
+    fRuntimeAmplitudeCalculation.BandFromHz := fBandFromHz;
+    fRuntimeAmplitudeCalculation.BandToHz := fBandToHz;
+    fRuntimeFrequencyCalculation := RecorderPrepareVibrationCalculation(
+      lSourceUnit, rvqDominantFrequency, 'Hz');
+    fRuntimeFrequencyCalculation.ManualBand := fManualBand;
+    fRuntimeFrequencyCalculation.BandFromHz := fBandFromHz;
+    fRuntimeFrequencyCalculation.BandToHz := fBandToHz;
+    fRuntimeTagId := lTagId;
+    fRuntimeBandIndex := -1;
+    if ARegistry <> nil then
+      for I := 0 to ARegistry.FrequencyBands.BandCount - 1 do
+        if SameText(ARegistry.FrequencyBands.Bands[I].Name, fBandName) then
+        begin
+          fRuntimeBandIndex := I;
+          Break;
+        end;
+  finally
+    fRuntimeLock.Leave;
+  end;
+end;
+
+procedure TRecorderVibrationEstimateComponent.BeginRuntimeSession;
+begin
+  fRuntimeLock.Enter;
+  try
+    fRuntimeHasValue := False;
+    fRuntimeActive := True;
+    Inc(fRuntimeRevision);
+    fRuntimeError := '';
+  finally
+    fRuntimeLock.Leave;
+  end;
+end;
+
+procedure TRecorderVibrationEstimateComponent.EndRuntimeSession;
+begin
+  fRuntimeLock.Enter;
+  try
+    fRuntimeActive := False;
+  finally
+    fRuntimeLock.Leave;
+  end;
+end;
+
+function TRecorderVibrationEstimateComponent.TryGetRuntimeEstimate(
+  out AValue, AFrequencyHz: Double): Boolean;
+begin
+  fRuntimeLock.Enter;
+  try
+    Result := fRuntimeHasValue;
+    AValue := fRuntimeValue;
+    AFrequencyHz := fRuntimeFrequency;
+  finally
+    fRuntimeLock.Leave;
+  end;
+end;
+
+procedure TRecorderVibrationEstimateComponent.HandleSpectrumEvent(
+  ASender: TObject; const AEvent: TRecorderEvent);
+var
+  lFrame: TRecorderSpectrumFrame;
+  lQuantity: TRecorderVibrationQuantity;
+  lValue, lFrequency, lScore: Double;
+begin
+  if (AEvent.Kind <> rceSpectrumFrame) or
+    not (AEvent.Data is TRecorderSpectrumFrameEventData) then Exit;
+  fRuntimeLock.Enter;
+  try
+    if not fRuntimeActive or (fRuntimeTagId = 0) or
+      (AEvent.IntValue <> fRuntimeTagId) then Exit;
+    lFrame := TRecorderSpectrumFrameEventData(AEvent.Data).Frame;
+    if not fRuntimeCalculation.ManualBand and
+      (fRuntimeConfiguredBand <> '') and (fRuntimeBandIndex < 0) then Exit;
+    lQuantity := fRuntimeQuantity;
+    if not RecorderCalculatePreparedVibration(lFrame, fRuntimeCalculation,
+      fRuntimeBandIndex, lValue, fRuntimeError) then Exit;
+    if (lQuantity <> rvqDominantFrequency) and fRuntimeAmplitudeMode then
+      lValue := lValue * Sqrt(2);
+    if not RecorderCalculatePreparedVibration(lFrame, fRuntimeFrequencyCalculation,
+      fRuntimeBandIndex,
+      lFrequency, fRuntimeError) then Exit;
+    if IsNan(lValue) or IsInfinite(lValue) or IsNan(lFrequency) or
+      IsInfinite(lFrequency) then Exit;
+    lScore := lValue;
+    if lQuantity = rvqDominantFrequency then
+      if not RecorderCalculatePreparedVibration(lFrame,
+        fRuntimeAmplitudeCalculation, fRuntimeBandIndex, lScore,
+        fRuntimeError) then Exit;
+    if IsNan(lScore) or IsInfinite(lScore) then Exit;
+    if not fRuntimeHold or not fRuntimeHasValue or (lScore > fRuntimeScore) then
+    begin
+      fRuntimeValue := lValue;
+      fRuntimeFrequency := lFrequency;
+      fRuntimeHasValue := True;
+      fRuntimeScore := lScore;
+      Inc(fRuntimeRevision);
+    end;
+  finally
+    fRuntimeLock.Leave;
+  end;
 end;
 
 procedure TRecorderVibrationEstimateComponent.GetFontSnapshot(

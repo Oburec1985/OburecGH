@@ -231,6 +231,7 @@ type
     procedure SetEnabled(AValue: Boolean);
     function GetActivePage: TRecorderFormPage;
     function GetActivePagePanel: TPanel;
+    procedure ClearActivePageViews;
     procedure BeginOperation(AOperation: TFormEditorOperation; X, Y: Integer);
     procedure UpdateOperation(X, Y: Integer);
     procedure EndOperation;
@@ -862,6 +863,10 @@ begin
     lDstVibration.OutputUnit := lSrcVibration.OutputUnit;
     lDstVibration.DisplayFormat := lSrcVibration.DisplayFormat;
     lDstVibration.AmplitudeMode := lSrcVibration.AmplitudeMode;
+    lDstVibration.HoldMaximum := lSrcVibration.HoldMaximum;
+    lDstVibration.ManualBand := lSrcVibration.ManualBand;
+    lDstVibration.BandFromHz := lSrcVibration.BandFromHz;
+    lDstVibration.BandToHz := lSrcVibration.BandToHz;
   end
   else if (ASource is TRecorderButtonComponent) and
     (ADest is TRecorderButtonComponent) then
@@ -1574,6 +1579,25 @@ end;
 
 
 
+procedure TFormEditorController.ClearActivePageViews;
+var
+  lPanel: TPanel;
+begin
+  { Views borrow model pointers. Tear down native windows and their callbacks
+    while those models still exist, including the Undo replacement path. }
+  RestoreEditMouseHandlers;
+  lPanel := GetActivePagePanel;
+  if lPanel = nil then Exit;
+  lPanel.DisableAlign;
+  try
+    fSelectionFrame := nil;
+    while lPanel.ControlCount > 0 do
+      lPanel.Controls[0].Free;
+  finally
+    lPanel.EnableAlign;
+  end;
+end;
+
 procedure TFormEditorController.DeleteSelected;
 
 var
@@ -1593,8 +1617,7 @@ begin
 
 
   PushUndoState;
-
-
+  ClearActivePageViews;
   while fSelected.Count > 0 do
   begin
     lMaxPos := 0;
@@ -2535,6 +2558,7 @@ begin
 
 
   ClearSelection;
+  ClearActivePageViews;
   while lPage.ComponentCount > 0 do
     lPage.DeleteComponent(lPage.ComponentCount - 1);
 

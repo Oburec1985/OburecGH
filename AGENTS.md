@@ -9,8 +9,16 @@
 ## Workplace entry points (installed 2026-10-13)
 
 - External knowledge base (AGrav vault): `D:\works\AGrav` — start with
-  `README_AI.md`, then `00_Система\Оглавление.md`; the skill router is
+  `README_AI.md`, then the state page `00_Система\Состояние_работ.md` ("what was
+  last": fresh work, statuses, next steps, journal links), then
+  `00_Система\Оглавление.md`; the skill router is
   `00_Система\Скиллы_ИИ.md`; project registry is `20_Проекты\Цех_Проектов.md`.
+- Three-trace contract for every iteration (owner:
+  `project-iteration-log` skill): (1) an entry in the single project journal,
+  (2) a row in `00_Система\Состояние_работ.md`, (3) a MemoryDB fact tagged
+  `project:<name>` + `iteration` with `source_file` pointing at the journal.
+  Do not skip a trace; report the layer as unavailable if it is. Run
+  `D:\LLMWorkplace\scripts\check-context.ps1` to prove the chain is intact.
 - Skill catalog: 24 skills in `C:\Users\User\.agents\skills` (global) and
   `D:\works\OburecGH\.agents\skills` (this project). Read the matching `SKILL.md`
   before acting; `memorydb` covers the local semantic memory,

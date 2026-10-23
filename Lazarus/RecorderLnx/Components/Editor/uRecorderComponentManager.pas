@@ -25,6 +25,7 @@ type
     destructor Destroy; override;
     procedure PublishGeneratedTags(ARegistry: TRecorderTagRegistry);
     procedure BeginAcquisitionSession(ARegistry: TRecorderTagRegistry);
+    procedure EndAcquisitionSession;
     procedure DoStart;
     procedure DoStop;
     procedure DoUpdateData;
@@ -90,9 +91,31 @@ end;
 
 procedure TRecorderComponentManager.BeginAcquisitionSession(
   ARegistry: TRecorderTagRegistry);
+var
+  lFactory: TRecorderComponentFactoryBase;
+  I: Integer;
 begin
   TRecorderTrendView.BeginAcquisitionSession(ARegistry);
   if fDacFactory <> nil then fDacFactory.SetTagRegistry(ARegistry);
+  { Bind every estimate before Start, including components on hidden pages. }
+  lFactory := fFactory.FindFactory(TRecorderVibrationEstimateComponent.TypeId);
+  if lFactory <> nil then
+    for I := 0 to lFactory.ChildCount - 1 do
+    begin
+      TRecorderVibrationEstimateComponent(lFactory.Children[I]).ConfigureRuntime(ARegistry);
+      TRecorderVibrationEstimateComponent(lFactory.Children[I]).BeginRuntimeSession;
+    end;
+end;
+
+procedure TRecorderComponentManager.EndAcquisitionSession;
+var
+  lFactory: TRecorderComponentFactoryBase;
+  I: Integer;
+begin
+  lFactory := fFactory.FindFactory(TRecorderVibrationEstimateComponent.TypeId);
+  if lFactory <> nil then
+    for I := 0 to lFactory.ChildCount - 1 do
+      TRecorderVibrationEstimateComponent(lFactory.Children[I]).EndRuntimeSession;
 end;
 
 procedure TRecorderComponentManager.DoStart;

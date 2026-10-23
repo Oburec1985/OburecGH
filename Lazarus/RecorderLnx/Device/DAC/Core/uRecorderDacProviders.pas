@@ -11,6 +11,25 @@ uses
 type
   TRecorderDacWaveMode = (rdwmSine, rdwmAccurateSine, rdwmSweepSine);
 
+  { Finite sine bursts. Interval includes the silent tail; parameters are
+    immutable during playback, and frame counters persist across blocks. }
+  TRecorderDacPulseProvider = class(TInterfacedObject, IRecorderDacSampleProvider)
+  private
+    fFrequency, fAmplitude, fInterval: Double;
+    fPeriods, fCount: Integer;
+    fConfig: TRecorderDacConfig;
+    fPosition, fIntervalFrames, fTotalFrames: Int64;
+    fActiveSec: Double;
+  public
+    constructor Create(AFrequency, AAmplitude, AInterval: Double;
+      APeriods, ACount: Integer);
+    function Configure(const AConfig: TRecorderDacConfig;
+      out AResult: TRecorderDacResult): Boolean;
+    procedure Reset;
+    function FillBlock(ABuffer: PDouble; AFrameCapacity: Integer;
+      out AFrameCount: Integer; out AResult: TRecorderDacResult): Boolean;
+  end;
+
   TRecorderDacWaveProvider = class(TInterfacedObject,
     IRecorderDacSampleProvider)
   private
@@ -73,6 +92,77 @@ type
   end;
 
 implementation
+
+constructor TRecorderDacPulseProvider.Create(AFrequency, AAmplitude,
+  AInterval: Double; APeriods, ACount: Integer);
+begin
+  inherited Create;
+  fFrequency := AFrequency;
+  fAmplitude := AAmplitude;
+  fInterval := AInterval;
+  fPeriods := APeriods;
+  fCount := ACount;
+end;
+
+function TRecorderDacPulseProvider.Configure(const AConfig: TRecorderDacConfig;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := False;
+  if not RecorderDacValidateConfig(AConfig, AResult) then Exit;
+  AResult := RecorderDacFailed(rdeInvalidConfig, rdsgConfigure,
+    'Pulse requires F > 0, periods/count > 0, interval >= periods/F and F <= Fs/2');
+  if IsNan(fFrequency) or IsInfinite(fFrequency) or
+    IsNan(fInterval) or IsInfinite(fInterval) or
+    IsNan(fAmplitude) or IsInfinite(fAmplitude) then Exit;
+  if (fFrequency <= 0) or (fFrequency > AConfig.SampleRateHz / 2) or
+    (fPeriods <= 0) or (fCount <= 0) or (fAmplitude < 0) then Exit;
+  fActiveSec := fPeriods / fFrequency;
+  if (fInterval < fActiveSec) or
+    (fInterval * AConfig.SampleRateHz > High(Int64) / fCount / 2) then Exit;
+  fIntervalFrames := Round(fInterval * AConfig.SampleRateHz);
+  if fIntervalFrames < 1 then Exit;
+  fTotalFrames := fIntervalFrames * fCount;
+  fConfig := AConfig;
+  Reset;
+  AResult := RecorderDacOk;
+  Result := True;
+end;
+
+procedure TRecorderDacPulseProvider.Reset;
+begin
+  fPosition := 0;
+end;
+
+function TRecorderDacPulseProvider.FillBlock(ABuffer: PDouble;
+  AFrameCapacity: Integer; out AFrameCount: Integer;
+  out AResult: TRecorderDacResult): Boolean;
+var
+  I, J: Integer;
+  lTime, lValue: Double;
+begin
+  AFrameCount := 0;
+  if fPosition >= fTotalFrames then
+  begin
+    AResult := RecorderDacFailed(rdeCompleted, rdsgWrite, 'Pulse series completed');
+    Exit(False);
+  end;
+  AFrameCount := Integer(Min(Int64(AFrameCapacity), fTotalFrames - fPosition));
+  for I := 0 to AFrameCount - 1 do
+  begin
+    lTime := (fPosition mod fIntervalFrames) / fConfig.SampleRateHz;
+    if lTime < fActiveSec then
+      lValue := fAmplitude * Sin(2 * Pi * fFrequency * lTime)
+    else lValue := 0;
+    for J := 0 to fConfig.ChannelCount - 1 do
+    begin
+      ABuffer^ := lValue;
+      Inc(ABuffer);
+    end;
+    Inc(fPosition);
+  end;
+  AResult := RecorderDacOk;
+  Result := True;
+end;
 
 constructor TRecorderDacWaveProvider.Create(AMode: TRecorderDacWaveMode;
   AFrequencyHz, AAmplitude, ASweepStartHz, ASweepEndHz,

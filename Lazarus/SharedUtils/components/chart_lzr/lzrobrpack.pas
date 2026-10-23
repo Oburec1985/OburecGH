@@ -8,11 +8,12 @@ unit LzrObrPack;
 interface
 
 uses
-  uOglChart, uOglChartBaseObj, uOglChartDrawObj, uOglChartPage, uOglChartAxis, 
-  uOglChartTrend, uOglChartTextLabel, uOglChartTextLabelTests, uOglChartChart, 
-  uOglChartMng, uOglChartModel, uOglChartRenderer, uOglChartFontMng, 
-  uOglChartLog, uOglChartSerializer, uOglChartTypes, uOglChartColors, 
-  uOglChartFrameListener, uOglChartSelectListener, uOglChartPanZoomListener, 
+  uSharedColorCheckTable, uOglChart, uOglChartBaseObj, uOglChartDrawObj, 
+  uOglChartPage, uOglChartAxis, uOglChartTrend, uOglChartTextLabel, 
+  uOglChartTextLabelTests, uOglChartChart, uOglChartMng, uOglChartModel, 
+  uOglChartRenderer, uOglChartFontMng, uOglChartLog, uOglChartSerializer, 
+  uOglChartTypes, uOglChartColors, uOglChartFrameListener, 
+  uOglChartSelectListener, uOglChartPanZoomListener, 
   uOglChartPageGeometryListener, uOglChartVertexEditListener, 
   uOglChartLabelEditListener, LazarusPackageIntf;
 
@@ -20,6 +21,7 @@ implementation
 
 procedure Register;
 begin
+  RegisterUnit('uSharedColorCheckTable', @uSharedColorCheckTable.Register);
   RegisterUnit('uOglChart', @uOglChart.Register);
 end;
 

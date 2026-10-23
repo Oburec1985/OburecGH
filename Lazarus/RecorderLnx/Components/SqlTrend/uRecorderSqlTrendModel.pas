@@ -51,6 +51,8 @@ type
     fShowEvents: Boolean;
     fShowRecordingEvents: Boolean;
     fShowTagAlarmEvents: Boolean;
+    fShowTagRangeEvents: Boolean;
+    fShowOnlyUnresolvedEventPoints: Boolean;
     fTimeMode: TRecorderSqlTrendTimeMode;
     fToUtc: Double;
     function GetActiveDisplay: TRecorderSqlTrendDisplay;
@@ -79,6 +81,14 @@ type
       write fShowRecordingEvents;
     property ShowTagAlarmEvents: Boolean read fShowTagAlarmEvents
       write fShowTagAlarmEvents;
+    { Уставка (tag.range) вынесена отдельной галочкой: на многих объектах это
+      самый частый тип события и он забивает ось времени на трейдах. Записи
+      (mera.recording) прятать нельзя — они же являются точками тренда. }
+    property ShowTagRangeEvents: Boolean read fShowTagRangeEvents
+      write fShowTagRangeEvents;
+    property ShowOnlyUnresolvedEventPoints: Boolean
+      read fShowOnlyUnresolvedEventPoints
+      write fShowOnlyUnresolvedEventPoints;
     property DisplayCount: Integer read GetDisplayCount;
     property Displays[AIndex: Integer]: TRecorderSqlTrendDisplay read GetDisplay;
     property ActiveDisplayIndex: Integer read fActiveDisplayIndex
@@ -186,6 +196,8 @@ begin
   fShowEvents := True;
   fShowRecordingEvents := True;
   fShowTagAlarmEvents := True;
+  fShowTagRangeEvents := True;
+  fShowOnlyUnresolvedEventPoints := False;
   if AxisCount = 0 then
   begin
     lAxis := AddAxis;
@@ -269,6 +281,8 @@ begin
   fShowEvents := ASource.fShowEvents;
   fShowRecordingEvents := ASource.fShowRecordingEvents;
   fShowTagAlarmEvents := ASource.fShowTagAlarmEvents;
+  fShowTagRangeEvents := ASource.fShowTagRangeEvents;
+  fShowOnlyUnresolvedEventPoints := ASource.fShowOnlyUnresolvedEventPoints;
 end;
 
 constructor TRecorderSqlTrendFactory.Create;

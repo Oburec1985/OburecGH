@@ -17,6 +17,7 @@ type
     BandTolerancePercent:Double;
     PointLabel:string;
     HideAnchors:Boolean;
+    ShowIntensityValues:Boolean;
     EnvelopeXEnabled,EnvelopeYEnabled,EnvelopeZEnabled:Boolean;
     EnvelopeX,EnvelopeY,EnvelopeZ:Double;
     Enabled: Boolean;
@@ -31,6 +32,7 @@ type
     Visualization: TRecorderPointVisualization;
     Visible: Boolean;
     DrawSymbol:Boolean;
+    ShowValue:Boolean;
     PointLabel:string;
   end;
   TRecorderFrfIntensityAdapter = class
@@ -40,6 +42,11 @@ type
     fBindings: array of TRecorderFrfIntensityBinding;
     fMarkers: array of TRecorderIntensityMarker;
     fValues, fPhases: array of Double;
+    fNormalizationSampler: IRecorderFrfSampler;
+    fNormalizationVersion: QWord;
+    fNormalizationMin, fNormalizationMax, fNormalizationPeak: Double;
+    fNormalizationReady: Boolean;
+    procedure UpdateNormalization(const ASampler: IRecorderFrfSampler);
     procedure PublishLabels;
     function ResolvePosition(const ABinding: TRecorderFrfIntensityBinding;
       out APosition: T3dVector): Boolean;
@@ -64,7 +71,8 @@ begin
   begin
     L:=fScene.EnsureLabel(PtrUInt(Self),I);
     L.Text:=fMarkers[I].PointLabel;
-    L.Visible:=fBindings[I].Enabled and fMarkers[I].Visible and (L.Text<>'');
+    L.Visible:=fBindings[I].Enabled and fMarkers[I].Visible and
+      not fMarkers[I].ShowValue and (L.Text<>'');
     L.NodeId:=fBindings[I].TargetNodeId;
     N:=fScene.FindNode(L.NodeId);
     L.AtVertex:=(N<>nil) and (N.Mesh<>nil);
@@ -105,6 +113,8 @@ var lIndex: Integer;
 begin
   if fScene<>nil then fScene.RemoveLabels(PtrUInt(Self));
   fProvider:=AProvider;
+  fNormalizationReady:=False;
+  fNormalizationSampler:=nil;
   fScene:=AScene;
   SetLength(fBindings,Length(ABindings));
   SetLength(fMarkers,Length(ABindings));
@@ -120,6 +130,33 @@ begin
     fMarkers[lIndex].PointLabel:=fBindings[lIndex].PointLabel;
   end;
   PublishLabels;
+end;
+
+procedure TRecorderFrfIntensityAdapter.UpdateNormalization(
+  const ASampler: IRecorderFrfSampler);
+var lMin,lMax,lPeak: Double; I: Integer; lRange: IRecorderFrfRangeScale;
+begin
+  if not GetRecorderFrfDisplayRange(lMin,lMax) then
+  begin fNormalizationPeak:=0; Exit end;
+  if fNormalizationReady and (fNormalizationSampler=ASampler) and
+    (fNormalizationVersion=ASampler.Version) and
+    (fNormalizationMin=lMin) and (fNormalizationMax=lMax) then Exit;
+  fNormalizationPeak:=0;
+  if Supports(ASampler,IRecorderFrfRangeScale,lRange) then
+    for I:=0 to High(fBindings) do
+      if fBindings[I].Enabled and lRange.TryGetRangeMaximum(fBindings[I].CurveId,
+        lMin,lMax,fBindings[I].IntensitySource=risAmplitude,fBindings[I].BandRms,
+        fBindings[I].BandTolerancePercent,lPeak) then
+      begin
+        lPeak:=Abs(lPeak*fBindings[I].Gain);
+        if not IsNan(lPeak) and not IsInfinite(lPeak) then
+          fNormalizationPeak:=Max(fNormalizationPeak,lPeak);
+      end;
+  fNormalizationSampler:=ASampler;
+  fNormalizationVersion:=ASampler.Version;
+  fNormalizationMin:=lMin;
+  fNormalizationMax:=lMax;
+  fNormalizationReady:=True;
 end;
 
 function TRecorderFrfIntensityAdapter.ResolvePosition(
@@ -155,9 +192,10 @@ begin
   if (fProvider=nil) or (fScene=nil) then Exit;
   lSampler:=fProvider.AcquireSnapshot;
   if lSampler=nil then Exit;
+  UpdateNormalization(lSampler);
+  lMaximum:=0;
   Supports(lSampler,IRecorderAmplitudeSampler,lAmplitude);
   Supports(lSampler,IRecorderFrfBandSampler,lBand);
-  lMaximum:=0;
   for lIndex:=0 to High(fBindings) do
   begin
     fValues[lIndex]:=-1;
@@ -187,7 +225,14 @@ begin
     lMarker.Visible:=ResolvePosition(fBindings[lIndex],lMarker.Position);
     lMarker.DrawSymbol:=True;
     lMarker.PointLabel:=fBindings[lIndex].PointLabel;
+    if fBindings[lIndex].ShowIntensityValues and (fValues[lIndex]>=0) then
+    begin
+      lMarker.ShowValue:=True;
+      lMarker.PointLabel:=lMarker.PointLabel+' = '+FloatToStrF(fValues[lIndex],ffGeneral,5,0);
+    end;
     lSize:=0;
+    { Preset range reference stays fixed while the frequency cursor moves. }
+    if fNormalizationPeak>0 then lMaximum:=fNormalizationPeak;
     if (lMaximum>0) and lMarker.Visible and (fValues[lIndex]>=0) then
       lSize:=2*fBindings[lIndex].MarkerSizePixels*fValues[lIndex]/lMaximum;
     lPulse:=1;

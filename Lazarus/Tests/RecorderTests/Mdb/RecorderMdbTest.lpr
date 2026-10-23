@@ -4,15 +4,25 @@ program RecorderMdbTest;
 {$codepage UTF8}
 
 uses Classes, SysUtils, DateUtils, uRecorderXmlDatabase, uRecorderMdbTypes,
-  uRecorderMdbRepository;
+  uRecorderMdbRepository, uRecorderMdbManager;
 
 type
+  TContextObserver = class
+    Count: Integer;
+    procedure Changed(Sender: TObject);
+  end;
+
   { Proof that the core is not tied to Object/Test/Registration. }
   TBladeLikeDatabase = class(TRecorderXmlDatabase)
   protected
     function CreateNode(const AKind: string): TRecorderXmlDbNode; override;
     function AcceptParent(const AKind, AParentKind: string): Boolean; override;
   end;
+
+procedure TContextObserver.Changed(Sender: TObject);
+begin
+  Inc(Count);
+end;
 
 function TBladeLikeDatabase.CreateNode(const AKind: string): TRecorderXmlDbNode;
 begin
@@ -54,6 +64,11 @@ begin
     lRegistrationId := lRepository.CreateRegistration(lObjectId, lTestId,
       'Reg_0001', 'host-a\measure-001', LocalTimeToUniversal(Now));
     Check(lRegistrationId <> '', 'registration id');
+    Check(lRepository.FindNode(lObjectId).RelativePath = 'Изделие 01',
+      'object directory matches entered name');
+    Check(lRepository.FindNode(lRegistrationId).RelativePath =
+      'Изделие 01' + PathDelim + 'Испытание 01' + PathDelim + 'Reg_0001',
+      'registration directory preserves all entered names');
   finally lRepository.Free; end;
 
   lRepository := TRecorderMdbRepository.Create(lRoot);
@@ -135,7 +150,76 @@ begin
   finally lRepository.Free; lTypes.Free; lFields.Free; end;
 end;
 
+procedure TestContextNotifications;
+var
+  lManager: TRecorderMdbManager;
+  lObserver: TContextObserver;
+  lPath, lObject, lTest: string;
+  lObjects: TMdbObjectInfos;
+  lTests: TMdbTestInfos;
+  lRevision: QWord;
 begin
-  try Run; TestTypeCatalog; WriteLn('RESULT recorder-mdb passed');
+  lPath := IncludeTrailingPathDelimiter(GetTempDir(False)) +
+    'recorder-mdb-context-' + IntToStr(GetProcessID);
+  lManager := TRecorderMdbManager.Create(lPath, '', '');
+  lObserver := TContextObserver.Create;
+  try
+    lObject := lManager.Repository.CreateObject('Context', '', '');
+    lTest := lManager.Repository.CreateTest(lObject, 'Test', '', Now);
+    lManager.Repository.ListObjects(lObjects);
+    lManager.Repository.ListTests(lObject, lTests);
+    SubscribeRecorderMdbContextChanged(@lObserver.Changed);
+    SubscribeRecorderMdbContextChanged(@lObserver.Changed);
+    lRevision := RecorderMdbContextRevision;
+    lManager.SelectContext(lObjects[0], lTests[0]);
+    Check(lObserver.Count = 1, 'context notification deduplicates subscribers');
+    Check(RecorderMdbContextRevision > lRevision, 'context revision advances');
+    Check(Pos('Context', RecorderMdbActiveObjectDirectory) > 0,
+      'committed context visible before notification processing');
+    lManager.ClearContext;
+    Check(lObserver.Count = 2, 'clear context notification');
+    lManager.SelectContext(lObjects[0], lTests[0]);
+    lManager.ChangeBasePath(lPath + '-new');
+    Check((lObserver.Count = 4) and
+      (RecorderMdbActiveObjectDirectory = ''), 'base path invalidates context');
+    UnsubscribeRecorderMdbContextChanged(@lObserver.Changed);
+    NotifyRecorderMdbContextChanged;
+    Check(lObserver.Count = 4, 'unsubscribed owner no longer called');
+  finally
+    UnsubscribeRecorderMdbContextChanged(@lObserver.Changed);
+    lObserver.Free;
+    lManager.Free;
+  end;
+end;
+
+procedure CheckLegacyBase;
+var lDb: TRecorderMdbRepository; lObjects: TMdbObjectInfos;
+  lTests: TMdbTestInfos; lRegs: TMdbMeasurementInfos; I: Integer; lFound: Boolean;
+begin
+  if ParamCount = 0 then Exit;
+  lDb := TRecorderMdbRepository.Create(ParamStr(1));
+  try
+    lDb.Open;
+    lDb.ListObjects(lObjects);
+    lFound := False;
+    for I := 0 to High(lObjects) do
+      if lObjects[I].Name = 'Object_001' then
+      begin
+        Check(lDb.FindNode(lObjects[I].Id).RelativePath = 'Object_001', 'legacy object path');
+        lDb.ListTests(lObjects[I].Id, lTests);
+        Check((Length(lTests) = 1) and (lTests[0].Name = 'Test_001'), 'legacy test');
+        lDb.ListMeasurements(lObjects[I].Id, lTests[0].Id, lRegs);
+        Check((Length(lRegs) = 1) and (lRegs[0].Reason = 'Reg_001'), 'legacy registration');
+        lFound := True;
+      end;
+    Check(lFound, 'legacy object visible');
+  finally
+    lDb.Free;
+  end;
+end;
+
+begin
+  try Run; TestTypeCatalog; TestContextNotifications; CheckLegacyBase;
+    WriteLn('RESULT recorder-mdb passed');
   except on E: Exception do begin WriteLn(StdErr, E.ClassName, ': ', E.Message); Halt(1); end; end;
 end.

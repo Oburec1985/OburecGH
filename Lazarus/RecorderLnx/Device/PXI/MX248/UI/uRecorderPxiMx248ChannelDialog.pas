@@ -1,7 +1,7 @@
 unit uRecorderPxiMx248ChannelDialog;
 
 {
-  Назначение: редактор одного канала MX-248 по структуре оригинального
+  Назначение: редактор одного или нескольких каналов MX-248 по структуре оригинального
   Recorder. Работает только с черновиком: прибор программирует общий Apply
   родительского диалога. Enum-поля выбираются из списков, свободный ввод
   аппаратных индексов запрещён.
@@ -16,6 +16,11 @@ uses
   Classes, Forms, Controls, StdCtrls, ExtCtrls;
 
 type
+  TMx248ChannelField = (mcfAmplifier, mcfInputMode, mcfRange, mcfLpf,
+    mcfIcp, mcfCalibration, mcfFloating);
+  { Empty fields mean mixed values on input and keep existing values on output. }
+  TMx248ChannelValues = array[TMx248ChannelField] of string;
+
   TPxiMx248ChannelDialog = class(TForm)
     btnCancel: TButton;
     btnOk: TButton;
@@ -32,7 +37,13 @@ type
     lblLpf: TLabel;
     pnButtons: TPanel;
     procedure FormCreate(Sender: TObject);
+  public
+    procedure LoadValues(const AValues: TMx248ChannelValues);
+    function ReadValues: TMx248ChannelValues;
   end;
+
+function EditPxiMx248Channels(AOwner: TComponent; ACount: Integer;
+  var AValues: TMx248ChannelValues): Boolean;
 
 function EditPxiMx248Channel(AOwner: TComponent; AChannel: Integer;
   var AAmplifier, AInputMode, ARangeIndex, ALpfIndex,
@@ -62,42 +73,125 @@ begin
   cbIeee.Items.Add('10 мА');
 end;
 
+procedure TPxiMx248ChannelDialog.LoadValues(const AValues: TMx248ChannelValues);
+
+  procedure SetCheck(AControl: TCheckBox; const AValue: string);
+  begin
+    AControl.AllowGrayed := AValue = '';
+    AControl.ShowHint := AControl.AllowGrayed;
+    AControl.Hint := 'Серый флажок — сохранить значение каждого канала.';
+    if AValue = '' then AControl.State := cbGrayed
+    else AControl.Checked := SameText(AValue, 'True');
+  end;
+
+  procedure SetChoice(AControl: TComboBox; AIndex: Integer;
+    const AValue: string);
+  begin
+    if (AControl.Items.Count > 0) and
+      (AControl.Items[AControl.Items.Count - 1] = 'Разные значения') then
+      AControl.Items.Delete(AControl.Items.Count - 1);
+    if AValue = '' then AIndex := AControl.Items.Add('Разные значения');
+    AControl.ItemIndex := AIndex;
+  end;
+
+var
+  lIndex: Integer;
+begin
+  SetCheck(chkAmplifier, AValues[mcfAmplifier]);
+  SetCheck(chkCalibration, AValues[mcfCalibration]);
+  SetCheck(chkFloating, AValues[mcfFloating]);
+  lIndex := Ord(SameText(AValues[mcfInputMode], 'single-ended'));
+  SetChoice(cbInputMode, lIndex, AValues[mcfInputMode]);
+  SetChoice(cbGain, StrToIntDef(AValues[mcfRange], 0), AValues[mcfRange]);
+  SetChoice(cbLpf, StrToIntDef(AValues[mcfLpf], 0), AValues[mcfLpf]);
+  lIndex := 0;
+  if AValues[mcfIcp] = '4' then lIndex := 1;
+  if AValues[mcfIcp] = '10' then lIndex := 2;
+  SetChoice(cbIeee, lIndex, AValues[mcfIcp]);
+end;
+
+function TPxiMx248ChannelDialog.ReadValues: TMx248ChannelValues;
+
+  function CheckValue(AControl: TCheckBox): string;
+  begin
+    if AControl.State = cbGrayed then Exit('');
+    Result := BoolToStr(AControl.Checked, True);
+  end;
+
+  function ChoiceIndex(AControl: TComboBox): string;
+  begin
+    if (AControl.ItemIndex < 0) or (AControl.Text = 'Разные значения') then
+      Exit('');
+    Result := IntToStr(AControl.ItemIndex);
+  end;
+
+begin
+  Result[mcfAmplifier] := CheckValue(chkAmplifier);
+  Result[mcfCalibration] := CheckValue(chkCalibration);
+  Result[mcfFloating] := CheckValue(chkFloating);
+  Result[mcfRange] := ChoiceIndex(cbGain);
+  Result[mcfLpf] := ChoiceIndex(cbLpf);
+  Result[mcfInputMode] := ChoiceIndex(cbInputMode);
+  if Result[mcfInputMode] = '0' then Result[mcfInputMode] := 'differential'
+  else if Result[mcfInputMode] = '1' then Result[mcfInputMode] := 'single-ended';
+  Result[mcfIcp] := ChoiceIndex(cbIeee);
+  case Result[mcfIcp] of
+    '0': Result[mcfIcp] := 'off';
+    '1': Result[mcfIcp] := '4';
+    '2': Result[mcfIcp] := '10';
+  end;
+end;
+
+function EditPxiMx248Channels(AOwner: TComponent; ACount: Integer;
+  var AValues: TMx248ChannelValues): Boolean;
+var
+  lDialog: TPxiMx248ChannelDialog;
+  lValues: TMx248ChannelValues;
+  lField: TMx248ChannelField;
+begin
+  lDialog := TPxiMx248ChannelDialog.Create(AOwner);
+  try
+    lDialog.Caption := Format('MX-248 — каналов: %d', [ACount]);
+    lDialog.LoadValues(AValues);
+    Result := lDialog.ShowModal = mrOk;
+    if not Result then Exit;
+    lValues := lDialog.ReadValues;
+    for lField := Low(lField) to High(lField) do
+      if lValues[lField] = AValues[lField] then lValues[lField] := '';
+    AValues := lValues;
+  finally
+    lDialog.Free;
+  end;
+end;
+
 function EditPxiMx248Channel(AOwner: TComponent; AChannel: Integer;
   var AAmplifier, AInputMode, ARangeIndex, ALpfIndex,
   AIeeeCurrent, ACalibrationEnabled, AInputFloating: string): Boolean;
 var
   lDialog: TPxiMx248ChannelDialog;
+  lValues: TMx248ChannelValues;
 begin
+  lValues[mcfAmplifier] := AAmplifier;
+  lValues[mcfInputMode] := AInputMode;
+  lValues[mcfRange] := ARangeIndex;
+  lValues[mcfLpf] := ALpfIndex;
+  lValues[mcfIcp] := AIeeeCurrent;
+  lValues[mcfCalibration] := ACalibrationEnabled;
+  lValues[mcfFloating] := AInputFloating;
   lDialog := TPxiMx248ChannelDialog.Create(AOwner);
   try
     lDialog.Caption := Format('MX-248 — канал %d', [AChannel]);
-    lDialog.chkAmplifier.Checked := SameText(AAmplifier, 'True');
-    lDialog.chkCalibration.Checked := SameText(ACalibrationEnabled, 'True');
-    lDialog.chkFloating.Checked := SameText(AInputFloating, 'True');
-    if SameText(AInputMode, 'single-ended') then
-      lDialog.cbInputMode.ItemIndex := 1
-    else
-      lDialog.cbInputMode.ItemIndex := 0;
-    lDialog.cbGain.ItemIndex := StrToIntDef(ARangeIndex, 0);
-    lDialog.cbLpf.ItemIndex := StrToIntDef(ALpfIndex, 0);
-    if AIeeeCurrent = '10' then lDialog.cbIeee.ItemIndex := 2
-    else if AIeeeCurrent = '4' then lDialog.cbIeee.ItemIndex := 1
-    else lDialog.cbIeee.ItemIndex := 0;
+    lDialog.LoadValues(lValues);
     Result := lDialog.ShowModal = mrOk;
     if not Result then Exit;
-    AAmplifier := BoolToStr(lDialog.chkAmplifier.Checked, True);
-    ACalibrationEnabled := BoolToStr(lDialog.chkCalibration.Checked, True);
-    AInputFloating := BoolToStr(lDialog.chkFloating.Checked, True);
-    if lDialog.cbInputMode.ItemIndex = 1 then AInputMode := 'single-ended'
-    else AInputMode := 'differential';
-    ARangeIndex := IntToStr(lDialog.cbGain.ItemIndex);
-    ALpfIndex := IntToStr(lDialog.cbLpf.ItemIndex);
-    case lDialog.cbIeee.ItemIndex of
-      1: AIeeeCurrent := '4';
-      2: AIeeeCurrent := '10';
-    else
-      AIeeeCurrent := 'off';
-    end;
+    lValues := lDialog.ReadValues;
+    AAmplifier := lValues[mcfAmplifier];
+    AInputMode := lValues[mcfInputMode];
+    ARangeIndex := lValues[mcfRange];
+    ALpfIndex := lValues[mcfLpf];
+    AIeeeCurrent := lValues[mcfIcp];
+    ACalibrationEnabled := lValues[mcfCalibration];
+    AInputFloating := lValues[mcfFloating];
   finally
     lDialog.Free;
   end;

@@ -160,7 +160,7 @@ object RecorderOpcUaEditorForm: TRecorderOpcUaEditorForm
       Top = 352
       Width = 130
       Anchors = [akLeft, akBottom]
-      Caption = 'Найти теги'
+      Caption = 'Обновить дерево'
       OnClick = BrowseClick
       TabOrder = 8
     end
@@ -346,9 +346,11 @@ object RecorderOpcUaEditorForm: TRecorderOpcUaEditorForm
           Align = alClient
           ColCount = 2
           FixedCols = 0
-          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goThumbTracking]
-          RowCount = 14
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goThumbTracking]
+          RowCount = 15
           TabOrder = 0
+          OnEditingDone = PropertiesGridEditingDone
+          OnSelectCell = PropertiesGridSelectCell
         end
       end
       object fUsedTab: TTabSheet
@@ -380,32 +382,143 @@ object RecorderOpcUaEditorForm: TRecorderOpcUaEditorForm
           TabOrder = 0
           OnChange = UsedSearchChange
         end
-        object fUsedTree: TTreeView
+        object fUsedContentPanel: TPanel
           Left = 0
           Height = 255
           Top = 58
           Width = 466
           Anchors = [akTop, akLeft, akRight, akBottom]
-          HideSelection = False
-          Images = fNodeImages
-          MultiSelect = True
-          MultiSelectStyle = [msControlSelect, msShiftSelect, msVisibleOnly]
-          ReadOnly = True
+          BevelOuter = bvNone
+          ClientHeight = 255
+          ClientWidth = 466
           TabOrder = 1
-          OnDragDrop = UsedTreeDragDrop
-          OnDragOver = UsedTreeDragOver
-          OnKeyDown = UsedTreeKeyDown
-          OnMouseDown = UsedTreeMouseDown
-          OnMouseMove = UsedTreeMouseMove
-          OnMouseUp = UsedTreeMouseUp
-          Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+          object fUsedTree: TTreeView
+            Left = 0
+            Height = 313
+            Top = 0
+            Width = 266
+            Align = alLeft
+            HideSelection = False
+            Images = fNodeImages
+            MultiSelect = True
+            MultiSelectStyle = [msControlSelect, msShiftSelect, msVisibleOnly]
+            ReadOnly = True
+            TabOrder = 0
+            OnDragDrop = UsedTreeDragDrop
+            OnDragOver = UsedTreeDragOver
+            OnKeyDown = UsedTreeKeyDown
+            OnMouseDown = UsedTreeMouseDown
+            OnMouseMove = UsedTreeMouseMove
+            OnMouseUp = UsedTreeMouseUp
+            OnSelectionChanged = UsedTreeSelectionChanged
+            Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+          end
+          object fUsedTreePropertiesSplitter: TSplitter
+            Cursor = crHSplit
+            Left = 266
+            Height = 313
+            Top = 0
+            Width = 6
+            Align = alLeft
+            AutoSnap = False
+            MinSize = 120
+            ResizeAnchor = akRight
+          end
+          object fUsedPropertiesHost: TPanel
+            Left = 272
+            Height = 313
+            Top = 0
+            Width = 194
+            Align = alClient
+            BevelOuter = bvNone
+            ClientHeight = 313
+            ClientWidth = 194
+            TabOrder = 1
+            object lblNameEdit: TLabel
+              Left = 8
+              Height = 19
+              Top = 8
+              Width = 180
+              Caption = 'Редактирование имени тега'
+              ParentColor = False
+            end
+            object fRemoveNameSubstring: TEdit
+              Left = 5
+              Height = 25
+              Top = 35
+              Width = 183
+              Anchors = [akTop, akLeft, akRight]
+              Hint = 'Общая часть имён выбранных тегов; *** отмечает найденное совпадение'
+              ParentShowHint = False
+              ShowHint = True
+              TabOrder = 0
+            end
+            object fRemoveNameSubstringButton: TButton
+              Left = 118
+              Height = 25
+              Top = 35
+              Width = 70
+              Anchors = [akTop, akRight]
+              Caption = 'Удалить'
+              OnClick = RemoveNameSubstringClick
+              TabOrder = 1
+            end
+            object fAddNamePrefixButton: TButton
+              Left = 118
+              Height = 25
+              Top = 64
+              Width = 70
+              Anchors = [akTop, akRight]
+              Caption = 'Заменить'
+              OnClick = AddNamePrefixClick
+              TabOrder = 3
+            end
+            object fAddConnectionAddressButton: TButton
+              Left = 5
+              Height = 25
+              Top = 95
+              Width = 183
+              Anchors = [akTop, akLeft, akRight]
+              Caption = 'Добавить адрес'
+              Hint = 'Добавить NodeId каждого выбранного OPC UA тега в его имя'
+              ParentShowHint = False
+              ShowHint = True
+              OnClick = AddConnectionAddressClick
+              TabOrder = 4
+            end
+            object fUsedPropertiesGridSplitter: TSplitter
+              Cursor = crVSplit
+              Left = 0
+              Height = 6
+              Top = 150
+              Width = 194
+              Align = alBottom
+              AutoSnap = False
+              MinSize = 70
+              ResizeAnchor = akBottom
+            end
+            object fUsedPropertiesGrid: TStringGrid
+              Left = 0
+              Height = 157
+              Top = 156
+              Width = 194
+              Align = alBottom
+              ColCount = 2
+              FixedCols = 0
+              Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goThumbTracking]
+              RowCount = 14
+              TabOrder = 5
+              OnEditingDone = UsedPropertiesGridEditingDone
+              OnSelectCell = UsedPropertiesGridSelectCell
+            end
+          end
         end
         object fValueGrid: TStringGrid
           Left = 0
           Height = 1
           Top = 0
           Width = 1
-          ColCount = 11
+          ColCount = 12
           FixedCols = 0
           RowCount = 1
           Visible = False

@@ -587,6 +587,18 @@ destructor TRecorderOglOscillogram.Destroy;
 var
   I: Integer;
 begin
+  { The chart can render while sibling HWNDs are being removed. Stop its
+    callbacks before labels, model references and calculation metadata die. }
+  Destroying;
+  if fChart <> nil then
+  begin
+    fChart.OnAfterRender := nil;
+    fChart.OnCursorChanged := nil;
+    fChart.OnMouseDown := nil;
+    fChart.OnMouseMove := nil;
+    fChart.OnMouseUp := nil;
+    FreeAndNil(fChart);
+  end;
   fHasDataSignature := False;
   for I := fExtraLines.Count - 1 downto 0 do
     TObject(fExtraLines[I]).Free;
@@ -1903,6 +1915,7 @@ procedure TRecorderOglOscillogram.UpdateLegendLayout;
 var
   lDesiredHeight, lAvailableHeight: Integer;
 begin
+  if csDestroying in ComponentState then Exit;
   if (fLegendPanel = nil) or (fLegendGrid = nil) then
     Exit;
   lDesiredHeight := fLegendGrid.RowCount * fLegendGrid.DefaultRowHeight + 2;
@@ -1945,6 +1958,7 @@ procedure TRecorderOglOscillogram.LegendPanelResize(Sender: TObject);
 var
   lWidth, lNameWidth, lNumericWidth, lTotalWidth, I: Integer;
 begin
+  if csDestroying in ComponentState then Exit;
   if (fLegendGrid = nil) or (fLegendGrid.ColCount < 7) or
     (fLegendGrid.ClientWidth <= 0) then
     Exit;
@@ -2042,6 +2056,7 @@ end;
 
 procedure TRecorderOglOscillogram.Resize;
 begin
+  if csDestroying in ComponentState then Exit;
   inherited Resize;
   if not fLegendSplitterDragging then
     UpdateLegendLayout;

@@ -94,7 +94,12 @@ begin
     if RecorderOpcUaNodeIsMessage(lNode) then Continue;
     lName := lNode.TagName;
     if lName = '' then lName := lNode.NodeId;
-    fNodeTags[I] := ARegistry.FindByName(lName);
+    if lNode.RecorderTagId <> 0 then
+      fNodeTags[I] := ARegistry.FindById(lNode.RecorderTagId)
+    else
+      fNodeTags[I] := nil;
+    if fNodeTags[I] = nil then
+      fNodeTags[I] := ARegistry.FindByName(lName);
     if OpcDevice.Config.Mode = oumServer then
     begin
       if fNodeTags[I] = nil then
@@ -104,6 +109,8 @@ begin
     end;
     if fNodeTags[I] = nil then
       fNodeTags[I] := ARegistry.CreateTag(lName, 4096);
+    lNode.RecorderTagId := fNodeTags[I].Id;
+    lNode.TagName := fNodeTags[I].Name;
     fNodeTags[I].SourceId := SourceId;
     fNodeTags[I].Address := lNode.NodeId;
     fNodeTags[I].ModuleType := CRecorderOpcUaModuleType;

@@ -199,8 +199,6 @@ object EditFrfFrm: TEditFrfFrm
       Align = alTop
       Caption = 'SPMGB'
       TabOrder = 1
-      ExplicitLeft = 2
-      ExplicitTop = 125
       object FFTBlockSizeLabel: TLabel
         Left = 8
         Top = 22

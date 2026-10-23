@@ -1,6 +1,7 @@
 unit uRcFrfPeaks;
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
 
 interface
 
@@ -15,7 +16,9 @@ type
   TRcPeaks = array of TRcPeak;
   TRcDoubles = array of Double;
 
-{ Finds only completed above-threshold hills. The caller owns the result array. }
+{ Ищет завершённые пики выше порога. AX — частоты, AY — значения кривой той же
+  длины; AMinFrequency/AMaxFrequency ограничивают AX, когда max больше min.
+  Найденные пики с именем ACurve дописываются в массив APeaks. }
 procedure FindRcPeaks(const AX, AY: TRcDoubles; AThreshold: Double;
   const ACurve: string; var APeaks: TRcPeaks;
   AMinFrequency: Double = 0; AMaxFrequency: Double = 0);
@@ -24,6 +27,8 @@ implementation
 
 uses Math;
 
+{ Считает декремент пика по ширине кривой на половине его амплитуды;
+  AX и AY — частоты и значения, APeak — индекс вершины. }
 function HalfWidth(const AX, AY: TRcDoubles; APeak: Integer): Double;
 var
   lLeft, lRight: Integer;
@@ -46,6 +51,8 @@ begin
   Result := (lRx - lLx) / (2 * AX[APeak]);
 end;
 
+{ Ищет завершённые пики выше AThreshold на частотной сетке AX и дописывает
+  результат в APeaks; AY содержит значения кривой ACurve. }
 procedure FindRcPeaks(const AX, AY: TRcDoubles; AThreshold: Double;
   const ACurve: string; var APeaks: TRcPeaks;
   AMinFrequency: Double; AMaxFrequency: Double);
@@ -86,7 +93,8 @@ begin
     end;
     if lValue > AY[lTop] then lTop := lI;
     if lValue > AThreshold then Continue;
-    { Both crossings are present; reject noise within one percent of the line. }
+    { Требуются оба пересечения порога и высота более чем на один процент выше
+      линии; это отсекает мелкие колебания вокруг порога. }
     if AY[lTop] > AThreshold * 1.01 then
     begin
       if lCount >= lCapacity then

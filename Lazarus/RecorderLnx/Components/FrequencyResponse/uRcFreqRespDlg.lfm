@@ -1,84 +1,101 @@
 object RcFreqRespDlg: TRcFreqRespDlg
-  Left = 220
+  Left = 120
   Height = 650
-  Top = 120
-  Width = 980
+  Top = 100
+  Width = 1160
   BorderStyle = bsSizeable
   Caption = 'Настройка АФЧХ'
   ClientHeight = 650
-  ClientWidth = 980
+  ClientWidth = 1160
   Constraints.MinHeight = 600
-  Constraints.MinWidth = 860
+  Constraints.MinWidth = 1080
   Position = poOwnerFormCenter
   LCLVersion = '2.2.6.0'
+  object pnlBottom: TPanel
+    Left = 0 Height = 45 Top = 605 Width = 1160 Align = alBottom Caption = '' TabOrder = 3
+    object fLegend: TCheckBox Left = 12 Height = 23 Top = 11 Width = 120 Caption = 'Легенда' TabOrder = 0 end
+    object btnOk: TButton Left = 970 Height = 30 Top = 7 Width = 80 Anchors = [akTop, akRight] Caption = 'OK' Default = True TabOrder = 1 OnClick = OkClick end
+    object btnCancel: TButton Left = 1065 Height = 30 Top = 7 Width = 80 Anchors = [akTop, akRight] Cancel = True Caption = 'Отмена' ModalResult = 2 TabOrder = 2 end
+  end
   object pnlLeft: TPanel
-    Left = 0 Height = 650 Top = 0 Width = 310 Align = alLeft Caption = '' TabOrder = 0
+    Left = 0 Height = 605 Top = 0 Width = 235 Align = alLeft Caption = '' TabOrder = 0
+    Constraints.MinWidth = 170
     object fTree: TTreeView
-      Left = 1 Height = 587 Top = 1 Width = 308 Align = alClient ReadOnly = True
-      TabOrder = 0 OnChange = TreeChange
+      Left = 1 Height = 541 Top = 1 Width = 233 Align = alClient ReadOnly = True
+      TabOrder = 0 OnChange = TreeChange OnDragOver = TreeDragOver OnDragDrop = TreeDragDrop
     end
     object btnDel: TButton
-      Left = 1 Height = 30 Top = 588 Width = 308 Align = alBottom
+      Left = 1 Height = 31 Top = 542 Width = 233 Align = alBottom
       Caption = 'Удалить выбранное' TabOrder = 1 OnClick = DeleteClick
     end
     object btnAddAxis: TButton
-      Left = 1 Height = 31 Top = 618 Width = 308 Align = alBottom
-      Caption = 'Добавить ось' TabOrder = 2 OnClick = AddAxisClick
+      Left = 1 Height = 31 Top = 573 Width = 233 Align = alBottom
+      Caption = 'Добавить узел' TabOrder = 2 OnClick = AddAxisClick
     end
   end
+  object splitTree: TSplitter Left = 235 Height = 605 Top = 0 Width = 5 Align = alLeft end
+  object pnlAvail: TPanel
+    Left = 850 Height = 605 Top = 0 Width = 310 Align = alRight Caption = '' TabOrder = 2
+    Constraints.MinWidth = 250
+    object fSearch: TEdit
+      Left = 1 Height = 28 Top = 1 Width = 308 Align = alTop
+      TextHint = 'Поиск каналов и тегов: имя, адрес, описание'
+      TabOrder = 0 OnChange = SearchChange
+    end
+    object fAvailable: TListView
+      Left = 1 Height = 543 Top = 29 Width = 308 Align = alClient
+      Columns = <
+        item Caption = 'Канал' Width = 175 end
+        item Caption = 'Частота опроса, Гц' Width = 125 end>
+      DragMode = dmAutomatic HideSelection = False MultiSelect = True
+      ReadOnly = True RowSelect = True ViewStyle = vsReport TabOrder = 1
+    end
+    object btnAddLines: TButton
+      Left = 1 Height = 32 Top = 572 Width = 308 Align = alBottom
+      Caption = '← Добавить в выбранный узел' TabOrder = 2 OnClick = AddLinesClick
+    end
+  end
+  object splitAvailable: TSplitter Left = 845 Height = 605 Top = 0 Width = 5 Align = alRight end
   object pnlMain: TPanel
-    Left = 310 Height = 650 Top = 0 Width = 670 Align = alClient Caption = '' TabOrder = 1
+    Left = 240 Height = 605 Top = 0 Width = 605 Align = alClient Caption = '' TabOrder = 1
     object fProps: TPanel
-      Left = 1 Height = 370 Top = 1 Width = 668 Align = alTop Caption = '' TabOrder = 0
+      Left = 1 Height = 497 Top = 1 Width = 603 Align = alClient Caption = '' TabOrder = 0
       object lblName: TLabel Left = 12 Height = 15 Top = 15 Width = 31 Caption = 'Имя:' end
-      object fName: TEdit Left = 180 Height = 27 Top = 10 Width = 476 Anchors = [akTop, akLeft, akRight] TabOrder = 0 end
-      object lblKind: TLabel Left = 12 Height = 15 Top = 47 Width = 67 Caption = 'Тип линии:' end
-      object fKind: TComboBox Left = 180 Height = 27 Top = 42 Width = 476 Anchors = [akTop, akLeft, akRight] Style = csDropDownList TabOrder = 1 end
-      object lblValue: TLabel Left = 12 Height = 15 Top = 79 Width = 92 Caption = 'Тег результата:' end
-      object fValueTag: TComboBox Left = 180 Height = 27 Top = 74 Width = 476 Anchors = [akTop, akLeft, akRight] Style = csDropDownList TabOrder = 2 end
-      object lblFreq: TLabel Left = 12 Height = 15 Top = 111 Width = 76 Caption = 'Тег частоты:' end
-      object fFreqTag: TComboBox Left = 180 Height = 27 Top = 106 Width = 476 Anchors = [akTop, akLeft, akRight] Style = csDropDownList TabOrder = 3 end
-      object lblMinY: TLabel Left = 12 Height = 15 Top = 143 Width = 54 Caption = 'Минимум:' end
-      object fMinY: TEdit Left = 180 Height = 27 Top = 138 Width = 476 Anchors = [akTop, akLeft, akRight] TabOrder = 4 end
-      object lblMaxY: TLabel Left = 12 Height = 15 Top = 175 Width = 58 Caption = 'Максимум:' end
-      object fMaxY: TEdit Left = 180 Height = 27 Top = 170 Width = 476 Anchors = [akTop, akLeft, akRight] TabOrder = 5 end
-      object lblBuf: TLabel Left = 12 Height = 15 Top = 207 Width = 92 Caption = 'Размер буфера:' end
-      object fBufSize: TEdit Left = 180 Height = 27 Top = 202 Width = 476 Anchors = [akTop, akLeft, akRight] TabOrder = 6 end
-      object lblStep: TLabel Left = 12 Height = 15 Top = 239 Width = 72 Caption = 'Шаг dX, Гц:' end
-      object fStep: TEdit Left = 180 Height = 27 Top = 234 Width = 476 Anchors = [akTop, akLeft, akRight] TabOrder = 7 end
-      object lblMerge: TLabel Left = 12 Height = 15 Top = 271 Width = 113 Caption = 'Совпавшие точки:' end
-      object fMerge: TComboBox Left = 180 Height = 27 Top = 266 Width = 476 Anchors = [akTop, akLeft, akRight] Style = csDropDownList TabOrder = 8 end
-      object fUniform: TCheckBox Left = 180 Height = 23 Top = 298 Width = 140 Caption = 'Равномерный X' TabOrder = 9 end
-      object fDrawLine: TCheckBox Left = 325 Height = 23 Top = 298 Width = 75 Caption = 'Линия' TabOrder = 10 end
-      object fDrawPoints: TCheckBox Left = 400 Height = 23 Top = 298 Width = 75 Caption = 'Точки' TabOrder = 11 end
-      object lblStyle: TLabel Left = 12 Height = 15 Top = 335 Width = 105 Caption = 'Цвет / толщина:' end
-      object fColor: TColorButton Left = 180 Height = 27 Top = 330 Width = 95 Caption = 'Цвет' TabOrder = 12 end
-      object fWidth: TEdit Left = 285 Height = 27 Top = 330 Width = 60 TabOrder = 13 end
-      object fLogY: TCheckBox Left = 355 Height = 23 Top = 330 Width = 190 Caption = 'Логарифмическая ось Y' TabOrder = 14 end
+      object fName: TEdit Left = 155 Height = 27 Top = 10 Width = 436 Anchors = [akTop, akLeft, akRight] TabOrder = 0 end
+      object lblKind: TLabel Left = 12 Height = 15 Top = 47 Width = 70 Caption = 'Тип узла:' end
+      object fKind: TComboBox Left = 155 Height = 27 Top = 42 Width = 436 Anchors = [akTop, akLeft, akRight] Style = csDropDownList TabOrder = 1 OnChange = KindChange end
+      object lblValue: TLabel Left = 12 Height = 15 Top = 79 Width = 110 Caption = 'Тег результата:' end
+      object fValueTag: TComboBox Left = 155 Height = 27 Top = 74 Width = 436 Anchors = [akTop, akLeft, akRight] Style = csDropDownList TabOrder = 2 OnChange = BindingChange end
+      object lblFreq: TLabel Left = 12 Height = 15 Top = 111 Width = 132 Caption = 'Тег частоты / тахо:' end
+      object fFreqTag: TComboBox Left = 155 Height = 27 Top = 106 Width = 436 Anchors = [akTop, akLeft, akRight] Style = csDropDownList ShowHint = True TabOrder = 3 OnChange = BindingChange end
+      object lblFreqMode: TLabel Left = 12 Height = 15 Top = 143 Width = 132 Caption = 'Расчёт частоты:' end
+      object fFreqMode: TComboBox Left = 155 Height = 27 Top = 138 Width = 436 Anchors = [akTop, akLeft, akRight] Style = csDropDownList ShowHint = True TabOrder = 4 OnChange = BindingChange end
+      object lblFrequencyHint: TLabel Left = 155 Height = 46 Top = 170 Width = 436 Anchors = [akTop, akLeft, akRight] AutoSize = False Caption = '' ShowHint = True WordWrap = True end
+      object lblBuf: TLabel Left = 12 Height = 15 Top = 223 Width = 130 Caption = 'Точек в буфере:' end
+      object fBufSize: TEdit Left = 155 Height = 27 Top = 218 Width = 436 Anchors = [akTop, akLeft, akRight] TabOrder = 5 end
+      object lblStep: TLabel Left = 12 Height = 15 Top = 255 Width = 100 Caption = 'Шаг X, Гц:' end
+      object fStep: TEdit Left = 155 Height = 27 Top = 250 Width = 436 Anchors = [akTop, akLeft, akRight] TabOrder = 6 end
+      object lblMerge: TLabel Left = 12 Height = 15 Top = 287 Width = 140 Caption = 'Совпавшие точки:' end
+      object fMerge: TComboBox Left = 155 Height = 27 Top = 282 Width = 436 Anchors = [akTop, akLeft, akRight] Style = csDropDownList TabOrder = 7 end
+      object fUniform: TCheckBox Left = 155 Height = 23 Top = 317 Width = 145 Caption = 'Равномерный X' TabOrder = 8 end
+      object fDrawLine: TCheckBox Left = 310 Height = 23 Top = 317 Width = 85 Caption = 'Линия' TabOrder = 9 end
+      object fDrawPoints: TCheckBox Left = 405 Height = 23 Top = 317 Width = 85 Caption = 'Точки' TabOrder = 10 end
+      object lblStyle: TLabel Left = 12 Height = 15 Top = 358 Width = 135 Caption = 'Цвет / толщина:' end
+      object fColor: TColorButton Left = 155 Height = 27 Top = 352 Width = 105 Caption = 'Цвет' end
+      object fWidth: TEdit Left = 275 Height = 27 Top = 352 Width = 60 TabOrder = 12 end
     end
-    object pnlBottom: TPanel
-      Left = 1 Height = 50 Top = 599 Width = 668 Align = alBottom Caption = '' TabOrder = 2
-      object lblMinX: TLabel Left = 12 Height = 15 Top = 18 Width = 40 Caption = 'X min:' end
-      object fMinX: TEdit Left = 58 Height = 27 Top = 11 Width = 75 TabOrder = 0 end
-      object lblMaxX: TLabel Left = 141 Height = 15 Top = 18 Width = 43 Caption = 'X max:' end
-      object fMaxX: TEdit Left = 190 Height = 27 Top = 11 Width = 75 TabOrder = 1 end
-      object fLogX: TCheckBox Left = 275 Height = 23 Top = 13 Width = 75 Caption = 'Лог X' TabOrder = 2 end
-      object fLegend: TCheckBox Left = 352 Height = 23 Top = 13 Width = 90 Caption = 'Легенда' TabOrder = 3 end
-      object btnOk: TButton Left = 486 Height = 30 Top = 10 Width = 80 Anchors = [akTop, akRight] Caption = 'OK' Default = True TabOrder = 4 OnClick = OkClick end
-      object btnCancel: TButton Left = 578 Height = 30 Top = 10 Width = 80 Anchors = [akTop, akRight] Cancel = True Caption = 'Отмена' ModalResult = 2 TabOrder = 5 end
-    end
-    object pnlAvail: TPanel
-      Left = 1 Height = 228 Top = 371 Width = 668 Align = alClient Caption = '' TabOrder = 1
-      object fSearch: TEdit
-        Left = 1 Height = 28 Top = 1 Width = 666 Align = alTop
-        TextHint = 'Поиск доступных сигналов по имени, адресу или описанию'
-        TabOrder = 0 OnChange = SearchChange
-      end
-      object fAvailable: TListBox Left = 1 Height = 166 Top = 29 Width = 666 Align = alClient MultiSelect = True TabOrder = 1 end
-      object btnAddLines: TButton
-        Left = 1 Height = 32 Top = 195 Width = 666 Align = alBottom
-        Caption = 'Добавить выбранные сигналы линиями' TabOrder = 2 OnClick = AddLinesClick
-      end
+    object pnlAxes: TPanel
+      Left = 1 Height = 106 Top = 498 Width = 603 Align = alBottom Caption = '' TabOrder = 1
+      object lblMinX: TLabel Left = 12 Height = 15 Top = 18 Width = 44 Caption = 'X min:' end
+      object fMinX: TEdit Left = 65 Height = 27 Top = 11 Width = 120 TabOrder = 0 end
+      object lblMaxX: TLabel Left = 205 Height = 15 Top = 18 Width = 44 Caption = 'max:' end
+      object fMaxX: TEdit Left = 250 Height = 27 Top = 11 Width = 120 TabOrder = 1 end
+      object fLogX: TCheckBox Left = 395 Height = 23 Top = 13 Width = 110 Caption = 'Лог X' TabOrder = 2 end
+      object lblMinY: TLabel Left = 12 Height = 15 Top = 62 Width = 44 Caption = 'Y min:' end
+      object fMinY: TEdit Left = 65 Height = 27 Top = 55 Width = 120 TabOrder = 3 end
+      object lblMaxY: TLabel Left = 205 Height = 15 Top = 62 Width = 44 Caption = 'max:' end
+      object fMaxY: TEdit Left = 250 Height = 27 Top = 55 Width = 120 TabOrder = 4 end
+      object fLogY: TCheckBox Left = 395 Height = 23 Top = 57 Width = 110 Caption = 'Лог Y' TabOrder = 5 end
     end
   end
 end

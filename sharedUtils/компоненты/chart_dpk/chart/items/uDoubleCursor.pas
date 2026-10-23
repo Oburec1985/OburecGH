@@ -564,6 +564,13 @@ begin
             cursor.setx2(cursor.LgPosToLinear(cursor.m_lgx2));
           end;
         end;
+      end
+      else
+      begin
+        // линейная ось: после зума синхронизируем пиксельное положение с
+        // отображаемой координатой, иначе getx1/getx2 дают неверное значение
+        cursor.setx1(cursor.getfx1);
+        cursor.setx2(cursor.getfx2);
       end;
     end;
   end;
@@ -716,16 +723,15 @@ begin
   begin
     page:=cpage(getpage);
     a:=page.activeAxis;
-    if (v>a.min.x) and (v<a.max.x) then
-    begin
-      fx1:=v;
+    fx1:=v;
+    // пиксель пересчитываем ВСЕГДА: getx1/getx2 считают координату от него, и
+    // после зума старое значение давало координату не там, где курсор нарисован
+    if a<>nil then
       ix1:=a.XToXi(v);
+    if (a<>nil) and (v>a.min.x) and (v<a.max.x) then
+    begin
       cChart(chart).legend.NeedUpdate:=true;
       cChart(chart).needRedraw:=true;
-    end
-    else
-    begin
-      fx1:=v;
     end;
   end;
   cChart(chart).needRedraw:=true;
@@ -742,16 +748,13 @@ begin
   begin
     page:=cpage(getpage);
     a:=page.activeAxis;
-    if (v>a.min.x) and (v<a.max.x) then
-    begin
-      fx2:=v;
+    fx2:=v;
+    if a<>nil then
       ix2:=a.XToXi(v);
+    if (a<>nil) and (v>a.min.x) and (v<a.max.x) then
+    begin
       cChart(chart).legend.NeedUpdate:=true;
       cChart(chart).needRedraw:=true;
-    end
-    else
-    begin
-      fx2:=v;
     end;
   end;
   cChart(chart).needRedraw:=true;

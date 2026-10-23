@@ -1,14 +1,18 @@
 object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
   Left = 0
-  Height = 780
+  Height = 410
   Top = 0
   Width = 720
-  Caption = 'Привязка к геометрии'
-  ClientHeight = 780
+  Caption = 'Отображение FRF'
+  ClientHeight = 410
   ClientWidth = 720
-  Constraints.MinHeight = 780
+  Constraints.MinHeight = 410
   Constraints.MinWidth = 720
   Position = poOwnerFormCenter
+  FormStyle = fsStayOnTop
+  KeyPreview = True
+  OnClose = FormClose
+  OnKeyDown = FormKeyDown
   object lblTarget: TLabel
     Left = 12
     Height = 15
@@ -41,7 +45,7 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
     ItemHeight = 15
     Style = csDropDownList
     TabOrder = 1
-    OnChange = EditorChange
+    OnChange = ObjectChange
   end
   object lblMode: TLabel
     Left = 12
@@ -64,45 +68,17 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
     TabOrder = 2
     OnChange = EditorChange
   end
-  object grdChannels: TStringGrid
-    Left = 12
-    Height = 206
-    Top = 82
-    Width = 684
-    Anchors = [akTop, akLeft, akRight]
-    ColCount = 4
-    FixedCols = 0
-    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect]
-    RowCount = 2
-    TabOrder = 3
-    OnSelectCell = ChannelSelect
-  end
-  object lblPoint: TLabel
-    Left = 16
-    Height = 15
-    Top = 300
-    Width = 76
-    Caption = 'Номер точки:'
-  end
-  object edPoint: TEdit
-    Left = 112
-    Height = 23
-    Top = 296
-    Width = 140
-    TabOrder = 4
-    OnChange = EditorChange
-  end
   object lblAxis: TLabel
     Left = 344
     Height = 15
-    Top = 354
+    Top = 112
     Width = 77
     Caption = 'Направление:'
   end
   object cbAxis: TComboBox
     Left = 444
     Height = 23
-    Top = 350
+    Top = 108
     Width = 80
     ItemHeight = 15
     Items.Strings = (
@@ -111,29 +87,29 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
       'Z'
     )
     Style = csDropDownList
-    TabOrder = 5
+    TabOrder = 3
     OnChange = EditorChange
   end
   object chkIntensityOnly: TCheckBox
     Left = 344
     Height = 19
-    Top = 328
+    Top = 84
     Width = 142
     Caption = 'Только интенсивность'
-    TabOrder = 6
+    TabOrder = 4
     OnClick = EditorChange
   end
   object lblDisplay: TLabel
     Left = 12
     Height = 15
-    Top = 386
+    Top = 148
     Width = 79
     Caption = 'Отображение:'
   end
   object cbVisualization: TComboBox
     Left = 112
     Height = 23
-    Top = 382
+    Top = 144
     Width = 160
     ItemHeight = 15
     Items.Strings = (
@@ -141,53 +117,53 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
       'Сфера'
     )
     Style = csDropDownList
-    TabOrder = 7
+    TabOrder = 5
     OnChange = EditorChange
   end
   object lblColor: TLabel
     Left = 296
     Height = 15
-    Top = 386
+    Top = 148
     Width = 29
     Caption = 'Цвет:'
   end
   object colorDisplay: TColorBox
     Left = 344
     Height = 24
-    Top = 382
+    Top = 144
     Width = 180
     Style = [cbStandardColors, cbExtendedColors, cbCustomColor]
     ItemHeight = 16
-    TabOrder = 8
+    TabOrder = 6
     OnChange = EditorChange
   end
   object lblSize: TLabel
     Left = 12
     Height = 15
-    Top = 422
+    Top = 184
     Width = 78
     Caption = 'Размер, пикс.:'
   end
   object edSize: TEdit
     Left = 112
     Height = 23
-    Top = 418
+    Top = 180
     Width = 80
-    TabOrder = 9
+    TabOrder = 7
     Text = '10'
     OnChange = EditorChange
   end
   object lblSource: TLabel
     Left = 269
     Height = 15
-    Top = 422
+    Top = 184
     Width = 56
     Caption = 'Значения:'
   end
   object cbSource: TComboBox
     Left = 344
     Height = 23
-    Top = 418
+    Top = 180
     Width = 180
     ItemHeight = 15
     Items.Strings = (
@@ -195,36 +171,36 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
       'Амплитуда'
     )
     Style = csDropDownList
-    TabOrder = 10
+    TabOrder = 8
     OnChange = EditorChange
   end
   object lblScale: TLabel
     Left = 12
     Height = 15
-    Top = 604
+    Top = 374
     Width = 428
     Caption = 'Заданный размер соответствует 50% размаха каналов на выбранной частоте.'
   end
   object chkGradient: TCheckBox
     Left = 16
     Height = 19
-    Top = 520
+    Top = 278
     Width = 287
-    Caption = 'Градиент вершин: зелёный → жёлтый → красный'
-    TabOrder = 11
+    Caption = 'Градиент вершин: синий → зелёный → жёлтый → красный'
+    TabOrder = 9
     OnClick = EditorChange
   end
   object lblAggregation: TLabel
     Left = 12
     Height = 15
-    Top = 458
+    Top = 220
     Width = 40
     Caption = 'Расчёт:'
   end
   object cbAggregation: TComboBox
     Left = 112
     Height = 23
-    Top = 454
+    Top = 216
     Width = 158
     ItemHeight = 15
     Items.Strings = (
@@ -232,113 +208,85 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
       'СКЗ в полосе'
     )
     Style = csDropDownList
-    TabOrder = 12
+    TabOrder = 10
     OnChange = EditorChange
   end
   object lblBandTolerance: TLabel
     Left = 354
     Height = 15
-    Top = 458
+    Top = 220
     Width = 72
     Caption = 'Полоса ±, %:'
   end
   object edBandTolerance: TEdit
     Left = 456
     Height = 23
-    Top = 454
+    Top = 216
     Width = 68
-    TabOrder = 13
+    TabOrder = 11
     Text = '5'
     OnChange = EditorChange
   end
   object btnOk: TButton
-    Left = 512
+    Left = 606
     Height = 30
-    Top = 568
+    Top = 332
     Width = 86
     Anchors = [akRight, akBottom]
-    Caption = 'OK'
-    Default = True
-    TabOrder = 14
+    Caption = 'Закрыть'
+    TabOrder = 12
     OnClick = OkClick
-  end
-  object lblPointLabel: TLabel
-    Left = 8
-    Height = 15
-    Top = 340
-    Width = 86
-    Caption = 'Подпись точки:'
-  end
-  object edLabel: TEdit
-    Left = 112
-    Height = 23
-    Top = 336
-    Width = 140
-    Anchors = [akTop, akLeft, akRight]
-    TabOrder = 15
-    OnChange = EditorChange
   end
   object chkCreateColorModifier: TCheckBox
     Left = 16
     Height = 19
-    Top = 496
+    Top = 254
     Width = 172
     Caption = 'Создать модификатор Color'
-    TabOrder = 16
+    TabOrder = 13
     OnClick = EditorChange
   end
   object chkShowAnchors: TCheckBox
-    Left = 456
+    Left = 16
     Height = 19
-    Top = 296
+    Top = 84
     Width = 118
     Caption = 'Показывать якоря'
-    TabOrder = 17
+    TabOrder = 14
     OnClick = EditorChange
+  end
+  object chkResultValues: TCheckBox
+    Left = 156
+    Top = 84
+    Width = 180
+    Height = 19
+    Caption = 'Отображать значения'
+    TabOrder = 17
+    OnClick = ResultValuesChange
   end
   object lblEnvelope: TLabel
     Left = 12
     Height = 15
-    Top = 548
+    Top = 308
     Width = 370
     Caption = 'Сферическая оболочка, радиус в единицах геометрии'
-  end
-  object chkOnlySensors: TCheckBox
-    Left = 264
-    Height = 19
-    Top = 296
-    Width = 173
-    Caption = 'Отображать только датчики'
-    TabOrder = 18
-    OnClick = EditorChange
   end
   object chkEnvelopeX: TCheckBox
     Left = 12
     Height = 19
-    Top = 572
+    Top = 336
     Width = 180
     Caption = 'Включить оболочку'
-    TabOrder = 19
+    TabOrder = 15
     OnClick = EditorChange
   end
   object edEnvelopeX: TEdit
     Left = 200
     Height = 23
-    Top = 568
+    Top = 332
     Width = 120
-    TabOrder = 20
+    TabOrder = 16
     Text = '1'
     OnChange = EditorChange
-  end
-  object btnCancel: TButton
-    Left = 606
-    Height = 30
-    Top = 568
-    Width = 86
-    Anchors = [akRight, akBottom]
-    Cancel = True
-    Caption = 'Отмена'
-    ModalResult = 2
-    TabOrder = 21
   end
 end

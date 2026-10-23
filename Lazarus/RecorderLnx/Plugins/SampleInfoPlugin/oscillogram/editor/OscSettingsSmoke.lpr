@@ -93,6 +93,27 @@ begin
       Check(lForm.ModalResult = mrCancel, 'Cancel button is not wired');
       FreeAndNil(lForm);
       Check(lModel.SaveUtf8 = lSaved, 'Cancel mutated original');
+      lForm := TOscSettings.Create(nil); lForm.Initialize(lModel, lCatalog);
+      lForm.lbLines.ItemIndex := 1; lForm.LineChange(nil);
+      lForm.cbAxis.ItemIndex := 0; lForm.AxisChange(nil);
+      Check((lForm.cbAxis.Items.Count = 1) and
+        (Pos('[Y1]', lForm.lbLines.Items[1]) = 1),
+        'Reassigning last axis signal did not prune/remap editor axes');
+      lForm.NewAxisClick(nil);
+      Check(lForm.cbAxis.Items.Count = 2, 'New axis did not attach signal');
+      lForm.lbLines.ItemIndex := 0; lForm.LineChange(nil);
+      lForm.DeleteClick(nil);
+      Check((lForm.lbLines.Count = 1) and (lForm.cbAxis.Items.Count = 1) and
+        (lForm.cbAxis.ItemIndex = 0), 'Deleting primary failed to promote/remap signal');
+      lForm.OkClick(nil); FreeAndNil(lForm);
+      Check((lModel.TagName = 'Channel3') and (lModel.LineCount = 0) and
+        (lModel.AxisCount = 1) and (lModel.PrimaryAxisIndex = 0),
+        'Committed primary promotion or axis compaction failed');
+      lForm := TOscSettings.Create(nil); lForm.Initialize(lModel, lCatalog);
+      lForm.DeleteClick(nil);
+      Check((lForm.lbLines.Count = 0) and (lForm.cbAxis.Items.Count = 1),
+        'Deleting final signal did not keep safe empty editor axis');
+      FreeAndNil(lForm);
       {$IFDEF WINDOWS}
       lOwner := TForm.CreateNew(nil); lProbe := TModalProbe.Create;
       lTimer := TTimer.Create(nil);

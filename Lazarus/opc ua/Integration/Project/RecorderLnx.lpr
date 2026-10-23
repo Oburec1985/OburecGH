@@ -1,0 +1,246 @@
+program RecorderLnx;
+
+{$mode objfpc}{$H+}
+{$codepage UTF8}
+{$IFDEF MSWINDOWS}
+{$R Device/MCbus/resources/mcbus.rc}
+{$R resources/app/recorderlnx_app.rc}
+{$ENDIF}
+
+uses
+  {$IFDEF UNIX}
+  cthreads, BaseUnix,
+  {$ENDIF}
+  SysUtils, Classes, Interfaces, Forms, ExtCtrls, uMainForm, uRecorderSplashForm,
+  uRecorderSingleInstance, uRecorderNetworkBinding,
+  uRecorderDebugLog,
+  uComponentSettingsDialog,
+  uRecorderVirtualTagDialog,
+  uRecorderButtonSettingsDialog,
+  uRecorderTrendSettingsDialog, uRecorderTrendView,
+  uRecorderSqlTrendModel, uRecorderSqlTrendView,
+  uRecorder3dModel, uRecorder3dView, uRecorder3dImpactBindingController,
+  uRecorderImpactHammerModel, uRecorderImpactHammerSettingsDialog,
+  uRecorderImpactHammerView,
+  uRecorderImpactHammerService,
+  uRecorderImpactHammerContracts,
+  uRecorderSignalGeneratorModel, uRecorderSignalGeneratorView,
+  uRecorderSignalGeneratorSettingsDialog,
+  uRecorderDacComponentModel, uRecorderDacComponentView,
+  uRecorderDacSettingsDialog,
+  uRecorderSqlTrendSettingsDialog,
+  uRecorderMeasurementSectionModel, uRecorderMeasurementSectionView,
+  uRecorderMeasurementSectionSettingsDialog,
+  uRecorderCalibrationAddDialog, uRecorderCalibrationListDialog,
+  uRecorderCalibrationPropertiesDialog, uRecorderStrainCalibration,
+  uRecorderStrainCalibrationDialog, uRecorderMic140SettingsDialog,
+  uRecorderSpectrumSettingsDialog, uRecorderSpectrumView,
+  uRecorderVisualControl, uRecorderDeviceInterfaces, uMic185Constants,
+  uMic185DebugLog, uMic185Device, uMic185MebiusTcpProtocol, uMic185MebiusTypes,
+  uRecorderMic185DataSource, uRecorderMic185Runtime,
+  uRecorderMic185AdditionalDialog, uRecorderMic185ChannelDialog,
+  uRecorderMic185SettingsDialog,
+  uRecorderPxiMx248ConfiguredEditor,
+  uRecorderHardwareTagSettingsProviders,
+  uRecorderMic140DataSource, uRecorderSpectrumRuntime, uSharedFileLogger,
+  uRecorderMeraPaths, uOglChartLog,
+  uRecorderUserGuideCapture,
+  uMc201ProtocolTypes, uMc201FirmwareResources, uMc201LegacyMdpClient,
+  uMc032Device, uRecorderMcbusDevice,
+  uRecorderOpcUaSourceEditor,
+  uRecorderModbusSourceEditor;
+
+const
+  CUserGuideDirectoryName: UTF8String = 'Руководство пользователя';
+  {$IFDEF UNIX}
+  CRecorderExitRequestFile = '/tmp/mera-recorderlnx-exit.request';
+  {$ENDIF}
+
+{$IFDEF UNIX}
+type
+  TRecorderTerminationMonitor = class
+  private
+    fTimer: TTimer;
+    procedure TimerTick(Sender: TObject);
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+var
+  g_TerminationRequested: LongInt = 0;
+  g_TerminationMonitor: TRecorderTerminationMonitor = nil;
+
+procedure RecorderTerminationSignalHandler(ASignal: cint); cdecl;
+begin
+  { Signal handlers may only publish the request. LCL and device cleanup must
+    run later in the application thread. }
+  InterlockedExchange(g_TerminationRequested, 1);
+end;
+
+constructor TRecorderTerminationMonitor.Create;
+begin
+  inherited Create;
+  DeleteFile(CRecorderExitRequestFile);
+  fTimer := TTimer.Create(nil);
+  fTimer.Interval := 100;
+  fTimer.OnTimer := @TimerTick;
+  fTimer.Enabled := True;
+end;
+
+destructor TRecorderTerminationMonitor.Destroy;
+begin
+  FreeAndNil(fTimer);
+  inherited Destroy;
+end;
+
+procedure TRecorderTerminationMonitor.TimerTick(Sender: TObject);
+var
+  lFileRequested: Boolean;
+begin
+  lFileRequested := FileExists(CRecorderExitRequestFile);
+  if (InterlockedExchange(g_TerminationRequested, 0) = 0) and
+    not lFileRequested then
+    Exit;
+  if lFileRequested then
+    DeleteFile(CRecorderExitRequestFile);
+  fTimer.Enabled := False;
+  RecorderDebugLog('Получен запрос штатного завершения RecorderLnx.');
+  FreeAndNil(MainForm);
+  Application.Terminate;
+end;
+{$ENDIF}
+
+function HasSwitch(const AName: string): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  for I := 1 to ParamCount do
+    if SameText(ParamStr(I), AName) then Exit(True);
+end;
+
+function SwitchValue(const AName, ADefault: string): string;
+var
+  I: Integer;
+  lPrefix: string;
+begin
+  Result := ADefault;
+  lPrefix := AName + '=';
+  for I := 1 to ParamCount do
+    if SameText(Copy(ParamStr(I), 1, Length(lPrefix)), lPrefix) then
+      Exit(Copy(ParamStr(I), Length(lPrefix) + 1, MaxInt));
+end;
+
+procedure RunHardwareSearchTest;
+var
+  lFound: TStringList;
+  lReport: TStringList;
+  lReportFile: string;
+  lNetworkLogFile: string;
+  lBind: string;
+  lHint: string;
+  lKind: string;
+  lSerial: string;
+  lTimeout: Cardinal;
+  I: Integer;
+begin
+  lBind := SwitchValue('--bind', '');
+  lHint := SwitchValue('--hint', '');
+  lTimeout := StrToIntDef(SwitchValue('--timeout-ms', '5200'), 5200);
+  lReportFile := ExtractFilePath(ParamStr(0)) + 'hardware-search-main-summary.log';
+  lNetworkLogFile := ExtractFilePath(ParamStr(0)) + 'hardware-search-main-net.log';
+  RecorderSetNetworkDebugLogFile(lNetworkLogFile);
+  SetRecorderNetworkBindAddress(lBind);
+  RecorderClearDiscoveryHints;
+  RecorderAddDiscoveryHintIPv4(lHint);
+  lFound := TStringList.Create;
+  lReport := TStringList.Create;
+  try
+    lReport.Add(Format('hardware-search-test exe="%s" bind="%s" effective="%s" hint="%s" timeout=%d',
+      [ParamStr(0), lBind, RecorderNetworkBindAddress, lHint, lTimeout]));
+    RecorderDiscoverMeraBroadcast(lFound, lTimeout);
+    if (lFound.Count = 0) and RecorderProbeMeraLegacyHost(lHint, lKind,  lSerial, 600) then
+    begin
+      lFound.Add(lHint + '=' + lKind + '|' + lSerial);
+    end;
+    lReport.Add(Format('found=%d', [lFound.Count]));
+    for I := 0 to lFound.Count - 1 do
+      lReport.Add(lFound[I]);
+    lReport.SaveToFile(lReportFile);
+  finally
+    lReport.Free;
+    lFound.Free;
+  end;
+end;
+
+var
+  lSingleInstance: TRecorderSingleInstance;
+  lSplash: TRecorderSplashForm;
+begin
+  { /cfg:... must select application settings before startup subsystems. }
+  RecorderConfigureAppConfigFromCommandLine;
+  if HasSwitch('--hardware-search-test') then
+  begin
+    RunHardwareSearchTest;
+    Halt(0);
+  end;
+
+  lSingleInstance := nil;
+  if not RecorderAllowsMultipleInstances then
+    lSingleInstance := TRecorderSingleInstance.Create;
+
+  RequireDerivedFormResource := True;
+  Application.Initialize;
+  if HasSwitch('--capture-modbus-editor') then
+  begin
+    RecorderModbusEditorCapture(SwitchValue('--capture-modbus-editor',
+      ExpandFileName('modbus-editor.png')),
+      SwitchValue('--modbus-transport', 'tcp'));
+    Halt(0);
+  end;
+  if Assigned(lSingleInstance) and not lSingleInstance.Acquired then
+  begin
+    RecorderDebugLog('Повторный запуск RecorderLnx отклонён: приложение уже запущено.');
+    lSingleInstance.Free;
+    Halt(0);
+  end;
+  if HasSwitch('--hardware-search-test-after-init') then
+  begin
+    RunHardwareSearchTest;
+    Halt(0);
+  end;
+  {$IFDEF UNIX}
+  { LCL и подключенный отладчик могут настроить обработчики сигналов во время
+    Application.Initialize. Поэтому политику TCP задаём после Initialize, но
+    до CreateForm, где начинаются проверки сетевых устройств. Закрытый peer
+    должен дать драйверу EPIPE, а не External exception code 13. }
+  fpSignal(SIGPIPE, SignalHandler(SIG_IGN));
+  fpSignal(SIGTERM, SignalHandler(@RecorderTerminationSignalHandler));
+  g_TerminationMonitor := TRecorderTerminationMonitor.Create;
+  {$ENDIF}
+  ChartLogSetFileName(RecorderServiceFileName('oglchart_debug.log'));
+  lSplash := TRecorderSplashForm.Create(nil);
+  try
+    lSplash.LoadApplicationInfo;
+    lSplash.Show;
+    lSplash.Update;
+    Application.ProcessMessages;
+    Application.CreateForm(TMainForm, MainForm);
+    MainForm.OnStartupReady := @lSplash.StartupReady;
+    if not MainForm.Visible then
+      MainForm.Show;
+    if HasSwitch('--capture-user-guide') then
+      StartRecorderUserGuideCapture(MainForm, SwitchValue('--guide-output',
+        ExpandFileName(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
+          PathDelim + 'Docs' + PathDelim + CUserGuideDirectoryName +
+          PathDelim + 'screens')));
+    Application.Run;
+  finally
+    {$IFDEF UNIX}
+    FreeAndNil(g_TerminationMonitor);
+    {$ENDIF}
+    lSplash.Free;
+    lSingleInstance.Free;
+  end;
+end.

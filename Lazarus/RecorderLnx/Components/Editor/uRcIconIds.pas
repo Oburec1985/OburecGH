@@ -20,6 +20,7 @@ const
   CIconId3dView = '3d-view';
   CIconIdLissajous = 'lissajous';
   CIconIdPluginOscillogram = 'plugin-oscillogram';
+  CIconIdPluginVisualComponent = 'plugin-visual-component';
   CIconIdDonut = 'donut';
   CIconIdSpectrum = 'spectrum';
   CIconIdImage = 'image';
@@ -100,6 +101,7 @@ begin
   else if SameText(AIconId, CIconId3dView) then Result := CIcon3dScene
   else if SameText(AIconId, CIconIdLissajous) then Result := CIconLissajous
   else if SameText(AIconId, CIconIdPluginOscillogram) then Result := CIconPluginOscillogram
+  else if SameText(AIconId, CIconIdPluginVisualComponent) then Result := CIconPluginOscillogram
   else if SameText(AIconId, CIconIdDonut) then Result := CIconDonut
   else if SameText(AIconId, CIconIdSpectrum) then Result := CIconSpectrum
   else if SameText(AIconId, CIconIdImage) then Result := CIconImageComponent

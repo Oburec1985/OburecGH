@@ -589,6 +589,80 @@ begin
   end;
 end;
 
+type TControlAccess = class(TControl);
+
+procedure CheckSequentialBuiltinDeletion;
+var
+  lWindow:TForm; lCanvas:TPanel; lProvider:TSmokePageProvider;
+  lFactories:TRecorderComponentFactory; lTags:TRecorderTagRegistry;
+  lEditor:TFormEditorController; lComponent:TRecorderVisualComponent;
+  lPagePanel:TWinControl; lControl:TControl; lTag:TRecorderTag;
+  I,J,K:Integer; lDown:TMouseEvent; lUp:TMouseEvent;
+begin
+  lFactories:=TRecorderComponentFactory.Create;
+  lTags:=TRecorderTagRegistry.Create(nil);
+  lProvider:=TSmokePageProvider.Create;
+  lWindow:=nil; lEditor:=nil; lProvider.Page:=nil;
+  try
+    lFactories.RegisterDefaultComponents;
+    lTag:=lTags.CreateTag('DeletionWave',512,True);
+    lTag.UnitName:='mV'; lTag.PollFrequencyHz:=100;
+    for I:=0 to 200 do lTag.AddSample(I/100,Sin(2*Pi*I/100));
+    for K:=1 to 20 do
+    begin
+      lProvider.Page:=TRecorderFormPage.Create('delete-smoke','Deletion','Deletion');
+      for I:=0 to 2 do
+      begin
+        lComponent:=lFactories.CreateComponent('Oscillogram');
+        lComponent.Id:='delete-'+IntToStr(I);
+        lComponent.TagId:=lTag.Id; lComponent.TagName:=lTag.Name;
+        lComponent.SetBounds(10+I*260,10,250,180);
+        lProvider.Page.AddComponent(lComponent);
+      end;
+      lWindow:=TForm.CreateNew(nil);
+      lWindow.SetBounds(20,20,850,400);
+      lCanvas:=TPanel.Create(lWindow); lCanvas.Parent:=lWindow; lCanvas.Align:=alClient;
+      lEditor:=TFormEditorController.Create(lCanvas,@lProvider.GetPage,lFactories);
+      lEditor.SetDataContext(lTags,nil,1);
+      lWindow.Show; lEditor.Render; lEditor.Enabled:=True;
+      Application.ProcessMessages;
+      for J:=0 to 5 do
+      begin
+        Check(lProvider.Page.ComponentCount>0,'Deletion fixture unexpectedly empty');
+        lPagePanel:=nil;
+        for I:=0 to lCanvas.ControlCount-1 do
+          if (lCanvas.Controls[I] is TWinControl) and
+            (lCanvas.Controls[I].ClassName='TRecorderPagePanel') then
+            lPagePanel:=TWinControl(lCanvas.Controls[I]);
+        Check(lPagePanel<>nil,'Editor page panel missing');
+        lControl:=nil;
+        for I:=0 to lPagePanel.ControlCount-1 do
+          if (lPagePanel.Controls[I].Tag=0) and
+            Assigned(TControlAccess(lPagePanel.Controls[I]).OnMouseDown) and
+            (lPagePanel.Controls[I].Width>100) then
+            lControl:=lPagePanel.Controls[I];
+        Check(lControl<>nil,'Selectable oscillogram host missing');
+        lDown:=TControlAccess(lControl).OnMouseDown;
+        lUp:=TControlAccess(lControl).OnMouseUp;
+        lDown(lControl,mbLeft,[],100,90);
+        if Assigned(lUp) then lUp(lControl,mbLeft,[],100,90);
+        lEditor.DeleteSelected;
+        lWindow.Width:=850+(J mod 2)*20;
+        lEditor.RefreshLive; lWindow.Repaint; Application.ProcessMessages;
+        if J=2 then
+          for I:=0 to 2 do begin lEditor.UndoLastStep; Application.ProcessMessages; end;
+      end;
+      Check(lProvider.Page.ComponentCount=0,'Sequential deletion did not remove every component');
+      FreeAndNil(lEditor); FreeAndNil(lWindow); FreeAndNil(lProvider.Page);
+      WriteLn('Sequential builtin deletion cycle ',K,' passed'); Flush(Output);
+    end;
+    WriteLn('RESULT Sequential builtin deletion 120 deletes/60 undo passed');
+  finally
+    lEditor.Free; lWindow.Free; lProvider.Page.Free;
+    lProvider.Free; lTags.Free; lFactories.Free;
+  end;
+end;
+
 procedure Run(const APluginFile: string);
 var
   lConfigFile, lPluginDirectory, lPluginPath: string;
@@ -781,7 +855,10 @@ begin
     Check(ParamCount in [1,2],'usage: OscillogramRuntimeSmoke plugin-library [gui-ini|inspect]');
     Application.Initialize;
     Application.ShowMainForm := False;
-    Run(ParamStr(1));
+    if SameText(ParamStr(1),'delete-only') then
+      CheckSequentialBuiltinDeletion
+    else
+      Run(ParamStr(1));
     WriteLn('RESULT OscillogramRuntimeSmoke passed');
   except
     on E: Exception do begin WriteLn('RESULT OscillogramRuntimeSmoke failed: ',E.Message); Halt(1); end;

@@ -1,11 +1,16 @@
 unit uRecorderSpectrumView;
 
+{ Spectrum view owns legend selection and its context commands. Horizontal
+  level overlays and value labels use the shared chart cursor/renderer;
+  cursor snapping belongs to the shared listener, not this component. }
+
 {$mode objfpc}{$H+}
 
 interface
 
 uses
   Classes, SysUtils, Controls, ExtCtrls, Graphics, Grids, Math, LConvEncoding,
+  Forms, Menus,
   uOglChart, uOglChartChart, uOglChartPage, uOglChartAxis,
   uOglChartTrend, uOglChartDrawObj,
   uOglChartCursor, uOglChartRenderer, uOglChartTextLabel, uOglChartColors,
@@ -14,6 +19,19 @@ uses
   uComponentServices, SyncObjs;
 
 type
+  TRecorderSpectrumView = class;
+  { Designer-owned context commands; data and chart objects remain in view. }
+  TSpectrumCommands = class(TDataModule)
+  published
+    Popup: TPopupMenu;
+    SetLevelItem, HideLevelItem, FollowPeakItem: TMenuItem;
+    procedure SetLevelClick(Sender: TObject);
+    procedure HideLevelClick(Sender: TObject);
+    procedure FollowPeakClick(Sender: TObject);
+  public
+    View: TRecorderSpectrumView;
+  end;
+
   TBufferedFrame = record
     TagName: string;
     Values: array of Double;
@@ -24,6 +42,11 @@ type
     MaxRms: Double;
     Bands: array of TRecorderSpectrumBandResult;
     HasNewData: Boolean;
+  end;
+
+  TSpectrumFollowState = record
+    Enabled, Fresh: Boolean;
+    Trend: cBuffTrend1d;
   end;
 
   TRecorderSpectrumView = class(TPanel, IVForm)
@@ -45,6 +68,21 @@ type
     fLock: TCriticalSection;
     fSplitter: TSplitter;
     fLegendHeightInitialized: Boolean;
+    fCommands: TSpectrumCommands;
+    fLevelCursor: TChartHorizontalCursor;
+    fContextAxis: TChartAxis;
+    fContextY: Double;
+    fContextCursorIndex: Integer;
+    fContextTrend: cBuffTrend1d;
+    fFollowCursor: TChartCursor;
+    fFollow: array[0..1] of TSpectrumFollowState;
+    fFollowRect: TChartPixelRect;
+    fFollowRectValid: Boolean;
+    procedure CacheFollowGeometry;
+    procedure MarkFollowFrame(ATrend: cBuffTrend1d);
+    procedure UpdateFollowers;
+    procedure ChartContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
     procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
     procedure ChartMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure ChartAfterRender(Sender: TObject; ARenderTimeMs: Double);
@@ -82,8 +120,154 @@ type
 
 implementation
 
+{$R *.lfm}
+
 uses
-  uRecorderTagRefs, uRecorderUnitManager;
+  uRecorderTagRefs, uRecorderUnitManager, uOglChartCursorListener;
+
+type
+  TSpectrumChartAccess = class(TOglChart)
+  public
+    property OnContextPopup;
+  end;
+
+procedure TSpectrumCommands.SetLevelClick(Sender: TObject);
+begin
+  if (View = nil) or (View.fLevelCursor = nil) or
+    (View.fContextAxis = nil) then Exit;
+  View.fLevelCursor.Axis := View.fContextAxis;
+  View.fLevelCursor.Y := View.fContextY;
+  View.fLevelCursor.Color := View.fContextAxis.Color;
+  View.fLevelCursor.Visible := True;
+  HideLevelItem.Enabled := True;
+  View.fChart.Invalidate;
+end;
+
+procedure TSpectrumCommands.HideLevelClick(Sender: TObject);
+begin
+  if (View = nil) or (View.fLevelCursor = nil) then Exit;
+  View.fLevelCursor.Visible := False;
+  HideLevelItem.Enabled := False;
+  View.fChart.Invalidate;
+end;
+
+procedure TSpectrumCommands.FollowPeakClick(Sender: TObject);
+var lIndex: Integer;
+begin
+  if View = nil then Exit;
+  lIndex := View.fContextCursorIndex;
+  if (lIndex < 0) or (lIndex > 1) then Exit;
+  if not View.fFollow[lIndex].Enabled and (View.fContextTrend = nil) then Exit;
+  View.fFollow[lIndex].Enabled := not View.fFollow[lIndex].Enabled;
+  if View.fFollow[lIndex].Enabled then
+    View.fFollow[lIndex].Trend := View.fContextTrend
+  else
+    View.fFollow[lIndex].Trend := nil;
+  View.fFollow[lIndex].Fresh := View.fFollow[lIndex].Enabled;
+  FollowPeakItem.Checked := View.fFollow[lIndex].Enabled;
+  View.CacheFollowGeometry;
+  View.UpdateFollowers;
+  View.UpdateHeader(True);
+  View.fChart.Invalidate;
+end;
+
+procedure TRecorderSpectrumView.CacheFollowGeometry;
+begin
+  if (fChart = nil) or (fPage = nil) then Exit;
+  { Cache screen geometry in the presentation stage. The fresh-frame search
+    below reuses it and keeps direct trend references, without name lookup. }
+  fFollowRect := TOpenGLChartRenderer(fChart.GetRenderer).GetPageContentRect(fPage);
+  fFollowRectValid := fFollowRect.Right > fFollowRect.Left;
+end;
+
+procedure TRecorderSpectrumView.MarkFollowFrame(ATrend: cBuffTrend1d);
+var I: Integer;
+begin
+  for I := 0 to 1 do
+    if fFollow[I].Enabled and (fFollow[I].Trend = ATrend) then
+      fFollow[I].Fresh := True;
+end;
+
+procedure TRecorderSpectrumView.UpdateFollowers;
+var I: Integer; lX, lPixel, lLeft, lRight: Double;
+  lRenderer: TOpenGLChartRenderer; lAxis: TChartAxis;
+begin
+  if (fFollowCursor = nil) or not fFollowCursor.Visible or
+    not fFollowRectValid then Exit;
+  lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
+  for I := 0 to 1 do
+  begin
+    if not fFollow[I].Enabled or not fFollow[I].Fresh then Continue;
+    fFollow[I].Fresh := False;
+    if (I = 1) and (fFollowCursor.CursorType <> cctDouble) then Continue;
+    if (fFollow[I].Trend = nil) or not fFollow[I].Trend.Visible or
+      not (fFollow[I].Trend.Parent is TChartAxis) then Continue;
+    lAxis := TChartAxis(fFollow[I].Trend.Parent);
+    if not lAxis.Visible or (lAxis.Parent <> fPage) then Continue;
+    if I = 0 then lX := fFollowCursor.X1 else lX := fFollowCursor.X2;
+    lPixel := lRenderer.XValueToPixel(fPage,nil,lX,fFollowRect.Left,fFollowRect.Right);
+    lLeft := lRenderer.PixelToXValue(fPage,nil,Round(lPixel)-10,
+      fFollowRect.Left,fFollowRect.Right);
+    lRight := lRenderer.PixelToXValue(fPage,nil,Round(lPixel)+10,
+      fFollowRect.Left,fFollowRect.Right);
+    lLeft := Max(lLeft,fPage.XMinValue);
+    lRight := Min(lRight,fPage.XMaxValue);
+    lX := ChartSnapXToExtremum(fFollow[I].Trend,lX,lLeft,lRight,False);
+    if I = 0 then fFollowCursor.X1 := lX else fFollowCursor.X2 := lX;
+  end;
+end;
+
+procedure TRecorderSpectrumView.ChartContextPopup(Sender: TObject;
+  MousePos: TPoint; var Handled: Boolean);
+var lRect: TChartPixelRect; lRenderer: TOpenGLChartRenderer;
+  lObject: TObject; lCursor: TChartCursor; lPixel1, lPixel2: Double; I: Integer;
+begin
+  if (fChart = nil) or (fPage = nil) then Exit;
+  lRenderer := TOpenGLChartRenderer(fChart.GetRenderer);
+  if lRenderer = nil then Exit;
+  fContextAxis := fAxisY;
+  fContextCursorIndex := -1;
+  fContextTrend := nil;
+  lObject := fChart.SelectedObject;
+  if (lObject is cBuffTrend1d) and cBuffTrend1d(lObject).Visible and
+    (cBuffTrend1d(lObject).Parent is TChartAxis) and
+    (cBuffTrend1d(lObject).Parent.Parent = fPage) then
+    fContextTrend := cBuffTrend1d(lObject);
+  if (lObject is cBaseTrend) and (cBaseTrend(lObject).Parent is TChartAxis) then
+    lObject := cBaseTrend(lObject).Parent;
+  if (lObject is TChartAxis) and (TChartAxis(lObject).Parent = fPage) then
+    fContextAxis := TChartAxis(lObject);
+  lRect := lRenderer.GetPageContentRect(fPage);
+  fFollowRect := lRect;
+  fFollowRectValid := lRect.Right > lRect.Left;
+  if fContextTrend = nil then
+    for I := 0 to fContextAxis.ChildCount - 1 do
+      if (fContextAxis.Children[I] is cBuffTrend1d) and
+        cBuffTrend1d(fContextAxis.Children[I]).Visible then
+      begin fContextTrend := cBuffTrend1d(fContextAxis.Children[I]); Break; end;
+  lCursor := FindPageCursor;
+  if (lCursor <> nil) and lCursor.Visible then
+  begin
+    fFollowCursor := lCursor;
+    lPixel1 := lRenderer.XValueToPixel(fPage,nil,lCursor.X1,lRect.Left,lRect.Right);
+    lPixel2 := Infinity;
+    if lCursor.CursorType = cctDouble then
+      lPixel2 := lRenderer.XValueToPixel(fPage,nil,lCursor.X2,lRect.Left,lRect.Right);
+    if Abs(MousePos.X-lPixel1) <= 8 then fContextCursorIndex := 0;
+    if (Abs(MousePos.X-lPixel2) <= 8) and
+      (Abs(MousePos.X-lPixel2) < Abs(MousePos.X-lPixel1)) then fContextCursorIndex := 1;
+  end;
+  fCommands.FollowPeakItem.Visible := fContextCursorIndex >= 0;
+  fCommands.FollowPeakItem.Enabled := (fContextTrend <> nil) or
+    ((fContextCursorIndex >= 0) and fFollow[fContextCursorIndex].Enabled);
+  if fContextCursorIndex >= 0 then
+    fCommands.FollowPeakItem.Checked := fFollow[fContextCursorIndex].Enabled;
+  if MousePos.Y < 0 then MousePos.Y := (lRect.Top + lRect.Bottom) div 2;
+  fContextY := lRenderer.PixelToAxisValue(fContextAxis,MousePos.Y,
+    lRect.Bottom,lRect.Top);
+  fCommands.SetLevelItem.Enabled := not IsNan(fContextY) and not IsInfinite(fContextY);
+  fCommands.HideLevelItem.Enabled := (fLevelCursor <> nil) and fLevelCursor.Visible;
+end;
 
 function TRecorderSpectrumView.IsAccelerationTag(
   const ATagName: string): Boolean;
@@ -678,6 +862,10 @@ begin
     fChart.OnMouseMove := @ChartMouseMove;
     fChart.OnAfterRender := @ChartAfterRender;
     fChart.OnCursorChanged := @ChartCursorChanged;
+    fCommands := TSpectrumCommands.Create(Self);
+    fCommands.View := Self;
+    fChart.PopupMenu := fCommands.Popup;
+    TSpectrumChartAccess(fChart).OnContextPopup := @ChartContextPopup;
 
     fModel := TChartModel.Create;
     fModel.BackgroundColor := $FFFFFFFF;
@@ -695,6 +883,13 @@ begin
   fChart.HoveredObject := nil;
   { ClearChildren owns chart objects; discard non-owning indexes first. }
   fBandObjects.Clear;
+  fLevelCursor := nil;
+  fContextAxis := nil;
+  fContextTrend := nil;
+  fContextCursorIndex := -1;
+  fFollowCursor := nil;
+  fFollowRectValid := False;
+  FillChar(fFollow,SizeOf(fFollow),0);
   fModel.ClearChildren;
   ClearSeries;
   ClearHeader;
@@ -760,6 +955,10 @@ begin
     fPage.XScale := casLinear;
   fModel.AddChild(fPage);
   fModel.AlignPagesAuto;
+  fLevelCursor := TChartHorizontalCursor.Create;
+  fLevelCursor.Visible := False;
+  fLevelCursor.ShowLabel := True;
+  fPage.AddChild(fLevelCursor);
 
   SetLength(lAxes, Max(1, fComponent.AxisCount));
   for J := 0 to High(lAxes) do
@@ -902,6 +1101,7 @@ begin
               lSeries.ReplaceValues(fBufferedFrames[I].Values, 0,
                 Length(fBufferedFrames[I].Values));
             UpdateMaxFlag(J, lSeries);
+            MarkFollowFrame(lSeries);
             lNeedsRedraw := True;
             Break;
           end;
@@ -917,6 +1117,7 @@ begin
               lSeries.DX := fBufferedFrames[I].FrequencyStepHz;
               lSeries.ReplaceValues(fBufferedFrames[I].SecondaryValues, 0,
                 Length(fBufferedFrames[I].SecondaryValues));
+              MarkFollowFrame(lSeries);
               lNeedsRedraw := True;
               Break;
             end;
@@ -981,6 +1182,7 @@ begin
 
   if lNeedsRedraw and (fChart <> nil) then
   begin
+    UpdateFollowers;
     fChart.Redraw;
     UpdateHeader(True);
   end;
@@ -1050,6 +1252,7 @@ end;
 procedure TRecorderSpectrumView.ChartAfterRender(Sender: TObject;
   ARenderTimeMs: Double);
 begin
+  if fFollow[0].Enabled or fFollow[1].Enabled then CacheFollowGeometry;
   UpdateHeader;
 end;
 

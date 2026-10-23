@@ -160,7 +160,7 @@ type
       procedure DrawBandShadedRects(APage: TChartPage; const ARect: TChartPixelRect);
     procedure CollectFlags(AObject: TChartBaseObject; AList: TList);
     procedure ResolveFlagOverlaps(APage: TChartPage);
-    procedure DrawCursorLabel(ACursor: TChartCursor; AXPixel, AYPixel: Single; const AText: string; const AColors: TCardinalArray);
+    procedure DrawCursorLabel(ACursor: TChartCursor; AXPixel, AYPixel: Single; const AText: string; const AColors: TCardinalArray; AOnLeft: Boolean);
     /// <summary> Рекурсивный обход и отрисовка дочерних объектов модели. </summary>
 
     procedure RenderObject(AObject: TChartBaseObject; const ARect: TChartPixelRect; APage: TChartPage; AYAxis: TChartAxis);
@@ -1176,7 +1176,7 @@ begin
   Result := lText;
 end;
 
-procedure TOpenGLChartRenderer.DrawCursorLabel(ACursor: TChartCursor; AXPixel, AYPixel: Single; const AText: string; const AColors: TCardinalArray);
+procedure TOpenGLChartRenderer.DrawCursorLabel(ACursor: TChartCursor; AXPixel, AYPixel: Single; const AText: string; const AColors: TCardinalArray; AOnLeft: Boolean);
 var
   lFont: cOglFont;
   lTextWidth, lTextHeight: Single;
@@ -1194,10 +1194,7 @@ begin
       lTextWidth := Max(lTextWidth, lFont.TextPixelWidth(lLines[I]));
     lTextHeight := lLines.Count * lFont.TextPixelHeight + (lLines.Count - 1) * 2;
 
-    lRect.Left := Round(AXPixel + 2);
-    lRect.Right := Round(AXPixel + 2 + lTextWidth + 12);
-    lRect.Top := Round(AYPixel - lTextHeight / 2 - 4);
-    lRect.Bottom := Round(AYPixel + lTextHeight / 2 + 4);
+    lRect := ChartCursorLabelRect(AXPixel, AYPixel, lTextWidth, lTextHeight, AOnLeft);
 
     SetGLColor($D8F5F5FA); // Светлая подложка флага (85% непрозрачности)
     FillRect(lRect);
@@ -1253,7 +1250,7 @@ begin
     begin
       lText1 := GetCursorLabelTextAndColors(ACursor, 1, APage, lColors1);
       lLabelY1 := ARect.Bottom + ACursor.LabelY1Offset * (ARect.Top - ARect.Bottom);
-      DrawCursorLabel(ACursor, lPixelX1, lLabelY1, lText1, lColors1);
+      DrawCursorLabel(ACursor, lPixelX1, lLabelY1, lText1, lColors1, ACursor.Label1OnLeft);
     end;
   end;
 
@@ -1274,7 +1271,7 @@ begin
       begin
         lText2 := GetCursorLabelTextAndColors(ACursor, 2, APage, lColors2);
         lLabelY2 := ARect.Bottom + ACursor.LabelY2Offset * (ARect.Top - ARect.Bottom);
-        DrawCursorLabel(ACursor, lPixelX2, lLabelY2, lText2, lColors2);
+        DrawCursorLabel(ACursor, lPixelX2, lLabelY2, lText2, lColors2, ACursor.Label2OnLeft);
       end;
     end;
   end;
@@ -1284,6 +1281,9 @@ procedure TOpenGLChartRenderer.DrawHorizontalCursor(
   ACursor: TChartHorizontalCursor; const ARect: TChartPixelRect);
 var
   lPixelY: Single;
+  lFont: cOglFont;
+  lText: string;
+  lTextX, lTextY: Single;
 begin
   if (ACursor = nil) or not ACursor.Visible or (ACursor.Axis = nil) then Exit;
   lPixelY := AxisValueToPixel(ACursor.Axis, ACursor.Y,
@@ -1302,6 +1302,17 @@ begin
     reserving axis labels, so the overlay always spans the visible X scale. }
   DrawLine(ARect.Left, lPixelY, ARect.Right, lPixelY);
   glPopAttrib;
+  if ACursor.ShowLabel then
+  begin
+    lText := FormatSignificant(ACursor.Y * ACursor.Axis.DisplayScale);
+    if ACursor.Axis.DisplayUnit <> '' then
+      lText := lText + ' ' + ACursor.Axis.DisplayUnit;
+    lFont := fFontMng.Font(cfGridTick);
+    lTextX := Max(ARect.Left + 4, ARect.Right - lFont.TextPixelWidth(lText) - 4);
+    lTextY := EnsureRange(lPixelY - lFont.TextPixelHeight - 3,
+      ARect.Top + 2, Max(ARect.Top + 2, ARect.Bottom - lFont.TextPixelHeight - 2));
+    DrawText(lText,lTextX,lTextY,lFont);
+  end;
 end;
 
 function FindTrendPeak(ATrend: cBuffTrend1d; AX1, AX2: Double; out APeakX, APeakY: Double): Boolean;

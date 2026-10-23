@@ -28,7 +28,8 @@ uses classes, stdctrls, controls, messages, windows, types, ExtCtrls, ComCtrls,
   uShader,
   uConfigFile3d,
   uBasePage,
-  uLineLgShader;
+  uLineLgShader,
+  uLogFile;
 
 type
   TMouseZoomEvent = procedure(Sender: TObject; UpScale: boolean) of object;
@@ -172,6 +173,11 @@ type
     procedure TVMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: integer);
     procedure LoadShaders;
+    // загрузить один шейдер; nil, если программа не готова к использованию
+    function LoadOneShader(const filename, sname: string;
+      buffered1d: boolean): cshader;
+    // записать в журнал сведения о GL-драйвере
+    procedure LogGlInfo;
   public
     Constructor Create(AOwner: TComponent); override;
     destructor destroy; override;
@@ -180,6 +186,8 @@ type
   public
     // если привязан debugLB то будет добавлена строка
     procedure logstr(str: string);
+    // аварийно выключить шейдеры и продолжить обычной отрисовкой
+    procedure DisableShaders;
     procedure SelectInTV(obj: cdrawobj);
     procedure SaveToFile(filename: string);
     procedure SaveWindowToFile(filename: string);
@@ -417,29 +425,94 @@ var
   sh: cshader;
 begin
   logstr('EnterLoadShaders');
+  m_UseShaders := false;
+  LogGlInfo;
+  // LineLg обязан загрузиться первым: тренды берут его по индексу 0,
+  // а буферизованную линию 1d - по индексу 1 (cBuffTrend1d.getshader)
   s := 'LineLg';
   shadername := g_configfile.findShaderFile(s);
   if shadername <> '' then
   begin
-    sh := cLineLgShader.Create(extractFilePath(shadername), s);
-    m_ShaderMng.Add(sh);
-    cLineLgShader(sh).BindLgShaderData;
-    m_UseShaders := true;
-  end;
-  s := 'LineLg1d';
-  shadername := g_configfile.findShaderFile(s);
-  if shadername <> '' then
-  begin
-    if fileexists(shadername) then
+    sh := LoadOneShader(shadername, s, false);
+    if sh <> nil then
     begin
-      sh := cLineLgShader1d.Create(extractFilePath(shadername), s);
-
       m_ShaderMng.Add(sh);
-      cLineLgShader1d(sh).BindLgShaderData;
+      cLineLgShader(sh).BindLgShaderData;
       m_UseShaders := true;
+      logMessage('Shaders: ' + s + ' loaded from ' + shadername);
+    end;
+  end
+  else
+    logMessage('Shaders: ' + s + ' file not found');
+  // вторая линия грузится только после успеха первой, иначе индексы шейдеров
+  // сместятся и тренды возьмут не тот шейдер
+  if m_UseShaders then
+  begin
+    s := 'LineLg1d';
+    shadername := g_configfile.findShaderFile(s);
+    if (shadername <> '') and fileexists(shadername) then
+    begin
+      sh := LoadOneShader(shadername, s, true);
+      if sh <> nil then
+      begin
+        m_ShaderMng.Add(sh);
+        cLineLgShader1d(sh).BindLgShaderData;
+        logMessage('Shaders: ' + s + ' loaded from ' + shadername);
+      end;
     end;
   end;
+  if not m_UseShaders then
+    logMessage('Shaders: disabled, fixed-function pipeline is used');
   logstr('ExitLoadShaders');
+end;
+
+function cChart.LoadOneShader(const filename, sname: string;
+  buffered1d: boolean): cshader;
+begin
+  result := nil;
+  try
+    if buffered1d then
+      result := cLineLgShader1d.Create(extractFilePath(filename), sname)
+    else
+      result := cLineLgShader.Create(extractFilePath(filename), sname);
+    if result.Ready then
+      exit;
+    // шейдер не собрался: в журнал причину и откат на обычную отрисовку
+    logMessage('Shaders: ' + sname + ' is not ready: ' + result.LastError);
+    result.Destroy;
+    result := nil;
+  except
+    on E: Exception do
+    begin
+      logMessage('Shaders: ' + sname + ' failed: ' + E.Message);
+      result := nil;
+    end;
+  end;
+end;
+
+procedure cChart.LogGlInfo;
+var
+  s: string;
+begin
+  if not Assigned(glGetString) then
+    exit;
+  s := 'GL_VENDOR=' + string(glGetString(GL_VENDOR));
+  s := s + '; GL_RENDERER=' + string(glGetString(GL_RENDERER));
+  s := s + '; GL_VERSION=' + string(glGetString(GL_VERSION));
+  s := s + '; GLSL=' + string(glGetString(GL_SHADING_LANGUAGE_VERSION));
+  logMessage('Shaders: ' + s);
+end;
+
+procedure cChart.DisableShaders;
+begin
+  if not m_UseShaders then
+    exit;
+  m_UseShaders := false;
+  if m_ShaderMng <> nil then
+    m_ShaderMng.disableShaders;
+  logMessage('Shaders: disabled by GL error, fixed-function pipeline is used');
+  // тренды пересоберут display list обычной веткой при следующей отрисовке
+  Invalidate;
 end;
 
 procedure cChart.logstr(str: string);

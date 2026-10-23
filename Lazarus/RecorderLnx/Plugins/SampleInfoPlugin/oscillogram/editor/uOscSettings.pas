@@ -304,7 +304,8 @@ begin
   try StoreLine; except on E: Exception do begin ShowMessage(E.Message); cbAxis.ItemIndex := fSelectedAxis; Exit; end; end;
   if fSelectedLine = 0 then fDraft.PrimaryAxisIndex := lIndex
   else fDraft.Lines[fSelectedLine - 1].AxisIndex := lIndex;
-  RefreshLines;
+  fDraft.RemoveUnusedAxes;
+  RefreshAxes; RefreshLines;
 end;
 procedure TOscSettings.AddClick(Sender: TObject);
 var lIndex: Integer;
@@ -327,7 +328,8 @@ begin
       fDraft.PrimaryAxisIndex := fDraft.Lines[0].AxisIndex; fDraft.DeleteLine(0); end
     else begin fDraft.TagId := 0; fDraft.TagName := ''; end;
   end else fDraft.DeleteLine(fSelectedLine - 1);
-  RefreshLines;
+  fDraft.RemoveUnusedAxes;
+  RefreshAxes; RefreshLines;
 end;
 procedure TOscSettings.NewAxisClick(Sender: TObject);
 var lIndex: Integer;
@@ -337,6 +339,7 @@ begin
   lIndex := fDraft.AxisCount; fDraft.AddAxis;
   if fSelectedLine = 0 then fDraft.PrimaryAxisIndex := lIndex
   else fDraft.Lines[fSelectedLine - 1].AxisIndex := lIndex;
+  fDraft.RemoveUnusedAxes;
   RefreshAxes; RefreshLines;
 end;
 procedure TOscSettings.OkClick(Sender: TObject);

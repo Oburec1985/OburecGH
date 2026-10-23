@@ -78,13 +78,22 @@ end;
 
 function cCfgFile.findShaderFile(name:string):string;
 begin
-  if FileExists(filename) then
+  // Сначала список путей Shaders из resources.ini (штатная раскладка плагина),
+  // затем поиск рядом с приложением. Берём только .vert/.frag: прежняя маска
+  // по всем расширениям находила и посторонние файлы (например, копии из
+  // shaders\bu), поэтому на разных машинах мог загрузиться разный шейдер.
+  result:=GetFile(name+'.vert', ShaderSection);
+  if (result='') or not FileExists(result) then
+    result:=GetFile(name+'.frag', ShaderSection);
+  if (result<>'') and not FileExists(result) then
+    result:='';
+  if result='' then
   begin
-    result:=GetFile(name+'.*', ShaderSection);
-  end
-  else
-  begin
-    result:=FindFile(name+'.*', startdir, deep+2);
+    result:=FindFile(name+'.vert', startdir, deep+2);
+    if (result='') or not FileExists(result) then
+      result:=FindFile(name+'.frag', startdir, deep+2);
+    if (result<>'') and not FileExists(result) then
+      result:='';
   end;
 end;
 

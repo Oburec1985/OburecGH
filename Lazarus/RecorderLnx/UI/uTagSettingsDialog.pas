@@ -822,7 +822,12 @@ begin
   case AKind of
     0: AValue := TagAt(0).Name;
     1: AValue := TagAt(0).UnitName;
-    2: AValue := TagAt(0).Address;
+    2:
+      begin
+        AValue := TagAt(0).Address;
+        if Pos('OPC UA: ', Trim(TagAt(0).SourceId)) = 1 then
+          AValue := Trim(TagAt(0).SourceId) + ' | ' + AValue;
+      end;
     3: AValue := TagAt(0).Description;
     4: AValue := TagAt(0).ModuleType;
   end;
@@ -832,7 +837,12 @@ begin
     case AKind of
       0: lValue := TagAt(I).Name;
       1: lValue := TagAt(I).UnitName;
-      2: lValue := TagAt(I).Address;
+      2:
+        begin
+          lValue := TagAt(I).Address;
+          if Pos('OPC UA: ', Trim(TagAt(I).SourceId)) = 1 then
+            lValue := Trim(TagAt(I).SourceId) + ' | ' + lValue;
+        end;
       3: lValue := TagAt(I).Description;
       4: lValue := TagAt(I).ModuleType;
     else

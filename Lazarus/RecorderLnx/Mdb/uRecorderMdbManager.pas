@@ -5,7 +5,7 @@ unit uRecorderMdbManager;
 
 interface
 
-uses SysUtils, uRecorderMdbTypes, uRecorderMdbRepository;
+uses Classes, SysUtils, uRecorderMdbTypes, uRecorderMdbRepository;
 
 type
   { Owns one XML measurement-base session. Recorder/RcPan paths are attached
@@ -28,12 +28,66 @@ type
 { UI-thread context shared by consumers on other mnemonic pages. The last
   successfully selected database context wins; its manager retains ownership. }
 function RecorderMdbActiveObjectDirectory: string;
+{ UI-thread only. Handlers invalidate cached context; they must not perform IO.
+  Owners must unsubscribe before destruction. Sender is nil for global changes. }
+procedure SubscribeRecorderMdbContextChanged(AHandler: TNotifyEvent);
+procedure UnsubscribeRecorderMdbContextChanged(AHandler: TNotifyEvent);
+procedure NotifyRecorderMdbContextChanged;
+function RecorderMdbContextRevision: QWord;
 
 implementation
 
 uses uRecorderXmlDatabase;
 
 var ActiveManager: TRecorderMdbManager = nil;
+    g_ContextHandlers: array of TNotifyEvent;
+    g_ContextRevision: QWord = 0;
+
+function SameHandler(const ALeft, ARight: TNotifyEvent): Boolean;
+begin
+  Result := (TMethod(ALeft).Code = TMethod(ARight).Code) and
+    (TMethod(ALeft).Data = TMethod(ARight).Data);
+end;
+
+procedure SubscribeRecorderMdbContextChanged(AHandler: TNotifyEvent);
+var I, lFree: Integer;
+begin
+  if not Assigned(AHandler) then Exit;
+  lFree := -1;
+  for I := 0 to High(g_ContextHandlers) do
+  begin
+    if SameHandler(g_ContextHandlers[I], AHandler) then Exit;
+    if not Assigned(g_ContextHandlers[I]) then lFree := I;
+  end;
+  if lFree < 0 then
+  begin
+    lFree := Length(g_ContextHandlers);
+    SetLength(g_ContextHandlers, lFree + 1);
+  end;
+  g_ContextHandlers[lFree] := AHandler;
+end;
+
+procedure UnsubscribeRecorderMdbContextChanged(AHandler: TNotifyEvent);
+var I: Integer;
+begin
+  for I := 0 to High(g_ContextHandlers) do
+    if SameHandler(g_ContextHandlers[I], AHandler) then
+      g_ContextHandlers[I] := nil;
+end;
+
+procedure NotifyRecorderMdbContextChanged;
+var I: Integer;
+begin
+  Inc(g_ContextRevision);
+  // Slots stay stable if a callback unsubscribes another owner.
+  for I := 0 to High(g_ContextHandlers) do
+    if Assigned(g_ContextHandlers[I]) then g_ContextHandlers[I](nil);
+end;
+
+function RecorderMdbContextRevision: QWord;
+begin
+  Result := g_ContextRevision;
+end;
 
 function RecorderMdbActiveObjectDirectory: string;
 var Node: TRecorderXmlDbNode;
@@ -86,7 +140,11 @@ end;
 
 destructor TRecorderMdbManager.Destroy;
 begin
-  if ActiveManager = Self then ActiveManager := nil;
+  if ActiveManager = Self then
+  begin
+    ActiveManager := nil;
+    NotifyRecorderMdbContextChanged;
+  end;
   fRepository.Free;
   inherited Destroy;
 end;
@@ -102,12 +160,14 @@ begin
   fContext.TestId := ATest.Id; fContext.TestName := ATest.Name;
   fContext.RequireValid;
   ActiveManager := Self;
+  NotifyRecorderMdbContextChanged;
 end;
 
 procedure TRecorderMdbManager.ClearContext;
 begin
   if ActiveManager = Self then ActiveManager := nil;
   fContext := Default(TMdbMeasurementContext);
+  NotifyRecorderMdbContextChanged;
 end;
 
 end.

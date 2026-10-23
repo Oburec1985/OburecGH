@@ -1,7 +1,7 @@
 unit uRecorderImpactSessionCsv;
 
-{ Long-form CSV projection of an immutable impact session. It is intended for
-  exchange and inspection; the JSON bundle remains the lossless import format. }
+{ Выгружает сессию в табличный CSV для обмена и просмотра. Для полного
+  обратимого импорта используется JSON-формат сессии. }
 
 {$mode objfpc}{$H+}
 {$codepage UTF8}
@@ -24,6 +24,7 @@ type
 
 implementation
 
+{ Экранирует CSV-поле и защищает значение с формульным префиксом. }
 function CsvText(const AValue: string): string;
 var
   SafeValue: string;
@@ -34,6 +35,7 @@ begin
   Result := '"' + StringReplace(SafeValue, '"', '""', [rfReplaceAll]) + '"';
 end;
 
+{ Сохраняет временный файл и заменяет CSV с восстановлением резервной копии при сбое. }
 procedure SaveAtomically(ALines: TStrings; const AFileName: string);
 var
   TempName: string;
@@ -61,11 +63,13 @@ begin
   end;
 end;
 
+{ Форматирует число согласно настройкам локали. }
 function NumberText(AValue: Double): string;
 begin
   Result := FloatToStr(AValue, DefaultFormatSettings);
 end;
 
+{ Проверяет снимок и экспортирует выбранные ряды и FRF в CSV. }
 function TRecorderImpactSessionCsvExporter.ExportCsv(const AFileName: string;
   const ASnapshot: TRecorderImpactSessionSnapshot;
   const AOptions: TRecorderImpactSessionSaveOptions;
@@ -75,6 +79,8 @@ var
   Origin: Double;
   I, J, K: Integer;
 
+  { Добавляет строки отсчётов; ATimeOrigin вычитается из времени, а SaveT0
+    задаёт начало общей временной оси при обходе блоков. }
   procedure AddSeries(const AKind: string; ASequence: QWord;
     const ASeries: TRecorderImpactSessionSeries; ATimeOrigin: Double);
   var

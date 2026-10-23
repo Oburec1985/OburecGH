@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Install RecorderLnx components
+Comment=Install Firebird, rcPanel, or a local NTP server for RecorderLnx
+Exec=bash ./install-firebird-recorderlnx.sh
+TryExec=bash
+Terminal=true
+Icon=system-software-install
+Categories=Utility;
+StartupNotify=false

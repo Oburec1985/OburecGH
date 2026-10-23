@@ -6,6 +6,7 @@ program ImpactHammerUiSmoke;
 uses
   Interfaces, Forms, Classes, SysUtils, Math, Controls, Graphics, StdCtrls, ExtCtrls,
   Buttons, LMessages, LCLType, uRecorderMeraBaseModel, uRecorderMdbRepository,
+  uRecorderProjectFiles,
   uRecorderFormModel, uRecorderTags, uRecorderCoreServices,
   uRecorderVisualControl,
   uRecorderStateMachine, uRecorderImpactHammer, uRecorderImpactHammerModel,
@@ -19,12 +20,20 @@ uses
   uSharedColorCheckTable,
   uRecorder3dFrfModifierFrame,
   uRecorder3dSettingsDialog, uRecorder3dModel,
-  uRecorderFrfRouteDialog, uRecorderFrfRoute,
+  uRecorder3dImpactBindingController, uRecorderImpactGeometryBindingDialog,
+  uRecorderFrfRouteDialog, uRecorderFrfRoute, uRecorderFrfPointStore,
   uRecorderFrfIntensityAdapter, uRecorderFrfRepository,
   uRecorderFrfContracts, u3dScene, u3dCoreTypes,
-  uOglChartPanZoomListener;
+  uOglChartPanZoomListener, GL, IntfGraphics, FPImage, GraphType;
 
 type
+  TGraphWindowTestForm = class(TForm)
+  public
+    FinishRequested: Boolean;
+    constructor Create(AOwner: TComponent); override;
+    procedure NativeKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+  end;
+
   THeadlessSessionCommands = class(TInterfacedObject,
     IRecorderImpactSessionCommandPort)
   private
@@ -33,6 +42,17 @@ type
     constructor Create(const AFolder: string);
     procedure Execute(ACommand: TRecorderImpactSessionCommand);
   end;
+
+constructor TGraphWindowTestForm.Create(AOwner: TComponent);
+begin
+  inherited CreateNew(AOwner);
+end;
+
+procedure TGraphWindowTestForm.NativeKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_RETURN then FinishRequested := True;
+end;
 
 constructor THeadlessSessionCommands.Create(const AFolder: string);
 begin
@@ -65,6 +85,589 @@ begin
 end;
 
 procedure CheckSceneFontDialog;
+forward;
+
+function NativeGraphMode: Boolean;
+begin
+  Result := ((ParamCount > 0) and (ParamStr(1) = '--graph-native-interactive')) or
+    SameText(ExtractFileName(ParamStr(0)), 'ImpactHammerNativeSmoke.exe');
+end;
+
+procedure CheckGraphWindows;
+var
+  lForm: TForm;
+  lView: TRecorderImpactHammerView;
+  lModel: TRecorderImpactHammerComponent;
+  lRegistry: TRecorderTagRegistry;
+  lBus: TRecorderEventBus;
+  lAxisState: TImpactResultAxisState;
+  lChart: TOglChart;
+  lRenderer: TOpenGLChartRenderer;
+  lPage: TChartPage;
+  lRect: TChartPixelRect;
+  lWindow: TRecorderImpactFilterWindow;
+  lSnapshot: TRecorderImpactHammerSnapshot;
+  lStale: TRecorderImpactHammerSnapshot;
+  lTimes, lExc, lResp: array[0..99] of Double;
+  lRawExcValues, lRectExcitation, lRectResponse: array of Double;
+  lBeforeTime, lBeforeFrf, lVerticalFrf, lEndTime: Double;
+  lBeforeChartTime, lBeforeChartFrf: Double;
+  lRawTimeSum, lRawExcSum, lRawFrfSum: Double;
+  lRectFrfSum, lRectExcSpectrum: Double;
+  lRectResponseSum, lRectResponseSpectrum: Double;
+  lSample: Integer;
+  lError: string;
+  lX, lY: Integer;
+  lKey: Word;
+  lBitmap: TBitmap;
+  lImage: TLazIntfImage;
+  lPixels: array of Byte;
+  lColor: TFPColor;
+  lRow, lColumn, lOffset, lOrange: Integer;
+  lNativeUntil, lNativeRevision: QWord;
+  lNativeLog: TextFile;
+
+  function Pixel(ATime: Double): Integer;
+  begin
+    Result := Round(lRenderer.XValueToPixel(lPage, nil, ATime,
+      lRect.Left, lRect.Right));
+  end;
+
+  procedure ReadWindow;
+  begin
+    lView.ApplicationService.FillSnapshot(lSnapshot);
+    lWindow := lSnapshot.FilterWindow;
+  end;
+
+  procedure MouseEvent(AMessage: Cardinal; AX, AY: Integer; AKeys: PtrUInt);
+  begin
+    lChart.Perform(AMessage, AKeys, (AX and $FFFF) or ((AY and $FFFF) shl 16));
+  end;
+
+  procedure Pump(AMilliseconds: Integer; ARefresh: Boolean = True);
+  var lUntil: QWord;
+  begin
+    lUntil := GetTickCount64 + AMilliseconds;
+    repeat
+      Application.ProcessMessages;
+      if ARefresh then lView.RefreshControl(nil, 0);
+      Sleep(5);
+    until GetTickCount64 >= lUntil;
+  end;
+
+  function CurveSum(AResult: TRecorderImpactResultType; ACurve: Integer): Double;
+  var lIndex: Integer;
+  begin
+    Result := 0;
+    Check(Length(lSnapshot.Results[AResult].Curves) > ACurve,
+      'captured curve missing');
+    Check(Length(lSnapshot.Results[AResult].Curves[ACurve].Y) > 0,
+      'captured samples missing');
+    for lIndex := 0 to High(lSnapshot.Results[AResult].Curves[ACurve].Y) do
+      Result := Result + Abs(lSnapshot.Results[AResult].Curves[ACurve].Y[lIndex]);
+  end;
+
+  function ChartSum(AResult: TRecorderImpactResultType; ACurve: Integer): Double;
+  var lSeries: cBuffTrend1d; lIndex: Integer;
+  begin
+    lSeries := cBuffTrend1d(Pointer(lView.ResultSeriesIdentity(AResult, ACurve)));
+    Check(lSeries <> nil, 'visible chart series missing');
+    Result := 0;
+    for lIndex := 0 to lSeries.Count - 1 do Result := Result + Abs(lSeries.Values[lIndex]);
+  end;
+
+  procedure DragRectHandle(AFrom, ATo: Double);
+  var lHandleOffset: Integer;
+  begin
+    lChart.Repaint;
+    lRect := lRenderer.GetPageContentRect(lPage);
+    if SameValue(AFrom, lWindow.StartSeconds) then lHandleOffset := 14
+    else lHandleOffset := -14;
+    MouseEvent(LM_LBUTTONDOWN, Pixel(AFrom) + lHandleOffset, lRect.Bottom - 8, MK_LBUTTON);
+    Check(not lChart.MouseInputEnabled, 'blue bottom rectangle handle was not captured');
+    { The real LCL release path is tested synchronously. Worker delivery is
+      pumped only after release, not with synthetic native button state held. }
+    MouseEvent(LM_LBUTTONUP, Pixel(ATo) + lHandleOffset, lRect.Bottom - 8, 0);
+    Pump(200, False);
+    ReadWindow;
+    Check(lChart.MouseInputEnabled, 'rectangle release did not restore chart input');
+  end;
+
+  procedure CheckRectSignals;
+  var lIndex: Integer; lExpected: Double;
+  begin
+    Check(Length(lSnapshot.Results[irtTime].Curves[0].Y) = Length(lRawExcValues),
+      'rectangle changed excitation sample count');
+    for lIndex := 0 to High(lRawExcValues) do
+    begin
+      { Existing display baseline removal is independent of rectangle bounds. }
+      lExpected := lRectExcitation[lIndex];
+      if (lSnapshot.Results[irtTime].Curves[0].X[lIndex] < lWindow.StartSeconds) or
+         (lSnapshot.Results[irtTime].Curves[0].X[lIndex] >= lWindow.EndSeconds) then
+        lExpected := 0;
+      Check(Abs(lSnapshot.Results[irtTime].Curves[0].Y[lIndex] - lExpected) < 1E-8,
+        Format('rectangle cut mismatch i=%d t=%.8f y=%.8g expected=%.8g bounds=%.8f..%.8f',
+          [lIndex, lSnapshot.Results[irtTime].Curves[0].X[lIndex],
+           lSnapshot.Results[irtTime].Curves[0].Y[lIndex], lExpected,
+           lWindow.StartSeconds, lWindow.EndSeconds]));
+      Check(Abs(lSnapshot.Results[irtTime].Curves[1].Y[lIndex] - lRectResponse[lIndex]) < 1E-8,
+        'rectangle incorrectly modified response exponential window');
+    end;
+  end;
+
+  procedure SaveRectImage;
+  var lBlueRows, lLeftX, lRightX, lScanY, lRow, lColumn: Integer;
+
+    function IsBlue(AX, AY: Integer; AEdgeLimit: Integer = 180): Boolean;
+    var lPixel: Integer;
+    begin
+      lPixel := ((lChart.Height - AY - 1) * lChart.Width + AX) * 4;
+      Result := (lPixels[lPixel] < AEdgeLimit) and (lPixels[lPixel + 1] < AEdgeLimit) and
+        (lPixels[lPixel + 2] > 180);
+    end;
+
+  begin
+    lChart.Repaint;
+    Application.ProcessMessages;
+    lRect := lRenderer.GetPageContentRect(lPage);
+    lChart.MakeCurrent;
+    SetLength(lPixels, lChart.Width * lChart.Height * 4);
+    glReadBuffer(GL_FRONT);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, lChart.Width, lChart.Height, GL_RGBA, GL_UNSIGNED_BYTE, @lPixels[0]);
+    lLeftX := Pixel(lWindow.StartSeconds);
+    lRightX := Pixel(lWindow.EndSeconds);
+    lBlueRows := 0;
+    for lScanY := lRect.Top + 25 to lRect.Bottom - 25 do
+      if IsBlue(lLeftX - 1, lScanY) and IsBlue(lLeftX, lScanY) and
+         IsBlue(lLeftX + 1, lScanY, 245) and IsBlue(lRightX - 1, lScanY) and
+         IsBlue(lRightX, lScanY) and IsBlue(lRightX + 1, lScanY, 245) then Inc(lBlueRows);
+    lImage := TLazIntfImage.Create(lChart.Width, lChart.Height, [riqfRGB, riqfAlpha]);
+    lBitmap := TBitmap.Create;
+    try
+      for lRow := 0 to lChart.Height - 1 do
+        for lColumn := 0 to lChart.Width - 1 do
+        begin
+          lOffset := ((lChart.Height - lRow - 1) * lChart.Width + lColumn) * 4;
+          lColor.Red := lPixels[lOffset] * 257;
+          lColor.Green := lPixels[lOffset + 1] * 257;
+          lColor.Blue := lPixels[lOffset + 2] * 257;
+          lColor.Alpha := 65535;
+          lImage.Colors[lColumn, lRow] := lColor;
+        end;
+      lBitmap.LoadFromIntfImage(lImage);
+      lBitmap.SaveToFile(IncludeTrailingPathDelimiter(GetTempDir) + 'impact-rect-windows.bmp');
+    finally lBitmap.Free; lImage.Free end;
+    Check(lBlueRows > (lRect.Bottom - lRect.Top - 50) * 0.75,
+      Format('rectangle solid-blue 3px coverage rows=%d height=%d x=%d,%d',
+        [lBlueRows, lRect.Bottom - lRect.Top, lLeftX, lRightX]));
+    Check(IsBlue(lLeftX + 14 - 5, lRect.Bottom - 8) and
+      IsBlue(lLeftX + 14 + 5, lRect.Bottom - 8) and
+      IsBlue(lRightX - 14 - 5, lRect.Bottom - 8) and
+      IsBlue(lRightX - 14 + 5, lRect.Bottom - 8), 'blue bottom square handles missing');
+  end;
+
+begin
+  lForm := nil;
+  if NativeGraphMode then
+  begin
+    Application.MainFormOnTaskbar := True;
+    Application.CreateForm(TGraphWindowTestForm, lForm);
+  end
+  else lForm := TGraphWindowTestForm.CreateNew(nil);
+  lModel := TRecorderImpactHammerComponent.Create;
+  lBus := TRecorderEventBus.Create;
+  lRegistry := TRecorderTagRegistry.Create(lBus);
+  try
+    lForm.SetBounds(50, 50, 1050, 720);
+    lForm.Caption := 'FRF native window test';
+    lForm.KeyPreview := True;
+    lForm.OnKeyDown := @TGraphWindowTestForm(lForm).NativeKeyDown;
+    lModel.Id := 'window-ui-smoke';
+    lRegistry.CreateTag('window-exc', 100);
+    lRegistry.CreateTag('window-response', 100);
+    lRegistry.FindByName('window-exc').PollFrequencyHz := 100;
+    lRegistry.FindByName('window-response').PollFrequencyHz := 100;
+    lModel.HammerTagId := lRegistry.FindByName('window-exc').Id;
+    lModel.HammerTagName := 'window-exc';
+    lModel.CaptureSamples := 100;
+    lModel.SampleRateHz := 100;
+    lModel.FftSize := 64;
+    { Rectangle regression covers the complete one-second capture, so both
+      late right-boundary motion and early left-boundary motion affect FFT. }
+    if (ParamCount > 0) and (ParamStr(1) = '--rect-window-only') then
+      lModel.FftSize := 128;
+    lModel.WelchSegmentSize := 64;
+    lModel.PretriggerSamples := 0;
+    lAxisState := lModel.AxisStates[irtFrfMagnitude];
+    lAxisState.XMin := 1;
+    lAxisState.XMax := 50;
+    lAxisState.YMin := 0;
+    lAxisState.YMax := 5;
+    lAxisState.LogX := False;
+    lAxisState.LogY := False;
+    lAxisState.AutoScale := False;
+    lModel.AxisStates[irtFrfMagnitude] := lAxisState;
+    with lModel.AddResponse do
+    begin
+      TagId := lRegistry.FindByName('window-response').Id;
+      TagName := 'window-response';
+      CurveId := 1;
+    end;
+    lView := TRecorderImpactHammerView.Create(lForm);
+    lView.Parent := lForm;
+    lView.Align := alClient;
+    lView.Configure(lModel, lRegistry);
+    lForm.Show;
+    Application.ProcessMessages;
+    Check(lView.FindComponent('tbWindowStart') = nil, 'native window slider remains');
+    Check(lView.FindComponent('tbWindowEnd') = nil, 'native window-end slider remains');
+    Check(lView.FindComponent('tbExponentialStart') = nil, 'native exponential slider remains');
+    Check(lView.FindComponent('tbExponentialLevel') = nil, 'native level slider remains');
+    lBus.Publish(TRecorderEventBus.MakeEvent(rceRunTransitionAfter, nil,
+      '', '', 0, nil, rstStopToView));
+    lView.ApplicationService.SetTriggerEnabled(False);
+    for lSample := 0 to 99 do
+    begin
+      lTimes[lSample] := lSample / 100;
+      lExc[lSample] := Sin(2 * Pi * 7 * lTimes[lSample]) + 0.3 * Cos(2 * Pi * 13 * lTimes[lSample]);
+      lResp[lSample] := 2 * Sin(2 * Pi * 7 * lTimes[lSample] + 0.2) + 0.7 * Cos(2 * Pi * 13 * lTimes[lSample]);
+    end;
+    lRegistry.PublishBlock('window-exc', lTimes, lExc, 100, True);
+    lRegistry.PublishBlock('window-response', lTimes, lResp, 100, True);
+    Check(lView.ApplicationService.TryCaptureRingPortion(lError), lError);
+    Pump(200);
+    ReadWindow;
+    lRawExcSum := CurveSum(irtTime, 0);
+    lRawTimeSum := CurveSum(irtTime, 1);
+    lRawFrfSum := CurveSum(irtFrfMagnitude, 0);
+    lRawExcValues := Copy(lSnapshot.Results[irtTime].Curves[0].Y);
+    lWindow := Default(TRecorderImpactFilterWindow);
+    lWindow.Enabled := True;
+    lWindow.StartSeconds := 0.1;
+    lWindow.EndSeconds := 0.9;
+    lWindow.ExponentialStartSeconds := 0.3;
+    lWindow.ExponentialEndSeconds := 0.7;
+    lWindow.ExponentialEndLevel := 0.2;
+    Check(lView.ApplicationService.TrySetFilterWindow(lWindow, lError), lError);
+    lView.ApplicationService.FillSnapshot(lSnapshot);
+    lView.ApplySnapshot(lSnapshot);
+    Pump(150);
+    ReadWindow;
+    lStale := lSnapshot;
+    lBeforeTime := CurveSum(irtTime, 1);
+    lBeforeFrf := CurveSum(irtFrfMagnitude, 0);
+    lBeforeChartTime := ChartSum(irtTime, 1);
+    lBeforeChartFrf := ChartSum(irtFrfMagnitude, 0);
+    lChart := lView.GetChartControl;
+    lChart.Redraw;
+    Application.ProcessMessages;
+    lRenderer := TOpenGLChartRenderer(lChart.GetRenderer);
+    lPage := TChartPage(TChartModel(lChart.Model).Children[0]);
+    lRect := lRenderer.GetPageContentRect(lPage);
+    if (ParamCount > 0) and (ParamStr(1) = '--rect-window-only') then
+    begin
+      lRectExcitation := Copy(lSnapshot.Results[irtTime].Curves[0].Y);
+      lRectResponse := Copy(lSnapshot.Results[irtTime].Curves[1].Y);
+      lRectFrfSum := CurveSum(irtFrfMagnitude, 0);
+      lRectExcSpectrum := CurveSum(irtSpectrum, 0);
+      DragRectHandle(0.1, 0.2);
+      Check(Abs(lWindow.StartSeconds - 0.2) < 0.005, 'left rectangle cursor did not move');
+      CheckRectSignals;
+      Check(Abs(CurveSum(irtFrfMagnitude, 0) - lRectFrfSum) > 1E-5,
+        'rectangular window did not recalculate FRF');
+      Check(Abs(CurveSum(irtSpectrum, 0) - lRectExcSpectrum) > 1E-5,
+        'rectangular window did not recalculate excitation spectrum');
+      Check(Abs(ChartSum(irtFrfMagnitude, 0) - lRectFrfSum) > 1E-5,
+        'recalculated rectangular-window FRF was not presented');
+      lRectFrfSum := CurveSum(irtFrfMagnitude, 0);
+      lRectExcSpectrum := CurveSum(irtSpectrum, 0);
+      DragRectHandle(0.9, 0.8);
+      Check(Abs(lWindow.EndSeconds - 0.8) < 0.005, 'right rectangle cursor did not move');
+      CheckRectSignals;
+      Check(Abs(CurveSum(irtFrfMagnitude, 0) - lRectFrfSum) > 1E-5,
+        'right rectangle cursor did not recalculate FRF');
+      Check(Abs(CurveSum(irtSpectrum, 0) - lRectExcSpectrum) > 1E-5,
+        'right rectangle cursor did not recalculate excitation spectrum');
+      Check(Abs(ChartSum(irtFrfMagnitude, 0) - lRectFrfSum) > 1E-5,
+        'right rectangle cursor frequency result was not presented');
+      lPage.XMinValue := 0.1;
+      lPage.XMaxValue := 0.9;
+      lPage.ZoomedX := True;
+      DragRectHandle(lWindow.StartSeconds, 0.25);
+      Check(Abs(lWindow.StartSeconds - 0.25) < 0.005,
+        'zoomed rectangle cursor used viewport-relative instead of physical time');
+      Check(SameValue(lPage.XMinValue, 0.1) and SameValue(lPage.XMaxValue, 0.9),
+        'rectangle edit changed selected X zoom');
+      CheckRectSignals;
+      lRectFrfSum := CurveSum(irtFrfMagnitude, 0);
+      lRectExcSpectrum := CurveSum(irtSpectrum, 0);
+      lRectResponseSum := CurveSum(irtTime, 1);
+      lRectResponseSpectrum := CurveSum(irtSpectrum, 1);
+      lRectExcitation := Copy(lSnapshot.Results[irtTime].Curves[0].Y);
+      lRect := lRenderer.GetPageContentRect(lPage);
+      lY := Round(lRect.Top + 8 + (1 - lWindow.ExponentialEndLevel) *
+        (lRect.Bottom - lRect.Top - 16));
+      MouseEvent(LM_LBUTTONDOWN, Pixel(lWindow.ExponentialEndSeconds), lY, MK_LBUTTON);
+      Check(not lChart.MouseInputEnabled, 'exponential XY handle was not captured');
+      lY := Round(lRect.Top + 8 + 0.55 * (lRect.Bottom - lRect.Top - 16));
+      MouseEvent(LM_LBUTTONUP, Pixel(0.65), lY, 0);
+      Pump(200, False);
+      ReadWindow;
+      Check(Abs(lWindow.ExponentialEndSeconds - 0.65) < 0.005,
+        'exponential handle physical end time was not applied');
+      Check(Abs(lWindow.ExponentialEndLevel - 0.45) < 0.02,
+        'exponential handle end level was not applied');
+      Check(Abs(CurveSum(irtFrfMagnitude, 0) - lRectFrfSum) > 1E-5,
+        'exponential window did not recalculate FRF');
+      Check(Abs(ChartSum(irtFrfMagnitude, 0) - lRectFrfSum) > 1E-5,
+        'exponential frequency result was not presented');
+      Check(Abs(CurveSum(irtTime, 1) - lRectResponseSum) > 1E-5,
+        'exponential window did not update response time signal');
+      Check(Abs(CurveSum(irtSpectrum, 1) - lRectResponseSpectrum) > 1E-5,
+        'exponential window did not update response spectrum');
+      Check(Abs(CurveSum(irtSpectrum, 0) - lRectExcSpectrum) < 1E-8,
+        'exponential window incorrectly changed excitation spectrum');
+      for lSample := 0 to High(lRectExcitation) do
+        Check(Abs(lSnapshot.Results[irtTime].Curves[0].Y[lSample] - lRectExcitation[lSample]) < 1E-8,
+          'exponential window incorrectly changed excitation time signal');
+      SaveRectImage;
+      lView.chkFilterWindow.Checked := False;
+      Pump(200, False);
+      ReadWindow;
+      Check(not lWindow.Enabled and not GetOrCreatePageCursor(lPage).Visible,
+        'disabled rectangular window still active');
+      Check(Abs(ChartSum(irtTime, 0) - lRawExcSum) < 1E-6,
+        'disable did not present raw excitation');
+      Check(Abs(ChartSum(irtTime, 1) - lRawTimeSum) < 1E-6,
+        'disable did not present raw response');
+      Check(Abs(ChartSum(irtFrfMagnitude, 0) - lRawFrfSum) < 1E-6,
+        'disable did not present baseline FRF');
+      WriteLn('RESULT blue rectangle cursors passed');
+      Exit;
+    end;
+    if NativeGraphMode then
+    begin
+      lNativeUntil := GetTickCount64 + 120000;
+      lNativeRevision := High(QWord);
+      AssignFile(lNativeLog, IncludeTrailingPathDelimiter(GetTempDir) + 'ImpactHammerNativeSmoke.log');
+      Rewrite(lNativeLog);
+      try
+      repeat
+        Application.ProcessMessages;
+        if lView.ApplicationService.Revision <> lNativeRevision then
+        begin
+          lNativeRevision := lView.ApplicationService.Revision;
+          ReadWindow;
+          WriteLn(lNativeLog, 'NATIVE tick=', GetTickCount64,
+            ' input=', lChart.MouseInputEnabled, ' enabled=', lWindow.Enabled,
+            ' rebuild=', lSnapshot.FilterRebuildPending,
+            ' rect=', lWindow.StartSeconds:0:5,
+            ':', lWindow.EndSeconds:0:5, ' exp=', lWindow.ExponentialStartSeconds:0:5,
+            ':', lWindow.ExponentialEndSeconds:0:5, ' level=', lWindow.ExponentialEndLevel:0:5,
+            ' time=', CurveSum(irtTime, 1):0:5, ' frf=', CurveSum(irtFrfMagnitude, 0):0:5);
+          Flush(lNativeLog);
+        end;
+        Sleep(5);
+      until TGraphWindowTestForm(lForm).FinishRequested or not lForm.Visible or
+        (GetTickCount64 >= lNativeUntil);
+      finally CloseFile(lNativeLog) end;
+      Exit;
+    end;
+    if (ParamCount > 0) and (ParamStr(1) = '--graph-capture-only') then
+    begin
+      SetCaptureControl(lChart);
+      Pump(600, False);
+      WriteLn('CAPTURECONTROL survived=', GetCaptureControl = lChart);
+      SetCaptureControl(nil);
+      Exit;
+    end;
+    lX := Pixel(0.7);
+    lY := Round(lRect.Top + 8 + 0.8 * (lRect.Bottom - lRect.Top - 16));
+    MouseEvent(LM_LBUTTONDOWN, lX, lY, MK_LBUTTON);
+    Check(not lChart.MouseInputEnabled, 'exponential handle did not capture gesture');
+    lY := Round(lRect.Top + 8 + 0.5 * (lRect.Bottom - lRect.Top - 16));
+    MouseEvent(LM_MOUSEMOVE, Pixel(0.75), lY, MK_LBUTTON);
+    Pump(150, False);
+    ReadWindow;
+    Check(Abs(lWindow.ExponentialEndSeconds - 0.75) < 0.005,
+      'live handle X was not queued while mouse held: ' + FloatToStr(lWindow.ExponentialEndSeconds) +
+      ' input=' + BoolToStr(lChart.MouseInputEnabled, True) + ' status=' + lSnapshot.StatusText);
+    Check(Abs(CurveSum(irtTime, 1) - lBeforeTime) > 0.01,
+      'time signal did not change while mouse held');
+    Check(Abs(CurveSum(irtFrfMagnitude, 0) - lBeforeFrf) > 0.01,
+      'FRF did not change while mouse held');
+    Check(not lChart.MouseInputEnabled, 'live repaint lost active drag');
+    Check(Abs(ChartSum(irtTime, 1) - lBeforeChartTime) > 0.01,
+      'production timer did not present live time signal');
+    Check(Abs(ChartSum(irtFrfMagnitude, 0) - lBeforeChartFrf) > 0.01,
+      'production timer did not present live FRF');
+    MouseEvent(LM_LBUTTONUP, Pixel(0.75), lY, 0);
+    ReadWindow;
+    Check(lChart.MouseInputEnabled, 'chart input not restored on release');
+    Check(Abs(lWindow.ExponentialEndSeconds - 0.75) < 0.005, 'end handle X not committed');
+    Check(Abs(lWindow.ExponentialEndLevel - 0.5) < 0.02, 'end handle level not committed');
+    Check(SameValue(lWindow.EndSeconds, 0.9), 'exponential handle changed rectangle end');
+    lView.ApplySnapshot(lStale);
+    MouseEvent(LM_LBUTTONDOWN, Pixel(0.75), lY, MK_LBUTTON);
+    Check(not lChart.MouseInputEnabled, 'stale snapshot moved exponential handle');
+    MouseEvent(LM_LBUTTONUP, Pixel(0.75), lY, 0);
+    Check(Abs(GetOrCreatePageCursor(lPage).X2 - 0.9) < 0.005,
+      'stale snapshot moved rectangle');
+    Pump(150);
+    ReadWindow;
+    Check(Abs(lWindow.ExponentialEndSeconds - 0.75) < 0.005,
+      'release/timer snapped end handle back');
+    { Vertical-only motion changes steepness without changing end time. }
+    lRect := lRenderer.GetPageContentRect(lPage);
+    lEndTime := lWindow.ExponentialEndSeconds;
+    lVerticalFrf := CurveSum(irtFrfMagnitude, 0);
+    lY := Round(lRect.Top + 8 + (1 - lWindow.ExponentialEndLevel) *
+      (lRect.Bottom - lRect.Top - 16));
+    MouseEvent(LM_LBUTTONDOWN, Pixel(lEndTime), lY, MK_LBUTTON);
+    lY := Round(lRect.Top + 8 + 0.25 * (lRect.Bottom - lRect.Top - 16));
+    MouseEvent(LM_MOUSEMOVE, Pixel(lEndTime), lY, MK_LBUTTON);
+    Pump(150, False);
+    ReadWindow;
+    Check(Abs(lWindow.ExponentialEndSeconds - lEndTime) < 0.005,
+      'vertical drag changed end time');
+    Check(Abs(lWindow.ExponentialEndLevel - 0.75) < 0.02,
+      'vertical drag did not change end level');
+    Check(Abs(CurveSum(irtFrfMagnitude, 0) - lVerticalFrf) > 0.01,
+      'vertical drag did not recompute FRF while held');
+    { Two rapid moves must flush the last one even with no further mouse event. }
+    lRect := lRenderer.GetPageContentRect(lPage);
+    lY := Round(lRect.Top + 8 + 0.2 * (lRect.Bottom - lRect.Top - 16));
+    MouseEvent(LM_MOUSEMOVE, Pixel(lEndTime), lY, MK_LBUTTON);
+    lY := Round(lRect.Top + 8 + 0.4 * (lRect.Bottom - lRect.Top - 16));
+    MouseEvent(LM_MOUSEMOVE, Pixel(lEndTime), lY, MK_LBUTTON);
+    Pump(120, False);
+    ReadWindow;
+    Check(Abs(lWindow.ExponentialEndLevel - 0.6) < 0.02,
+      'coalescing timer did not flush latest vertical position: ' + FloatToStr(lWindow.ExponentialEndLevel));
+    MouseEvent(LM_LBUTTONUP, Pixel(lEndTime), lY, 0);
+    Pump(100);
+    MouseEvent(LM_LBUTTONDOWN, Pixel(0.3), lRect.Top + 8, MK_LBUTTON);
+    MouseEvent(LM_MOUSEMOVE, Pixel(0.4), lRect.Top + 8, MK_LBUTTON);
+    Pump(100);
+    lKey := VK_ESCAPE;
+    lChart.OnKeyDown(lChart, lKey, []);
+    Pump(100);
+    ReadWindow;
+    Check(lChart.MouseInputEnabled and (lKey = 0), 'Escape did not cancel handle drag');
+    Check(SameValue(lWindow.ExponentialStartSeconds, 0.3), 'Escape committed preview');
+    lY := (lRect.Top + lRect.Bottom) div 2;
+    MouseEvent(LM_LBUTTONDOWN, Pixel(0.1), lY, MK_LBUTTON);
+    MouseEvent(LM_MOUSEMOVE, Pixel(0.2), lY, MK_LBUTTON);
+    MouseEvent(LM_LBUTTONUP, Pixel(0.2), lY, 0);
+    ReadWindow;
+    Check(Abs(lWindow.StartSeconds - 0.2) < 0.005, 'rectangle start cursor not committed');
+    Check(SameValue(lWindow.ExponentialStartSeconds, 0.3), 'rectangle cursor changed exponential start');
+    Pump(100);
+    Check(SameValue(lPage.XMinValue, 0) and SameValue(lPage.XMaxValue, 1),
+      'window gesture changed X viewport');
+    { Default rectangle boundaries must work before exponential handles move. }
+    lWindow.StartSeconds := 0;
+    lWindow.EndSeconds := 1;
+    lWindow.ExponentialStartSeconds := 0;
+    lWindow.ExponentialEndSeconds := 1;
+    Check(lView.ApplicationService.TrySetFilterWindow(lWindow, lError), lError);
+    ReadWindow;
+    lSnapshot.CaptureDurationSeconds := 0.5;
+    lView.ApplySnapshot(lSnapshot);
+    lChart.Repaint;
+    Application.ProcessMessages;
+    lRect := lRenderer.GetPageContentRect(lPage);
+    lY := (lRect.Top + lRect.Bottom) div 2;
+    lView.chartMouseDown(lChart, mbLeft, [], Pixel(0), lY);
+    lView.chartMouseUp(lChart, mbLeft, [], Pixel(0.1), lY);
+    ReadWindow;
+    Check(Abs(lWindow.StartSeconds - 0.1) < 0.005,
+      'default rectangle start is frozen by exponential start');
+    { Do not pick the orange endpoint that shares X with this green cursor. }
+    lY := lRect.Top + 25;
+    lView.chartMouseDown(lChart, mbLeft, [], Pixel(1), lY);
+    Check(not lChart.MouseInputEnabled, 'default end cursor did not capture gesture');
+    lView.chartMouseUp(lChart, mbLeft, [], Pixel(0.8), lY);
+    ReadWindow;
+    Check(Abs(lWindow.EndSeconds - 0.8) < 0.005,
+      'rectangle end incorrectly clamps to partial capture length: ' + FloatToStr(lWindow.EndSeconds));
+    Check(SameValue(lWindow.ExponentialEndSeconds, 1),
+      'rectangle incorrectly clipped independent response window');
+    lView.chartMouseDown(lChart, mbLeft, [], Pixel(lWindow.StartSeconds), lRect.Top + 8);
+    Check(not lChart.MouseInputEnabled, 'start handle did not capture gesture');
+    lView.chartMouseMove(lChart, [ssLeft], Pixel(0.2), lRect.Top + 8);
+    SetCaptureControl(nil);
+    Check(lChart.MouseInputEnabled, 'lost capture left chart input disabled');
+    ReadWindow;
+    Check(lWindow.ExponentialStartSeconds < 0.11, 'lost capture committed draft');
+    Pump(150);
+    lChart.Redraw;
+    lChart.Repaint;
+    Application.ProcessMessages;
+    { WM_PRINT/GetFormImage cannot capture an OpenGL child. Read its front
+      buffer and assert actual envelope pixels, not merely model geometry. }
+    lChart.MakeCurrent;
+    SetLength(lPixels, lChart.Width * lChart.Height * 4);
+    glReadBuffer(GL_FRONT);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, lChart.Width, lChart.Height, GL_RGBA,
+      GL_UNSIGNED_BYTE, @lPixels[0]);
+    lImage := TLazIntfImage.Create(lChart.Width, lChart.Height,
+      [riqfRGB, riqfAlpha]);
+    lBitmap := TBitmap.Create;
+    try
+      lOrange := 0;
+      for lRow := 0 to lChart.Height - 1 do
+        for lColumn := 0 to lChart.Width - 1 do
+        begin
+          lOffset := ((lChart.Height - lRow - 1) * lChart.Width + lColumn) * 4;
+          lColor.Red := lPixels[lOffset] * 257;
+          lColor.Green := lPixels[lOffset + 1] * 257;
+          lColor.Blue := lPixels[lOffset + 2] * 257;
+          lColor.Alpha := 65535;
+          lImage.Colors[lColumn, lRow] := lColor;
+          if (lPixels[lOffset] > 220) and (lPixels[lOffset + 1] > 70) and
+             (lPixels[lOffset + 1] < 190) and (lPixels[lOffset + 2] < 50) then
+            Inc(lOrange);
+        end;
+      Check(lOrange > 100, 'exponential curve/handles not rendered in GL frame');
+      lBitmap.LoadFromIntfImage(lImage);
+      lBitmap.SaveToFile(IncludeTrailingPathDelimiter(GetTempDir) + 'impact-graph-windows.bmp');
+    finally lBitmap.Free; lImage.Free end;
+    { Disable also works during an active preview: cancellation must not
+      overwrite the desired checkbox value with the drag-start enabled flag. }
+    lRect := lRenderer.GetPageContentRect(lPage);
+    MouseEvent(LM_LBUTTONDOWN, Pixel(lWindow.ExponentialStartSeconds), lRect.Top + 8, MK_LBUTTON);
+    MouseEvent(LM_MOUSEMOVE, Pixel(0.05), lRect.Top + 8, MK_LBUTTON);
+    lView.chkFilterWindow.Checked := False;
+    Pump(200, False);
+    ReadWindow;
+    Check(not lWindow.Enabled and not lView.chkFilterWindow.Checked,
+      'disabling checkbox during drag was lost');
+    Check(lChart.MouseInputEnabled, 'disable left gesture captured');
+    Check(not GetOrCreatePageCursor(lPage).Visible, 'disabled rectangle cursor still visible');
+    Check(Abs(CurveSum(irtTime, 0) - lRawExcSum) < 1E-6,
+      'disabling did not restore unwindowed excitation');
+    Check(Abs(CurveSum(irtTime, 1) - lRawTimeSum) < 1E-6,
+      'disabling did not restore unwindowed response');
+    Check(Abs(CurveSum(irtFrfMagnitude, 0) - lRawFrfSum) < 1E-6,
+      'disabling did not restore baseline FRF');
+    Check(Abs(ChartSum(irtTime, 0) - lRawExcSum) < 1E-6,
+      'disable completion did not present unwindowed excitation');
+    Check(Abs(ChartSum(irtTime, 1) - lRawTimeSum) < 1E-6,
+      'disable completion did not present unwindowed response');
+    Check(Abs(ChartSum(irtFrfMagnitude, 0) - lRawFrfSum) < 1E-6,
+      'disable completion did not present baseline FRF');
+  finally
+    lForm.Free;
+    lModel.Free;
+    lRegistry.Free;
+    lBus.Free;
+  end;
+end;
+
+procedure CheckSceneFontDialog;
 var
   Model:TRecorder3dComponent;
   Dlg:TRecorder3dSettingsDialog;
@@ -77,6 +680,36 @@ begin
     Dlg.seLabelFontSize.Value:=14;
     Check(Model.LabelFontSize=14,'Scene font-size edits apply live');
   finally Dlg.Free; Model.Free; end;
+end;
+
+procedure CheckNumericVertexSort;
+var Model: TRecorder3dComponent; Dlg: TRecorder3dSettingsDialog; I, Comparison: Integer;
+begin
+  Model := TRecorder3dComponent.Create;
+  Dlg := nil;
+  try
+    Dlg := TRecorder3dSettingsDialog.CreateDialog(nil, Model, nil, 0);
+    Dlg.sgVertices.RowCount := 4;
+    for I := 1 to 3 do Dlg.sgVertices.Cells[0,I] := IntToStr(I);
+    Dlg.sgVertices.Cells[7,1] := '10';
+    Dlg.sgVertices.Cells[7,2] := '2';
+    Dlg.sgVertices.Cells[7,3] := '1';
+    Dlg.VerticesHeaderClick(nil, True, 7);
+    Check((Dlg.sgVertices.Cells[7,1]='1') and (Dlg.sgVertices.Cells[7,2]='2') and
+      (Dlg.sgVertices.Cells[7,3]='10'), 'Vertex labels sort numerically');
+    Check(Dlg.sgVertices.Cells[0,1]='3', 'Sorting keeps vertex row identity');
+    Dlg.sgVertices.Cells[7,1] := '2 point';
+    Dlg.sgVertices.Cells[7,2] := '10 point';
+    Dlg.VerticesCompareCells(nil,7,1,7,2,Comparison);
+    Check(Comparison<0, 'Leading numeric prefix is compared before suffix');
+    Dlg.sgVertices.Cells[7,1] := '999999999999999999999999999999';
+    Dlg.sgVertices.Cells[7,2] := '1000000000000000000000000000000';
+    Dlg.VerticesCompareCells(nil,7,1,7,2,Comparison);
+    Check(Comparison<0, 'Long numeric labels do not overflow');
+  finally
+    Dlg.Free;
+    Model.Free;
+  end;
 end;
 
 procedure CheckIntensityMarkers;
@@ -159,6 +792,56 @@ begin
     Check(Adapter.Marker(0).PointLabel='Маршрут A','Custom point caption reaches marker');
     Check(Adapter.Marker(0).Visible and Adapter.Marker(0).DrawSymbol,
       'Hidden anchors do not hide the intensity sphere');
+    for I:=0 to 1 do
+    begin
+      SetLength(Curves[I].FrequencyHz,2);
+      SetLength(Curves[I].Magnitude,2);
+      SetLength(Curves[I].PhaseRadians,2);
+      SetLength(Curves[I].Coherence,2);
+      Curves[I].FrequencyHz[1]:=200;
+      Curves[I].Magnitude[1]:=8-4*I;
+      Curves[I].Coherence[1]:=1;
+      Bindings[I].BandRms:=False;
+      Bindings[I].IntensitySource:=risFrf;
+    end;
+    Check(Repo.Publish(Curves),'Publish frequency-varying intensity curves');
+    SetRecorderFrfDisplayRange(100,200);
+    Adapter.Configure(Provider,Scene,[Bindings[0]]);
+    Adapter.Update(100);
+    Check(SameValue(Adapter.Marker(0).SizePixels,5),'Single point normalized to preset interval peak');
+    Adapter.Update(200);
+    Check(SameValue(Adapter.Marker(0).SizePixels,20),'Single point changes size with frequency');
+    RegisterRecorderFrfProvider(Adapter,Provider);
+    try
+      Adapter.Configure(RecorderAggregateFrfProvider,Scene,Bindings);
+      Adapter.Update(100);
+      Check(SameValue(Adapter.Marker(0).SizePixels,5) and
+        SameValue(Adapter.Marker(1).SizePixels,10),'Aggregate normalizes to preset interval');
+      Adapter.Update(200);
+      Check(SameValue(Adapter.Marker(0).SizePixels,20) and
+        SameValue(Adapter.Marker(1).SizePixels,10),'Normalized relative sizes follow FRF cursor');
+      for I:=0 to 1 do
+      begin
+        SetLength(Curves[I].FrequencyHz,3);
+        SetLength(Curves[I].Magnitude,3);
+        SetLength(Curves[I].PhaseRadians,3);
+        SetLength(Curves[I].Coherence,3);
+        Curves[I].FrequencyHz[2]:=300;
+        Curves[I].Magnitude[2]:=1E9;
+        Curves[I].Coherence[2]:=1;
+      end;
+      Check(Repo.Publish(Curves),'Republish changed spectrum peak');
+      NotifyRecorderFrfProviderChanged(Provider);
+      Adapter.Update(100);
+      Check(SameValue(Adapter.Marker(1).SizePixels,10),
+        'Huge peak outside preset must not make current circle disappear');
+      SetRecorderFrfDisplayRange(100,150);
+      Adapter.Update(100);
+      Check(SameValue(Adapter.Marker(0).SizePixels,8),
+        'Changing preset invalidates interpolation-bound reference');
+    finally
+      UnregisterRecorderFrfProvider(Adapter);
+    end;
     Demo := Default(TRecorderModelPointBinding);
     Demo.ModifierTargetNodeId := 77;
     Demo.PointNumber := 2;
@@ -271,12 +954,233 @@ begin
         Values[I]);
 end;
 
+procedure CheckLiveGeometryBinding;
+var
+  Scene: T3dScene;
+  SceneModel: TRecorder3dComponent;
+  Model: TRecorderImpactHammerComponent;
+  Controller: TRecorder3dImpactBindingController;
+  Catalog: IRecorderModelPointCatalog;
+  Sink: IRecorderModelPointBindingSink;
+  Dialog: TRecorderImpactGeometryBindingDialog;
+  RouteDialog: TRecorderFrfRouteDialog;
+  Route: TRecorderFrfRoute;
+  Node: T3dNode;
+  Selection: TRecorderModelPointSelection;
+  I: Integer;
+  CanSelect: Boolean;
+  Key: Word;
+  NewPointText: string;
+  OldStepHeight, OldBindingTop: Integer;
+  LabelMode: IRecorderModelVertexLabelMode;
+  StepMarkers: array[0..2] of TRecorderModelPointBinding;
+begin
+  Scene := T3dScene.Create;
+  SceneModel := TRecorder3dComponent.Create;
+  SceneModel.Id := 'live-bind-scene';
+  Model := TRecorderImpactHammerComponent.Create;
+  Dialog := nil;
+  try
+    for I := 0 to 1 do
+    begin
+      Node := T3dNode.Create;
+      Node.Id := 77 + I;
+      Node.Name := 'Object ' + IntToStr(I + 1);
+      Node.Mesh := T3dMeshData.Create;
+      SetLength(Node.Mesh.Positions, 2);
+      Node.Mesh.Positions[0] := Vector3d(0,0,0);
+      Node.Mesh.Positions[1] := Vector3d(1,0,0);
+      Scene.AddNode(Node);
+    end;
+    Controller := TRecorder3dImpactBindingController.Create(SceneModel, Scene);
+    Catalog := Controller;
+    Sink := Controller;
+    RegisterRecorderModelPointTarget('live-bind-scene', Catalog, Sink);
+    Check(Supports(Sink,IRecorderModelVertexLabelMode,LabelMode), 'Current-step marker API');
+    StepMarkers[0] := Default(TRecorderModelPointBinding);
+    StepMarkers[0].TargetNodeId := 77;
+    StepMarkers[0].PointNumber := 1;
+    StepMarkers[1] := StepMarkers[0];
+    StepMarkers[2] := StepMarkers[0];
+    StepMarkers[2].PointNumber := 2;
+    SceneModel.ShowVertexLabels := False;
+    LabelMode.SetCurrentStepPoints(StepMarkers);
+    Check(SceneModel.CurrentStepPointCount=2, 'Green frames deduplicate vertices and do not require labels/data');
+    LabelMode.SetCurrentStepPoints([]);
+    Check(SceneModel.CurrentStepPointCount=0, 'Empty step clears green frames');
+    SceneModel.ShowVertexLabels := True;
+    Model.Target3dComponentId := 'live-bind-scene';
+    Model.Target3dNodeId := 77;
+    Model.AddResponse.TagName := 'X';
+    Model.AddResponse.TagName := 'Y';
+    Dialog := TRecorderImpactGeometryBindingDialog.ShowBinding(nil, Model);
+    Check(Dialog.FormStyle = fsStayOnTop, 'Binding editor stays on top');
+    Check(Dialog.Visible and not (fsModal in Dialog.FormState), 'Binding editor is nonmodal');
+    Check(Dialog.chkResultValues <> nil, 'Value labels belong to FRF display settings');
+    Dialog.chkResultValues.Checked := True;
+    Dialog.ResultValuesChange(nil);
+    Check(Model.ResultValuesVisible, 'Display settings update persistent value-label preference');
+    Dialog.cbObject.ItemIndex := 1;
+    Dialog.EditorChange(Dialog.cbObject);
+    Model.Responses[1].PointNumber:=42;
+    Model.Responses[1].PointLabel:='route label';
+    Model.Responses[1].Target3dNodeId:=78;
+    Check((Dialog.FindComponent('grdChannels')=nil) and
+      (Dialog.FindComponent('cbPointLabel')=nil),'Display form has no obsolete channel/point mapping controls');
+    Selection.SceneComponentId := 'live-bind-scene';
+    Selection.NodeId := 77;
+    Selection.PointNumber := 2;
+    PublishRecorderModelPointSelection(Selection);
+    Check(Dialog.cbObject.ItemIndex = 0, 'Scene selection updates object combo');
+    Check(Model.Responses[1].PointNumber = 42, 'Scene selection does not edit route-owned points');
+    Dialog.edSize.Text := '24';
+    Key := VK_RETURN;
+    Dialog.FormKeyDown(Dialog.edSize, Key, []);
+    Check((Key = 0) and Dialog.Visible and SameValue(Model.MarkerSizePixels,24),
+      'Enter applies without closing binding editor');
+    Check((Model.Responses[1].PointNumber=42) and
+      (Model.Responses[1].PointLabel='route label') and
+      (Model.Responses[1].Target3dNodeId=78),'Display changes preserve geometry mappings');
+    Dialog.Close;
+    Check(not Dialog.Visible, 'Close hides retained binding editor');
+    Route := TRecorderFrfRoute.Create;
+    RouteDialog := nil;
+    try
+      RouteDialog := TRecorderFrfRouteDialog.ShowRoute(nil, Model, Route, nil, nil, nil);
+      Check(RouteDialog.FormStyle = fsStayOnTop, 'Route editor stays on top');
+      Application.ProcessMessages;
+      OldStepHeight := RouteDialog.gridRoute.Height;
+      OldBindingTop := RouteDialog.pnlBindings.Top + RouteDialog.gridBindings.Top;
+      RouteDialog.splitSteps.MoveSplitter(50);
+      Check(RouteDialog.gridRoute.Height > OldStepHeight, 'Splitter expands step table');
+      Check(RouteDialog.pnlBindings.Top + RouteDialog.gridBindings.Top > OldBindingTop,
+        'Binding area follows splitter');
+      Check(RouteDialog.gridBindings.Height >= 90, 'Binding table remains usable');
+      RouteDialog.AddClick(nil);
+      RouteDialog.cbObject.ItemIndex := 1;
+      RouteDialog.ObjectChange(nil);
+      RouteDialog.cbChannel.ItemIndex := 0;
+      Selection.NodeId := 78;
+      Selection.PointNumber := 1;
+      PublishRecorderModelPointSelection(Selection);
+      RouteDialog.AddBindingClick(nil);
+      Check(RouteDialog.cbObject.ItemIndex = 1, 'Adding route mapping preserves focused object');
+      RouteDialog.cbChannel.ItemIndex := 1;
+      Selection.PointNumber := 2;
+      PublishRecorderModelPointSelection(Selection);
+      RouteDialog.AddBindingClick(nil);
+      Check(Length(Route.Entries[Route.CurrentIndex].Bindings) = 2,
+        'One route step holds multiple channel-point mappings');
+      Selection.NodeId := 77;
+      PublishRecorderModelPointSelection(Selection);
+      Check((RouteDialog.cbObject.ItemIndex = 0) and (Pos('2',RouteDialog.lblSelectedVertex.Caption)>0),
+        'Route editor follows scene object and vertex selection');
+      Check(RouteDialog.FindComponent('cbPoint') = nil, 'No top vertex combo in route editor');
+      Check(RouteDialog.gridRoute.ColCount = 4, 'No redundant point-count column');
+      CanSelect := True;
+      RouteDialog.BindingSelect(RouteDialog.gridBindings, 2, 1, CanSelect);
+      Check(RouteDialog.gridBindings.Columns[2].PickList.Count = 2, 'Point cell has object vertex choices');
+      NewPointText := '2';
+      RouteDialog.BindingValidate(RouteDialog.gridBindings, 2, 1, '1', NewPointText);
+      Check(Route[Route.CurrentIndex].Bindings[0].PointNumber = 2, 'Typed point updates actual vertex identity');
+      NewPointText := 'missing';
+      RouteDialog.BindingValidate(RouteDialog.gridBindings, 2, 1, '2', NewPointText);
+      Check(NewPointText = '2', 'Unknown point must not corrupt mapping');
+      RouteDialog.rgVertexLabels.ItemIndex := 1;
+      RouteDialog.VertexLabelsChange(nil);
+      Check(Model.OnlySensors, 'Current-step label mode');
+      Check(SceneModel.VertexLabelsOnlyBound, 'Scene filters labels to current step');
+      Sink.PublishBindings('test-empty-step', 'live-bind-scene', []);
+      Check(SceneModel.VertexLabelsOnlyBound, 'Empty step keeps current-step label mode');
+      RouteDialog.rgVertexLabels.ItemIndex := 0;
+      RouteDialog.VertexLabelsChange(nil);
+      Check(not Model.OnlySensors, 'All-vertex label mode');
+      Check(not SceneModel.VertexLabelsOnlyBound, 'All mode clears the old FRF-only label filter');
+      RouteDialog.CopyStepClick(nil);
+      Check((Route.Count = 2) and (Length(Route[1].Bindings) = 2), 'Copy step preserves mappings');
+      Check(Route[1].PointLabel = '2', 'Copied step defaults to its new ordinal number');
+      Check((Route[0].CurveId <> Route[1].CurveId) and not Route[1].Captured and
+        (Route[1].StorageFolder = ''), 'Copied step has independent identity and no captured data');
+    finally
+      RouteDialog.Free;
+      Route.Free;
+    end;
+  finally
+    Dialog.Free;
+    UnregisterRecorderModelPointTarget('live-bind-scene');
+    Catalog := nil;
+    Sink := nil;
+    LabelMode := nil;
+    Model.Free;
+    Scene.Free;
+    SceneModel.Free;
+  end;
+end;
+
+procedure CheckVertexLabelPersistence;
+var
+  Forms, Loaded: TRecorderFormManager;
+  Factory: TRecorderComponentFactory;
+  Page: TRecorderFormPage;
+  Model, Clone: TRecorder3dComponent;
+  FileName: string;
+begin
+  Forms := TRecorderFormManager.Create;
+  Loaded := TRecorderFormManager.Create;
+  Factory := TRecorderComponentFactory.Create;
+  FileName := IncludeTrailingPathDelimiter(GetTempDir) + 'vertex-labels-' +
+    IntToStr(GetTickCount64) + '.ini';
+  try
+    RegisterRecorder3dFactory(Factory);
+    Page := Forms.AddPage(TRecorderFormPage.Create('labels', 'labels', 'Labels'));
+    Model := TRecorder3dComponent.Create;
+    Model.Id := 'labels-scene';
+    Model.ShowVertexLabels := False;
+    Page.AddComponent(Model);
+    Model.SetPointLabel(42, 7, 9, '1');
+    Check(Model.PointLabel(42, 7) = '1', 'Edited vertex receives requested label');
+    Check(Model.PointLabel(42, 1) = '', 'Duplicate vertex label is explicitly cleared');
+    Model.SetPointLabel(42, 8, 9, '1');
+    Check(Model.PointLabel(42, 7) = '', 'Reassigning label clears former owner');
+    Check(Model.PointLabel(43, 1) = '1', 'Label uniqueness is local to one object');
+    with Model.AddNodeRenderOverride do
+    begin
+      NodeId := 77;
+      VertexLabels.Add('1=');
+      VertexLabels.Add('7=Датчик 1');
+    end;
+    SaveRecorderGuiConfig(FileName, Forms);
+    LoadRecorderGuiConfig(FileName, Loaded, Factory);
+    Clone := TRecorder3dComponent(Loaded.Pages[0].Components[0]);
+    Check(not Clone.ShowVertexLabels, 'Vertex label visibility must survive saving');
+    Check(Clone.FindNodeRenderOverride(77) <> nil, 'Label override persisted');
+    Check((Clone.PointLabel(42, 7) = '') and (Clone.PointLabel(42, 8) = '1'),
+      'Renumbered and explicitly cleared labels must survive saving');
+    Check(Clone.FindNodeRenderOverride(77).VertexLabels.IndexOfName('1') >= 0,
+      'Explicitly cleared vertex label must survive saving');
+    Check(Clone.FindNodeRenderOverride(77).VertexLabels.Values['7'] = 'Датчик 1',
+      'Vertex label text must survive saving');
+  finally
+    DeleteFile(FileName);
+    Loaded.Free;
+    Forms.Free;
+    Factory.Free;
+  end;
+end;
+
 procedure CheckMdbModelPath;
 var
   Page: TRecorderFormPage;
-  Model: TRecorderMeraBaseComponent;
+  Model, OtherModel: TRecorderMeraBaseComponent;
   Repository: TRecorderMdbRepository;
-  Root, Id, Expected: string;
+  Root, Id, Id2, Expected, Expected2: string;
+  Bus:TRecorderEventBus;
+  Registry:TRecorderTagRegistry;
+  Impact:TRecorderImpactHammerComponent;
+  View:TRecorderImpactHammerView;
+  Port:IRecorderFrfRouteService;
+  Revision:QWord;
+  RouteDialog:TRecorderFrfRouteDialog;
 begin
   Root := IncludeTrailingPathDelimiter(GetTempDir) + 'mdb-model-path-' + IntToStr(GetTickCount64);
   Repository := TRecorderMdbRepository.Create(Root);
@@ -284,6 +1188,8 @@ begin
     Repository.Open;
     Id := Repository.CreateObject('Object on another page', '', '');
     Expected := IncludeTrailingPathDelimiter(Repository.BasePath + Repository.FindNode(Id).RelativePath);
+    Id2:=Repository.CreateObject('Second object','','');
+    Expected2:=IncludeTrailingPathDelimiter(Repository.BasePath+Repository.FindNode(Id2).RelativePath);
   finally
     Repository.Free;
   end;
@@ -293,8 +1199,70 @@ begin
     Page.AddComponent(Model);
     Model.BasePath := Root;
     Model.ObjectId := Id;
+    OtherModel := TRecorderMeraBaseComponent.Create;
+    Page.AddComponent(OtherModel);
+    OtherModel.BasePath := Root;
+    OtherModel.ObjectId := Id2;
+    OtherModel.ActivateContext;
+    Check(RecorderMeraObjectDirectory = Expected2,
+      'Last applied MDB component wins over first component on another page');
+    Model.ActivateContext;
     Check(RecorderMeraObjectDirectory = Expected,
       'Resolve database component on inactive page without constructing its view');
+    Bus:=TRecorderEventBus.Create;
+    Registry:=TRecorderTagRegistry.Create(Bus);
+    Impact:=TRecorderImpactHammerComponent.Create;
+    View:=TRecorderImpactHammerView.Create(nil);
+    try
+      Registry.CreateTag('hammer',64).PollFrequencyHz:=1000;
+      Registry.CreateTag('response',64).PollFrequencyHz:=1000;
+      Impact.HammerTagId:=Registry.FindByName('hammer').Id;
+      Impact.HammerTagName:='hammer';
+      Impact.SampleRateHz:=1000;
+      Impact.AddResponse.TagId:=Registry.FindByName('response').Id;
+      Impact.Responses[0].TagName:='response';
+      View.Configure(Impact,Registry);
+      Check(Supports(View.ApplicationService,IRecorderFrfRouteService,Port),'MDB route service');
+      Check(SameFileName(Port.Route.Directory,ExcludeTrailingPathDelimiter(Expected+'frf'+PathDelim+'track')),
+        'Initial route uses selected database object');
+      View.btnRouteClick(nil);
+      RouteDialog:=TRecorderFrfRouteDialog(View.FindComponent('RecorderFrfRouteDialog'));
+      Check((RouteDialog<>nil) and RouteDialog.chkMdb.Checked,
+        'Auto database route opens with MDB enabled');
+      Revision:=RecorderMeraContextRevision;
+      Model.ObjectId:=Id2;
+      Check(RecorderMeraContextRevision<>Revision,'MDB object setter changes context revision');
+      Application.ProcessMessages;
+      Check(SameFileName(Port.Route.Directory,ExcludeTrailingPathDelimiter(Expected2+'frf'+PathDelim+'track')),
+        'FRF widget follows object change on another page');
+      Check(not Port.Route.Entries[0].Captured,'New object must not inherit saved state');
+      Check(SameFileName(RouteDialog.edFolder.Text,Port.Route.Directory),
+        'Open route editor follows database object folder');
+      Check(not View.chkResultReview.Checked,'Object change exits old saved result');
+      RouteDialog.chkMdb.Checked := False;
+      RouteDialog.MdbChange(nil);
+      Impact.ExportPath := Root + PathDelim + 'manual-frf';
+      Port.Route.SetDirectory(Impact.ExportPath + PathDelim + 'track');
+      RouteDialog.RefreshStorage;
+      RouteDialog.chkMdb.Checked := True;
+      RouteDialog.MdbChange(nil);
+      Check((Impact.ExportPath = '') and
+        SameFileName(Port.Route.Directory,
+          ExcludeTrailingPathDelimiter(Expected2 + 'frf' + PathDelim + 'track')),
+        'Enabling MDB overrides stale manual export path immediately');
+      Model.ObjectId := Id;
+      Model.ActivateContext;
+      Application.ProcessMessages;
+      Check(SameFileName(RouteDialog.edFolder.Text,
+        ExcludeTrailingPathDelimiter(Expected + 'frf' + PathDelim + 'track')),
+        'Database notification updates an already open route editor without manual refresh');
+    finally
+      Port:=nil;
+      View.Free;
+      Impact.Free;
+      Registry.Free;
+      Bus.Free;
+    end;
   finally
     Page.Free;
   end;
@@ -309,6 +1277,12 @@ var
   View: TRecorderImpactHammerView;
   Port: IRecorderFrfRouteService;
   Entry: TRecorderFrfRouteEntry;
+  Values: TStringList;
+  LoadedImpact: TRecorderImpactHammerComponent;
+  ErrorText: string;
+  TimePage: TChartPage;
+  Snapshot: TRecorderImpactHammerSnapshot;
+  FrfCursor: TChartCursor;
 begin
   Bus := TRecorderEventBus.Create;
   Registry := TRecorderTagRegistry.Create(Bus);
@@ -326,6 +1300,69 @@ begin
       'route-spinner-' + IntToStr(GetTickCount64);
     View.Configure(Model, Registry);
     Check(Supports(View.ApplicationService, IRecorderFrfRouteService, Port), 'Route service');
+    Check((View.btnCapturePortion<>nil) and not View.btnCapturePortion.Enabled,
+      'Manual portion button loads and waits for acquisition');
+    Check((View.FindComponent('btnStart')=nil) and
+      (View.FindComponent('btnArm')=nil) and (View.FindComponent('btnStop')=nil),
+      'Acquisition uses trigger checkbox or manual portion, without old commands');
+    Check((View.btnCapturePortion.Left>=View.chkTrigger.Left+View.chkTrigger.Width) and
+      (View.btnCapturePortion.Left+View.btnCapturePortion.Width<=View.btnGeometryBindings.Left),
+      'Manual portion button fits measurement command row');
+    Check(View.clbCurves.ItemCount>0,
+      'Configured channels are visible before the first portion');
+    View.rgFrequencyResult.ItemIndex:=1;
+    View.frequencyResultChange(nil);
+    Check((View.clbCurves.ItemCount=1) and
+      (View.clbCurves.ItemCaption[0]='response'),
+      'FRF table shows configured response before first portion');
+    View.rgFrequencyResult.ItemIndex:=0;
+    View.frequencyResultChange(nil);
+    Check((View.clbCurves.ItemCount=2) and
+      (View.clbCurves.ItemCaption[0]='hammer') and
+      (View.clbCurves.ItemCaption[1]='response'),
+      'Spectrum table shows configured excitation and response before first portion');
+    Check(View.lblCaptureStatus.Top>=View.chkResultReview.Top+View.chkResultReview.Height,
+      'Capture status has its own nonoverlapping row');
+    Bus.Publish(TRecorderEventBus.MakeEvent(rceStarted));
+    View.RefreshControl(nil,0);
+    Check(View.btnCapturePortion.Enabled,'Manual portion enabled for running acquisition');
+    View.chkTrigger.Checked:=True;
+    View.TriggerChange(nil);
+    View.ApplicationService.FillSnapshot(Snapshot);
+    Check(Snapshot.TriggerEnabled,'Trigger checkbox delegates enable command');
+    Check(View.ApplicationService.TryCapturePortion(ErrorText), ErrorText);
+    View.RefreshControl(nil,0);
+    Check(not View.btnCapturePortion.Enabled,'Future capture API disables busy action');
+    Check(not View.chkTrigger.Checked,'Manual portion disables trigger checkbox');
+    Check(View.lblCaptureStatus.Caption<>'','Pending manual portion status is visible');
+    View.ApplicationService.StopMeasurement;
+    View.RefreshControl(nil,0);
+    Check(View.btnCapturePortion.Enabled,'Service stop cancels pending portion and enables new request');
+    Check(Port.Route.Count = 1, 'Stationary object starts with one route step');
+    Values := TStringList.Create;
+    LoadedImpact := TRecorderImpactHammerComponent.Create;
+    try
+      // Selecting a new empty step intentionally leaves channels unmapped.
+      Model.Responses[0].PointNumber := 0;
+      Model.Responses[0].Target3dNodeId := 0;
+      Model.Responses[0].PointLabel := '';
+      Model.SaveToStrings(Values, 'Impact.');
+      Check(LoadedImpact.LoadFromStrings(Values, 'Impact.', ErrorText),
+        'Empty-step FRF configuration must reload at startup: ' + ErrorText);
+      Check(LoadedImpact.Responses[0].PointNumber = 0,
+        'Unassigned geometry point must not acquire an invented vertex');
+      Check(LoadedImpact.Responses[0].PointLabel = '', 'Unassigned point must keep an empty label');
+      LoadedImpact.Responses[0].PointNumber := -1;
+      Check(not LoadedImpact.Validate(ErrorText), 'Negative vertex numbers must remain invalid');
+    finally
+      LoadedImpact.Free;
+      Values.Free;
+    end;
+    Check((View.btnSaveSession.Parent = View.seRoutePoint.Parent) and
+      (View.btnSaveSession.Left >= View.seRoutePoint.Left + View.seRoutePoint.Width) and
+      (Abs(View.btnSaveSession.Top - View.seRoutePoint.Top) < 8),
+      'Save action must be beside step spinner');
+    Port.Route.Clear;
     Entry := Default(TRecorderFrfRouteEntry);
     Entry.PointNumber := 1;
     Entry.PointLabel := 'A';
@@ -333,17 +1370,476 @@ begin
     Entry.PointNumber := 2;
     Entry.PointLabel := 'B';
     Port.Route.Add(Entry);
-    Check(not View.seRoutePoint.Enabled, 'Route spinner disabled outside scenario');
-    View.chkScenario.Checked := True;
-    View.ScenarioChange(nil);
-    Check(View.seRoutePoint.Enabled, 'Route spinner enabled in scenario');
+    View.RefreshControl(nil, 0);
+    Check(not View.chkScenario.Visible, 'Unified step workflow has no separate scenario mode');
+    Check(View.seRoutePoint.Enabled, 'Step spinner enabled for configured steps');
     View.seRoutePoint.Value := 2;
     Check(Port.Route.CurrentIndex = 1, 'Spinner selects second route point');
     Check(Pos('B', View.lblRoutePoint.Caption) > 0, 'Spinner displays point label');
-    View.chkScenario.Checked := False;
-    View.ScenarioChange(nil);
-    Check(not View.seRoutePoint.Enabled, 'Scenario off disables spinner');
+    TimePage := TChartPage(View.GetChartControl.Model.Children[0]);
+    Snapshot := Default(TRecorderImpactHammerSnapshot);
+    Snapshot.ImpactCount := 1;
+    Snapshot.CaptureDurationSeconds := 0.35;
+    View.ApplySnapshot(Snapshot);
+    TimePage.XMinValue := 0.005;
+    TimePage.XMaxValue := 0.017;
+    TimePage.ZoomedX := True;
+    Snapshot.ImpactCount := 2;
+    Snapshot.ImpactIndex := 1;
+    View.ApplySnapshot(Snapshot);
+    Check(SameValue(TimePage.XMinValue,0.005) and SameValue(TimePage.XMaxValue,0.017) and
+      TimePage.ZoomedX, 'Changing impact preserves manual 5..17 ms X viewport');
+    TimePage.ZoomedX := False;
+    Snapshot.ImpactIndex := 0;
+    View.ApplySnapshot(Snapshot);
+    Check(SameValue(TimePage.XMinValue,0.005) and SameValue(TimePage.XMaxValue,0.017),
+      'Impact navigation must preserve actual X bounds, not depend on the zoom flag');
+    Snapshot.ImpactCount := 0;
+    View.ApplySnapshot(Snapshot);
+    Snapshot.ImpactCount := 5;
+    Snapshot.ImpactIndex := 3;
+    View.ApplySnapshot(Snapshot);
+    Check(SameValue(TimePage.XMinValue,0.005) and SameValue(TimePage.XMaxValue,0.017),
+      'Empty presentation and returning to impacts must preserve time X');
+    TimePage.XMinValue := TimePage.PresetMinXValue;
+    TimePage.XMaxValue := TimePage.PresetMaxXValue;
+    TimePage.ZoomedX := False;
+    Snapshot.ImpactIndex := 4;
+    View.ApplySnapshot(Snapshot);
+    Check(SameValue(TimePage.XMinValue,TimePage.PresetMinXValue) and
+      SameValue(TimePage.XMaxValue,TimePage.PresetMaxXValue),
+      'Explicitly restored full X range must remain full on next impact');
+    Check((View.chkResultReview <> nil) and (View.chkResultValues <> nil), 'Result review controls load');
+    TimePage.XMinValue := 0.005;
+    TimePage.XMaxValue := 0.017;
+    TChartAxis(TimePage.Children[0]).MinValue := -7;
+    TChartAxis(TimePage.Children[0]).MaxValue := 13;
+    with TChartPage(View.GetChartControl.Model.Children[1]) do
+    begin
+      XMinValue := 50;
+      XMaxValue := 170;
+      ZoomedX := True;
+      TChartAxis(Children[0]).MinValue := 0.002;
+      TChartAxis(Children[0]).MaxValue := 0.2;
+    end;
+    SetRecorderSelectedFrfFrequency(123.5);
+    View.seRoutePoint.Value := 1;
+    Check(SameValue(RecorderSelectedFrfFrequency,123.5), 'Step change preserves selected FRF frequency');
+    Check(SameValue(TimePage.XMinValue,0.005) and SameValue(TimePage.XMaxValue,0.017) and
+      SameValue(TChartAxis(TimePage.Children[0]).MinValue,-7) and
+      SameValue(TChartAxis(TimePage.Children[0]).MaxValue,13), 'Step change preserves time X/Y');
+    with TChartPage(View.GetChartControl.Model.Children[1]) do
+      Check(SameValue(XMinValue,50) and SameValue(XMaxValue,170) and
+        SameValue(TChartAxis(Children[0]).MinValue,0.002) and
+        SameValue(TChartAxis(Children[0]).MaxValue,0.2), 'Step change preserves frequency X/Y');
+    FrfCursor:=TChartCursor.Create;
+    try
+      TChartPage(View.GetChartControl.Model.Children[1]).AddChild(FrfCursor);
+      FrfCursor.Visible:=True;
+      FrfCursor.CursorType:=cctDouble;
+      FrfCursor.X1:=100;
+      FrfCursor.X2:=200;
+      View.chartCursorChanged(nil,FrfCursor);
+      FrfCursor.X1:=120;
+      View.chartCursorChanged(nil,FrfCursor);
+      Check(SameValue(RecorderSelectedFrfFrequency,120),'Dragging first frequency cursor updates intensity');
+      FrfCursor.X2:=220;
+      View.chartCursorChanged(nil,FrfCursor);
+      Check(SameValue(RecorderSelectedFrfFrequency,220),'Dragging second frequency cursor updates intensity');
+    finally
+      FrfCursor.Free;
+    end;
   finally
+    Port := nil;
+    View.Free;
+    Model.Free;
+    Registry.Free;
+    Bus.Free;
+  end;
+end;
+
+procedure CheckEmptyStepLegend;
+var
+  Scene: T3dScene;
+  SceneModel: TRecorder3dComponent;
+  Controller: TRecorder3dImpactBindingController;
+  Catalog: IRecorderModelPointCatalog;
+  Sink: IRecorderModelPointBindingSink;
+  Node: T3dNode;
+  Selection: TRecorderModelPointSelection;
+  Bus: TRecorderEventBus;
+  Registry: TRecorderTagRegistry;
+  Model: TRecorderImpactHammerComponent;
+  View: TRecorderImpactHammerView;
+  Port: IRecorderFrfRouteService;
+  Entry: TRecorderFrfRouteEntry;
+  I: Integer;
+  OriginalService: IRecorderImpactHammerApplicationService;
+  CaptureSnapshot: TRecorderImpactHammerSnapshot;
+
+  procedure PublishManualWave(ABaseTime: Double);
+  var
+    J: Integer;
+    T: Double;
+  begin
+    for J := 0 to 16 do
+    begin
+      T := ABaseTime + J / 8;
+      Registry.PublishValue('response', T, 2 * (1 + Sin(T)));
+      Registry.PublishValue('hammer', T, 1 + Sin(T));
+    end;
+  end;
+begin
+  Scene := T3dScene.Create;
+  SceneModel := TRecorder3dComponent.Create;
+  SceneModel.Id := 'review-selection-scene';
+  Node := T3dNode.Create;
+  Node.Id := 77;
+  Node.Mesh := T3dMeshData.Create;
+  SetLength(Node.Mesh.Positions, 2);
+  Scene.AddNode(Node);
+  Controller := TRecorder3dImpactBindingController.Create(SceneModel, Scene);
+  Catalog := Controller;
+  Sink := Controller;
+  RegisterRecorderModelPointTarget(SceneModel.Id, Catalog, Sink);
+  Bus := TRecorderEventBus.Create;
+  Registry := TRecorderTagRegistry.Create(Bus);
+  Model := TRecorderImpactHammerComponent.Create;
+  View := TRecorderImpactHammerView.Create(nil);
+  try
+    Registry.CreateTag('hammer', 64).PollFrequencyHz := 8;
+    Registry.CreateTag('response', 64).PollFrequencyHz := 8;
+    Model.HammerTagId := Registry.FindByName('hammer').Id;
+    Model.HammerTagName := 'hammer';
+    Model.SampleRateHz := 8;
+    Model.TriggerThreshold := 5;
+    Model.WindowKind := iwRectangular;
+    Model.PretriggerSamples := 1;
+    Model.CaptureSamples := 8;
+    Model.FftSize := 8;
+    Model.WelchSegmentSize := 8;
+    Model.WelchOverlapPercent := 0;
+    Model.AddResponse.TagId := Registry.FindByName('response').Id;
+    Model.Responses[0].TagName := 'response';
+    Model.Target3dComponentId := SceneModel.Id;
+    Model.Target3dNodeId := 77;
+    Model.Responses[0].Target3dNodeId := 77;
+    Model.Responses[0].PointNumber := 1;
+    Model.Responses[0].PointLabel := 'A';
+    Model.ExportPath := IncludeTrailingPathDelimiter(GetTempDir) +
+      'empty-step-legend-' + IntToStr(GetTickCount64);
+    View.Configure(Model, Registry);
+    Check(Supports(View.ApplicationService, IRecorderFrfRouteService, Port),
+      'Empty-step test has route service');
+    OriginalService := View.ApplicationService;
+    Bus.Publish(TRecorderEventBus.MakeEvent(rceStarted));
+    View.RefreshControl(nil, 0);
+    Check(View.btnCapturePortion.Enabled, 'First manual portion is available');
+    PublishManualWave(10);
+    View.btnCapturePortion.Click;
+    for I := 0 to 100 do
+    begin
+      View.RefreshControl(nil, 0);
+      if (View.ResultSampleCount(irtTime, 0) > 0) and
+        View.btnCapturePortion.Enabled then Break;
+      CheckSynchronize(10);
+      Sleep(5);
+    end;
+    View.ApplicationService.FillSnapshot(CaptureSnapshot);
+    Check(View.ResultSampleCount(irtTime, 0) > 0,
+      'Old step has captured time samples: ' + CaptureSnapshot.StatusText +
+      ' impacts=' + IntToStr(CaptureSnapshot.ImpactCount));
+    Model.RouteAutoEnabled := not Model.RouteAutoEnabled;
+    Model.RouteTagSyncEnabled := not Model.RouteTagSyncEnabled;
+    View.Configure(Model, Registry);
+    Check(View.ApplicationService = OriginalService,
+      'Runtime automation flags must not recreate the acquisition service');
+    Check(View.ResultSampleCount(irtTime, 0) > 0,
+      'Runtime automation flags retain unsaved raw samples');
+    Model.RouteAutoEnabled := False;
+    Model.RouteTagSyncEnabled := False;
+    View.btnSaveSession.Click;
+    Check(Port.RoutePointHasData, 'UI save stores current manual portion');
+    View.Configure(Model, Registry);
+    Check(View.ApplicationService = OriginalService, 'Saving must not recreate the acquisition service');
+    Entry := Default(TRecorderFrfRouteEntry);
+    Entry.PointLabel := 'Empty';
+    SetLength(Entry.Bindings, 1);
+    Entry.Bindings[0].ChannelIndex := 0;
+    Entry.Bindings[0].TargetNodeId := 77;
+    Entry.Bindings[0].SceneComponentId := SceneModel.Id;
+    Entry.Bindings[0].PointNumber := 2;
+    Entry.Bindings[0].PointLabel := 'B';
+    Port.Route.Add(Entry);
+    View.RefreshControl(nil, 0);
+    View.seRoutePoint.Value := Port.Route.Count;
+    View.RefreshControl(nil, 0);
+    View.Configure(Model, Registry);
+    Check(View.ApplicationService = OriginalService, 'Step navigation must not recreate the acquisition service');
+    Check(View.btnCapturePortion.Enabled, 'Next empty step still permits manual capture');
+    Check((View.chkRouteTagSync.Left = View.chkRouteAuto.Left) and
+      (View.chkRouteAuto.Top > View.chkRouteTagSync.Top),
+      'Automatic mode is directly below route-tag synchronization');
+    Check(not View.chkResultValues.Visible,
+      'Value-label preference is absent from main widget');
+    View.chkResultReview.Checked := True;
+    View.ResultReviewChange(nil);
+    Selection.SceneComponentId := SceneModel.Id;
+    Selection.NodeId := 77;
+    Selection.PointNumber := 1;
+    PublishRecorderModelPointSelection(Selection);
+    Check(View.seRoutePoint.Value = 1, 'Review scene point selects its saved route step');
+    Check(Pos('Точка: A', View.lblRoutePoint.Caption) > 0,
+      'Review shows selected geometry point label');
+    Check(View.ResultSampleCount(irtTime, 0) > 0,
+      'Review scene selection loads saved time realization');
+    Selection.PointNumber := 2;
+    PublishRecorderModelPointSelection(Selection);
+    Check((View.seRoutePoint.Value = 2) and
+      (Pos('Точка: B', View.lblRoutePoint.Caption) > 0),
+      'Review scene point selects empty step and displays its point label');
+    View.chkResultReview.Checked := False;
+    View.ResultReviewChange(nil);
+    Check((View.ResultSampleCount(irtTime, 0) = 0) and
+      (View.ResultSampleCount(irtFrfMagnitude, 0) = 0),
+      'Empty selected step must not display old step samples');
+    View.rgFrequencyResult.ItemIndex := 1;
+    View.frequencyResultChange(nil);
+    Check((View.clbCurves.ItemCount = 1) and
+      (View.clbCurves.ItemCaption[0] = 'response'),
+      'Empty selected step retains configured channel legend');
+    View.seRoutePoint.Value := 1;
+    View.RefreshControl(nil, 0);
+    Check(View.ResultSampleCount(irtTime, 0) > 0,
+      'Returning to saved old step restores its time samples');
+    View.seRoutePoint.Value := Port.Route.Count;
+    PublishManualWave(20);
+    View.btnCapturePortion.Click;
+    for I := 0 to 100 do
+    begin
+      View.RefreshControl(nil, 0);
+      if View.btnCapturePortion.Enabled then Break;
+      CheckSynchronize(10);
+      Sleep(5);
+    end;
+    Check(View.btnCapturePortion.Enabled and
+      (View.ResultSampleCount(irtTime, 0) > 0),
+      'Second step completes manual capture without restarting acquisition');
+  finally
+    OriginalService := nil;
+    Port := nil;
+    View.Free;
+    Model.Free;
+    Registry.Free;
+    Bus.Free;
+    UnregisterRecorderModelPointTarget(SceneModel.Id);
+    Catalog := nil;
+    Sink := nil;
+    SceneModel.Free;
+    Scene.Free;
+  end;
+end;
+
+procedure CheckRouteTagSync;
+var
+  Bus: TRecorderEventBus;
+  Registry: TRecorderTagRegistry;
+  Model: TRecorderImpactHammerComponent;
+  View: TRecorderImpactHammerView;
+  Port: IRecorderFrfRouteService;
+  OriginalService: IRecorderImpactHammerApplicationService;
+  Entry: TRecorderFrfRouteEntry;
+  Dlg: TRecorderFrfRouteDialog;
+  Image: TBitmap;
+  AtPoint, NextStep: TRecorderTag;
+  I: Integer;
+  ComboKey: Word;
+  procedure TypeSearch(ACombo: TComboBox; const AText: string);
+  begin
+    ACombo.ItemIndex := -1;
+    ACombo.Text := AText;
+    Dlg.AutomationSearchChange(ACombo);
+  end;
+begin
+  Bus := TRecorderEventBus.Create;
+  Registry := TRecorderTagRegistry.Create(Bus);
+  Model := TRecorderImpactHammerComponent.Create;
+  View := TRecorderImpactHammerView.Create(nil);
+  try
+    Registry.CreateTag('hammer', 64).PollFrequencyHz := 1000;
+    Registry.CreateTag('response', 64).PollFrequencyHz := 1000;
+    Registry.CreateTag('route-step', 64);
+    AtPoint := Registry.CreateTag('station-ready', 64);
+    AtPoint.Address := 'Input.Station.Ready';
+    AtPoint.Description := 'Arrival permissive';
+    NextStep := Registry.CreateTag('station-next', 64);
+    NextStep.Address := 'Output.Next';
+    NextStep.Description := 'Advance carriage';
+    NextStep.ExternalWriteAllowed := True;
+    Model.HammerTagId := Registry.FindByName('hammer').Id;
+    Model.HammerTagName := 'hammer';
+    Model.SampleRateHz := 1000;
+    Model.AddResponse.TagId := Registry.FindByName('response').Id;
+    Model.Responses[0].TagName := 'response';
+    Model.RoutePointTagId := Registry.FindByName('route-step').Id;
+    Model.RoutePointTagName := 'route-step';
+    Model.RouteAtPointTagId := AtPoint.Id;
+    Model.RouteAtPointTagName := AtPoint.Name;
+    Model.RouteNextStepTagId := NextStep.Id;
+    Model.RouteNextStepTagName := NextStep.Name;
+    Model.ExportPath := IncludeTrailingPathDelimiter(GetTempDir) +
+      'route-tag-sync-' + IntToStr(GetTickCount64);
+    View.Configure(Model, Registry);
+    Check(Supports(View.ApplicationService, IRecorderFrfRouteService, Port),
+      'Tag sync exposes route service');
+    OriginalService := View.ApplicationService;
+    Port.Route.Clear;
+    for I := 1 to 3 do
+    begin
+      Entry := Default(TRecorderFrfRouteEntry);
+      Entry.PointLabel := IntToStr(I);
+      SetLength(Entry.Bindings, 1);
+      Entry.Bindings[0].ChannelIndex := 0;
+      Entry.Bindings[0].PointNumber := I;
+      Entry.Bindings[0].PointLabel := IntToStr(I);
+      Port.Route.Add(Entry);
+    end;
+    View.RefreshControl(nil, 0);
+    Dlg := TRecorderFrfRouteDialog.ShowRoute(nil, Model, Port.Route, nil, nil, nil, Registry);
+    try
+      Check(Dlg.cbAtPointTag.Items.Objects[Dlg.cbAtPointTag.ItemIndex] = AtPoint,
+        'At-point combo restores stable identity');
+      Check((Dlg.FindComponent('edAtPointSearch') = nil) and
+        (Dlg.FindComponent('edNextStepSearch') = nil) and
+        (Dlg.FindComponent('edPointTagSearch') = nil), 'Tag search uses combo edit only');
+      Check(Dlg.cbAtPointTag.Style = csDropDown, 'At-point combo is editable');
+      TypeSearch(Dlg.cbAtPointTag, 'RiVaL');
+      Check((Dlg.cbAtPointTag.Items.Count = 2) and
+        (Dlg.cbAtPointTag.Items.Objects[1] = AtPoint) and
+        (Dlg.cbAtPointTag.Text = 'RiVaL') and (Model.RouteAtPointTagId = AtPoint.Id),
+        'Inline search finds middle description without changing text or bound identity');
+      TypeSearch(Dlg.cbAtPointTag, 'pUt.StAt');
+      Check(Dlg.cbAtPointTag.Items.Count = 2, 'At-point search matches address substring');
+      TypeSearch(Dlg.cbAtPointTag, 'tion-rea');
+      Check(Dlg.cbAtPointTag.Items.Count = 2, 'At-point search matches name substring');
+      TypeSearch(Dlg.cbAtPointTag, 'no-such-tag');
+      ComboKey := VK_RETURN;
+      Dlg.AutomationTagKeyDown(Dlg.cbAtPointTag, ComboKey, []);
+      Check((Dlg.cbAtPointTag.Items.Count = 1) and
+        (Model.RouteAtPointTagId = AtPoint.Id), 'Unmatched Enter never clears configured tag');
+      TypeSearch(Dlg.cbAtPointTag, 'response');
+      Check(Model.RouteAtPointTagId = AtPoint.Id, 'Typing exact tag never commits implicitly');
+      ComboKey := VK_RETURN;
+      Dlg.AutomationTagKeyDown(Dlg.cbAtPointTag, ComboKey, []);
+      Check((Model.RouteAtPointTagId = Registry.FindByName('response').Id) and
+        (Model.RouteAtPointTagName = 'response'), 'Enter commits stable tag ID and name');
+      TypeSearch(Dlg.cbAtPointTag, 'RiVaL');
+      Dlg.cbAtPointTag.ItemIndex := 1;
+      Dlg.AutomationTagSelect(Dlg.cbAtPointTag);
+      Check(Model.RouteAtPointTagId = AtPoint.Id, 'Explicit suggestion selection commits tag');
+      TypeSearch(Dlg.cbAtPointTag, '');
+      Check(Dlg.cbAtPointTag.Items.Count = Registry.TagCount + 1, 'Clear search restores allowed tags');
+      Check((Dlg.cbNextStepTag.Items.Count = 2) and
+        (Dlg.cbNextStepTag.Items.Objects[1] = NextStep),
+        'Command combo excludes read-only tags');
+      TypeSearch(Dlg.cbNextStepTag, 'CaRr');
+      Check(Dlg.cbNextStepTag.Items.Count = 2, 'Command search matches description case-insensitively');
+      TypeSearch(Dlg.cbPointTag, 'TE-ST');
+      Check((Dlg.cbPointTag.Items.Count = 2) and
+        (TRecorderTag(Dlg.cbPointTag.Items.Objects[1]).Id = Model.RoutePointTagId),
+        'Point-tag combo filters without changing bound identity');
+      Dlg.chkRouteAuto.Checked := True;
+      Dlg.chkAutoOverwrite.Checked := True;
+      Dlg.AutomationChange(nil);
+      Dlg.edNextStepPulse.Text := '350';
+      Dlg.PulseEditingDone(nil);
+      Check(Model.RouteAutoEnabled and Model.RouteAutoOverwrite and
+        (Model.RouteNextStepPulseMs = 350), 'Route automation controls update model');
+      TypeSearch(Dlg.cbAtPointTag, '');
+      TypeSearch(Dlg.cbNextStepTag, '');
+      TypeSearch(Dlg.cbPointTag, '');
+      ComboKey := VK_ESCAPE;
+      Dlg.AutomationTagKeyDown(Dlg.cbAtPointTag, ComboKey, []);
+      Check((Dlg.cbAtPointTag.Text = AtPoint.Name) and
+        (Dlg.cbAtPointTag.Items.Count = Registry.TagCount + 1),
+        'Escape restores committed tag and full suggestion list');
+      Application.ProcessMessages;
+      Image := Dlg.GetFormImage;
+      try Image.SaveToFile(IncludeTrailingPathDelimiter(GetTempDir) + 'recorder-route-auto-ui.bmp');
+      finally Image.Free end;
+      Model.RouteAutoEnabled := False;
+    finally Dlg.Free end;
+    Dlg := TRecorderFrfRouteDialog.ShowRoute(nil, Model, Port.Route, nil, nil, nil, Registry);
+    try
+      Check((Dlg.cbAtPointTag.Text = AtPoint.Name) and
+        (Dlg.cbAtPointTag.Items.Objects[Dlg.cbAtPointTag.ItemIndex] = AtPoint),
+        'Reopening restores committed tag rather than search fragment');
+    finally Dlg.Free end;
+    Check(not View.chkRouteTagSync.Enabled, 'Tag sync is unavailable outside Play');
+    Check((View.chkRouteTagSync.Left >= View.btnSaveSession.Left + View.btnSaveSession.Width) and
+      (View.lblRoutePoint.Left >= View.chkRouteTagSync.Left + View.chkRouteTagSync.Width),
+      'Tag sync fits beside step/save controls without label overlap');
+    Registry.PublishValue('route-step', 0, 1);
+    Bus.Publish(TRecorderEventBus.MakeEvent(rceStarted));
+    View.RefreshControl(nil, 0);
+    Check(View.chkRouteTagSync.Enabled, 'Play enables configured tag synchronization');
+    View.chkRouteAuto.Checked := True;
+    View.RouteAutoChange(nil);
+    Check(View.chkRouteAuto.Checked, 'Play permits automatic route mode');
+    View.chkRouteTagSync.Checked := True;
+    View.RouteTagSyncChange(nil);
+    Registry.PublishValue('route-step', 0.5, 3);
+    for I := 0 to 100 do
+    begin
+      View.RefreshControl(nil, 0);
+      if View.seRoutePoint.Value = 3 then Break;
+      CheckSynchronize(5);
+      Sleep(5);
+    end;
+    Check(View.seRoutePoint.Value = 3, 'Worker-selected automatic step is presented');
+    View.Configure(Model, Registry);
+    Check(View.ApplicationService = OriginalService,
+      'Automatic step binding presentation does not recreate acquisition service');
+    View.seRoutePoint.Value := 2;
+    Check(not View.chkRouteAuto.Checked, 'Manual neighboring point cancels automatic route mode');
+    View.chkRouteAuto.Checked := True;
+    View.RouteAutoChange(nil);
+    Check(View.chkRouteAuto.Checked, 'Automatic route mode can be enabled again');
+    Registry.PublishValue('hammer', 0, 0);
+    Registry.PublishValue('response', 0, 0);
+    Registry.PublishValue('hammer', 0.001, 1);
+    Registry.PublishValue('response', 0.001, 1);
+    View.btnCapturePortionClick(nil);
+    Check(not View.chkRouteAuto.Checked, 'Manual capture cancels automatic route mode');
+    View.seRoutePoint.Value := 1;
+    View.chkRouteTagSync.Checked := True;
+    View.RouteTagSyncChange(nil);
+    Check(View.chkRouteTagSync.Checked, 'User can enable tag synchronization');
+    Registry.PublishValue('route-step', 1, 3);
+    View.RefreshControl(nil, 0);
+    Check((View.seRoutePoint.Value = 3) and (Port.Route.CurrentIndex = 2),
+      'Tag update selects route step and updates spinner');
+    Check(View.chkRouteTagSync.Checked, 'Programmatic spinner update preserves synchronization');
+    View.Configure(Model, Registry);
+    Check(View.ApplicationService = OriginalService,
+      'Automatic geometry mapping update does not recreate acquisition service');
+    View.seRoutePoint.Value := 2;
+    Check(not View.chkRouteTagSync.Checked, 'Manual neighboring step disables tag synchronization');
+    Registry.PublishValue('route-step', 2, 1);
+    View.RefreshControl(nil, 0);
+    Check(View.seRoutePoint.Value = 2, 'Tag no longer overrides manual step selection');
+    View.chkRouteTagSync.Checked := True;
+    View.RouteTagSyncChange(nil);
+    Check(View.seRoutePoint.Value = 1, 'Re-enabled synchronization follows latest tag value');
+    Bus.Publish(TRecorderEventBus.MakeEvent(rceStopped));
+    View.RefreshControl(nil, 0);
+    Check(not View.chkRouteTagSync.Enabled and not View.chkRouteTagSync.Checked,
+      'Stopping Play clears and disables tag synchronization');
+    Registry.PublishValue('route-step', 3, 3);
+    View.RefreshControl(nil, 0);
+    Check(View.seRoutePoint.Value = 1, 'Stopped source cannot change selected route step');
+  finally
+    OriginalService := nil;
     Port := nil;
     View.Free;
     Model.Free;
@@ -443,17 +1939,69 @@ var
   RoutePort:IRecorderFrfRouteService;
   RouteEntry:TRecorderFrfRouteEntry;
   RouteError,RouteFolder:string;
-  SavedCurves:TRecorderRouteCurveArray;
+  SavedRouteSnapshot:TRecorderImpactSessionSnapshot;
   SearchRoute: TRecorderFrfRoute;
 begin
   DeleteFile(IncludeTrailingPathDelimiter(GetTempDir) +
     'ImpactHammerUiSmoke.stage.log');
   Stage('initialize');
   Application.Initialize;
+  if NativeGraphMode or ((ParamCount > 0) and ((ParamStr(1) = '--graph-windows-only') or
+     (ParamStr(1) = '--rect-window-only') or
+     (ParamStr(1) = '--graph-capture-only') or
+     (ParamStr(1) = '--graph-native-interactive'))) then
+  begin
+    try
+      CheckGraphWindows;
+      if not NativeGraphMode then WriteLn('RESULT graph windows passed');
+      Halt(0);
+    except on E: Exception do
+      begin WriteLn('FAIL graph windows: ' + E.Message); DumpExceptionBackTrace(Output); Halt(1) end;
+    end;
+  end;
+  if (ParamCount > 0) and (ParamStr(1) = '--intensity-markers-only') then
+  begin
+    try CheckIntensityMarkers; WriteLn('RESULT intensity markers passed');
+    except on E:Exception do begin WriteLn('FAIL intensity markers: '+E.Message); Halt(1) end end;
+    Halt(0);
+  end;
+  if (ParamCount > 0) and (ParamStr(1) = '--numeric-vertex-sort-only') then
+  begin
+    try CheckNumericVertexSort; WriteLn('RESULT numeric vertex sort passed'); Halt(0);
+    except on E: Exception do begin WriteLn('FAIL numeric sort: '+E.Message); DumpExceptionBackTrace(Output); Halt(1) end end;
+  end;
+  if (ParamCount > 0) and (ParamStr(1) = '--live-geometry-binding-only') then
+  begin
+    try
+      CheckLiveGeometryBinding;
+      WriteLn('RESULT live geometry binding passed');
+      Halt(0);
+    except
+      on E: Exception do begin WriteLn('FAIL live binding: '+E.Message); DumpExceptionBackTrace(Output); Halt(1); end;
+    end;
+  end;
+  if (ParamCount > 0) and (ParamStr(1) = '--vertex-label-persistence-only') then
+  begin
+    try
+      CheckVertexLabelPersistence;
+    except
+      on E: Exception do begin WriteLn('FAIL vertex labels: ' + E.Message); DumpExceptionBackTrace(Output); Halt(1); end;
+    end;
+    WriteLn('RESULT vertex label persistence passed');
+    Halt(0);
+  end;
   if (ParamCount > 0) and (ParamStr(1) = '--route-spinner-only') then
   begin
-    CheckRouteSpinner;
+    try CheckRouteSpinner; CheckEmptyStepLegend; CheckRouteTagSync;
+    except on E: Exception do begin WriteLn('FAIL route spinner: '+E.Message); Halt(1) end end;
     WriteLn('RESULT route spinner passed');
+    Halt(0);
+  end;
+  if (ParamCount > 0) and (ParamStr(1) = '--route-tag-sync-only') then
+  begin
+    try CheckRouteTagSync;
+    except on E: Exception do begin WriteLn('FAIL route tag sync: ' + E.Message); Halt(1) end end;
+    WriteLn('RESULT route tag sync passed');
     Halt(0);
   end;
   if (ParamCount > 0) and (ParamStr(1) = '--mdb-model-path-only') then
@@ -1062,11 +2610,16 @@ begin
     Check(not RoutePort.CaptureRouteStep(RouteError),'Repeated realization rejected');
     View.btnPreviousImpactClick(nil);
     Check(RoutePort.CaptureRouteStep(RouteError),'Capture second route realization: '+RouteError);
-    Check(RoutePort.Route.LoadSavedCurves(SavedCurves),'Reload route curves from disk');
-    Check(Length(SavedCurves)=2,'Both route point realizations saved');
+    Check(RoutePort.Route.AllComplete,'Both route MERA realizations saved');
     for I:=0 to RoutePort.Route.Count-1 do
-      DeleteFile(IncludeTrailingPathDelimiter(RouteFolder)+'curve-'+
-        UIntToStr(RoutePort.Route.Entries[I].CurveId)+'.frf');
+    begin
+      Check(TRecorderFrfPointStore.Load(RoutePort.Route.PointDirectory(I),
+        SavedRouteSnapshot, RouteError),'Reload route MERA from disk: '+RouteError);
+      Check(Length(SavedRouteSnapshot.Curves)>0,'Saved route MERA contains FRF');
+      Check(not FileExists(IncludeTrailingPathDelimiter(
+        RoutePort.Route.PointDirectory(I))+'curve.frf'),
+        'Duplicate legacy curve must not be written');
+    end;
     DeleteFile(IncludeTrailingPathDelimiter(RouteFolder)+'route.ini');
     RemoveDir(RouteFolder);
     RoutePort:=nil;

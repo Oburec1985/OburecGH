@@ -1,5 +1,21 @@
 # FRF editor and project-load failures
 
+## 2026-10-16 — same resource defect in the AFChKh editor
+
+User: entering the frequency-response component editor reports unknown
+property TabOrder. `uRcFreqRespDlg.lfm` streamed `fColor.TabOrder` on TColorButton.
+The new standalone FrequencyResponseUiSmoke reproduced exactly:
+`Error reading fColor.TabOrder: Unknown property: "TabOrder"` (exit 1).
+Removed only the unsupported property; declared the resource's panels, labels,
+buttons and handlers explicitly in the form's published section, removing its
+accidental dependency on control classes registered by unrelated application
+forms. Initial isolated creation had exposed `Class "TButton" not found` too.
+
+After fix, the public modal editor opens, resizes and cancels normally:
+`RESULT FrequencyResponseUiSmoke modal resource/resize/cancel passed` (exit 0).
+The regression test lives in Tests/RecorderTests/FrequencyResponseUiSmoke.
+Version 0.1.182; no deployment or user configuration changes.
+
 ## Symptoms
 
 - Opening the impact FRF component editor terminated the application.

@@ -1,7 +1,7 @@
 unit uRecorderImpactMeraAdapter;
 
-{ Portable legacy-style Mera folder adapter. It writes frf.mera plus separate
-  FRF and phase .dat files and can import those files for comparison. }
+{ Обмен с каталогом MERA старого формата: запись манифеста, FRF/фазы и импорт
+  сохранённых кривых для сравнения с текущим результатом. }
 
 {$mode objfpc}{$H+}
 {$codepage UTF8}
@@ -63,6 +63,7 @@ const
   MERA_MAX_TOTAL_BYTES = 128 * 1024 * 1024;
   MERA_FREQUENCY_TOLERANCE = 1E-9;
 
+{ Рекурсивно удаляет файлы и подкаталоги AFolder. }
 procedure RemoveTree(const AFolder: string);
 var
   Entry: TSearchRec;
@@ -86,6 +87,7 @@ begin
   RemoveDir(AFolder);
 end;
 
+{ Разрешает имя внутри AFolder; абсолютные пути и переходы через .. отклоняются. }
 function SafeChildName(const AFolder, AChild: string;
   out AResolved: string): Boolean;
 var
@@ -105,6 +107,7 @@ begin
   Result := True;
 end;
 
+{ Проверяет наличие файла и ограничение AMaximum; возвращает размер или ошибку. }
 function CheckedFileSize(const AFileName: string; AMaximum: Int64;
   out ASize: Int64; out AError: string): Boolean;
 var
@@ -131,6 +134,7 @@ begin
   Result := True;
 end;
 
+{ Сохраняет AContext для публикации пути последнего экспорта. }
 constructor TRecorderImpactMeraFolderAdapter.Create(
   AContext: TRecorderImpactExportContext);
 begin
@@ -138,6 +142,7 @@ begin
   fContext := AContext;
 end;
 
+{ Определяет каталог MERA по каталогу или имени файла APath. }
 function TRecorderImpactMeraFolderAdapter.ResolveFolder(
   const APath: string): string;
 begin
@@ -149,6 +154,7 @@ begin
     Result := APath;
 end;
 
+{ Записывает снимок во временный каталог: манифест, FRF и фазу каждой кривой. }
 procedure TRecorderImpactMeraFolderAdapter.WriteStagedSnapshot(
   const AFolder: string; const ASnapshot: TRecorderImpactSessionSnapshot);
 var
@@ -213,6 +219,7 @@ begin
   end;
 end;
 
+{ Записывает шаги и привязки в конфигурацию проекта; ADirectory задаёт корень результатов. }
 function TRecorderImpactMeraFolderAdapter.Save(const AFileName: string;
   const ASnapshot: TRecorderImpactSessionSnapshot;
   const AOptions: TRecorderImpactSessionSaveOptions;
@@ -258,14 +265,16 @@ begin
     RemoveTree(StageFolder);
 end;
 
+{ Загружает снимок MERA через общий импорт сравнения и возвращает причину ошибки в AError. }
 function TRecorderImpactMeraFolderAdapter.Load(const AFileName: string;
   out ASnapshot: TRecorderImpactSessionSnapshot;
   out AError: string): Boolean;
 begin
-  { Comparison import is intentionally implemented by the same adapter. }
+  { Сравнение читает те же файлы MERA, что и обычная загрузка сессии. }
   Result := ImportComparison(AFileName, ASnapshot, AError);
 end;
 
+{ Читает манифест и парные FRF/фаза файлы, сверяет частотные сетки и проверяет итоговый снимок. }
 function TRecorderImpactMeraFolderAdapter.ImportComparison(
   const AFileName: string; out ASnapshot: TRecorderImpactSessionSnapshot;
   out AError: string): Boolean;
@@ -394,6 +403,7 @@ begin
   Manifest.Free;
 end;
 
+{ Сохраняет AContext, из которого запускается внешний просмотр последнего экспорта. }
 constructor TRecorderImpactWinPosLauncher.Create(
   AContext: TRecorderImpactExportContext);
 begin
@@ -401,6 +411,7 @@ begin
   fContext := AContext;
 end;
 
+{ Открывает путь последнего экспорта; при отказе заполняет AError. }
 function TRecorderImpactWinPosLauncher.LaunchWinPos(
   const ASnapshot: TRecorderImpactSessionSnapshot;
   out AError: string): Boolean;

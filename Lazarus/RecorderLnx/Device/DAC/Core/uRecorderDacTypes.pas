@@ -15,7 +15,7 @@ type
 
   TRecorderDacError = (rdeNone, rdeInvalidState, rdeInvalidConfig,
     rdeUnsupported, rdeNoData, rdeBufferTooSmall, rdeDriver,
-    rdeFeedbackLoop);
+    rdeFeedbackLoop, rdeCompleted);
 
   TRecorderDacUnderrunPolicy = (rdupZero, rdupHoldLast, rdupStop);
 
@@ -48,6 +48,7 @@ type
     BackendId: string;
     Endpoint: string;
     DisplayName: string;
+    SampleRateHz: Double;
   end;
 
   TRecorderDacEndpoints = array of TRecorderDacEndpoint;

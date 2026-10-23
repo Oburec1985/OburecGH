@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Math, Forms, Controls, StdCtrls, ExtCtrls, Grids,
-  uRecorderSqlDbTypes;
+  Graphics, uRecorderSqlDbTypes;
 
 type
   TRecorderMeraRecordingIds = array of string;
@@ -58,6 +58,8 @@ type
     procedure btnTransferSelectedClick({%H-}Sender: TObject);
     procedure btnSaveClick({%H-}Sender: TObject);
     procedure grdPackagesDblClick({%H-}Sender: TObject);
+    procedure grdPackagesDrawCell({%H-}Sender: TObject; ACol, ARow: Integer;
+      ARect: TRect; AState: TGridDrawState);
     procedure grdPackagesSelectCell({%H-}Sender: TObject; ACol, ARow: Integer;
       var {%H-}CanSelect: Boolean);
   private
@@ -69,6 +71,7 @@ type
     fPackages: TRecorderSqlDbMeraPackages;
     fEntryPaths: array of string;
     fLocationIds: array of string;
+    fLoadError: string;
     fOpenAllWhenLoaded: Boolean;
     procedure AcceptPackages(AWorker: TRecorderMeraPackageLoadThread);
     procedure FillPackages;
@@ -79,6 +82,9 @@ type
     procedure RequestTransfer(ASelectedOnly: Boolean);
     function SaveChanges: Boolean;
     procedure UpdateButtons;
+    procedure UpdateStatusCaption;
+    function UnresolvedRowCount: Integer;
+    function RowResolves(AIndex: Integer): Boolean;
   public
     constructor CreateDialog(AOwner: TComponent; const AConfigFileName: string;
       const AEvent: TRecorderSqlDbMeraEvent;
@@ -245,10 +251,7 @@ begin
   fPackages := AWorker.fPackages;
   fEntryPaths := AWorker.fEntryPaths;
   fLocationIds := AWorker.fLocationIds;
-  if AWorker.fErrorText <> '' then
-    lblStatus.Caption := UTF8Encode('Ошибка чтения: ') + AWorker.fErrorText
-  else
-    lblStatus.Caption := Format('Загружено пакетов: %d', [Length(fPackages)]);
+  fLoadError := AWorker.fErrorText;
   FillPackages;
   if fOpenAllWhenLoaded then
   begin
@@ -339,6 +342,17 @@ begin
   end;
 end;
 
+function TRecorderMeraEventDialog.RowResolves(AIndex: Integer): Boolean;
+var
+  lPath: string;
+begin
+  Result := False;
+  if (AIndex < 0) or (AIndex > High(fPackages)) or
+    (AIndex > High(fEntryPaths)) then Exit;
+  lPath := ResolveRecorderNetworkPath(Trim(fEntryPaths[AIndex]));
+  Result := (lPath <> '') and FileExists(lPath);
+end;
+
 procedure TRecorderMeraEventDialog.FillPackages;
 var
   I: Integer;
@@ -357,6 +371,41 @@ begin
     grdPackages.Cells[6, I + 1] := fEntryPaths[I];
   end;
   UpdateButtons;
+  UpdateStatusCaption;
+end;
+
+function TRecorderMeraEventDialog.UnresolvedRowCount: Integer;
+var
+  I: Integer;
+begin
+  Result := 0;
+  for I := 0 to High(fPackages) do
+    if not RowResolves(I) then Inc(Result);
+end;
+
+procedure TRecorderMeraEventDialog.UpdateStatusCaption;
+var
+  lUnresolved: Integer;
+begin
+  if fLoadError <> '' then
+  begin
+    lblStatus.Caption := UTF8Encode('Ошибка чтения: ') + fLoadError;
+    Exit;
+  end;
+  lUnresolved := UnresolvedRowCount;
+  if Length(fPackages) = 0 then
+  begin
+    { Записи в SQL есть, а пакеты не зарегистрированы — WinПОС открывать
+      нечего. Причина чаще всего в неполной публикации mera_recording_files. }
+    lblStatus.Caption := UTF8Encode('Замер не найден: ') +
+      UTF8Encode('данные записи отсутствуют в SQL БД, WinПОС не сможет ' +
+        'открыть это событие.');
+    Exit;
+  end;
+  lblStatus.Caption := Format('Загружено пакетов: %d', [Length(fPackages)]);
+  if lUnresolved > 0 then
+    lblStatus.Caption := lblStatus.Caption + ' | ' + UTF8Encode('замер не ' +
+      'найден: ') + IntToStr(lUnresolved) + UTF8Encode(' (нет файла на диске)');
 end;
 
 procedure TRecorderMeraEventDialog.UpdateButtons;
@@ -368,6 +417,69 @@ begin
   btnOpenSelected.Enabled := lReady;
   btnTransferAll.Enabled := lReady;
   btnTransferSelected.Enabled := lReady;
+  if not lReady then
+  begin
+    btnOpenAll.Hint := UTF8Encode('Данные замера в WinПОС не найдены');
+    btnOpenSelected.Hint := btnOpenAll.Hint;
+    btnOpenAll.ShowHint := True;
+    btnOpenSelected.ShowHint := True;
+  end
+  else
+  begin
+    btnOpenAll.Hint := '';
+    btnOpenSelected.Hint := '';
+    btnOpenAll.ShowHint := False;
+    btnOpenSelected.ShowHint := False;
+  end;
+end;
+
+{
+  Ячейки «Замер» и «Путь MERA»: иконкой подписывается замер, который не
+  резолвится — файла нет по указанному пути, поэтому ни открыть, ни перенести
+  его нельзя. Физическая проверка выполняется на перерисовке; для таблиц
+  замера это сотни строк, и файловые вызовы здесь допустимы.
+}
+procedure TRecorderMeraEventDialog.grdPackagesDrawCell(Sender: TObject;
+  ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState);
+var
+  lResolved: Boolean;
+  lText: string;
+  lIconRect: TRect;
+  lBitmap: TBitmap;
+begin
+  if (ARow <= 0) or (ARow > Length(fPackages)) or
+    ((ACol <> 1) and (ACol <> 6)) then Exit;
+  lResolved := RowResolves(ARow - 1);
+  lText := grdPackages.Cells[ACol, ARow];
+  if not lResolved then
+  begin
+    grdPackages.Canvas.FillRect(ARect);
+    { Мини-иконка «нет данных»: жёлтый квадрат с крестом, без внешних
+      ресурсов — одинаково на Windows и Linux. }
+    lBitmap := TBitmap.Create;
+    try
+      lBitmap.SetSize(12, 12);
+      lBitmap.Canvas.Brush.Color := clYellow;
+      lBitmap.Canvas.FillRect(0, 0, 12, 12);
+      lBitmap.Canvas.Pen.Color := clMaroon;
+      lBitmap.Canvas.Rectangle(0, 0, 12, 12);
+      lBitmap.Canvas.Line(2, 2, 10, 10);
+      lBitmap.Canvas.Line(10, 2, 2, 10);
+      lIconRect.Left := ARect.Left + 3;
+      lIconRect.Top := ARect.Top + Max(2, (ARect.Height - 12) div 2);
+      lIconRect.Right := lIconRect.Left + 12;
+      lIconRect.Bottom := lIconRect.Top + 12;
+      grdPackages.Canvas.Draw(lIconRect.Left, lIconRect.Top, lBitmap);
+    finally
+      lBitmap.Free;
+    end;
+    if gdSelected in AState then
+      grdPackages.Canvas.Font.Color := clHighlightText
+    else
+      grdPackages.Canvas.Font.Color := clMaroon;
+    grdPackages.Canvas.TextOut(lIconRect.Right + 4, ARect.Top + 3,
+      lText);
+  end;
 end;
 
 procedure TRecorderMeraEventDialog.grdPackagesSelectCell(Sender: TObject;

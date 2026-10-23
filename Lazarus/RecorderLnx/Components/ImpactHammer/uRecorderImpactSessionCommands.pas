@@ -1,7 +1,7 @@
 unit uRecorderImpactSessionCommands;
 
-{ LCL application-shell adapter for session commands. It owns dialogs and
-  adapter selection; the view and headless service remain free of file UI. }
+{ Обработчик команд сессии на стороне приложения. Здесь выбираются диалоги и
+  файловые адаптеры; сервис измерений и график остаются без зависимости от UI. }
 
 {$mode objfpc}{$H+}
 {$codepage UTF8}
@@ -24,6 +24,8 @@ type
     fSavePath: string;
     procedure ReportError(const AError: string);
   public
+    { AMdb и AWinPos обслуживают внешние команды; ASavePath задаёт резервный
+      каталог, если не установлен глобальный провайдер пути. }
     constructor Create(AService: TRecorderImpactHammerService;
       const AMdb: IRecorderImpactMdbAdapter;
       const AWinPos: IRecorderImpactExternalToolPort;
@@ -42,12 +44,14 @@ uses
 var
   GDefaultSavePathProvider: TRecorderImpactSavePathProvider = nil;
 
+{ Задаёт функцию, возвращающую начальную папку диалога сохранения, если путь команды пуст. }
 procedure SetRecorderImpactDefaultSavePathProvider(
   AProvider: TRecorderImpactSavePathProvider);
 begin
   GDefaultSavePathProvider := AProvider;
 end;
 
+{ Сохраняет сервис и адаптеры MDB/WinPos; ASavePath задаёт начальный путь сохранения. }
 constructor TRecorderImpactSessionCommands.Create(
   AService: TRecorderImpactHammerService; const AMdb: IRecorderImpactMdbAdapter;
   const AWinPos: IRecorderImpactExternalToolPort; const ASavePath: string);
@@ -59,12 +63,14 @@ begin
   fSavePath := ASavePath;
 end;
 
+{ Показывает пользователю непустую ошибку команды. }
 procedure TRecorderImpactSessionCommands.ReportError(const AError: string);
 begin
   if AError <> '' then
     MessageDlg('Ударный FRF', AError, mtError, [mbOK], 0);
 end;
 
+{ Выполняет команду сохранения, импорта сравнения или запуска WinPos и подготавливает снимок для экспорта. }
 procedure TRecorderImpactSessionCommands.Execute(
   ACommand: TRecorderImpactSessionCommand);
 var

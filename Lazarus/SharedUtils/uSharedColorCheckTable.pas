@@ -92,7 +92,16 @@ type
       write fOnCheckChanged;
   end;
 
+{ The installed LzrObrPack calls this entry point so the LFM designer can
+  resolve this component, not only applications that use this unit. }
+procedure Register;
+
 implementation
+
+procedure Register;
+begin
+  RegisterComponents('Samples', [TSharedColorCheckTable]);
+end;
 
 constructor TSharedColorCheckTable.Create(AOwner: TComponent);
 begin

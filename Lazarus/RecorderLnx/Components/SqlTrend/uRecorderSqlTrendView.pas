@@ -25,6 +25,7 @@ type
     fAppendLoad: Boolean;
     fIncludeRecordingEvents: Boolean;
     fIncludeTagAlarmEvents: Boolean;
+    fIncludeTagRangeEvents: Boolean;
     fOwner: TRecorderSqlTrendView;
     fPoints: TRecorderSqlTrendPoints;
     fEvents: TRecorderSqlDbMeraEvents;
@@ -41,8 +42,8 @@ type
     destructor Destroy; override;
     function RequestLoad(const AConfigFileName: string; ASignalNames: TStrings;
       AFromUtc, AToUtc: Double; AMaxPoints: Integer;
-      AAppendLoad, AIncludeRecordingEvents,
-      AIncludeTagAlarmEvents: Boolean): Boolean;
+      AAppendLoad, AIncludeRecordingEvents, AIncludeTagAlarmEvents,
+      AIncludeTagRangeEvents: Boolean): Boolean;
   end;
 
   TRecorderSqlTrendView = class(TPanel, IVForm)
@@ -75,6 +76,8 @@ type
     fEventPopup: TPopupMenu;
     fRecordingEventsMenuItem: TMenuItem;
     fTagAlarmEventsMenuItem: TMenuItem;
+    fTagRangeEventsMenuItem: TMenuItem;
+    fUnresolvedEventsMenuItem: TMenuItem;
     fAllEventsMenuItem: TMenuItem;
     fForceFullReload: Boolean;
     fFullAxisMax: array of Double;
@@ -98,6 +101,7 @@ type
     fEvents: TRecorderSqlDbMeraEvents;
     fHoveredEventIndex: Integer;
     fPinnedEventIndex: Integer;
+    fPinnedEventId: string;
     fReloadTimer: TTimer;
     fLiveReloadTimer: TTimer;
     fResetViewOnLoad: Boolean;
@@ -117,6 +121,8 @@ type
     procedure EventFilterClick(Sender: TObject);
     procedure UpdateEventFilterMenu;
     procedure RequestEventReload;
+    procedure PinEvent(AIndex: Integer);
+    function IndexOfEventId(const AEventId: string): Integer;
     procedure OpenMeraEventButtonClick({%H-}Sender: TObject);
     procedure DisplayComboChange({%H-}Sender: TObject);
     procedure DisplayNextClick({%H-}Sender: TObject);
@@ -159,6 +165,11 @@ type
     function LineIndex(const ASignalName: string): Integer;
     function EventIndexAtX(AX: Integer; const APlot: TRect): Integer;
     function IsRecordingEvent(AIndex: Integer): Boolean;
+    function MatchesTagSignalFilter(
+      const AEvent: TRecorderSqlDbMeraEvent): Boolean;
+    function EventMatchesTagFilter(AIndex: Integer): Boolean;
+    function EventVisible(AIndex: Integer): Boolean;
+    function IsUnresolvedEvent(AIndex: Integer): Boolean;
     function EventCaption(AIndex: Integer): string;
     procedure UpdateMeraEventButton;
   protected
@@ -203,6 +214,37 @@ end;
 
 const
   CSqlTrendCursorGrabPixels = 6;
+  { Короткая подпись под иконкой у маркера события. Только ASCII, чтобы
+    подпись не зависела от кодировки исходника. }
+  CUnresolvedEventCaption = 'WinPOS: izmerenie ne naideno';
+  CEventIconSize = 14;
+
+{ Неразрешимое событие записи: в SQL нет файлов пакета, WinПОС открыть нечего. }
+function UnresolvedEventStatusText: string;
+begin
+  Result := UTF8Encode(UnicodeString(
+    'Данные записи не найдены в WinПОС: в базе нет файлов пакета.'));
+end;
+
+{ Иконка «нет данных»: жёлтый квадрат с крестом — маркер события, для
+  которого WinПОС не сможет открыть замер. Рисуется без глифов и ресурсов,
+  чтобы одинаково выглядеть на Windows и Linux. }
+procedure PaintNoDataBadge(ACanvas: TCanvas; ALeft, ATop: Integer);
+var
+  lRect: TRect;
+begin
+  lRect := Rect(ALeft, ATop, ALeft + CEventIconSize, ATop + CEventIconSize);
+  ACanvas.Brush.Color := clYellow;
+  ACanvas.Brush.Style := bsSolid;
+  ACanvas.Pen.Color := clMaroon;
+  ACanvas.Pen.Width := 1;
+  ACanvas.Rectangle(lRect);
+  ACanvas.Line(lRect.Left + 3, lRect.Top + 3, lRect.Right - 3,
+    lRect.Bottom - 3);
+  ACanvas.Line(lRect.Right - 3, lRect.Top + 3, lRect.Left + 3,
+    lRect.Bottom - 3);
+  ACanvas.Brush.Style := bsClear;
+end;
 
 function ClipLineToRect(var AX0, AY0, AX1, AY1: Double;
   const ARect: TRect): Boolean;
@@ -269,7 +311,8 @@ end;
 function TRecorderSqlTrendLoadThread.RequestLoad(
   const AConfigFileName: string; ASignalNames: TStrings; AFromUtc,
   AToUtc: Double; AMaxPoints: Integer; AAppendLoad,
-  AIncludeRecordingEvents, AIncludeTagAlarmEvents: Boolean): Boolean;
+  AIncludeRecordingEvents, AIncludeTagAlarmEvents,
+  AIncludeTagRangeEvents: Boolean): Boolean;
 begin
   Result := False;
   EnterCriticalSection(fRequestLock);
@@ -283,6 +326,7 @@ begin
     fAppendLoad := AAppendLoad;
     fIncludeRecordingEvents := AIncludeRecordingEvents;
     fIncludeTagAlarmEvents := AIncludeTagAlarmEvents;
+    fIncludeTagRangeEvents := AIncludeTagRangeEvents;
     fRequestPending := True;
     Result := True;
   finally
@@ -347,7 +391,8 @@ begin
             lRepository.ReadTrendPoints(fSignalNames, fFromUtc, fToUtc,
               fMaxPoints, fPoints, False);
             lRepository.ListTimelineEvents(fFromUtc, fToUtc,
-              fIncludeRecordingEvents, fIncludeTagAlarmEvents, fEvents);
+              fIncludeRecordingEvents, fIncludeTagAlarmEvents,
+              fIncludeTagRangeEvents, fEvents);
           end
           else
           begin
@@ -544,35 +589,82 @@ begin
   fPinnedEventIndex := -1;
   fEventPopup := TPopupMenu.Create(Self);
   fRecordingEventsMenuItem := TMenuItem.Create(fEventPopup);
-  fRecordingEventsMenuItem.Caption := 'Записи';
+  fRecordingEventsMenuItem.Caption := 'Записи (события WinПОС)';
   fRecordingEventsMenuItem.AutoCheck := False;
   fRecordingEventsMenuItem.OnClick := @EventFilterClick;
   fEventPopup.Items.Add(fRecordingEventsMenuItem);
   fTagAlarmEventsMenuItem := TMenuItem.Create(fEventPopup);
-  fTagAlarmEventsMenuItem.Caption := 'Аварийные по тегам';
+  fTagAlarmEventsMenuItem.Caption := 'Аварии по тегам';
   fTagAlarmEventsMenuItem.AutoCheck := False;
   fTagAlarmEventsMenuItem.OnClick := @EventFilterClick;
   fEventPopup.Items.Add(fTagAlarmEventsMenuItem);
+  fTagRangeEventsMenuItem := TMenuItem.Create(fEventPopup);
+  fTagRangeEventsMenuItem.Caption := 'Уставки по тегам';
+  fTagRangeEventsMenuItem.AutoCheck := False;
+  fTagRangeEventsMenuItem.OnClick := @EventFilterClick;
+  fEventPopup.Items.Add(fTagRangeEventsMenuItem);
+  fUnresolvedEventsMenuItem := TMenuItem.Create(fEventPopup);
+  fUnresolvedEventsMenuItem.Caption := 'Только события без замера в WinПОС';
+  fUnresolvedEventsMenuItem.AutoCheck := False;
+  fUnresolvedEventsMenuItem.OnClick := @EventFilterClick;
+  fEventPopup.Items.Add(fUnresolvedEventsMenuItem);
   fAllEventsMenuItem := TMenuItem.Create(fEventPopup);
-  fAllEventsMenuItem.Caption := 'Выбрать все';
+  fAllEventsMenuItem.Caption := 'Показать все события';
   fAllEventsMenuItem.OnClick := @EventFilterClick;
   fEventPopup.Items.Add(fAllEventsMenuItem);
 end;
 
 procedure TRecorderSqlTrendView.EventFilterClick(Sender: TObject);
+var
+  lWasResolvedOnly: Boolean;
+  lChanged: Boolean;
 begin
   if fComponent = nil then Exit;
+  lWasResolvedOnly := fComponent.ShowOnlyUnresolvedEventPoints;
   if Sender = fRecordingEventsMenuItem then
     fComponent.ShowRecordingEvents := not fComponent.ShowRecordingEvents
   else if Sender = fTagAlarmEventsMenuItem then
     fComponent.ShowTagAlarmEvents := not fComponent.ShowTagAlarmEvents
+  else if Sender = fTagRangeEventsMenuItem then
+    fComponent.ShowTagRangeEvents := not fComponent.ShowTagRangeEvents
+  else if Sender = fUnresolvedEventsMenuItem then
+    fComponent.ShowOnlyUnresolvedEventPoints :=
+      not fComponent.ShowOnlyUnresolvedEventPoints
   else if Sender = fAllEventsMenuItem then
   begin
     fComponent.ShowRecordingEvents := True;
     fComponent.ShowTagAlarmEvents := True;
+    fComponent.ShowTagRangeEvents := True;
+    fComponent.ShowOnlyUnresolvedEventPoints := False;
+  end
+  else
+    Exit;
+  { Соседние галочки не должны приводить к пустому тренду: если пользователь
+    снял последнюю, запрос к SQL был бы пустым. Возвращаем уставки — это
+    ближайшее к событиям «аварийное» семейство, и пользователь видит результат
+    своего щелчка. }
+  if (not fComponent.ShowRecordingEvents) and
+    (not fComponent.ShowTagAlarmEvents) and
+    (not fComponent.ShowTagRangeEvents) then
+  begin
+    if Sender <> fTagAlarmEventsMenuItem then
+      fComponent.ShowTagAlarmEvents := True
+    else
+      fComponent.ShowTagRangeEvents := True;
   end;
   UpdateEventFilterMenu;
-  RequestEventReload;
+  lChanged := lWasResolvedOnly <> fComponent.ShowOnlyUnresolvedEventPoints;
+  if lChanged then
+  begin
+    { Фильтр «без замера» применяется к уже загруженному списку, без SQL. }
+    fPinnedEventId := '';
+    fPinnedEventIndex := -1;
+    fHoveredEventIndex := -1;
+    UpdateMeraEventButton;
+    Invalidate;
+  end
+  else
+    RequestEventReload;
 end;
 
 procedure TRecorderSqlTrendView.UpdateEventFilterMenu;
@@ -580,12 +672,16 @@ begin
   if fComponent = nil then Exit;
   fRecordingEventsMenuItem.Checked := fComponent.ShowRecordingEvents;
   fTagAlarmEventsMenuItem.Checked := fComponent.ShowTagAlarmEvents;
+  fTagRangeEventsMenuItem.Checked := fComponent.ShowTagRangeEvents;
+  fUnresolvedEventsMenuItem.Checked :=
+    fComponent.ShowOnlyUnresolvedEventPoints;
 end;
 
 procedure TRecorderSqlTrendView.RequestEventReload;
 begin
   fHoveredEventIndex := -1;
   fPinnedEventIndex := -1;
+  fPinnedEventId := '';
   fForceFullReload := True;
   fLoadPending := True;
   fReloadTimer.Enabled := True;
@@ -614,20 +710,65 @@ begin
     lFromUtc, lToUtc);
 end;
 
+{
+  Обновление выбора события. Щелчок по маркеру немедленно открывает карточку
+  замера в WinПОС. Если данные записи в SQL не найдены (иконка «нет данных»),
+  пользователь получает объяснение в заголовке и подсказке, а не тихий отказ.
+}
+procedure TRecorderSqlTrendView.PinEvent(AIndex: Integer);
+begin
+  if (AIndex < 0) or (AIndex > High(fEvents)) then Exit;
+  fPinnedEventIndex := AIndex;
+  fPinnedEventId := fEvents[AIndex].EventId;
+  fHoveredEventIndex := AIndex;
+  if (fComponent <> nil) and fComponent.ShowEvents then
+    OpenMeraEventButtonClick(nil);
+  UpdateMeraEventButton;
+  Invalidate;
+end;
+
+function TRecorderSqlTrendView.IndexOfEventId(const AEventId: string): Integer;
+begin
+  Result := -1;
+  if Trim(AEventId) = '' then Exit;
+  for Result := 0 to High(fEvents) do
+    if SameText(fEvents[Result].EventId, AEventId) then
+      Exit;
+  Result := -1;
+end;
+
 procedure TRecorderSqlTrendView.OpenMeraEventButtonClick(Sender: TObject);
 var
   lIndex: Integer;
+  lEventId: string;
   lResult: TRecorderMeraEventDialogResult;
 begin
   lIndex := fPinnedEventIndex;
   if lIndex < 0 then lIndex := fHoveredEventIndex;
   if (lIndex < 0) or (lIndex > High(fEvents)) or (fComponent = nil) or
     (not IsRecordingEvent(lIndex)) then Exit;
+  lEventId := fEvents[lIndex].EventId;
   lResult := ShowRecorderMeraEventDialog(GetParentForm(Self),
     fComponent.ConfigFileName, fEvents[lIndex]);
   if lResult <> medrUnchanged then
   begin
-    if lResult = medrDeleted then fPinnedEventIndex := -1;
+    { Правка выполняется по только что открытой записи; держим её видимой и
+      выбранной по устойчивому EventId после перезагрузки списка. }
+    if lResult = medrDeleted then
+    begin
+      fPinnedEventId := '';
+      fPinnedEventIndex := -1;
+    end
+    else
+    begin
+      if fComponent.ShowOnlyUnresolvedEventPoints then
+      begin
+        fComponent.ShowOnlyUnresolvedEventPoints := False;
+        UpdateEventFilterMenu;
+      end;
+      fPinnedEventId := lEventId;
+      fPinnedEventIndex := -1;
+    end;
     fHoveredEventIndex := -1;
     { Editing or deleting must reconcile against the complete interval.  An
       overlap merge cannot discover a deletion outside its short window. }
@@ -646,8 +787,19 @@ begin
   lIndex := fPinnedEventIndex;
   if lIndex < 0 then lIndex := fHoveredEventIndex;
   if fOpenMeraEventButton <> nil then
+  begin
+    { Для события без данных замера открывать нечего: кнопка остаётся
+      недоступной, а подсказка объясняет причину. }
     fOpenMeraEventButton.Enabled := (fComponent <> nil) and
-      fComponent.ShowEvents and IsRecordingEvent(lIndex);
+      fComponent.ShowEvents and IsRecordingEvent(lIndex) and
+      (not IsUnresolvedEvent(lIndex));
+    if (lIndex >= 0) and (lIndex <= High(fEvents)) and
+      IsUnresolvedEvent(lIndex) then
+      fOpenMeraEventButton.Hint := UnresolvedEventStatusText
+    else
+      fOpenMeraEventButton.Hint := '';
+    fOpenMeraEventButton.ShowHint := fOpenMeraEventButton.Hint <> '';
+  end;
 end;
 
 function TRecorderSqlTrendView.IsRecordingEvent(AIndex: Integer): Boolean;
@@ -656,17 +808,76 @@ begin
     SameText(fEvents[AIndex].EventType, 'mera.recording');
 end;
 
+function TRecorderSqlTrendView.MatchesTagSignalFilter(
+  const AEvent: TRecorderSqlDbMeraEvent): Boolean;
+var
+  lSignalName: string;
+begin
+  { Аварийные события показываются либо когда сигнал вообще не опубликован в
+    таблицу signals, либо когда его линия есть в текущем отображении тренда.
+    Иначе шум со всех записанных тегов забивает маркер. }
+  lSignalName := Trim(AEvent.SignalName);
+  if (lSignalName = '') or (fComponent = nil) or
+    (fComponent.ActiveDisplay = nil) then
+    Exit(True);
+  Result := LineIndex(lSignalName) >= 0;
+end;
+
+function TRecorderSqlTrendView.EventMatchesTagFilter(
+  AIndex: Integer): Boolean;
+begin
+  Result := False;
+  if (AIndex < 0) or (AIndex > High(fEvents)) then Exit;
+  if SameText(fEvents[AIndex].EventType, 'tag.range') then
+    Exit((fComponent = nil) or (not fComponent.ShowEvents) or
+      (fComponent.ShowTagRangeEvents and MatchesTagSignalFilter(fEvents[AIndex])));
+  if SameText(fEvents[AIndex].EventType, 'tag.alarm') then
+    Exit((fComponent = nil) or (not fComponent.ShowEvents) or
+      (fComponent.ShowTagAlarmEvents and MatchesTagSignalFilter(fEvents[AIndex])));
+  Result := True;
+end;
+
+function TRecorderSqlTrendView.EventVisible(AIndex: Integer): Boolean;
+begin
+  Result := (AIndex >= 0) and (AIndex <= High(fEvents));
+  if not Result then Exit;
+  if (fComponent <> nil) and (not fComponent.ShowEvents) then Exit(False);
+  if IsRecordingEvent(AIndex) then
+    Result := (fComponent = nil) or fComponent.ShowRecordingEvents
+  else
+    Result := EventMatchesTagFilter(AIndex);
+  if Result and (fComponent <> nil) and
+    fComponent.ShowOnlyUnresolvedEventPoints then
+    Result := IsUnresolvedEvent(AIndex);
+end;
+
+function TRecorderSqlTrendView.IsUnresolvedEvent(AIndex: Integer): Boolean;
+begin
+  { Замера нет в SQL: mera_recdrding_files пуст, поэтому диалог WinПОС не
+    найдёт ни одного .mera. }
+  Result := IsRecordingEvent(AIndex) and (fEvents[AIndex].MeraFileCount = 0);
+end;
+
 function TRecorderSqlTrendView.EventCaption(AIndex: Integer): string;
+var
+  lText: string;
 begin
   Result := '';
   if (AIndex < 0) or (AIndex > High(fEvents)) then Exit;
   if IsRecordingEvent(AIndex) then
+  begin
+    { Пометка о неразрешимом замере: по щелчку пользователь сразу видит, что в
+      WinПОС открывать нечего. }
+    lText := '';
+    if IsUnresolvedEvent(AIndex) then
+      lText := '  [' + UTF8Encode(CUnresolvedEventCaption) + ']';
     Result := Format('%s  %s  ПК/пакетов: %d  %s', [
       FormatDateTime('dd.mm.yyyy hh:nn:ss',
         UtcDisplayTime(fEvents[AIndex].StartedAtUtc)),
       fEvents[AIndex].DisplayName,
       fEvents[AIndex].PackageCount,
-      fEvents[AIndex].State])
+      fEvents[AIndex].State]) + lText;
+  end
   else
   begin
     Result := Trim(fEvents[AIndex].Description);
@@ -1080,6 +1291,7 @@ begin
   begin
     fHoveredEventIndex := -1;
     fPinnedEventIndex := -1;
+    fPinnedEventId := '';
   end;
   FillDisplayControls;
   fAxisCombo.ItemIndex := 0;
@@ -1398,7 +1610,8 @@ begin
   if fWorker.RequestLoad(fComponent.ConfigFileName, fLoadSignalNames,
     lFromUtc, lToUtc, fComponent.MaxPointsPerLine, lAppendLoad,
     fComponent.ShowEvents and fComponent.ShowRecordingEvents,
-    fComponent.ShowEvents and fComponent.ShowTagAlarmEvents) then
+    fComponent.ShowEvents and fComponent.ShowTagAlarmEvents,
+    fComponent.ShowEvents and fComponent.ShowTagRangeEvents) then
     fForceFullReload := False
   else
     fLoadPending := True;
@@ -1406,7 +1619,6 @@ end;
 
 procedure TRecorderSqlTrendView.AcceptLoad(AWorker: TRecorderSqlTrendLoadThread);
 var
-  I: Integer;
   lOldPoints: TRecorderSqlTrendPoints;
   lOldEvents: TRecorderSqlDbMeraEvents;
   lPinnedEventId: string;
@@ -1427,7 +1639,9 @@ begin
     end;
     lPinnedEventId := '';
     if (fPinnedEventIndex >= 0) and (fPinnedEventIndex <= High(fEvents)) then
-      lPinnedEventId := fEvents[fPinnedEventIndex].EventId;
+      lPinnedEventId := fEvents[fPinnedEventIndex].EventId
+    else
+      lPinnedEventId := fPinnedEventId;
     if AWorker.fAppendLoad then
       MergeLiveEvents(AWorker.fEvents, fComponent.FromUtc)
     else
@@ -1438,13 +1652,12 @@ begin
     end;
     fHoveredEventIndex := -1;
     fPinnedEventIndex := -1;
+    { Выбор привязывается по устойчивому EventId: после перезагрузки или
+      слияния старый номер строки указывает на другое событие (или ни на что). }
     if lPinnedEventId <> '' then
-      for I := 0 to High(fEvents) do
-        if SameText(fEvents[I].EventId, lPinnedEventId) then
-        begin
-          fPinnedEventIndex := I;
-          Break;
-        end;
+      fPinnedEventIndex := IndexOfEventId(lPinnedEventId);
+    if fPinnedEventIndex >= 0 then
+      fHoveredEventIndex := fPinnedEventIndex;
     { A failed load must not advance this watermark: the next live tick has
       to retry the same interval instead of permanently skipping its data. }
     if fResetViewOnLoad then
@@ -1691,15 +1904,13 @@ begin
     lEventIndex := EventIndexAtX(X, lPlot);
     if (lEventIndex >= 0) and (Y >= lPlot.Top) and (Y <= lPlot.Bottom) then
     begin
-      fPinnedEventIndex := lEventIndex;
-      fHoveredEventIndex := lEventIndex;
-      UpdateMeraEventButton;
-      Invalidate;
+      PinEvent(lEventIndex);
       Exit;
     end;
     if fPinnedEventIndex >= 0 then
     begin
       fPinnedEventIndex := -1;
+      fPinnedEventId := '';
       UpdateMeraEventButton;
       Invalidate;
     end;
@@ -1768,6 +1979,18 @@ begin
     fHoveredEventIndex := EventIndexAtX(X, lPlot)
   else
     fHoveredEventIndex := -1;
+  { Подсказка над маркером: для неразрешимого события сразу видно, что данные
+    замера не найдены, а не только после щелчка. }
+  if (fHoveredEventIndex >= 0) and IsUnresolvedEvent(fHoveredEventIndex) then
+  begin
+    Hint := UnresolvedEventStatusText;
+    ShowHint := True;
+  end
+  else
+  begin
+    Hint := '';
+    ShowHint := False;
+  end;
   if lOldHover <> fHoveredEventIndex then
   begin
     UpdateMeraEventButton;
@@ -1848,6 +2071,8 @@ begin
   if fZoomSelecting or fPanning or fCursorDragging then Exit;
   Cursor := crDefault;
   fHoveredEventIndex := -1;
+  Hint := '';
+  ShowHint := False;
   UpdateMeraEventButton;
   if not fCursorEnabled then
     fCursorVisible := False;
@@ -1956,6 +2181,7 @@ begin
   lBestDistance := CSqlTrendCursorGrabPixels + 1;
   for I := 0 to High(fEvents) do
   begin
+    if not EventVisible(I) then Continue;
     lEventX := APlot.Left + Round((fEvents[I].StartedAtUtc - fFromUtc) /
       (fToUtc - fFromUtc) * (APlot.Width - 1));
     lDistance := Abs(AX - lEventX);
@@ -2049,6 +2275,7 @@ begin
   if fComponent.ShowEvents and (fToUtc > fFromUtc) then
     for I := 0 to High(fEvents) do
     begin
+      if not EventVisible(I) then Continue;
       lEventX := lPlot.Left + Round((fEvents[I].StartedAtUtc - fFromUtc) /
         (fToUtc - fFromUtc) * (lPlot.Width - 1));
       if fEvents[I].FinishedAtUtc > fEvents[I].StartedAtUtc then
@@ -2072,6 +2299,20 @@ begin
       Canvas.Line(EnsureRange(lEventX, lPlot.Left, lPlot.Right), lPlot.Top + 3,
         EnsureRange(Max(lEventX + 2, lEventEndX), lPlot.Left, lPlot.Right),
         lPlot.Top + 3);
+    end;
+  { Значок неразрешимого замера рисуется поверх линий, сдвинутый от маркера,
+    чтобы не перекрывать полосу длительности события. }
+  if fComponent.ShowEvents and (fToUtc > fFromUtc) then
+    for I := 0 to High(fEvents) do
+    begin
+      if (not IsUnresolvedEvent(I)) or (not EventVisible(I)) then Continue;
+      lEventX := lPlot.Left + Round((fEvents[I].StartedAtUtc - fFromUtc) /
+        (fToUtc - fFromUtc) * (lPlot.Width - 1));
+      if (lEventX < lPlot.Left) or (lEventX > lPlot.Right) then Continue;
+      lEventBoxTop := Max(lPlot.Top + 5,
+        Min(lPlot.Bottom - CEventIconSize - 4, lPlot.Top + 9));
+      PaintNoDataBadge(Canvas, EnsureRange(lEventX + 4, lPlot.Left,
+        Max(lPlot.Left, lPlot.Right - CEventIconSize - 1)), lEventBoxTop);
     end;
   Canvas.Pen.Width := 1;
   Canvas.Pen.Style := psSolid;
@@ -2228,20 +2469,40 @@ begin
     lEventIndex := fPinnedEventIndex
   else
     lEventIndex := -1;
-  if (lEventIndex >= 0) and (lEventIndex <= High(fEvents)) then
+  if (lEventIndex >= 0) and (lEventIndex <= High(fEvents)) and
+    EventVisible(lEventIndex) then
   begin
     lEventX := lPlot.Left + Round((fEvents[lEventIndex].StartedAtUtc - fFromUtc) /
       Max(1E-12, fToUtc - fFromUtc) * (lPlot.Width - 1));
     lCaption := EventCaption(lEventIndex);
-    lEventBoxLeft := EnsureRange(lEventX + 8, lPlot.Left,
-      Max(lPlot.Left, lPlot.Right - Canvas.TextWidth(lCaption) - 12));
-    lEventBoxTop := lPlot.Top + 10;
-    Canvas.Brush.Color := $00FFFFE8;
-    Canvas.Brush.Style := bsSolid;
-    Canvas.Pen.Color := clGray;
-    Canvas.Rectangle(lEventBoxLeft, lEventBoxTop,
-      lEventBoxLeft + Canvas.TextWidth(lCaption) + 10,
-      lEventBoxTop + Canvas.TextHeight(lCaption) + 8);
+    { Жёлтый фон у подписи — визуальное подтверждение иконки: замера в WinПОС
+      нет, кнопка «Открыть в WinПОС» для этого события недоступна. }
+    if IsUnresolvedEvent(lEventIndex) then
+    begin
+      lEventBoxLeft := EnsureRange(lEventX + CEventIconSize + 10, lPlot.Left,
+        Max(lPlot.Left, lPlot.Right - Canvas.TextWidth(lCaption) - 12));
+      lEventBoxTop := lPlot.Top + 10;
+      Canvas.Brush.Color := $00C0FFFF;
+      Canvas.Brush.Style := bsSolid;
+      Canvas.Pen.Color := clMaroon;
+      Canvas.Rectangle(lEventBoxLeft, lEventBoxTop,
+        lEventBoxLeft + Canvas.TextWidth(lCaption) + 10,
+        lEventBoxTop + Canvas.TextHeight(lCaption) + 8);
+      PaintNoDataBadge(Canvas, lEventBoxLeft - CEventIconSize - 4,
+        lEventBoxTop + 4);
+    end
+    else
+    begin
+      lEventBoxLeft := EnsureRange(lEventX + 8, lPlot.Left,
+        Max(lPlot.Left, lPlot.Right - Canvas.TextWidth(lCaption) - 12));
+      lEventBoxTop := lPlot.Top + 10;
+      Canvas.Brush.Color := $00FFFFE8;
+      Canvas.Brush.Style := bsSolid;
+      Canvas.Pen.Color := clGray;
+      Canvas.Rectangle(lEventBoxLeft, lEventBoxTop,
+        lEventBoxLeft + Canvas.TextWidth(lCaption) + 10,
+        lEventBoxTop + Canvas.TextHeight(lCaption) + 8);
+    end;
     Canvas.Font.Color := clBlack;
     Canvas.Brush.Style := bsClear;
     Canvas.TextOut(lEventBoxLeft + 5, lEventBoxTop + 4, lCaption);

@@ -82,8 +82,10 @@ type
     procedure ListMeraRecordingEvents(AFromUtc, AToUtc: Double;
       out AItems: TRecorderSqlDbMeraEvents);
     procedure ListTimelineEvents(AFromUtc, AToUtc: Double;
-      AIncludeRecordings, AIncludeTagAlarms: Boolean;
-      out AItems: TRecorderSqlDbMeraEvents);
+      AIncludeRecordingEvents, AIncludeTagAlarmEvents,
+      AIncludeTagRangeEvents: Boolean; out AItems: TRecorderSqlDbMeraEvents);
+    procedure ListRecordingMeraFileCounts(const AEventIds: TStrings;
+      out ACounts: TRecorderSqlDbEventFileCounts);
     function GetMeraEventSnapshot(const AEventId: string;
       out AEventUtc, AFirstStartedUtc, ALastFinishedUtc: Double;
       out ARecordingCount: Integer): Boolean;
@@ -2046,15 +2048,19 @@ begin
 end;
 
 procedure TRecorderSqlDbRepository.ListTimelineEvents(AFromUtc,
-  AToUtc: Double; AIncludeRecordings, AIncludeTagAlarms: Boolean;
-  out AItems: TRecorderSqlDbMeraEvents);
+  AToUtc: Double; AIncludeRecordingEvents, AIncludeTagAlarmEvents,
+  AIncludeTagRangeEvents: Boolean; out AItems: TRecorderSqlDbMeraEvents);
 var
   I: Integer;
   lQuery: TSQLQuery;
 begin
   SetLength(AItems, 0);
-  if not AIncludeRecordings and not AIncludeTagAlarms then
-    Exit;
+  { Записи (mera.recording) не скрываются: тренд не может существовать без
+    своих собственных событий записи, поэтому хотя бы одно семейство
+    включается принудительно. }
+  if not AIncludeRecordingEvents and not AIncludeTagAlarmEvents and
+    not AIncludeTagRangeEvents then
+    AIncludeTagAlarmEvents := True;
   EnsureDatabase;
   lQuery := TSQLQuery.Create(nil);
   try
@@ -2067,7 +2073,8 @@ begin
       'coalesce(e.description,e.event_text),e.measured_value,' +
       'e.timestamp_utc,max(r.finished_at_utc),' +
       'coalesce(max(r.state),''active''),count(distinct r.id),' +
-      'cast(coalesce(sum(f.file_size),0) as bigint) ' +
+      'cast(coalesce(sum(f.file_size),0) as bigint),' +
+      'count(distinct m.file_id) ' +
       'from events e left join signals s on s.id=e.signal_id ' +
       'left join mera_recordings r on r.event_id=e.id ' +
       'left join mera_recording_files m on m.recording_id=r.id ' +
@@ -2075,15 +2082,18 @@ begin
       'where (:recordings=1 and e.event_type=''mera.recording'' and ' +
       'r.started_at_utc<=:to and (r.finished_at_utc is null or ' +
       'r.finished_at_utc>=:from)) or (:alarms=1 and ' +
-      'e.event_type in (''tag.alarm'',''tag.range'') and ' +
+      'e.event_type=''tag.alarm'' and ' +
+      'e.timestamp_utc>=:from and e.timestamp_utc<=:to) or ' +
+      '(:ranges=1 and e.event_type=''tag.range'' and ' +
       'e.timestamp_utc>=:from and e.timestamp_utc<=:to) ' +
       'group by e.id,e.event_type,e.severity,e.signal_id,e.display_name,' +
       'e.description,e.event_text,e.measured_value,e.timestamp_utc ' +
       'order by e.timestamp_utc';
     lQuery.ParamByName('from').AsFloat := AFromUtc;
     lQuery.ParamByName('to').AsFloat := AToUtc;
-    lQuery.ParamByName('recordings').AsInteger := Ord(AIncludeRecordings);
-    lQuery.ParamByName('alarms').AsInteger := Ord(AIncludeTagAlarms);
+    lQuery.ParamByName('recordings').AsInteger := Ord(AIncludeRecordingEvents);
+    lQuery.ParamByName('alarms').AsInteger := Ord(AIncludeTagAlarmEvents);
+    lQuery.ParamByName('ranges').AsInteger := Ord(AIncludeTagRangeEvents);
     lQuery.Open;
     while not lQuery.EOF do
     begin
@@ -2106,6 +2116,44 @@ begin
       AItems[I].State := lQuery.Fields[11].AsString;
       AItems[I].PackageCount := lQuery.Fields[12].AsInteger;
       AItems[I].TotalSize := lQuery.Fields[13].AsLargeInt;
+      AItems[I].MeraFileCount := lQuery.Fields[14].AsInteger;
+      lQuery.Next;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbRepository.ListRecordingMeraFileCounts(
+  const AEventIds: TStrings; out ACounts: TRecorderSqlDbEventFileCounts);
+var
+  I, lIndex: Integer;
+  lQuery: TSQLQuery;
+begin
+  SetLength(ACounts, 0);
+  if (AEventIds = nil) or (AEventIds.Count = 0) then
+    Exit;
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select r.event_id,count(distinct m.file_id) ' +
+      'from mera_recordings r join mera_recording_files m ' +
+      'on m.recording_id=r.id group by r.event_id';
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      { Индексированный поиск по списку событий вместо IN () из сотен имён. }
+      lIndex := AEventIds.IndexOf(lQuery.Fields[0].AsString);
+      if lIndex >= 0 then
+      begin
+        I := Length(ACounts);
+        SetLength(ACounts, I + 1);
+        ACounts[I].EventId := lQuery.Fields[0].AsString;
+        ACounts[I].FileCount := lQuery.Fields[1].AsInteger;
+      end;
       lQuery.Next;
     end;
   finally

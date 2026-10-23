@@ -26,7 +26,7 @@ interface
 uses
   Classes, SysUtils, Math, Contnrs,
   uRecorderCoreServices, uRecorderSpectrumEngine, uRecorderFrequencyBands,
-  uRecorderTimeSystem, uRecorderUnitManager;
+  uRecorderTimeSystem, uRecorderUnitManager, uRecorderBlockClock;
 
 type
   { Идентификатор тега }
@@ -208,6 +208,7 @@ type
     и собственный буфер сигнала; запись значений идет через AddSample. }
   TRecorderTag = class
   private
+    fBlockTimeDomain: TRecorderBlockTimeDomain;
     fAddress: string;                                          { Адрес тега (например, в модуле) }
     fDescription: string;                                      { Описание тега }
     fGroupPath: string;                                        { Пользовательский путь группы в дереве тегов }
@@ -361,6 +362,9 @@ type
     property SetpointRangeAlarmInfoText: string
       read fSetpointRangeAlarmInfoText write fSetpointRangeAlarmInfoText;
     property SourceId: string read fSourceId write fSourceId;
+    { Set by the producer during Configure, before publication starts. }
+    property BlockTimeDomain: TRecorderBlockTimeDomain
+      read fBlockTimeDomain write fBlockTimeDomain;
     property SourceValueMode: string read fSourceValueMode write fSourceValueMode;
     property HardwareCalibrationEnabled: Boolean read fHardwareCalibrationEnabled
       write SetHardwareCalibrationEnabled;
@@ -533,7 +537,7 @@ type
     function GetSelectedTag: TRecorderTag;
     function GetTag(AIndex: Integer): TRecorderTag;
     function GetTagCount: Integer;
-    procedure MarkRuntimeDataUpdated(ATimeSec: Double);
+    procedure MarkRuntimeDataUpdated(ATag: TRecorderTag; ATimeSec: Double);
     procedure MarkInputDataUpdated;
     procedure PublishValueInternal(ATag: TRecorderTag; ATimeSec,
       AValue: Double; AIsInput: Boolean);
@@ -749,7 +753,7 @@ function RecorderTagSourceIsVisible(ARegistry: TRecorderTagRegistry; ATag: TReco
 implementation
 
 uses
-  StrUtils, uRecorderDebugLog;
+  StrUtils, uRecorderDebugLog, uRecorderConfiguredDataSources;
 
 const
   CTagThermocoupleInverseMinMv = -20.0;
@@ -2033,8 +2037,11 @@ begin
   inherited Destroy;
 end;
 
-procedure TRecorderTagRegistry.MarkRuntimeDataUpdated(ATimeSec: Double);
+procedure TRecorderTagRegistry.MarkRuntimeDataUpdated(ATag: TRecorderTag;
+  ATimeSec: Double);
 begin
+  if (fTimeSystem <> nil) and (ATag <> nil) then
+    ATimeSec := fTimeSystem.SampleTimeToSession(ATimeSec, ATag.BlockTimeDomain);
   EnterCriticalSection(fRuntimeDataLock);
   try
     Inc(fRuntimeDataRevision);
@@ -3040,6 +3047,10 @@ begin
     Exit;
   if RecorderIsDetachedTagSource(ATag.SourceId) then
     Exit(False);
+  { Explicit operator disable overrides cached link/activity, virtual flags
+    and an existing MERA file. Keep the tags/configuration, hide their views. }
+  if (ARegistry <> nil) and not RecorderConfiguredDataSourceEnabled(ARegistry,
+    ATag.SourceId) then Exit(False);
   { Виртуальность задаётся явно при создании тега. Такой тег не должен
     исчезать из представлений только потому, что его SourceId не является
     зарегистрированным аппаратным источником. }
@@ -3130,7 +3141,7 @@ begin
   ATimeSec := ResolvePublishTime(ATimeSec);
   lValue := TransformTagValue(ATag, AValue);
   ATag.AddSample(ATimeSec, lValue);
-  MarkRuntimeDataUpdated(ATimeSec);
+  MarkRuntimeDataUpdated(ATag, ATimeSec);
   if AIsInput then MarkInputDataUpdated;
 
   if Assigned(fOnValuePublished) then
@@ -3210,7 +3221,7 @@ begin
       lValues[I] := TransformTagValue(ATag, AValues[I]);
     ATag.AddSamples(ATimes, lValues, ACount);
   end;
-  MarkRuntimeDataUpdated(ATimes[ACount - 1]);
+  MarkRuntimeDataUpdated(ATag, ATimes[ACount - 1]);
   MarkInputDataUpdated;
 end;
 
@@ -3403,7 +3414,7 @@ begin
       lValues[I] := TransformTagValue(ATag, AValues[I]);
     ATag.AddSamples(ATimes, lValues, ACount);
   end;
-  MarkRuntimeDataUpdated(ATimes[ACount - 1]);
+  MarkRuntimeDataUpdated(ATag, ATimes[ACount - 1]);
   MarkInputDataUpdated;
   // This method is in the acquisition hot path. Per-tag disk logging turns a
   // 48-channel hardware block into dozens of synchronous writes and can delay

@@ -33,7 +33,7 @@ begin
   try
     cbShape.ItemIndex:=Ord(ASpec.PointCloudShape);
     cbShape.Visible:=ASpec.Kind=pkPointCloud; lblShape.Visible:=cbShape.Visible;
-    cbDrawPointNumbers.Visible:=ASpec.Kind=pkPointCloud;
+    cbDrawPointNumbers.Visible:=True;
     cbDrawPointNumbers.Checked:=ASpec.DrawPointNumbers;
     seSizeX.Value:=ASpec.SizeX; seSizeY.Value:=ASpec.SizeY; seSizeZ.Value:=ASpec.SizeZ;
     if ASpec.Kind=pkPointCloud then

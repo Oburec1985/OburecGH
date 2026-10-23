@@ -1,12 +1,16 @@
 unit uRecorderDacSession;
 
+{ DAC worker lifecycle and fixed-capacity mirror handoff. Each successful
+  hardware Start creates a device-frame to Recorder-time anchor. Queue entries
+  retain submission metadata, so publisher delays/loss do not retime output. }
+
 {$mode objfpc}{$H+}
 {$codepage UTF8}
 
 interface
 
 uses
-  SysUtils, uRecorderDacTypes, uRecorderDacContracts;
+  SysUtils, uRecorderDacTypes, uRecorderDacContracts, uRecorderBlockClock;
 
 type
   { Stable DAC lifecycle orchestrator. Pump is called by a backend worker or test. }
@@ -15,6 +19,9 @@ type
     fBackend: IRecorderDacBackend;
     fProvider: IRecorderDacSampleProvider;
     fMirror: IRecorderDacMirror;
+    fTimedMirror: IRecorderDacTimedMirror;
+    fClockMap: TRecorderDeviceTimeMap;
+    fRunFrames: QWord;
     fConfig: TRecorderDacConfig;
     fBuffer: array of Double;
     fLastFrame: array of Double;
@@ -23,6 +30,7 @@ type
     fMirrorQueue: array of Double;
     fMirrorFlushBuffer: array of Double;
     fMirrorCounts: array[0..3] of Integer;
+    fMirrorTimes: array[0..3] of TRecorderBlockTime;
     fMirrorRead: Integer;
     fMirrorWrite: Integer;
     fMirrorCount: Integer;
@@ -30,7 +38,7 @@ type
     procedure ClampBlock(AFrameCount: Integer);
     procedure FillUnderrunBlock(out AFrameCount: Integer);
     procedure RememberLastFrame(AFrameCount: Integer);
-    function EnqueueMirror(AFrameCount: Integer): Boolean;
+    function EnqueueMirror(const ATime: TRecorderBlockTime): Boolean;
   public
     constructor Create(const ABackend: IRecorderDacBackend;
       const AProvider: IRecorderDacSampleProvider;
@@ -91,14 +99,18 @@ begin
   end;
   if fBackend.State = rdsConfigured then
     if not fBackend.Disconnect(AResult) then Exit;
-  if not fProvider.Configure(AConfig, AResult) then Exit;
-  if (fMirror <> nil) and not fMirror.Configure(AConfig, AResult) then Exit;
   if (fBackend.State = rdsClosed) and not fBackend.Connect(AResult) then Exit;
   if (fBackend.State = rdsConnected) and not fBackend.Initialize(AResult) then Exit;
   if (fBackend.State = rdsInitialized) and
     not fBackend.ReadProperties(AResult) then Exit;
-  if not fBackend.Configure(AConfig, AResult) then Exit;
   fConfig := AConfig;
+  { Hardware selects the sampling clock. Every consumer must use that same
+    rate, especially the tag timestamps and the pulse duration calculation. }
+  if fBackend.SampleRateHz > 0 then fConfig.SampleRateHz := fBackend.SampleRateHz;
+  if not fProvider.Configure(fConfig, AResult) then Exit;
+  if (fMirror <> nil) and not fMirror.Configure(fConfig, AResult) then Exit;
+  Supports(fMirror, IRecorderDacTimedMirror, fTimedMirror);
+  if not fBackend.Configure(fConfig, AResult) then Exit;
   SetLength(fBuffer, AConfig.FramesPerBlock * AConfig.ChannelCount);
   SetLength(fLastFrame, AConfig.ChannelCount);
   if fMirror <> nil then
@@ -119,7 +131,7 @@ begin
   Result := True;
 end;
 
-function TRecorderDacSession.EnqueueMirror(AFrameCount: Integer): Boolean;
+function TRecorderDacSession.EnqueueMirror(const ATime: TRecorderBlockTime): Boolean;
 var
   lOffset: Integer;
   lSampleCount: Integer;
@@ -128,10 +140,11 @@ begin
   EnterCriticalSection(fMirrorLock);
   try
     if fMirrorCount = Length(fMirrorCounts) then Exit(False);
-    lSampleCount := AFrameCount * fConfig.ChannelCount;
+    lSampleCount := ATime.SampleCount * fConfig.ChannelCount;
     lOffset := fMirrorWrite * fConfig.FramesPerBlock * fConfig.ChannelCount;
     Move(fBuffer[0], fMirrorQueue[lOffset], lSampleCount * SizeOf(Double));
-    fMirrorCounts[fMirrorWrite] := AFrameCount;
+    fMirrorCounts[fMirrorWrite] := ATime.SampleCount;
+    fMirrorTimes[fMirrorWrite] := ATime;
     fMirrorWrite := (fMirrorWrite + 1) mod Length(fMirrorCounts);
     Inc(fMirrorCount);
     Result := True;
@@ -141,6 +154,8 @@ begin
 end;
 
 function TRecorderDacSession.Start(out AResult: TRecorderDacResult): Boolean;
+var
+  lBefore, lAfter: Double;
 begin
   if not fConfigured then
   begin
@@ -148,9 +163,26 @@ begin
       'Configure DAC session before Start');
     Exit(False);
   end;
+  if fBackend.State = rdsRunning then
+  begin
+    AResult := RecorderDacFailed(rdeInvalidState, rdsgStart,
+      'DAC session is already running');
+    Exit(False);
+  end;
   fProvider.Reset;
   if fMirror <> nil then fMirror.Reset;
+  lBefore := RecorderClockSeconds;
   Result := fBackend.Start(AResult);
+  lAfter := RecorderClockSeconds;
+  if Result then
+  begin
+    { Host start is an estimate, not hardware phase synchronization. Include
+      one output block in uncertainty until a backend exposes its DAC clock. }
+    fClockMap.BeginSession(0, (lBefore + lAfter) * 0.5,
+      (lAfter - lBefore) * 0.5 + RecorderClockResolution +
+      fConfig.FramesPerBlock / fConfig.SampleRateHz);
+    fRunFrames := 0;
+  end;
 end;
 
 procedure TRecorderDacSession.ClampBlock(AFrameCount: Integer);
@@ -193,6 +225,7 @@ function TRecorderDacSession.Pump(out AResult: TRecorderDacResult): Boolean;
 var
   lFrameCount: Integer;
   lProviderResult: TRecorderDacResult;
+  lTime: TRecorderBlockTime;
 begin
   if fBackend.State <> rdsRunning then
   begin
@@ -205,6 +238,12 @@ begin
     lFrameCount, lProviderResult) then
   begin
     Inc(fCounters.Underruns);
+    if lProviderResult.Error = rdeCompleted then
+    begin
+      Dec(fCounters.Underruns);
+      AResult := lProviderResult;
+      Exit(False);
+    end;
     if fConfig.UnderrunPolicy = rdupStop then
     begin
       AResult := lProviderResult;
@@ -220,9 +259,17 @@ begin
   end;
   ClampBlock(lFrameCount);
   RememberLastFrame(lFrameCount);
+  lTime.DeviceStartSeconds := fRunFrames / fConfig.SampleRateHz;
+  lTime.RecorderStartSeconds := fClockMap.ToRecorder(lTime.DeviceStartSeconds);
+  lTime.SubmittedRecorderSeconds := RecorderClockSeconds;
+  lTime.SampleRateHz := fConfig.SampleRateHz;
+  lTime.SampleCount := lFrameCount;
+  lTime.Generation := fClockMap.Generation;
+  lTime.UncertaintySeconds := fClockMap.UncertaintySeconds;
   if not fBackend.SubmitBlock(@fBuffer[0], lFrameCount, AResult) then Exit(False);
+  Inc(fRunFrames, lFrameCount);
   Inc(fCounters.SubmittedFrames, lFrameCount);
-  if (fMirror <> nil) and not EnqueueMirror(lFrameCount) then
+  if (fMirror <> nil) and not EnqueueMirror(lTime) then
     Inc(fCounters.DroppedMirrorBlocks);
   Result := True;
 end;
@@ -232,6 +279,7 @@ function TRecorderDacSession.FlushMirror(
 var
   lFrameCount: Integer;
   lOffset: Integer;
+  lTime: TRecorderBlockTime;
 begin
   if fMirror = nil then
   begin
@@ -246,6 +294,7 @@ begin
       Exit(False);
     end;
     lFrameCount := fMirrorCounts[fMirrorRead];
+    lTime := fMirrorTimes[fMirrorRead];
     lOffset := fMirrorRead * fConfig.FramesPerBlock * fConfig.ChannelCount;
     Move(fMirrorQueue[lOffset], fMirrorFlushBuffer[0],
       lFrameCount * fConfig.ChannelCount * SizeOf(Double));
@@ -254,7 +303,10 @@ begin
   finally
     LeaveCriticalSection(fMirrorLock);
   end;
-  Result := fMirror.WriteBlock(@fMirrorFlushBuffer[0], lFrameCount, AResult);
+  if fTimedMirror <> nil then
+    Result := fTimedMirror.WriteTimedBlock(@fMirrorFlushBuffer[0], lTime, AResult)
+  else
+    Result := fMirror.WriteBlock(@fMirrorFlushBuffer[0], lFrameCount, AResult);
   if Result then Inc(fCounters.MirroredFrames, lFrameCount);
 end;
 

@@ -34,6 +34,7 @@ type
     chkObjectPoints: TCheckBox;
     chkObjectWireframe: TCheckBox;
     chkShowAxes: TCheckBox;
+    chkShowVertexLabels: TCheckBox;
     lblLabelFontSize: TLabel;
     seLabelFontSize: TSpinEdit;
     cbPointColor:TColorBox;
@@ -76,16 +77,22 @@ type
     procedure ObjectRenderSettingsChange(Sender:TObject);
     procedure PointColorSelect(Sender:TObject);
     procedure LabelFontSizeChange(Sender:TObject);
+    procedure VertexLabelsChange(Sender:TObject);
     procedure SceneTreeSelectionChanged(Sender:TObject);
     procedure VerticesSelectCell(Sender:TObject; ACol,ARow:Integer;
       var CanSelect:Boolean);
     procedure VerticesPrepareCanvas(Sender:TObject; ACol,ARow:Integer;
       AState:TGridDrawState);
+    procedure VerticesValidateEntry(Sender:TObject; ACol,ARow:Integer;
+      const OldValue:string; var NewValue:string);
     procedure FormClose(Sender:TObject; var CloseAction:TCloseAction);
     procedure FormResize(Sender:TObject);
     procedure OkClick(Sender:TObject);
     procedure CancelClick(Sender:TObject);
     procedure ModifierSelectionChange(Sender:TObject);
+    procedure VerticesHeaderClick(Sender:TObject; IsColumn:Boolean; Index:Integer);
+    procedure VerticesCompareCells(Sender:TObject; ACol,ARow,BCol,BRow:Integer;
+      var Result:Integer);
     procedure ObjectPropertiesChanged(Sender:TObject);
   private
     fComponent:TRecorder3dComponent;
@@ -98,6 +105,8 @@ type
       PtrUInt. Zero is reserved for “not selected”; IDs must fit PtrUInt. }
     fSelectedTagIds:array[TRecorder3dBindingSlot] of TRecorderTagId;
     fPopulating:Boolean;
+    fRebuildingTree:Boolean;
+    fLabelWarnings:array of Boolean;
     fInitialSelectedNodeId:QWord;
     fModeless:Boolean;
     fOwnsScene:Boolean;
@@ -106,6 +115,7 @@ type
     fOnNodeSelected:TRecorder3dNodeSelectedEvent;
     fOnVertexSelected:TRecorder3dVertexSelectedEvent;
     fOnSettingsApplied:TNotifyEvent;
+    fOnLabelsChanged:TNotifyEvent;
     fOnGeometryChanged:TNotifyEvent;
     fOnSkinChanged:TNotifyEvent;
     fOnVertexColorChanged:TNotifyEvent;
@@ -124,6 +134,11 @@ type
     procedure CreateObjectPages;
     procedure ApplyPrimitiveProperties;
     function SelectedLogicalVertexId:LongWord;
+    function VertexIndexAtRow(ARow:Integer):Integer;
+    function RowForVertex(AIndex:Integer):Integer;
+  private
+    fLabelSortDescending:Boolean;
+  private
     procedure CreateModifierFrames;
     procedure ShowSelectedModifier;
     procedure SkinFrameChanged(Sender:TObject);
@@ -166,6 +181,7 @@ type
     property OnNodeSelected:TRecorder3dNodeSelectedEvent read fOnNodeSelected write fOnNodeSelected;
     property OnVertexSelected:TRecorder3dVertexSelectedEvent read fOnVertexSelected write fOnVertexSelected;
     property OnSettingsApplied:TNotifyEvent read fOnSettingsApplied write fOnSettingsApplied;
+    property OnLabelsChanged:TNotifyEvent read fOnLabelsChanged write fOnLabelsChanged;
     property OnGeometryChanged:TNotifyEvent read fOnGeometryChanged write fOnGeometryChanged;
     property OnSkinChanged:TNotifyEvent read fOnSkinChanged write fOnSkinChanged;
     property OnVertexColorChanged:TNotifyEvent read fOnVertexColorChanged write fOnVertexColorChanged;
@@ -205,6 +221,8 @@ begin
   sgVertices.Cells[4,0]:='Z';
   sgVertices.Cells[5,0]:='Копий';
   sgVertices.Cells[6,0]:='Полигоны';
+  sgVertices.Cells[7,0]:='Подпись';
+  sgVertices.ColWidths[7]:=110;
   sgVertices.ColWidths[0]:=42;
   sgVertices.ColWidths[1]:=85;
   sgVertices.ColWidths[2]:=75;
@@ -490,15 +508,20 @@ end;
 
 procedure TRecorder3dSettingsDialog.RebuildTreeFromCurrentScene;
 begin
-  fSelectedNode:=nil;
-  tvScene.Items.Clear;
-  if fScene=nil then
-  begin
-    FillVertexGrid;
-    Exit;
+  fRebuildingTree:=True;
+  tvScene.Items.BeginUpdate;
+  try
+    fSelectedNode:=nil;
+    tvScene.Items.Clear;
+    if fScene<>nil then
+    begin
+      BuildSceneTree;
+      RestoreTreeSelection;
+    end;
+  finally
+    tvScene.Items.EndUpdate;
+    fRebuildingTree:=False;
   end;
-  BuildSceneTree;
-  RestoreTreeSelection;
   SceneTreeSelectionChanged(tvScene);
 end;
 
@@ -626,6 +649,13 @@ procedure TRecorder3dSettingsDialog.LabelFontSizeChange(Sender:TObject);
 begin
   if fPopulating or (fComponent=nil) then Exit;
   fComponent.LabelFontSize:=seLabelFontSize.Value;
+  if Assigned(fOnSettingsApplied) then fOnSettingsApplied(Self);
+end;
+
+procedure TRecorder3dSettingsDialog.VertexLabelsChange(Sender:TObject);
+begin
+  if fPopulating or (fComponent=nil) then Exit;
+  fComponent.ShowVertexLabels:=chkShowVertexLabels.Checked;
   if Assigned(fOnSettingsApplied) then fOnSettingsApplied(Self);
 end;
 
@@ -818,6 +848,7 @@ end;
 
 procedure TRecorder3dSettingsDialog.SceneTreeSelectionChanged(Sender:TObject);
 begin
+  if fRebuildingTree then Exit;
   SaveSelectedNode;
   fSelectedNode:=nil;
   if (fScene<>nil) and (tvScene.Selected<>nil) then
@@ -854,7 +885,7 @@ begin
     if (ALogicalVertex<0) or (ALogicalVertex>=Length(fTopology.Vertices)) then
       Exit;
     CanSelect:=True;
-    sgVertices.Row:=ALogicalVertex+1;
+    sgVertices.Row:=RowForVertex(ALogicalVertex);
     VerticesSelectCell(sgVertices,sgVertices.Col,sgVertices.Row,CanSelect);
     sgVertices.TopRow:=Max(1,sgVertices.Row-2);
   finally
@@ -904,8 +935,10 @@ begin
   fTopology:=BuildMeshTopology(Mesh);
   SetLength(fRelations,0);
   sgVertices.RowCount:=Max(1,Length(fTopology.Vertices)+1);
+  SetLength(fLabelWarnings,Length(fTopology.Vertices));
   for I:=0 to High(fTopology.Vertices) do
   begin
+    fLabelWarnings[I]:=False;
     Vertex:=fTopology.Vertices[I];
     sgVertices.Cells[0,I+1]:=IntToStr(I+1);
     sgVertices.Cells[1,I+1]:=IntToStr(Vertex.StableId);
@@ -914,12 +947,39 @@ begin
     sgVertices.Cells[4,I+1]:=FloatToStr(Vertex.Position.Z);
     sgVertices.Cells[5,I+1]:=IntToStr(Vertex.CornerCount);
     sgVertices.Cells[6,I+1]:=IndexesText(Vertex.FaceIndexes);
+    sgVertices.Cells[7,I+1]:=fComponent.PointLabel(fSelectedNode.Id,I+1);
   end;
   sgVertices.Invalidate;
 end;
 
+procedure TRecorder3dSettingsDialog.VerticesValidateEntry(Sender:TObject;
+  ACol,ARow:Integer; const OldValue:string; var NewValue:string);
+var I,lVertex,lOther:Integer; S:TRecorderModelPointSelection;
+begin
+  if (ACol<>7) or (ARow<1) or (fSelectedNode=nil) then
+  begin NewValue:=OldValue; Exit end;
+  NewValue:=Trim(NewValue);
+  lVertex:=VertexIndexAtRow(ARow);
+  if lVertex<0 then begin NewValue:=OldValue; Exit end;
+  for I:=1 to High(fTopology.Vertices)+1 do
+  begin
+    lOther:=VertexIndexAtRow(I);
+    if (I<>ARow) and (NewValue<>'') and
+      (fComponent.PointLabel(fSelectedNode.Id,lOther+1)=NewValue) then
+    begin sgVertices.Cells[7,I]:=''; fLabelWarnings[lOther]:=True end;
+  end;
+  fLabelWarnings[lVertex]:=False;
+  fComponent.SetPointLabel(fSelectedNode.Id,lVertex+1,Length(fTopology.Vertices),NewValue);
+  sgVertices.Invalidate;
+  S.SceneComponentId:=fComponent.Id; S.NodeId:=fSelectedNode.Id;
+  S.PointNumber:=lVertex+1;
+  if Assigned(fOnLabelsChanged) then fOnLabelsChanged(Self);
+  PublishRecorderModelPointSelection(S);
+end;
+
 procedure TRecorder3dSettingsDialog.VerticesSelectCell(Sender:TObject; ACol,ARow:Integer; var CanSelect:Boolean);
 begin
+  ARow:=VertexIndexAtRow(ARow)+1;
   if ARow>0 then
     fRelations:=ClassifyLogicalVertices(fTopology,ARow-1)
   else
@@ -943,13 +1003,84 @@ begin
       fVertexColorFrame.SetSelectedVertex(0,0,False);
 end;
 
+function TRecorder3dSettingsDialog.VertexIndexAtRow(ARow:Integer):Integer;
+begin
+  Result:=-1;
+  if (ARow<1) or (ARow>=sgVertices.RowCount) then Exit;
+  Result:=StrToIntDef(sgVertices.Cells[0,ARow],0)-1;
+  if (Result<0) or (Result>=Length(fTopology.Vertices)) then Result:=-1;
+end;
+
+function TRecorder3dSettingsDialog.RowForVertex(AIndex:Integer):Integer;
+var I:Integer;
+begin
+  Result:=1;
+  for I:=1 to sgVertices.RowCount-1 do
+    if VertexIndexAtRow(I)=AIndex then Exit(I);
+end;
+
+procedure TRecorder3dSettingsDialog.VerticesCompareCells(Sender:TObject;
+  ACol,ARow,BCol,BRow:Integer; var Result:Integer);
+var lLeft,lRight,lLeftNumber,lRightNumber:string; lLeftEnd,lRightEnd:Integer;
+
+  function NumberPrefix(const ALabel:string; out AEnd:Integer):string;
+  var lStart:Integer;
+  begin
+    AEnd:=1;
+    while (AEnd<=Length(ALabel)) and (ALabel[AEnd] in ['0'..'9']) do Inc(AEnd);
+    lStart:=1;
+    while (lStart<AEnd-1) and (ALabel[lStart]='0') do Inc(lStart);
+    Result:=Copy(ALabel,lStart,AEnd-lStart);
+  end;
+
+begin
+  lLeft:=sgVertices.Cells[ACol,ARow];
+  lRight:=sgVertices.Cells[BCol,BRow];
+  lLeftNumber:=NumberPrefix(lLeft,lLeftEnd);
+  lRightNumber:=NumberPrefix(lRight,lRightEnd);
+  Result:=0;
+  if (ACol=7) and (BCol=7) and (lLeftNumber<>'') and (lRightNumber<>'') then
+  begin
+    { Comparing digit counts avoids overflow even for long vertex labels. }
+    if Length(lLeftNumber)<Length(lRightNumber) then Result:=-1
+    else if Length(lLeftNumber)>Length(lRightNumber) then Result:=1
+    else Result:=CompareStr(lLeftNumber,lRightNumber);
+    if Result=0 then Result:=UTF8CompareText(Copy(lLeft,lLeftEnd,MaxInt),
+      Copy(lRight,lRightEnd,MaxInt));
+  end
+  else Result:=UTF8CompareText(lLeft,lRight);
+  if Result=0 then
+    Result:=VertexIndexAtRow(ARow)-VertexIndexAtRow(BRow);
+  if sgVertices.SortOrder=soDescending then Result:=-Result;
+end;
+
+procedure TRecorder3dSettingsDialog.VerticesHeaderClick(Sender:TObject;
+  IsColumn:Boolean; Index:Integer);
+var lSelected:Integer; lWasSync:Boolean;
+begin
+  if not IsColumn or (Index<>7) or (sgVertices.RowCount<2) then Exit;
+  lSelected:=VertexIndexAtRow(sgVertices.Row);
+  lWasSync:=fSynchronizingSelection;
+  fSynchronizingSelection:=True;
+  try
+    if fLabelSortDescending then sgVertices.SortOrder:=soDescending
+    else sgVertices.SortOrder:=soAscending;
+    sgVertices.SortColRow(True,7);
+    fLabelSortDescending:=not fLabelSortDescending;
+    sgVertices.Row:=RowForVertex(lSelected);
+  finally
+    fSynchronizingSelection:=lWasSync;
+  end;
+  sgVertices.Invalidate;
+end;
+
 function TRecorder3dSettingsDialog.SelectedLogicalVertexId:LongWord;
 begin
   Result:=0;
   if (sgVertices.Row<=0) or
      (sgVertices.Row-1>High(fTopology.Vertices)) then
     Exit;
-  Result:=fTopology.Vertices[sgVertices.Row-1].StableId;
+  Result:=fTopology.Vertices[VertexIndexAtRow(sgVertices.Row)].StableId;
 end;
 
 procedure AppendCorners(var ADestination:TRecorder3dCornerIndices;
@@ -968,9 +1099,16 @@ procedure TRecorder3dSettingsDialog.NotifyVertexSelection(
   ALogicalVertex:Integer);
 var
   I:Integer;
+  S:TRecorderModelPointSelection;
   PrimaryCorners:TRecorder3dCornerIndices;
   AdjacentCorners:TRecorder3dCornerIndices;
 begin
+  if fSelectedNode<>nil then
+  begin
+    S.SceneComponentId:=fComponent.Id; S.NodeId:=fSelectedNode.Id;
+    S.PointNumber:=ALogicalVertex+1;
+    PublishRecorderModelPointSelection(S);
+  end;
   SetLength(PrimaryCorners,0);
   SetLength(AdjacentCorners,0);
   if not Assigned(fOnVertexSelected) or (fSelectedNode=nil) then
@@ -990,6 +1128,10 @@ end;
 
 procedure TRecorder3dSettingsDialog.VerticesPrepareCanvas(Sender:TObject; ACol,ARow:Integer; AState:TGridDrawState);
 begin
+  ARow:=VertexIndexAtRow(ARow)+1;
+  if (ACol=7) and (ARow>0) and (ARow-1<=High(fLabelWarnings)) and
+    fLabelWarnings[ARow-1] then
+  begin sgVertices.Canvas.Brush.Color:=$00D0A0FF; Exit end;
   if (ARow<=0) or (ARow-1>High(fRelations)) then Exit;
   case fRelations[ARow-1] of
     trPrimary:sgVertices.Canvas.Brush.Color:=$0080E8FF;
@@ -1003,6 +1145,9 @@ var
 begin
   edSceneFile.Text:=fComponent.SceneFileName;
   chkShowAxes.Checked:=fComponent.ShowAxes;
+  chkShowVertexLabels.OnChange:=nil;
+  chkShowVertexLabels.Checked:=fComponent.ShowVertexLabels;
+  chkShowVertexLabels.OnChange:=@VertexLabelsChange;
   seLabelFontSize.OnChange:=nil;
   seLabelFontSize.Value:=EnsureRange(fComponent.LabelFontSize,4,48);
   seLabelFontSize.OnChange:=@LabelFontSizeChange;
@@ -1036,6 +1181,7 @@ procedure TRecorder3dSettingsDialog.SaveGlobalSettings;
 begin
   fComponent.SceneFileName:=edSceneFile.Text;
   fComponent.ShowAxes:=chkShowAxes.Checked;
+  fComponent.ShowVertexLabels:=chkShowVertexLabels.Checked;
   fComponent.LabelFontSize:=seLabelFontSize.Value;
   fComponent.NormalLength:=StrToFloatDef(edNormalLength.Text,0.25);
   fComponent.PointColor:=LongInt(cbPointColor.Selected);

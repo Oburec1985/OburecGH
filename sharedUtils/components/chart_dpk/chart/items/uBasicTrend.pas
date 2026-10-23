@@ -45,6 +45,8 @@ type
     logpointsX:array of single;
     // идентификатор списка отображения для логарифмированной линии
     DisplayListName:Cardinal;
+    // display list собран шейдерной веткой (нужно для аварийного отката)
+    m_CompiledWithShader:boolean;
     // опции тренда
     settings:cardinal;
   protected
@@ -176,9 +178,15 @@ begin
     if a.lg or p.lgx then
     begin
       if cchart(chart).m_UseShaders then
-        CompileLineLgShader
+      begin
+        CompileLineLgShader;
+        m_CompiledWithShader:=true;
+      end
       else
+      begin
         CompileLineLg;
+        m_CompiledWithShader:=false;
+      end;
       if  drawPoint then
       begin
         evalDrawPointsList;
@@ -370,6 +378,9 @@ begin
   inherited;
   glgetfloatv(GL_PROJECTION_MATRIX, @m);
   glGetIntegerv(GL_VIEWPORT, @v); // узнаём параметры viewport-a.
+  // шейдерный путь мог быть аварийно выключен по ошибке GL - пересобираем обычной веткой
+  if m_CompiledWithShader and (not cchart(chart).m_UseShaders) then
+    NeedRecompile:=true;
   if NeedRecompile then
     compile;
   // GL_LINE_WIDTH_RANGE GL_LINE_WIDTH_GRANULARITY
@@ -734,7 +745,12 @@ var
   ls:lpcstr;
 
 begin
+  if (cchart(chart).m_ShaderMng = nil) or
+     (cchart(chart).m_ShaderMng.m_shaders.Count = 0) then
+    exit;
   sh:=cLineLgShader(cchart(chart).m_ShaderMng.getshader(0));
+  if g_ShaderCheckGlErrors then
+    while glGetError <> GL_NO_ERROR do ; // сбросить накопленные ошибки драйвера
   SwitchLgProg(true, sh);
 
   a:=caxis(parent);
@@ -753,6 +769,15 @@ begin
   vertexData[2]:=a.minY;
   vertexData[3]:=a.maxY;
   glUniform4f(sh.aLocation, vertexData[0],vertexData[1],vertexData[2],vertexData[3]);
+  // Драйвер мог не принять uniform-ы: шейдерный путь формально включён, но не
+  // работает. Проверка под флагом uShader.g_ShaderCheckGlErrors: после drain
+  // выше ошибки принадлежат нашим вызовам. Тогда гасим шейдеры, тренд
+  // пересоберётся обычной веткой.
+  if g_ShaderCheckGlErrors and (glGetError <> GL_NO_ERROR) then
+  begin
+    SwitchLgProg(false, nil);
+    cchart(chart).DisableShaders;
+  end;
 end;
 
 procedure cBasicTrend.SwitchLgProg(b:boolean; sh:cshader);

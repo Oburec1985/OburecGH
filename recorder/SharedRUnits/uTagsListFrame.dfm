@@ -18,7 +18,7 @@ object TagsListFrame: TTagsListFrame
     TabOrder = 0
     object ChanNamesPanel: TPanel
       Left = 2
-      Top = 18
+      Top = 15
       Width = 280
       Height = 111
       Margins.Left = 4
@@ -33,8 +33,8 @@ object TagsListFrame: TTagsListFrame
       object FrmTagPropLabel: TLabel
         Left = 5
         Top = 58
-        Width = 55
-        Height = 16
+        Width = 48
+        Height = 13
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -44,8 +44,8 @@ object TagsListFrame: TTagsListFrame
       object FrmTagPropValue: TLabel
         Left = 121
         Top = 60
-        Width = 56
-        Height = 16
+        Width = 48
+        Height = 13
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -81,7 +81,7 @@ object TagsListFrame: TTagsListFrame
         Left = 5
         Top = 82
         Width = 108
-        Height = 24
+        Height = 21
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -100,9 +100,9 @@ object TagsListFrame: TTagsListFrame
     end
     object TagsLV: TBtnListView
       Left = 2
-      Top = 129
+      Top = 126
       Width = 280
-      Height = 172
+      Height = 175
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -131,6 +131,8 @@ object TagsListFrame: TTagsListFrame
       DrawColorBox = False
       ChangeTextColor = False
       Editable = False
+      ExplicitTop = 129
+      ExplicitHeight = 172
     end
   end
 end

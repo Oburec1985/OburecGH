@@ -36,7 +36,7 @@ object PeakFrm: TPeakFrm
     Left = 0
     Top = 0
     Width = 635
-    Height = 30
+    Height = 56
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
@@ -98,6 +98,33 @@ object PeakFrm: TPeakFrm
       TabOrder = 1
       Text = '0,2'
       OnChange = RatioLimitEditChange
+    end
+    object VisibleAreaCB: TCheckBox
+      Left = 6
+      Top = 31
+      Width = 170
+      Height = 17
+      Caption = 'Видимая область'
+      Checked = True
+      State = cbChecked
+      TabOrder = 2
+      OnClick = VisibleAreaCBClick
+    end
+    object SigColorPanel: TPanel
+      Left = 190
+      Top = 31
+      Width = 18
+      Height = 16
+      BevelOuter = bvNone
+      Caption = ''
+      TabOrder = 3
+    end
+    object SigNameLabel: TLabel
+      Left = 214
+      Top = 32
+      Width = 200
+      Height = 13
+      Caption = ''
     end
   end
   object ProfileSG: TStringGridExt

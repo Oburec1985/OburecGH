@@ -208,6 +208,9 @@ begin Result := StrToFloatDef(AValue, 0, DefaultFormatSettings); end;
 
 function TRecorderMdbRepository.CreateNode(const AKind: string): TRecorderXmlDbNode;
 begin
+  if SameText(AKind, 'cObjFolder') then Exit(TRecorderXmlDbNode.Create(CMdbObjectKind));
+  if SameText(AKind, 'cTestFolder') then Exit(TRecorderXmlDbNode.Create(CMdbTestKind));
+  if SameText(AKind, 'cRegFolder') then Exit(TRecorderXmlDbNode.Create(CMdbRegistrationKind));
   if SameText(AKind, CMdbObjectKind) or SameText(AKind, CMdbTestKind) or
     SameText(AKind, CMdbRegistrationKind) then
     Result := TRecorderXmlDbNode.Create(AKind)
@@ -217,6 +220,9 @@ end;
 function TRecorderMdbRepository.AcceptParent(const AKind,
   AParentKind: string): Boolean;
 begin
+  if SameText(AKind, 'cObjFolder') then Exit(AParentKind = '');
+  if SameText(AKind, 'cTestFolder') then Exit(SameText(AParentKind, CMdbObjectKind));
+  if SameText(AKind, 'cRegFolder') then Exit(SameText(AParentKind, CMdbTestKind));
   Result := (SameText(AKind, CMdbObjectKind) and (AParentKind = '')) or
     (SameText(AKind, CMdbTestKind) and SameText(AParentKind, CMdbObjectKind)) or
     (SameText(AKind, CMdbRegistrationKind) and SameText(AParentKind, CMdbTestKind));

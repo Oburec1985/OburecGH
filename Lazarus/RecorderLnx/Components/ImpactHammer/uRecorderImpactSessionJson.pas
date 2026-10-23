@@ -1,7 +1,7 @@
 unit uRecorderImpactSessionJson;
 
-{ Portable JSON adapter for impact-hammer sessions. Conversion is performed
-  only on explicit save/load commands, never in acquisition or paint paths. }
+{ Сохраняет и загружает полную сессию измерений в JSON. Преобразование данных
+  выполняется только по явной команде, вне сбора отсчётов и отрисовки. }
 
 {$mode objfpc}{$H+}
 {$codepage UTF8}
@@ -16,6 +16,8 @@ type
   TRecorderImpactSessionJsonStore = class(TInterfacedObject,
     IRecorderImpactSessionStore, IRecorderImpactComparisonPort)
   private
+    { В файл записывается время относительно ATimeOrigin; при чтении смещение
+      прибавляется обратно к каждому времени отсчёта. }
     class function SeriesToJson(const ASeries: TRecorderImpactSessionSeries;
       ATimeOrigin: Double): TJSONObject; static;
     class function SeriesFromJson(AJson: TJSONObject;
@@ -36,6 +38,7 @@ type
 
 implementation
 
+{ Преобразует числовой массив в JSON с сохранением порядка. }
 function DoubleArrayToJson(const AValues: array of Double): TJSONArray;
 var
   I: Integer;
@@ -45,6 +48,7 @@ begin
     Result.Add(AValues[I]);
 end;
 
+{ Копирует JSON-числа в буфер AValues; длины должны совпасть. }
 function JsonToDoubleArray(AJson: TJSONArray; out AValues: array of Double): Boolean;
 var
   I: Integer;
@@ -56,6 +60,7 @@ begin
     AValues[I] := AJson.Floats[I];
 end;
 
+{ Кодирует ряд; ATimeOrigin вычитается из времени каждого отсчёта. }
 class function TRecorderImpactSessionJsonStore.SeriesToJson(
   const ASeries: TRecorderImpactSessionSeries;
   ATimeOrigin: Double): TJSONObject;
@@ -80,6 +85,7 @@ begin
   end;
 end;
 
+{ Декодирует ряд и прибавляет ATimeOrigin; ATotalSamples контролирует общий объём. }
 class function TRecorderImpactSessionJsonStore.SeriesFromJson(
   AJson: TJSONObject; ATimeOrigin: Double; var ATotalSamples: Int64;
   out ASeries: TRecorderImpactSessionSeries): Boolean;
@@ -111,6 +117,7 @@ begin
   end;
 end;
 
+{ Сохраняет снимок сессии в MERA-каталог; AError получает причину отказа. }
 function TRecorderImpactSessionJsonStore.Save(const AFileName: string;
   const ASnapshot: TRecorderImpactSessionSnapshot;
   const AOptions: TRecorderImpactSessionSaveOptions;
@@ -200,6 +207,7 @@ begin
   Root.Free;
 end;
 
+{ Загружает снимок из MERA-каталога; AError получает причину отказа. }
 function TRecorderImpactSessionJsonStore.Load(const AFileName: string;
   out ASnapshot: TRecorderImpactSessionSnapshot;
   out AError: string): Boolean;
@@ -324,6 +332,7 @@ begin
   Lines.Free;
 end;
 
+{ Загружает сессию тем же путём, что и обычный импорт. }
 function TRecorderImpactSessionJsonStore.ImportComparison(
   const AFileName: string; out ASnapshot: TRecorderImpactSessionSnapshot;
   out AError: string): Boolean;

@@ -323,6 +323,7 @@
       <Unit>
         <Filename Value="Components/Spectrum/uRecorderSpectrumView.pas"/>
         <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="Components/Common/uRecorderColorSwatch.pas"/>
@@ -680,11 +681,11 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderFrequencyResponse.pas"/>
+        <Filename Value="Components/FrequencyResponse/uRecorderFrequencyResponse.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderFrequencyResponseModel.pas"/>
+        <Filename Value="Components/FrequencyResponse/uRecorderFrequencyResponseModel.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -701,19 +702,19 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderFrfContracts.pas"/>
+        <Filename Value="Components/Common/uRecorderFrfContracts.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderFrfRepository.pas"/>
+        <Filename Value="Components/Common/uRecorderFrfRepository.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderImpactHammer.pas"/>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactHammer.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderImpactDsp.pas"/>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactDsp.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -787,11 +788,11 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderImpactSessionContracts.pas"/>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactSessionContracts.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="Core/uRecorderImpactSessionValidation.pas"/>
+        <Filename Value="Components/ImpactHammer/uRecorderImpactSessionValidation.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>

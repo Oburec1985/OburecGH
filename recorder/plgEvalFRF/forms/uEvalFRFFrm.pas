@@ -246,7 +246,6 @@ type
   public
     // профиль испытания
     // m_profile: cprofile;
-
     m_color: point3;
     m_frm: tform;
     m_CohTreshold,
@@ -260,9 +259,7 @@ type
     // m_T1ClxData:TAlignDCmpx;
     // тот же спектр, но амплитуда
     // m_rms: TAlignDarray;
-
     line: cBuffTrend1d;
-
     // список ударов (TDataBlock)
     m_shockList: TDataBlockList;
     // окно на удар
@@ -412,6 +409,9 @@ type
     m_profileline: ctrend;
     // список настроек Тахо
     m_TahoList: tlist;
+    // опрос клавиши Home: в плагине фокус клавиатуры часто остаётся у окна Recorder
+    FHomeTimer: TTimer;
+    FHomeDown: boolean;
     // spm
     m_lgX, m_lgY, m_newAx: boolean;
     m_minX, m_maxX: double;
@@ -464,6 +464,22 @@ type
     function CanAssignBladeSn(const ASn: string; ABlade: cBladeFolder): boolean;
     function EnsureSelectedBladeSn: boolean;
   public
+    // единое оформление линий сигналов: цвет и число линий на канал
+    procedure UpdateLineStyles;
+    // заполнить мгновенные линии всех каналов (когда "Усреднить" снято)
+    procedure FillInstantLines;
+    // галка "Усреднить": переключить показ средних/мгновенных линий
+    procedure useAvrCbClick(sender: tobject);
+    // страница графика, над которой находится мышь (nil - если ни над одной)
+    function PageUnderMouse: cpage;
+    // Home / Ctrl+Home: переместить курсор активного графика в позицию мыши
+    procedure CursorToMouse(bothCursors: boolean);
+    // опрос Home/Ctrl+Home вне зависимости от фокуса клавиатуры
+    procedure HomeTimerTick(Sender: TObject);
+    procedure SpmChartKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure SpmChartMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: integer);
     // номер удара с учетом ShockIE
     function GetShockNum:integer;
     function getLine(s: cSRSres): cBuffTrend1d;
@@ -491,9 +507,14 @@ type
     procedure updatedata; override;
     // выделение памяти. происходит при загрузке или смене конфига
     procedure UpdateBlocks;
+    // Перепривязать теги из настроек к базе тегов Recorder. Вызывается в
+    // doRecorderInit: на момент LoadSettings теги Recorder ещё не созданы.
+    procedure RebindTags;
     procedure UpdateChart;
     procedure doStart;
     procedure addTaho(t: cSRSTaho);
+    // удалить тахо (корневой узел настройки) вместе с конфигурациями и сигналами
+    procedure DelTaho(t: cSRSTaho);
     procedure StoreTahoThreshold;
     function getTaho: cSRSTaho;
     function getRes(s: string): cSRSres;
@@ -583,6 +604,54 @@ implementation
 uses
   uEditEvalFRFFrm;
 {$R *.dfm}
+
+// Шаг по частоте: при неопределённом разрешении спектра (fspmdx = 0, частота
+// тахо ещё не известна) деление на ноль даёт EZeroDivide. Возвращаем 0.
+function SpmStep(dx: double): double;
+begin
+  if dx > 0 then
+    result := 1 / dx
+  else
+    result := 0;
+end;
+
+// Перепоиск тега по имени. Вызывать только когда тег уже есть в базе Recorder:
+// cTag.settagname при уже привязанном теге и отсутствии имени в базе пытается
+// ПЕРЕИМЕНОВАТЬ старый тег, а нам нужна только привязка.
+procedure RebindTag(tag: ctag);
+begin
+  if (tag = nil) or (tag.tagname = '') then
+    exit;
+  if getTagByName(tag.tagname) = nil then
+    exit;
+  // принудительное присваивание: сеттер переискивает тег и восстанавливает привязку
+  tag.tagname := tag.tagname;
+end;
+
+// Координата тренда по ОТОБРАЖАЕМОМУ положению курсора. При AbsScreenMode=true
+// (так в этом пакете) координата хранится в fx1/fx2, а пиксель ix1/ix2 после
+// зума остаётся устаревшим: getx1/getx2 дают значение не там, где нарисован
+// курсор, из-за чего окно обработки применяется не по видимой границе.
+function CursorTrendX(cursor: cDoubleCursor; first: boolean): double;
+begin
+  result := 0;
+  if cursor = nil then
+    exit;
+  if cursor.AbsScreenMode then
+  begin
+    if first then
+      result := cursor.getFx1
+    else
+      result := cursor.getFx2;
+  end
+  else
+  begin
+    if first then
+      result := cursor.getx1
+    else
+      result := cursor.getx2;
+  end;
+end;
 
 function copyData(t: ctag; var time: point2d; buf: TAlignDarray): integer;
 var
@@ -727,6 +796,25 @@ begin
   m_TahoList.Add(t);
 end;
 
+// Удалить тахо со всеми конфигурациями и сигналами. Графические объекты снимаются
+// штатной пересборкой: UpdateChart очищает оси и сразу выходит, так как тахо в
+// списке уже нет. Полосы держат ссылки на сигналы, поэтому их тоже пересобираем.
+procedure TFRFFrm.DelTaho(t: cSRSTaho);
+var
+  i: integer;
+begin
+  if t = nil then
+    exit;
+  i := m_TahoList.IndexOf(t);
+  if i < 0 then
+    exit;
+  m_TahoList.Delete(i);
+  UpdateChart;
+  if g_FrfFactory <> nil then
+    g_FrfFactory.CreateBands(self, g_mbase);
+  t.destroy;
+end;
+
 procedure TFRFFrm.BladeSEDownClick(sender: tobject);
 var
   s: cStageFolder;
@@ -852,6 +940,9 @@ begin
   cfg := t.getCfg;
   bl := g_mbase.SelectBlade;
   result := true;
+  // без выбранной лопатки дальше идут bl.GetTolerance/bl.m_res - это AV
+  if bl = nil then
+    exit;
   for i := 0 to cfg.SRSCount - 1 do
   begin
     s := cfg.GetSrs(i);
@@ -863,6 +954,8 @@ begin
   end;
   // датчик успешно нашел все полосы
   s := ActiveSignal;
+  if s = nil then
+    exit;
   resStr := '';
   tol := bl.GetTolerance(0); // допуск на полосы в процентах
   for i := 0 to s.m_BandExtremums.Count - 1 do
@@ -962,9 +1055,23 @@ begin
   fPress := 0;
   if Assigned(FPressFE) then
     fPress := FPressFE.FloatNum;
-  SaveBladeReport(repname, m_MeraFile, slist, // список обработок
-    m_bands, // список тонов лопатки
-    SpmChart, bl, fPress, g_FrfFactory.m_hideExcel);
+  try
+    SaveBladeReport(repname, m_MeraFile, slist, // список обработок
+      m_bands, // список тонов лопатки
+      SpmChart, bl, fPress, g_FrfFactory.m_hideExcel);
+  except
+    on E: Exception do
+    begin
+      // исключение из DLL роняет Recorder: показываем причину и сохраняем то,
+      // что успели записать в книгу
+      try
+        SaveWorkBookAs(repname);
+      except
+      end;
+      ShowMessage('Ошибка формирования отчёта: ' + E.ClassName + ': ' +
+        E.Message);
+    end;
+  end;
   for i := 0 to cfg.SRSCount - 1 do
   begin
     repsig := RepSignal(slist.Items[i]);
@@ -1088,6 +1195,12 @@ begin
     else
       s.linePhase.visible := false;
   end;
+
+  // единое оформление линий (цвет, одна/две линии на канал)
+  UpdateLineStyles;
+  // список экстремумов пересчитать по отмеченным сигналам
+  if (PeakFrm <> nil) and PeakFrm.Visible and ShowPeaks.Checked then
+    PeakFrm.ShowFRFPeaks(self);
 
   // перекочевало сюда из showspm
   UpdateView;
@@ -1509,6 +1622,257 @@ begin
   m_profileline.visible := true;
 
   axSpm := p.activeAxis;
+
+  // галка "Усреднить" переключает средние/мгновенные линии
+  useAvrCb.OnClick := useAvrCbClick;
+  // Home / Ctrl+Home - курсор активного графика в позицию мыши
+  SpmChart.TabStop := true;
+  SpmChart.OnMouseDown := SpmChartMouseDown;
+  SpmChart.OnKeyDown := SpmChartKeyDown;
+  // форма ловит клавишу, пока фокус у любого её контрола (VCL KeyPreview)
+  KeyPreview := true;
+  OnKeyDown := SpmChartKeyDown;
+  // дополнительно опрашиваем клавишу таймером: OnKeyDown доходит только когда
+  // фокус клавиатуры у самого графика, а в плагине он обычно у окна Recorder
+  FHomeTimer := TTimer.Create(Self);
+  FHomeTimer.Interval := 30;
+  FHomeTimer.OnTimer := HomeTimerTick;
+end;
+
+// Home / Ctrl+Home без зависимости от фокуса клавиатуры: фокус часто остаётся
+// у окна Recorder, поэтому клавишу опрашиваем таймером, пока указатель мыши
+// находится над графиком.
+procedure TFRFFrm.HomeTimerTick(Sender: TObject);
+var
+  down, ctrl: boolean;
+  pt: TPoint;
+  h: THandle;
+begin
+  // $8000 - сейчас нажата, $0001 - была нажата после прошлого опроса. Свой
+  // детектор фронта: одиночное срабатывание на нажатие, короткие нажатия ловятся
+  down := (GetAsyncKeyState(VK_HOME) and $8001) <> 0;
+  if down = FHomeDown then
+    exit;
+  FHomeDown := down;
+  if not down then
+    exit;
+  if (SpmChart = nil) or (not SpmChart.Visible) then
+    exit;
+  pt := Mouse.CursorPos;
+  h := WindowFromPoint(pt);
+  // только когда указатель над графиком
+  if (h <> SpmChart.Handle) and (not IsChild(SpmChart.Handle, h)) then
+    exit;
+  // если фокус в поле ввода - Home нужен самому полю
+  if (Screen.ActiveControl <> nil) and (Screen.ActiveControl is TCustomEdit) then
+    exit;
+  // обновляем координаты мыши в чарте, чтобы курсор встал точно под указатель
+  Windows.ScreenToClient(SpmChart.Handle, pt);
+  SpmChart.mouse.ipos := pt;
+  SpmChart.mouse.ipos_inv := Point(pt.X, SpmChart.Height - pt.Y);
+  ctrl := (GetAsyncKeyState(VK_CONTROL) and $8000) <> 0;
+  CursorToMouse(ctrl);
+end;
+
+procedure TFRFFrm.SpmChartMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: integer);
+begin
+  // отдаём фокус прямо окну графика (VCL SetFocus у встроенной в хост формы
+  // неактивен и вырождается в тот же Windows.SetFocus)
+  if SpmChart.HandleAllocated then
+    Windows.SetFocus(SpmChart.Handle);
+end;
+
+procedure TFRFFrm.SpmChartKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_HOME then
+  begin
+    // в полях ввода Home должен работать как обычно
+    if (ActiveControl <> nil) and (ActiveControl is TCustomEdit) then
+      exit;
+    // без Ctrl - первый курсор, с Ctrl - второй (на временной шкале) или оба
+    CursorToMouse(ssCtrl in Shift);
+    Key := 0;
+  end;
+end;
+
+// Заполнить мгновенные линии (спектр и АЧХ) для всех каналов по выбранному удару.
+// Обычно они заполняются только для активного канала (ShowSpm/ShowFrf), а при
+// показе всех каналов без усреднения нужны каждому.
+procedure TFRFFrm.FillInstantLines;
+var
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  b: TDataBlock;
+  i, shInd: integer;
+begin
+  t := getTaho;
+  if t = nil then
+    exit;
+  c := t.cfg;
+  if c = nil then
+    exit;
+  shInd := GetShockNum;
+  for i := 0 to c.SRSCount - 1 do
+  begin
+    s := c.GetSrs(i);
+    if s = nil then
+      continue;
+    b := s.m_shockList.getBlock(shInd);
+    if b = nil then
+      b := s.m_shockList.getLastBlock;
+    if b = nil then
+      continue;
+    if (s.lineSpm <> nil) and (b.m_mod.p <> nil) then
+      s.lineSpm.AddPoints(TDoubleArray(b.m_mod.p), c.fHalfFft);
+    if (s.lineFrf <> nil) and (b.m_frf <> nil) then
+      s.lineFrf.AddPoints(b.m_frf, c.fHalfFft);
+  end;
+end;
+
+// Единое оформление линий сигналов (SPM и АЧХ):
+//  - средняя линия всегда цветом канала;
+//  - мгновенная линия черная, когда показывается один канал;
+//  - когда показываются все каналы (нет выбранной строки или отмечено больше
+//    одного канала), на канал рисуется одна линия цветом канала: средняя, если
+//    включена галка "Усреднить", иначе мгновенная.
+procedure TFRFFrm.UpdateLineStyles;
+var
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+  i: integer;
+  singleLine, useAvg: boolean;
+  instColor: point3;
+begin
+  t := getTaho;
+  if t = nil then
+    exit;
+  c := t.cfg;
+  if c = nil then
+    exit;
+  useAvg := (useAvrCb <> nil) and useAvrCb.Checked;
+  singleLine := (SignalsLV.SelCount = 0) or (CheckedCount > 1);
+  if singleLine and not useAvg then
+    FillInstantLines;
+  for i := 0 to c.SRSCount - 1 do
+  begin
+    s := c.GetSrs(i);
+    if s = nil then
+      continue;
+    // средние линии всегда цветом канала
+    if s.lineAvSpm <> nil then
+      s.lineAvSpm.Color := s.m_color;
+    if s.lineAvFRF <> nil then
+      s.lineAvFRF.Color := s.m_color;
+    // мгновенные: черные, кроме режима "все каналы без усреднения"
+    if singleLine and not useAvg then
+      instColor := s.m_color
+    else
+      instColor := black;
+    if s.lineSpm <> nil then
+      s.lineSpm.Color := instColor;
+    if s.lineFrf <> nil then
+      s.lineFrf.Color := instColor;
+    if not singleLine then
+      continue;
+    // одна линия на канал - по галке "Усреднить"
+    case ResTypeRG.ItemIndex of
+      0:
+        begin
+          if s.lineAvFRF <> nil then
+            s.lineAvFRF.visible := useAvg;
+          if s.lineFrf <> nil then
+            s.lineFrf.visible := not useAvg;
+        end;
+      2:
+        begin
+          if s.lineAvSpm <> nil then
+            s.lineAvSpm.visible := useAvg;
+          if s.lineSpm <> nil then
+            s.lineSpm.visible := not useAvg;
+        end;
+    end;
+  end;
+end;
+
+// галка "Усреднить": переключить средние/мгновенные линии
+procedure TFRFFrm.useAvrCbClick(sender: tobject);
+begin
+  UpdateLineStyles;
+  // экстремумы ищутся по средней или мгновенной линии - обновить список
+  if (PeakFrm <> nil) and PeakFrm.Visible and ShowPeaks.Checked then
+    PeakFrm.ShowFRFPeaks(self);
+  SpmChart.redraw;
+end;
+
+// Страница графика под мышью: в окне две страницы (осциллограмма и спектр),
+// активной может остаться не та, над которой находится курсор.
+function TFRFFrm.PageUnderMouse: cpage;
+var
+  i: integer;
+  p: cpage;
+begin
+  result := nil;
+  if (SpmChart = nil) or (SpmChart.tabs = nil) or
+     (SpmChart.tabs.activeTab = nil) then
+    exit;
+  for i := 0 to SpmChart.tabs.activeTab.ChildCount - 1 do
+  begin
+    p := SpmChart.tabs.activeTab.GetPage(i);
+    if p = nil then
+      continue;
+    if p.MouseInPage(SpmChart.mouse.ipos_inv) then
+    begin
+      result := p;
+      exit;
+    end;
+  end;
+end;
+
+// Переместить курсор графика в позицию мыши по X - так же, как это
+// делает перетаскивание курсора мышью (через пиксельную координату, тогда
+// корректно отрабатывает логарифмическая ось и обновление легенды).
+// bothCursors = false - только первый курсор (Home), true - первый и второй
+// (Ctrl+Home).
+procedure TFRFFrm.CursorToMouse(bothCursors: boolean);
+var
+  p: cpage;
+  cur: cDoubleCursor;
+  px: integer;
+  secondOnly: boolean;
+begin
+  if SpmChart = nil then
+    exit;
+  p := PageUnderMouse;
+  if p = nil then
+    p := cpage(SpmChart.activePage);
+  if p = nil then
+    exit;
+  cur := p.cursor;
+  if cur = nil then
+    exit;
+  px := SpmChart.mouse.ipos.x;
+  if (px < 0) or (px > SpmChart.Width) then
+    exit;
+  // На временной шкале Ctrl+Home двигает второй курсор (правую границу окна),
+  // первый остаётся на месте. На спектре Ctrl+Home ставит оба курсора.
+  secondOnly := bothCursors and (p = pageT);
+  cur.visible := true;
+  if not secondOnly then
+    cur.x1 := px;
+  if bothCursors then
+    cur.x2 := px;
+  // те же события, что и при перетаскивании курсора мышью
+  if SpmChart.OBJmNG <> nil then
+  begin
+    if not secondOnly then
+      SpmChart.OBJmNG.Events.CallAllEventsWithSender(e_OnMoveCursor, cur);
+    if bothCursors then
+      SpmChart.OBJmNG.Events.CallAllEventsWithSender(e_OnMoveCursor2, cur);
+  end;
 end;
 
 procedure TFRFFrm.Frf_YX_XY_CBClick(sender: tobject);
@@ -1725,6 +2089,38 @@ begin
   end;
 end;
 
+// Перепривязать теги из сохранённых настроек к базе тегов Recorder.
+// К моменту LoadSettings база ещё не создана, поэтому m_tag.tag = nil и
+// частота тахо неизвестна (fspmdx = 0). Принудительное присваивание tagname
+// заставляет cTag.settagname заново найти тег по имени и восстановить привязку.
+procedure TFRFFrm.RebindTags;
+var
+  i, j, k: integer;
+  t: cSRSTaho;
+  c: cSpmCfg;
+  s: cSRSres;
+begin
+  for i := 0 to m_TahoList.Count - 1 do
+  begin
+    t := cSRSTaho(m_TahoList.Items[i]);
+    if t = nil then
+      continue;
+    RebindTag(t.m_tag);
+    for j := 0 to t.CfgCount - 1 do
+    begin
+      c := t.getCfg(j);
+      if c = nil then
+        continue;
+      for k := 0 to c.SRSCount - 1 do
+      begin
+        s := c.GetSrs(k);
+        if s <> nil then
+          RebindTag(s.m_tag);
+      end;
+    end;
+  end;
+end;
+
 procedure TFRFFrm.UpdateBlocks;
 var
   refresh: double;
@@ -1735,18 +2131,29 @@ var
 begin
   refresh := GetREFRESHPERIOD;
   lt := getTaho;
+  if lt = nil then
+    exit;
   if lt.WorkFreq <> 0 then
     lt.line.dx := 1 / lt.WorkFreq;
 
   c := lt.cfg;
+  if c = nil then
+    exit;
   c.fHalfFft := c.m_fftCount shr 1;
   // размер блока для расчета в секундах
   c.fportionsize := m_Length * c.m_blockcount;
   c.fportionsizei := round(c.fportionsize * lt.WorkFreq);
   c.fOutSize := c.m_fftCount * c.m_blockcount;
-  c.fspmdx := lt.WorkFreq / c.m_fftCount;
-  c.FFTProp := GetFFTPlan(c.m_fftCount);
-  c.FFTProp.StartInd := 0;
+  // разрешение спектра определено только при известной частоте тахо и размере fft
+  if (c.m_fftCount > 0) and (lt.WorkFreq > 0) then
+    c.fspmdx := lt.WorkFreq / c.m_fftCount
+  else
+    c.fspmdx := 0;
+  if c.m_fftCount > 0 then
+  begin
+    c.FFTProp := GetFFTPlan(c.m_fftCount);
+    c.FFTProp.StartInd := 0;
+  end;
 
   GetMemAlignedArray_d(c.fportionsizei, lt.m_T1data);
   for i := 0 to c.SRSCount - 1 do
@@ -1879,7 +2286,8 @@ begin
         l.dx := 0;
 
       l := cBuffTrend1d.create;
-      l.Color := s.m_color;
+      // мгновенный спектр черный, средний (lineAvSpm) - цветом канала
+      l.Color := black;
       s.lineSpm := l;
       s.lineSpm.dx := c.fspmdx;
       s.lineSpm.name := s.name + '_spm';
@@ -1895,7 +2303,7 @@ begin
       s.lineAvSpm.weight := 5;
       s.lineAvSpm.visible := true;
       // s.lineAvSpm.color:= s.m_color;
-      s.lineAvSpm.Color := black;
+      s.lineAvSpm.Color := s.m_color; // средняя - всегда цветом канала
       axSpm.AddChild(l);
 
       l := cBuffTrend1d.create;
@@ -1907,7 +2315,8 @@ begin
       l.visible := ResTypeRG.ItemIndex = 3;
 
       l := cBuffTrend1d.create;
-      l.Color := s.m_colorAlt;
+      // мгновенная АЧХ черная, средняя (lineAvFRF) - цветом канала
+      l.Color := black;
       l.dx := c.fspmdx;
       axSpm.AddChild(l);
       s.lineFrf := l;
@@ -2428,6 +2837,8 @@ begin
   begin
     axSpm.lg := m_lgY;
   end;
+  // единое оформление: цвет линий и одна/две линии на канал
+  UpdateLineStyles;
 end;
 
 function TFRFFrm.hideind: integer;
@@ -2877,10 +3288,10 @@ begin
       num := s.m_shockList.Count - j;
       // spm
       ident := 'spm_' + s.m_tag.tagname + '_' + inttostr(num);
-      saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
+      saveHeader(ifile, SpmStep(c.fspmdx), 0, ident, 'Гц');
       // frf
       ident := 'frf_' + s.m_tag.tagname + '_' + inttostr(num);
-      saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
+      saveHeader(ifile, SpmStep(c.fspmdx), 0, ident, 'Гц');
       // временной блок
       ident := s.m_tag.tagname + '_' + inttostr(num);
       if m_saveT0 then
@@ -2901,7 +3312,7 @@ begin
     end;
     ident := 'AvFRF_' + s.m_tag.tagname;
     // ident := extractfiledir(ident) + '\'+'AvFRF_'+s.m_tag.tagname+'.dat';
-    saveHeader(ifile, 1 / c.fspmdx, 0, ident, 'Гц');
+    saveHeader(ifile, SpmStep(c.fspmdx), 0, ident, 'Гц');
     savedata(f, s.m_tag.tagname, s);
 
   end;
@@ -3370,6 +3781,9 @@ begin
     pageSpm.cursor.magniteObj := s.lineSpm;
   end;
   fShowLast := false;
+  // список экстремумов всегда пересчитывается для выбранного сигнала
+  if (PeakFrm <> nil) and PeakFrm.Visible and ShowPeaks.Checked then
+    PeakFrm.ShowFRFPeaks(self);
   SpmChart.redraw;
 end;
 
@@ -3435,6 +3849,9 @@ var
 begin
   result := 0;
   c := s.cfg;
+  // без разрешения спектра индекс не определить; деление на ноль даёт EZeroDivide
+  if (c = nil) or (c.fspmdx <= 0) then
+    exit;
   ind := trunc(x / c.fspmdx);
   if ind < 0 then
   begin
@@ -3594,7 +4011,10 @@ begin
     begin
       s := c.GetSrs(j);
       li := SignalsLV.Items[j];
-      ind := trunc(x1 / s.cfg.fspmdx);
+      if (s.cfg <> nil) and (s.cfg.fspmdx > 0) then
+        ind := trunc(x1 / s.cfg.fspmdx)
+      else
+        ind := 0;
       SignalsLV.SetSubItemByColumnName('Ind', inttostr(ind), li);
       SignalsLV.SetSubItemByColumnName('X', formatstr(x1, 4), li);
       y := GetSelectValue(s, x1, GetShockNum);
@@ -3639,8 +4059,11 @@ begin
     begin
       t := getTaho;
       c := t.cfg;
-      t.m_shockList.m_wnd.x1 := pageT.cursor.getx1;
-      t.m_shockList.m_wnd.x2 := pageT.cursor.getx2;
+      // окно берём по отображаемому положению курсора (fx), а не по пикселю:
+      // после зума пиксель устаревает и окно "уезжает" относительно линий
+      pageT.cursor.visible := true;
+      t.m_shockList.m_wnd.x1 := CursorTrendX(pageT.cursor, true);
+      t.m_shockList.m_wnd.x2 := CursorTrendX(pageT.cursor, false);
       // переопределяем зануление слева от x1 в откликах
       for i := 0 to c.SRSCount - 1 do
       begin
@@ -3653,13 +4076,14 @@ begin
           s.m_shockList.BuidSpm;
           // перерисовка линий датчиков по занулению слева от x0
           tb := s.m_shockList.getBlock(GetShockNum);
-          s.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
+          if (tb <> nil) and (s.line <> nil) then
+            s.line.AddPoints(TDoubleArray(tb.m_TimeBlockFlt.p), tb.m_TimeArrSize);
         end
         else
-          break;
+          // continue, а не break: проверяем каждый сигнал отдельно, иначе при
+          // первом же совпавшем остальные остаются с прежним занулением
+          continue;
       end;
-      if tb = nil then
-        exit;
       for j := 0 to t.m_shockList.Count - 1 do
       begin
         tb := t.m_shockList.getBlock(j);
@@ -4679,16 +5103,30 @@ begin
     t := f.getTaho;
     if t <> nil then
     begin
-      for i := 0 to t.cfg.SRSCount - 1 do
+      if t.cfg <> nil then
       begin
-        s := t.cfg.GetSrs(i);
-        setlength(s.m_flags, c);
+        for i := 0 to t.cfg.SRSCount - 1 do
+        begin
+          s := t.cfg.GetSrs(i);
+          setlength(s.m_flags, c);
+        end;
       end;
       for i := 0 to f.m_bands.Count - 1 do
       begin
         b := tspmband(f.m_bands.Items[i]);
-        b.m_f1i := trunc(b.m_f1 / t.cfg.fspmdx) + 1;
-        b.m_f2i := trunc(b.m_f2 / t.cfg.fspmdx);
+        // fspmdx = 0, пока не известна частота тахо: делить на него нельзя
+        // (trunc(x/0) даёт EInvalidOp). Индексы полосы будут посчитаны при
+        // отрисовке по GetLowInd в TFRFFrm.UpdateBandNames.
+        if (t.cfg <> nil) and (t.cfg.fspmdx > 0) then
+        begin
+          b.m_f1i := trunc(b.m_f1 / t.cfg.fspmdx) + 1;
+          b.m_f2i := trunc(b.m_f2 / t.cfg.fspmdx);
+        end
+        else
+        begin
+          b.m_f1i := 0;
+          b.m_f2i := 0;
+        end;
       end;
     end;
     f.UpdateBandNames;
@@ -4802,23 +5240,12 @@ begin
     TFRFFrm(Frm).SignalsLV.drawcolorbox := true;
     TFRFFrm(Frm).SignalsLV.getcolor := fgetcolor;
     TFRFFrm(Frm).TrigFE.Value := TFRFFrm(Frm).m_spmTrig;
+    // Теги Recorder иногда (многопоточность) создаются позже, чем читаются настройки (LoadSettings),
+    // поэтому привязку восстанавливаем здесь повторным поиском по имени.
+    TFRFFrm(Frm).RebindTags;
     t := TFRFFrm(Frm).getTaho;
     if t <> nil then
-    begin
-      if t.m_tag.tag = nil then
-      begin
-        t.m_tag.tag := getTagByName(t.m_tag.tagname);
-      end;
-      for j := 0 to t.cfg.SRSCount - 1 do
-      begin
-        s := t.cfg.GetSrs(j);
-        if s.m_tag.tag = nil then
-        begin
-          s.m_tag.tag := getTagByName(s.m_tag.tagname);
-        end;
-      end;
       TFRFFrm(Frm).UpdateBlocks;
-    end;
 
     a_pIni := TIniFile.create(TFRFFrm(Frm).gui_file);
     lstr := a_pIni.ReadString(TFRFFrm(Frm).gui_section, 'SelectTurb', '');

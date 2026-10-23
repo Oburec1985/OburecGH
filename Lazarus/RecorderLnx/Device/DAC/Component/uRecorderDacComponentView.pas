@@ -6,13 +6,17 @@ unit uRecorderDacComponentView;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Spin,
+  Classes, SysUtils, Graphics, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Spin,
   uOglChart, uRecorderVisualControl, uRecorderFormModel, uRecorderTags,
   uRecorderDacTypes, uRecorderDacComponentModel;
 
 type
   TRecorderDacComponentView = class(TFrame, IVForm)
-    btnPlay, btnRefresh, btnSave: TButton;
+    btnRefresh, btnSave: TButton;
+    btnPlay: TPanel;
+    edPulseInterval: TFloatSpinEdit;
+    edPulsePeriods, edPulseCount: TSpinEdit;
+    lblPulseInterval, lblPulsePeriods, lblPulseCount, lblPulseDerived: TLabel;
     cbBackend: TComboBox;
     cbMirror: TCheckBox;
     edAmplitude, edEndFreq, edFrequency, edStartFreq,
@@ -25,7 +29,7 @@ type
       lblStartFreq, lblState, lblSweepTime: TLabel;
     pcPrograms: TPageControl;
     pnlTop: TPanel;
-    tsAccurate, tsSin, tsSweep, tsTag: TTabSheet;
+    tsAccurate, tsSin, tsSweep, tsTag, tsPulse: TTabSheet;
     procedure SelectInputTag(Sender: TObject);
     procedure BackendChange(Sender: TObject);
     procedure MirrorClick(Sender: TObject);
@@ -127,6 +131,7 @@ begin
   try
     FillDevices;
     case fComponent.SourceMode of
+      rdsmPulse: pcPrograms.ActivePage := tsPulse;
       rdsmTag: pcPrograms.ActivePage := tsTag;
       rdsmAccurateSine: pcPrograms.ActivePage := tsAccurate;
       rdsmSweepSine: pcPrograms.ActivePage := tsSweep;
@@ -140,6 +145,9 @@ begin
     cbMirror.Checked := fComponent.MirrorEnabled;
     edMirrorTag.Text := fComponent.MirrorTagName;
     edInputTag.Text := fComponent.InputTagName;
+    edPulseInterval.Value := fComponent.PulseIntervalSec;
+    edPulsePeriods.Value := fComponent.PulsePeriods;
+    edPulseCount.Value := fComponent.PulseCount;
     UpdateModeView;
   finally
     fLoading := False;
@@ -155,14 +163,20 @@ begin
   begin
     fComponent.BackendId := fEndpoints[cbBackend.ItemIndex].BackendId;
     fComponent.Endpoint := fEndpoints[cbBackend.ItemIndex].Endpoint;
+    if fEndpoints[cbBackend.ItemIndex].SampleRateHz > 0 then
+      fComponent.SampleRateHz := fEndpoints[cbBackend.ItemIndex].SampleRateHz;
   end;
   case pcPrograms.ActivePageIndex of
     1: fComponent.SourceMode := rdsmAccurateSine;
     2: fComponent.SourceMode := rdsmSweepSine;
     3: fComponent.SourceMode := rdsmTag;
+    4: fComponent.SourceMode := rdsmPulse;
   else fComponent.SourceMode := rdsmSine;
   end;
   fComponent.FrequencyHz := edFrequency.Value;
+  fComponent.PulseIntervalSec := edPulseInterval.Value;
+  fComponent.PulsePeriods := edPulsePeriods.Value;
+  fComponent.PulseCount := edPulseCount.Value;
   fComponent.Amplitude := edAmplitude.Value;
   fComponent.SweepStartHz := edStartFreq.Value;
   fComponent.SweepEndHz := edEndFreq.Value;
@@ -178,10 +192,25 @@ end;
 
 procedure TRecorderDacComponentView.UpdateModeView;
 var
-  lSweep, lTagMode: Boolean;
+  lSweep, lTagMode, lPulse: Boolean;
 begin
   lSweep := pcPrograms.ActivePage = tsSweep;
   lTagMode := pcPrograms.ActivePage = tsTag;
+  lPulse := pcPrograms.ActivePage = tsPulse;
+  lblPulseInterval.Visible := lPulse;
+  edPulseInterval.Visible := lPulse;
+  lblPulsePeriods.Visible := lPulse;
+  edPulsePeriods.Visible := lPulse;
+  lblPulseCount.Visible := lPulse;
+  edPulseCount.Visible := lPulse;
+  lblPulseDerived.Visible := lPulse;
+  if (edFrequency.Value > 0) and (edPulsePeriods.Value > 0) then
+    lblPulseDerived.Caption := Format('T1 — возбуждение: %.6g с' + LineEnding +
+      'T0 — пауза: %.6g с' + LineEnding + 'Скважность T/T1: %.6g',
+      [edPulsePeriods.Value / edFrequency.Value,
+       edPulseInterval.Value - edPulsePeriods.Value / edFrequency.Value,
+       edPulseInterval.Value * edFrequency.Value / edPulsePeriods.Value])
+  else lblPulseDerived.Caption := 'T1, T0 и скважность: задайте частоту > 0';
   lblInputTag.Visible := lTagMode;
   edInputTag.Visible := lTagMode;
   btnInputTag.Visible := lTagMode;
@@ -228,8 +257,16 @@ begin
   begin
     fApplyPending := False;
     fRuntime.StopOutput;
+    btnPlay.Caption := 'Play';
+    btnPlay.Color := clBtnFace;
   end
-  else begin ApplyModel; fRuntime.StartOutput; end;
+  else
+  begin
+    ApplyModel;
+    fRuntime.StartOutput;
+    btnPlay.Caption := 'Stop';
+    btnPlay.Color := clYellow;
+  end;
 end;
 
 procedure TRecorderDacComponentView.RefreshClick(Sender: TObject);
@@ -249,6 +286,9 @@ begin
     lRunning := fRuntime.Snapshot.State = rdsRunning;
   ApplyModel;
   if lRevision = fComponent.Revision then Exit;
+  UpdateModeView;
+  { A finite series is armed by Play; editing its settings does not retrigger it. }
+  if fComponent.SourceMode = rdsmPulse then Exit;
   if lRunning or fApplyPending then
   begin
     { Stop is asynchronous. StartOutput queues the restart until the worker
@@ -267,8 +307,26 @@ begin
 end;
 procedure TRecorderDacComponentView.MirrorClick(Sender: TObject);
 begin
+  if fLoading or (fComponent = nil) then Exit;
+  ApplyModel;
+  if cbMirror.Checked then
+  begin
+    fComponent.EnsureMirrorTag(fRegistry);
+    fLoading := True;
+    try
+      edMirrorTag.Text := fComponent.MirrorTagName;
+    finally
+      fLoading := False;
+    end;
+  end;
   UpdateModeView;
-  ParametersChange(Sender);
+  if fRuntime <> nil then
+    if fRuntime.Snapshot.State = rdsRunning then
+    begin
+      fApplyPending := True;
+      fRuntime.StopOutput;
+      fRuntime.StartOutput;
+    end;
 end;
 procedure TRecorderDacComponentView.BackendChange(Sender: TObject);
 begin
@@ -284,8 +342,19 @@ begin
   lblState.Caption := DacStateText(ASnapshot.State);
   if ASnapshot.LastResult.Error <> rdeNone then
     lblState.Caption := lblState.Caption + ': ' + ASnapshot.LastResult.Text;
-  if ASnapshot.State = rdsRunning then btnPlay.Caption := 'Stop'
-  else btnPlay.Caption := 'Play';
+  lblState.Visible := ASnapshot.LastResult.Error <> rdeNone;
+  btnPlay.Hint := lblState.Caption;
+  btnPlay.ShowHint := True;
+  if ASnapshot.State in [rdsRunning, rdsStopping] then
+  begin
+    btnPlay.Caption := 'Stop';
+    btnPlay.Color := clYellow;
+  end
+  else
+  begin
+    btnPlay.Caption := 'Play';
+    btnPlay.Color := clBtnFace;
+  end;
 end;
 
 procedure TRecorderDacComponentView.RefreshControl(ATagRegistry: TRecorderTagRegistry;

@@ -1,6 +1,10 @@
 unit uRecorderImpactHammerModelTests;
 
 {$mode objfpc}{$H+}
+{$codepage UTF8}
+
+{ Проверяет модель, загрузку настроек, привязки геометрии и сборку кадра
+  представления. Запускается отдельной целью ImpactHammerModelTestRunner. }
 
 interface
 
@@ -117,6 +121,17 @@ begin
   try
     ConfigureValid(Source);
     Source.ExportPath := 'D:\FRF';
+    Source.RoutePointTagId := 1234567;
+    Source.RoutePointTagName := 'Route point';
+    Source.RouteAutoEnabled := True;
+    Source.ResultValuesVisible := True;
+    Source.RouteTagSyncEnabled := True;
+    Source.RouteAutoOverwrite := True;
+    Source.RouteAtPointTagId := 2345678;
+    Source.RouteAtPointTagName := 'At point';
+    Source.RouteNextStepTagId := 3456789;
+    Source.RouteNextStepTagName := 'Next step';
+    Source.RouteNextStepPulseMs := 350;
     Source.ActiveResultType := irtCoherence;
     Source.ExcitationVisible := False;
     Source.ExcitationOwnAxis := True;
@@ -158,6 +173,16 @@ begin
     Copy.SaveToStrings(Values, 'Impact.');
     Check(Loaded.LoadFromStrings(Values, 'Impact.', ErrorText), ErrorText);
     Check(Loaded.HammerTagId = 101, 'Hammer TagId roundtrip');
+    Check(Loaded.RoutePointTagId = 1234567, 'Route point TagId assign/roundtrip');
+    Check(Loaded.RoutePointTagName = 'Route point', 'Route point name assign/roundtrip');
+    Check(Loaded.RouteAutoEnabled and Loaded.RouteTagSyncEnabled and
+      Loaded.RouteAutoOverwrite, 'Route automation flags roundtrip');
+    Check(Loaded.ResultValuesVisible, 'FRF numeric value display preference roundtrip');
+    Check((Loaded.RouteAtPointTagId = 2345678) and
+      (Loaded.RouteAtPointTagName = 'At point') and
+      (Loaded.RouteNextStepTagId = 3456789) and
+      (Loaded.RouteNextStepTagName = 'Next step') and
+      (Loaded.RouteNextStepPulseMs = 350), 'Route automation tags/pulse roundtrip');
     Check(Loaded.TriggerPolarity = itpAbsolute, 'Polarity roundtrip');
     Check(Loaded.Estimator = ifeH2, 'Estimator roundtrip');
     Check(Loaded.ResponseCount = 1, 'Response count roundtrip');
@@ -353,15 +378,11 @@ begin
     Dlg.Initialize(Model);
     Model.SaveToStrings(After,'Test.');
     Check(Before.Text=After.Text,'Opening geometry dialog must not mutate model');
-    Dlg.grdChannels.Row:=2;
-    Dlg.edPoint.Text:='12'; Dlg.edLabel.Text:='sensor-B';
     Dlg.edSize.Text:='33'; Dlg.chkGradient.Checked:=True;
     Dlg.cbVisualization.ItemIndex:=Ord(rpvVector);
     Dlg.EditorChange(nil);
-    Dlg.grdChannels.Row:=3;
     Check(Dlg.cbVisualization.ItemIndex=Ord(rpvVector),
       'Display type stays common when changing channel');
-    Dlg.grdChannels.Row:=2;
     Dlg.chkIntensityOnly.Checked:=True; Dlg.EditorChange(nil);
     Check(not Dlg.cbAxis.Enabled,'Intensity-only disables direction');
     Dlg.chkIntensityOnly.Checked:=False; Dlg.EditorChange(nil);
@@ -369,8 +390,8 @@ begin
     Dlg.chkEnvelopeX.Checked:=True; Dlg.edEnvelopeX.Text:=FloatToStr(2.5);
     Dlg.OkClick(nil);
     Check((Model.Responses[0].PointNumber=7) and
-      (Model.Responses[1].PointNumber=12) and (Model.Responses[2].PointNumber=9),
-      'Editing one point preserves the other rows');
+      (Model.Responses[1].PointNumber=8) and (Model.Responses[2].PointNumber=9),
+      'Display settings preserve route point mappings');
     Check((Model.Responses[1].EnvelopeX=2.5) and
       (Model.Responses[1].EnvelopeY=2.5) and (Model.Responses[1].EnvelopeZ=2.5),
       'One radius produces a spherical envelope');
@@ -379,8 +400,7 @@ begin
     Dlg:=TRecorderImpactGeometryBindingDialog.Create(nil); Dlg.Initialize(Model);
     Model.SaveToStrings(After,'Test.');
     Check(Before.Text=After.Text,'Reopening preserves all saved geometry settings');
-    Check(Dlg.grdChannels.Cells[1,2]='12','Reopened point number');
-    Check(Dlg.grdChannels.Cells[2,2]='sensor-B','Reopened point label');
+    Check(Model.Responses[1].PointLabel='2','Display does not edit point label');
     Check(Dlg.edSize.Text='33','Reopened common marker size');
     Check(Dlg.chkGradient.Checked,'Reopened common gradient');
     Check(Dlg.cbVisualization.ItemIndex=Ord(rpvVector),'Reopened common display type');
@@ -400,7 +420,7 @@ begin
   try
     Check(Dlg.cbSource.Items.Count = 2, 'Geometry source resource');
     Check(Dlg.edSize.Text = '10', 'Geometry marker size resource');
-    Check(Dlg.grdChannels.ColCount = 4, 'Geometry table includes label and object');
+    Check(Dlg.FindComponent('grdChannels') = nil, 'Display has no obsolete mapping table');
     Check(Dlg.chkGradient.Visible, 'Common gradient checkbox visible');
     Check(Assigned(Dlg.cbVisualization.OnChange), 'Geometry live preview event');
   finally Dlg.Free; end;
