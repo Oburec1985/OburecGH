@@ -10,7 +10,7 @@ uses
   Menus,
   ExtCtrls, Grids, DateTimePicker, Spin, fpjson, uCoordinatorModel,
   uCoordinatorConfig, uCoordinatorHttpServer, uCoordinatorSqlEventStore,
-  uRecorderSqlDbTypes, uCoordinatorHostAgentClient;
+  uRecorderSqlDbTypes, uCoordinatorHostAgentClient, uCoordinatorBackup;
 
 type
 
@@ -30,6 +30,7 @@ type
     btnShutdownAll: TBitBtn;
     btnShutdownSelected: TBitBtn;
     btnSyncSdb: TButton;
+    btnSyncSqlChannels: TButton;
     btnSetSqlPeriodAll: TButton;
     btnWakeAll: TBitBtn;
     btnWakeSelected: TBitBtn;
@@ -43,6 +44,8 @@ type
     btnSave: TButton;
     btnTestStorage: TButton;
     btnLaunchSelected: TBitBtn;
+    btnClaimRecorder: TButton;
+    btnReleaseRecorder: TButton;
     cbCreateRecordingEvents: TCheckBox;
     cbSqlRecordingAll: TCheckBox;
     cbStartAllOnAnyRecording: TCheckBox;
@@ -97,6 +100,8 @@ type
     procedure btnCommandStopAllClick(Sender: TObject);
     procedure btnLaunchAllClick(Sender: TObject);
     procedure btnLaunchSelected_Click(Sender: TObject);
+    procedure btnClaimRecorderClick(Sender: TObject);
+    procedure btnReleaseRecorderClick(Sender: TObject);
     procedure btnShutdownAllClick(Sender: TObject);
     procedure btnShutdownSelectedClick(Sender: TObject);
     procedure btnWakeAllClick(Sender: TObject);
@@ -105,6 +110,7 @@ type
     procedure btnSetDatabaseForAllClick(Sender: TObject);
     procedure btnSetPrimarySdbClick(Sender: TObject);
     procedure btnSyncSdbClick(Sender: TObject);
+    procedure btnSyncSqlChannelsClick(Sender: TObject);
     procedure btnSetSqlPeriodAllClick(Sender: TObject);
     procedure btnEditEventClick(Sender: TObject);
     procedure btnOpenEventClick(Sender: TObject);
@@ -132,13 +138,20 @@ type
     fServer: TCoordinatorHttpServer;
     fSqlEventStore: TCoordinatorSqlEventStore;
     fLoading: Boolean;
+    fRefreshingHosts: Boolean;
+    fHostEditorDirty: Boolean;
     fSqlEvents: TRecorderSqlDbMeraEvents;
     fEventsToFollowsNow: Boolean;
     fEditorHostId: string;
     fSdbSyncRunning: Boolean;
+    fBackupRunning: Boolean;
+    fBackupButton: TButton;
     fSdbConfigRequestPending: Boolean;
     fSdbConfigResponsesReady: Boolean;
     fSdbConfigRequestedAt: QWord;
+    fSqlAllowedGetCommandId: string;
+    fSqlAllowedStopCorrelation: string;
+    fPendingSqlAllowedNames: TStringList;
     procedure AddLog(const AText: string);
     procedure CreateHostContextMenu;
     procedure DrainBackgroundDiagnostics;
@@ -151,8 +164,14 @@ type
     procedure SendCommand(const AName: string);
     procedure SendCommandTo(const AHostId, AName: string;
       const APayloadJson: string = '');
+    function EnqueueCommandTo(const AHostId, AName: string;
+      const APayloadJson: string = ''): string;
+    procedure AdvanceSqlAllowedSync;
+    procedure SynchronizeAllowedSqlChannels(AAllowedNames: TStrings);
+    procedure FinishAllowedSqlChannelSync;
     procedure StartHostAction(const AAddress: string;
       AAction: TCoordinatorHostAgentAction);
+    function ClaimHost(AHost: TJSONObject): Boolean;
     procedure HostActionCompleted(Sender: TObject;
       AAction: TCoordinatorHostAgentAction;
       const AHost, AResponse: string; AHttpStatus: Integer;
@@ -171,6 +190,9 @@ type
     function SelectedStorage: TStorageConfig;
     procedure ShowSelectedEvent;
     procedure SdbSyncCompleted(Sender: TObject; const AReport, AError: string);
+    procedure BackupButtonClick(Sender: TObject);
+    procedure BackupCompleted(Sender: TObject; const AReport, AError: string);
+    procedure BackupCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure SetSelectedHostAsSdbPrimary;
     procedure UpdateEventButtons;
   end;
@@ -183,13 +205,158 @@ implementation
 {$R *.lfm}
 
 uses
-  DateUtils, uRecorderSqlDbRepository, uRecorderMeraEventDialog,
+  DateUtils, IniFiles, uRecorderSqlDbRepository, uRecorderMeraEventDialog,
   uRecorderNetworkBinding, uSharedFileLogger, uCoordinatorWakeOnLan,
-  uCoordinatorVersion, uCoordinatorSdbSync;
+  uCoordinatorVersion, uCoordinatorSdbSync, uCoordinatorBackupDialog;
 
 function TCoordinatorMainForm.DefaultFirebirdHost: string;
+var
+  lSqlConfig: TRecorderSqlDbConfig;
 begin
+  Result := Trim(fConfig.FirebirdHost);
+  if Result <> '' then Exit;
+  lSqlConfig := TRecorderSqlDbConfig.Create;
+  try
+    lSqlConfig.LoadFromFile(fConfig.SqlDbConfigFile);
+    Result := Trim(lSqlConfig.Host);
+  finally
+    lSqlConfig.Free;
+  end;
+  if Result <> '' then Exit;
   Result := CRecorderFirebirdDefaultHost;
+end;
+
+procedure TCoordinatorMainForm.BackupCloseQuery(Sender: TObject;
+  var CanClose: Boolean);
+begin
+  CanClose := not fBackupRunning;
+  if not CanClose then
+    MessageDlg('Резервное копирование',
+      'Дождитесь окончания резервного копирования.', mtInformation, [mbOK], 0);
+end;
+
+procedure TCoordinatorMainForm.BackupCompleted(Sender: TObject;
+  const AReport, AError: string);
+begin
+  fBackupRunning := False;
+  fBackupButton.Enabled := True;
+  fBackupButton.Caption := 'Резервная копия';
+  AddLog('Резервное копирование: ' + AReport);
+  if AError = '' then
+    MessageDlg('Резервное копирование', AReport, mtInformation, [mbOK], 0)
+  else
+    MessageDlg('Резервное копирование', AError + LineEnding + AReport,
+      mtError, [mbOK], 0);
+end;
+
+procedure TCoordinatorMainForm.BackupButtonClick(Sender: TObject);
+const
+  CConfigRemote = '/srv/recorderlnx/MeraFiles/RecorderLnx';
+  CShareNames: array[0..3] of string =
+    ('config', 'RecorderProjects', 'Calibr', 'SDB');
+  CDestNames: array[0..3] of string = ('app-config', 'projects', 'Calibr', 'SDB');
+var
+  lData: TJSONArray;
+  lItem: TJSONObject;
+  lVisible: TCoordinatorBackupHostArray;
+  lHosts: TBackupHosts;
+  lSelection: TStringList;
+  lDialogOptions: TCoordinatorBackupOptions;
+  lOptions: TBackupOptions;
+  lAddress, lBase, lId: string;
+  I, J, K: Integer;
+begin
+  if fBackupRunning then Exit;
+  lData := fModel.HostsJson;
+  lSelection := TStringList.Create;
+  try
+    SetLength(lVisible, 0);
+    for I := 0 to lData.Count - 1 do
+    begin
+      lItem := lData.Objects[I];
+      lAddress := Trim(lItem.Get('address', ''));
+      lId := Trim(lItem.Get('instance_id', ''));
+      if (lAddress = '') or (lId = '') or (Pos('/', lAddress) > 0) or
+        (Pos('\', lAddress) > 0) or (Pos('..', lAddress) > 0) then Continue;
+      {$IFDEF UNIX}
+      lBase := IncludeTrailingPathDelimiter(GetUserDir) +
+        '.local/share/rcpanel-backup-sources/' + lAddress;
+      {$ENDIF}
+      J := Length(lVisible);
+      SetLength(lVisible, J + 1);
+      lVisible[J].InstanceId := lId;
+      lVisible[J].Address := lAddress;
+      {$IFDEF UNIX}
+      lVisible[J].Prepared := DirectoryExists(lBase);
+      {$ELSE}
+      lVisible[J].Prepared := True;
+      {$ENDIF}
+      lVisible[J].DisplayName := Trim(lItem.Get('host_name', ''));
+      if lVisible[J].DisplayName = '' then lVisible[J].DisplayName := lAddress;
+    end;
+    if Length(lVisible) = 0 then
+    begin
+      MessageDlg('Резервное копирование',
+        'Нет рабочих мест с настроенными источниками резервного копирования.',
+        mtWarning, [mbOK], 0);
+      Exit;
+    end;
+    if not ShowCoordinatorBackupDialog(Self, lVisible, lDialogOptions,
+      lSelection) then Exit;
+    lOptions := [];
+    if lDialogOptions.IncludeConfigs then Include(lOptions, boConfigurations);
+    if lDialogOptions.IncludeCalibrations then Include(lOptions, boCalibrations);
+    SetLength(lHosts, 0);
+    for I := 0 to High(lVisible) do
+    begin
+      if lSelection.IndexOf(lVisible[I].InstanceId) < 0 then Continue;
+      J := Length(lHosts);
+      SetLength(lHosts, J + 1);
+      lHosts[J].DisplayName := lVisible[I].DisplayName;
+      lHosts[J].Address := lVisible[I].Address;
+      lHosts[J].AgentPort := fConfig.HostAgentPort;
+      lHosts[J].AgentToken := fConfig.HostAgentToken;
+      {$IFDEF UNIX}
+      lBase := IncludeTrailingPathDelimiter(GetUserDir) +
+        '.local/share/rcpanel-backup-sources/' + lHosts[J].Address;
+      lHosts[J].ConfigRoot := lBase + '/MeraFiles/RecorderLnx';
+      lHosts[J].ProgramRoot := lBase + '/RecorderProgram';
+      {$ELSE}
+      lBase := '\\' + lHosts[J].Address;
+      lHosts[J].ConfigRoot := lBase + '\MeraFiles\RecorderLnx';
+      lHosts[J].ProgramRoot := lBase + '\RecorderProgram';
+      {$ENDIF}
+      lHosts[J].ConfigRootRemote := CConfigRemote;
+      SetLength(lHosts[J].ConfigRoots, Length(CShareNames));
+      for K := 0 to High(CShareNames) do
+      begin
+        lHosts[J].ConfigRoots[K].DestinationName := CDestNames[K];
+        if K = 0 then
+          lHosts[J].ConfigRoots[K].SourcePath :=
+            IncludeTrailingPathDelimiter(lHosts[J].ConfigRoot) + 'config'
+        else
+          lHosts[J].ConfigRoots[K].SourcePath :=
+            IncludeTrailingPathDelimiter(lBase) + CShareNames[K];
+        lHosts[J].ConfigRoots[K].RemotePath := '';
+      end;
+    end;
+    fBackupRunning := True;
+    fBackupButton.Enabled := False;
+    fBackupButton.Caption := 'Копирование...';
+    try
+      StartCoordinatorBackup(lDialogOptions.Destination, lHosts, lOptions,
+        @BackupCompleted);
+      AddLog('Резервное копирование запущено: ' + lDialogOptions.Destination);
+    except
+      fBackupRunning := False;
+      fBackupButton.Enabled := True;
+      fBackupButton.Caption := 'Резервная копия';
+      raise;
+    end;
+  finally
+    lSelection.Free;
+    lData.Free;
+  end;
 end;
 
 function TCoordinatorMainForm.TryStartService(out AError: string): Boolean;
@@ -204,15 +371,31 @@ var
   lError: string;
 begin
   Caption := CoordinatorWindowCaption;
+  fBackupButton := TButton.Create(Self);
+  fBackupButton.Parent := pnlService;
+  fBackupButton.SetBounds(pnlService.ClientWidth - 170, 9, 158, 28);
+  fBackupButton.Anchors := [akTop, akRight];
+  fBackupButton.Caption := 'Резервная копия';
+  fBackupButton.OnClick := @BackupButtonClick;
+  OnCloseQuery := @BackupCloseQuery;
   fModel := TCoordinatorModel.Create;
+  fPendingSqlAllowedNames := TStringList.Create;
+  fPendingSqlAllowedNames.CaseSensitive := False;
+  fPendingSqlAllowedNames.Sorted := True;
+  fPendingSqlAllowedNames.Duplicates := dupIgnore;
   fConfig := TCoordinatorConfig.Create(ChangeFileExt(Application.ExeName, '.ini'));
   fConfig.Load;
+  if not fConfig.ControlIdentityPersistent then
+    AddLog('Не удалось сохранить идентификатор RCPanel в INI. ' +
+      'Проверьте права записи к файлу настроек; текущий сеанс доступен.');
   fModel.EventWindowSec := fConfig.EventWindowSec;
   fModel.CreateRecordingEvents := fConfig.CreateRecordingEvents;
   fModel.StartAllOnAnyRecording := fConfig.StartAllOnAnyRecording;
   fSqlEventStore := TCoordinatorSqlEventStore.Create(fConfig.SqlDbConfigFile);
   fModel.OnRecordingLifecycle := @StoreRecordingLifecycle;
-  fServer := TCoordinatorHttpServer.Create(fModel);
+  fServer := TCoordinatorHttpServer.Create(fModel, fConfig.HostAgentPort,
+    fConfig.HostAgentToken);
+  fServer.ConfigureControl(fConfig.CoordinatorId, fConfig.CoordinatorToken);
   CreateHostContextMenu;
   edtEventWindow.Text := IntToStr(fConfig.EventWindowSec);
   edtDatabaseHost.Text := DefaultFirebirdHost;
@@ -244,6 +427,7 @@ end;
 
 procedure TCoordinatorMainForm.FormDestroy(Sender: TObject);
 begin
+  fPendingSqlAllowedNames.Free;
   fServer.Free;
   fModel.OnRecordingLifecycle := nil;
   fSqlEventStore.Free;
@@ -288,6 +472,7 @@ end;
 
 procedure TCoordinatorMainForm.ApplyServiceSettings;
 begin
+  fConfig.FirebirdHost := Trim(edtDatabaseHost.Text);
   fConfig.CreateRecordingEvents := cbCreateRecordingEvents.Checked;
   fConfig.StartAllOnAnyRecording := cbStartAllOnAnyRecording.Checked;
   fConfig.EventWindowSec := StrToIntDef(edtEventWindow.Text, 30);
@@ -345,6 +530,38 @@ begin
     Result := 'не проверен';
 end;
 
+function CommandResultCaption(AItem: TJSONObject): string;
+var
+  lName, lState, lCode: string;
+begin
+  lName := AItem.Get('last_command', '');
+  if lName = '' then Exit('нет команды');
+  if SameText(lName, 'config.sql_database.set') then lName := 'База данных'
+  else if SameText(lName, 'config.sql_recording.set') then lName := 'SQL-запись'
+  else if SameText(lName, 'config.sql_allowed_channels.get') then
+    lName := 'Чтение SQL-каналов'
+  else if SameText(lName, 'config.sql_allowed_channels.set') then
+    lName := 'Разрешённые SQL-каналы'
+  else if SameText(lName, 'recording.start') then lName := 'Запуск записи'
+  else if SameText(lName, 'recording.stop') then lName := 'Остановка записи'
+  else if SameText(lName, 'recording.preview') then lName := 'Просмотр';
+  lState := AItem.Get('last_command_state', '');
+  lCode := AItem.Get('last_command_result', '');
+  if SameText(lState, 'accepted') and SameText(lCode, 'notReady') then
+    Result := 'ожидает готовности'
+  else if SameText(lState, 'pending') then
+    Result := 'ожидает доставки'
+  else if SameText(lState, 'accepted') then
+    Result := 'выполняется'
+  else if SameText(lCode, 'noError') and SameText(lState, 'completed') then
+    Result := 'выполнена'
+  else if lCode <> '' then
+    Result := 'ошибка: ' + lCode
+  else
+    Result := 'нет подтверждения';
+  Result := lName + ': ' + Result;
+end;
+
 procedure TCoordinatorMainForm.RefreshHosts;
 var
   lData: TJSONArray;
@@ -352,6 +569,7 @@ var
   lIndex: Integer;
 begin
   lData := fModel.HostsJson;
+  fRefreshingHosts := True;
   try
     gridHosts.RowCount := lData.Count + 1;
     for lIndex := 0 to lData.Count - 1 do
@@ -360,24 +578,35 @@ begin
       gridHosts.Cells[1, lIndex + 1] := lItem.Get('instance_id', '');
       gridHosts.Cells[2, lIndex + 1] := lItem.Get('address', '');
       gridHosts.Cells[3, lIndex + 1] := lItem.Get('host_name', '');
-      gridHosts.Cells[4, lIndex + 1] := lItem.Get('mac_address', '');
-      gridHosts.Cells[5, lIndex + 1] := PcConnectionCaption(
+      gridHosts.Cells[6, lIndex + 1] := lItem.Get('mac_address', '');
+      gridHosts.Cells[7, lIndex + 1] := PcConnectionCaption(
         lItem.Get('pc_connection_state', 'unknown'));
-      gridHosts.Cells[6, lIndex + 1] := AgentConnectionCaption(
+      gridHosts.Cells[8, lIndex + 1] := AgentConnectionCaption(
         lItem.Get('agent_connection_state', 'unknown'));
-      gridHosts.Cells[7, lIndex + 1] := lItem.Get('state', '');
-      gridHosts.Cells[8, lIndex + 1] := lItem.Get('measurement_path', '');
-      gridHosts.Cells[9, lIndex + 1] := lItem.Get('last_seen_utc', '');
-      gridHosts.Cells[10, lIndex + 1] := lItem.Get('mera_files_path', '');
-      if SameText(lItem.Get('instance_id', ''), fConfig.SdbPrimaryHostId) then
-        gridHosts.Cells[11, lIndex + 1] := '●'
+      gridHosts.Cells[9, lIndex + 1] := lItem.Get('state', '');
+      gridHosts.Cells[10, lIndex + 1] := lItem.Get('measurement_path', '');
+      gridHosts.Cells[11, lIndex + 1] := lItem.Get('last_seen_utc', '');
+      gridHosts.Cells[12, lIndex + 1] := lItem.Get('mera_files_path', '');
+      if (lItem.Get('control_owner', '') <> '') and
+         (lItem.Get('control_owner', '') <> fServer.ControlId) then
+        gridHosts.Cells[4, lIndex + 1] := 'другая панель'
+      else if lItem.Get('recorder_reachable', False) then
+        gridHosts.Cells[4, lIndex + 1] := 'подключён'
+      else if lItem.Get('control_owner', '') = '' then
+        gridHosts.Cells[4, lIndex + 1] := 'не захвачен'
       else
-        gridHosts.Cells[11, lIndex + 1] := '';
+        gridHosts.Cells[4, lIndex + 1] := 'нет связи';
+      gridHosts.Cells[5, lIndex + 1] := CommandResultCaption(lItem);
+      if SameText(lItem.Get('instance_id', ''), fConfig.SdbPrimaryHostId) then
+        gridHosts.Cells[13, lIndex + 1] := '●'
+      else
+        gridHosts.Cells[13, lIndex + 1] := '';
       gridHosts.Cells[0, lIndex + 1] := '';
       gridHosts.InvalidateCell(0, lIndex + 1);
     end;
     gridHosts.Update;
   finally
+    fRefreshingHosts := False;
     lData.Free;
   end;
   UpdateSelectedHost;
@@ -675,7 +904,8 @@ end;
 procedure TCoordinatorMainForm.btnAddHostClick(Sender: TObject);
 var
   lInput, lResult: TJSONObject;
-  lHostId, lStoredId: string;
+  lHostId, lStoredId, lStoredName, lStoredAddress, lName: string;
+  lPayload: TJSONObject;
 begin
   lHostId := Trim(edtSelectedHost.Text);
   if lHostId = '' then
@@ -688,11 +918,50 @@ begin
   lResult := EditorHost;
   try
     lStoredId := lResult.Get('instance_id', '');
+    lStoredName := lResult.Get('host_name', '');
+    lStoredAddress := lResult.Get('address', '');
   finally
     lResult.Free;
   end;
   if lStoredId <> '' then
   begin
+    lName := Trim(edtHostName.Text);
+    if lName <> lStoredName then
+    begin
+      if (lName = '') or (lHostId <> lStoredAddress) then
+      begin
+        MessageDlg('Имя АРМ',
+          'Укажите непустое имя. Если меняется IP, сначала сохраните адрес.',
+          mtWarning, [mbOK], 0);
+        Exit;
+      end;
+      lInput := TJSONObject.Create;
+      try
+        lInput.Add('address', lStoredAddress);
+        lInput.Add('command', 'workstation.name.set');
+        lPayload := TJSONObject.Create;
+        lInput.Add('payload', lPayload);
+        lPayload.Add('name', lName);
+        lPayload.Add('use_computer_name', False);
+        lResult := fModel.EnqueueCommand(lInput);
+        try
+          if lResult.Get('command_id', '') = '' then
+          begin
+            MessageDlg('Имя АРМ', 'Захватите RecorderLnx на выбранном ПК и повторите.',
+              mtWarning, [mbOK], 0);
+            Exit;
+          end;
+          AddLog('Запрошена смена имени АРМ ' + lStoredAddress + ' на ' + lName);
+        finally
+          lResult.Free;
+        end;
+      finally
+        lInput.Free;
+      end;
+      fHostEditorDirty := False;
+      RefreshHosts;
+      Exit;
+    end;
     if not fModel.SetHostAddress(lStoredId, lHostId) then
     begin
       MessageDlg('Редактирование RecorderLnx',
@@ -700,7 +969,6 @@ begin
         mtWarning, [mbOK], 0);
       Exit;
     end;
-    fModel.SetHostDisplayName(lStoredId, Trim(edtHostName.Text));
     AddLog('RecorderLnx изменён: ' + lStoredId);
   end
   else
@@ -728,6 +996,7 @@ begin
       lInput.Free;
     end;
   end;
+  fHostEditorDirty := False;
   RefreshHosts;
 end;
 
@@ -752,6 +1021,7 @@ begin
   fEditorHostId := '';
   edtSelectedHost.Clear;
   edtHostName.Clear;
+  fHostEditorDirty := False;
   RefreshHosts;
   AddLog('Хост удалён и добавлен в [ignored_hosts]: ' + lHostId);
 end;
@@ -791,6 +1061,7 @@ end;
 
 procedure TCoordinatorMainForm.edtSelectedHostChange(Sender: TObject);
 begin
+  if not fLoading then fHostEditorDirty := True;
   UpdateHostEditorMode;
 end;
 
@@ -825,12 +1096,19 @@ end;
 
 procedure TCoordinatorMainForm.SendCommandTo(const AHostId, AName: string;
   const APayloadJson: string);
+begin
+  EnqueueCommandTo(AHostId, AName, APayloadJson);
+end;
+
+function TCoordinatorMainForm.EnqueueCommandTo(const AHostId, AName: string;
+  const APayloadJson: string): string;
 var
   lInput, lResult: TJSONObject;
   lPayload: TJSONData;
   lId: TGuid;
   lCorrelation: string;
 begin
+  Result := '';
   if AHostId = '' then Exit;
   lInput := TJSONObject.Create;
   try
@@ -850,14 +1128,20 @@ begin
       lInput.Add('correlation_id', lCorrelation);
     end;
     lResult := fModel.EnqueueCommand(lInput);
-    try AddLog('Команда поставлена: ' + lResult.AsJSON); finally lResult.Free; end;
+    try
+      Result := lResult.Get('command_id', '');
+      if Result = '' then Result := lResult.Get('correlation_id', '');
+      AddLog('Команда поставлена: ' + lResult.AsJSON);
+    finally
+      lResult.Free;
+    end;
   finally lInput.Free; end;
 end;
 
 procedure TCoordinatorMainForm.btnSetDatabaseForAllClick(Sender: TObject);
 var
   lHost: string;
-  lPayload: TJSONObject;
+  lPayload, lServer: TJSONObject;
   lSqlConfig: TRecorderSqlDbConfig;
 begin
   lHost := Trim(edtDatabaseHost.Text);
@@ -868,28 +1152,23 @@ begin
       mtWarning, [mbOK], 0);
     Exit;
   end;
-  if MessageDlg('Настройка Firebird',
-    'Установить всем RecorderLnx сервер Firebird ' + lHost + '?' +
-    LineEnding + LineEnding +
-    'Команда будет применена к подключённым управляемым RecorderLnx.',
-    mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
+  lServer := fModel.HostByAddressJson(lHost);
+  try
+    if Trim(lServer.Get('sql_local_database', '')) = '' then
+      AddLog('Путь БД сервера пока неизвестен. Подключите его Recorder к панели ' +
+        'и повторите настройку.');
+  finally
+    lServer.Free;
+  end;
   lSqlConfig := TRecorderSqlDbConfig.Create;
   try
     lSqlConfig.LoadFromFile(fConfig.SqlDbConfigFile);
-    if lSqlConfig.Password = '' then
-    begin
-      MessageDlg('Настройка Firebird',
-        'В ' + fConfig.SqlDbConfigFile + ' не задан пароль Firebird.',
-        mtError, [mbOK], 0);
-      Exit;
-    end;
     lPayload := TJSONObject.Create;
     try
       lPayload.Add('host', lHost);
       lPayload.Add('port', lSqlConfig.Port);
-      lPayload.Add('database', lSqlConfig.Database);
-      lPayload.Add('username', lSqlConfig.UserName);
-      lPayload.Add('password', lSqlConfig.Password);
+      fConfig.FirebirdHost := lHost;
+      fConfig.Save;
       SendCommandTo('*', 'config.sql_database.set', lPayload.AsJSON);
     finally
       lPayload.Free;
@@ -1033,6 +1312,236 @@ begin
   end;
 end;
 
+procedure TCoordinatorMainForm.btnSyncSqlChannelsClick(Sender: TObject);
+var
+  lDialog: TOpenDialog;
+  lNames, lLines: TStringList;
+  lIni: TIniFile;
+  lIndex: Integer;
+  lName: string;
+begin
+  if (fSqlAllowedGetCommandId <> '') or (fSqlAllowedStopCorrelation <> '') then Exit;
+  lDialog := TOpenDialog.Create(Self);
+  lNames := TStringList.Create;
+  lLines := TStringList.Create;
+  try
+   try
+    lDialog.Title := 'Выберите файл разрешённых SQL-каналов';
+    lDialog.Filter := 'Список каналов (*.txt;*.ini)|*.txt;*.ini|Все файлы|*';
+    lDialog.Options := lDialog.Options + [ofFileMustExist];
+    if not lDialog.Execute then Exit;
+    lNames.CaseSensitive := False;
+    lNames.Sorted := True;
+    lNames.Duplicates := dupIgnore;
+    if SameText(ExtractFileExt(lDialog.FileName), '.ini') then
+    begin
+      lIni := TIniFile.Create(lDialog.FileName);
+      try
+        if not lIni.ReadBool('SQLdb', 'AllowedSignalSelectionConfigured', False) then
+          raise Exception.Create('В файле не настроен список разрешённых SQL-каналов.');
+        lIni.ReadSection('SQLdbAllowedSignals', lNames);
+      finally
+        lIni.Free;
+      end;
+    end
+    else
+    begin
+      lLines.LoadFromFile(lDialog.FileName);
+      for lIndex := 0 to lLines.Count - 1 do
+      begin
+        lName := Trim(lLines[lIndex]);
+        if (lIndex = 0) and (Copy(lName, 1, 3) = #$EF#$BB#$BF) then
+          Delete(lName, 1, 3);
+        if (lName <> '') and (lName[1] <> '#') then lNames.Add(lName);
+      end;
+    end;
+    if lNames.Count = 0 then
+      raise Exception.Create('Список пуст. Выберите файл с названиями каналов.');
+    AddLog(Format('Загружен файл разрешённых SQL-каналов: %s (%d)',
+      [lDialog.FileName, lNames.Count]));
+    SynchronizeAllowedSqlChannels(lNames);
+  except
+    on E: Exception do
+      MessageDlg('SQL-каналы', E.Message, mtError, [mbOK], 0);
+   end;
+  finally
+    lLines.Free;
+    lNames.Free;
+    lDialog.Free;
+  end;
+end;
+
+procedure TCoordinatorMainForm.AdvanceSqlAllowedSync;
+var
+  lStatus, lResult, lGroupStatus: TJSONObject;
+  lData: TJSONData;
+  lAllowed: TStringList;
+  lIndex, lTotal, lCompleted, lFailed: Integer;
+begin
+  if fSqlAllowedStopCorrelation <> '' then
+  begin
+    lGroupStatus := fModel.CommandGroupStatus(fSqlAllowedStopCorrelation);
+    try
+      lTotal := lGroupStatus.Get('total', 0);
+      lCompleted := lGroupStatus.Get('completed', 0);
+      lFailed := lGroupStatus.Get('failed', 0);
+    finally
+      lGroupStatus.Free;
+    end;
+    if lTotal = 0 then
+      raise Exception.Create('Нет управляемых RecorderLnx для синхронизации');
+    if lCompleted < lTotal then Exit;
+    if lFailed > 0 then
+      raise Exception.CreateFmt(
+        'Не удалось остановить RecorderLnx: %d из %d. Список не применён.',
+        [lFailed, lTotal]);
+    fSqlAllowedStopCorrelation := '';
+    FinishAllowedSqlChannelSync;
+    Exit;
+  end;
+  if fSqlAllowedGetCommandId = '' then Exit;
+  lStatus := fModel.WorkstationCommandStatus(fSqlAllowedGetCommandId);
+  if not SameText(lStatus.Get('state', ''), 'completed') then
+  begin
+    lStatus.Free;
+    Exit;
+  end;
+  try
+    if not SameText(lStatus.Get('result_code', ''), 'noError') then
+    begin
+      MessageDlg('SQL-каналы', lStatus.Get('result_text',
+        'RecorderLnx не вернул список разрешённых каналов.'),
+        mtError, [mbOK], 0);
+      Exit;
+    end;
+    lResult := TJSONObject(lStatus.Find('result'));
+    if lResult = nil then
+      raise Exception.Create('Ответ не содержит список разрешённых каналов');
+    if not lResult.Get('configured', False) then
+    begin
+      MessageDlg('SQL-каналы',
+        'На выбранном RecorderLnx список разрешённых каналов ещё не настроен.',
+        mtWarning, [mbOK], 0);
+      Exit;
+    end;
+    lData := lResult.Find('allowed_channels');
+    if not (lData is TJSONArray) then
+      raise Exception.Create('Ответ allowed_channels имеет неверный формат');
+    lAllowed := TStringList.Create;
+    try
+      lAllowed.CaseSensitive := False;
+      lAllowed.Sorted := True;
+      lAllowed.Duplicates := dupIgnore;
+      for lIndex := 0 to TJSONArray(lData).Count - 1 do
+        lAllowed.Add(TJSONArray(lData).Strings[lIndex]);
+      SynchronizeAllowedSqlChannels(lAllowed);
+    finally
+      lAllowed.Free;
+    end;
+  finally
+    fSqlAllowedGetCommandId := '';
+    btnSyncSqlChannels.Enabled := fSqlAllowedStopCorrelation = '';
+    lStatus.Free;
+  end;
+end;
+
+procedure TCoordinatorMainForm.SynchronizeAllowedSqlChannels(
+  AAllowedNames: TStrings);
+var
+  lPreview: string;
+  lIndex: Integer;
+begin
+  lPreview := '';
+  for lIndex := 0 to AAllowedNames.Count - 1 do
+  begin
+    if lIndex >= 20 then
+    begin
+      lPreview := lPreview + LineEnding + '...';
+      Break;
+    end;
+    if lPreview <> '' then lPreview := lPreview + LineEnding;
+    lPreview := lPreview + AAllowedNames[lIndex];
+  end;
+  if MessageDlg('Синхронизация SQL-каналов', Format(
+    'Загружено каналов: %d' + LineEnding + '%s' + LineEnding + LineEnding +
+    'Остановить все RecorderLnx и применить этот список?',
+    [AAllowedNames.Count, lPreview]), mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+
+  fPendingSqlAllowedNames.Assign(AAllowedNames);
+  fSqlAllowedStopCorrelation := EnqueueCommandTo('*', 'recording.stop');
+  if fSqlAllowedStopCorrelation = '' then
+  begin
+    fPendingSqlAllowedNames.Clear;
+    raise Exception.Create('Не удалось поставить остановку RecorderLnx в очередь');
+  end;
+  btnSyncSqlChannels.Enabled := False;
+  AddLog('Остановка всех RecorderLnx перед синхронизацией SQL-каналов');
+end;
+
+procedure TCoordinatorMainForm.FinishAllowedSqlChannelSync;
+var
+  lPayload: TJSONObject;
+  lArray: TJSONArray;
+  lConfig: TRecorderSqlDbConfig;
+  lRepository: TRecorderSqlDbRepository;
+  lInfos: TRecorderSqlDbSignalInfos;
+  lDeleteNames: TStringList;
+  lSignalsDeleted, lValuesDeleted: Int64;
+  lIndex: Integer;
+begin
+  lPayload := TJSONObject.Create;
+  try
+    lArray := TJSONArray.Create;
+    for lIndex := 0 to fPendingSqlAllowedNames.Count - 1 do
+      lArray.Add(fPendingSqlAllowedNames[lIndex]);
+    lPayload.Add('allowed_channels', lArray);
+    SendCommandTo('*', 'config.sql_allowed_channels.set', lPayload.AsJSON);
+  finally
+    lPayload.Free;
+  end;
+  AddLog(Format('Всем RecorderLnx отправлен список разрешённых SQL-каналов: %d',
+    [fPendingSqlAllowedNames.Count]));
+
+  lDeleteNames := TStringList.Create;
+  lConfig := TRecorderSqlDbConfig.Create;
+  try
+    lDeleteNames.CaseSensitive := False;
+    lDeleteNames.Sorted := True;
+    lDeleteNames.Duplicates := dupIgnore;
+    lConfig.LoadFromFile(fConfig.SqlDbConfigFile);
+    lRepository := TRecorderSqlDbRepository.Create(lConfig);
+    try
+      lRepository.ListSignalInfos(lInfos, False);
+      for lIndex := 0 to High(lInfos) do
+        if fPendingSqlAllowedNames.IndexOf(lInfos[lIndex].Name) < 0 then
+          lDeleteNames.Add(lInfos[lIndex].Name);
+      if (lDeleteNames.Count > 0) and
+        (MessageDlg('Очистка общей SQL БД', Format(
+          'В общей БД найдено неразрешённых каналов: %d.' + LineEnding +
+          'Удалить их однократно из RCPanel?', [lDeleteNames.Count]),
+          mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+      begin
+        lRepository.DeleteSignalsByName(lDeleteNames, lSignalsDeleted,
+          lValuesDeleted);
+        AddLog(Format(
+          'Однократная очистка SQL БД: удалено каналов %d, точек %d',
+          [lSignalsDeleted, lValuesDeleted]));
+        MessageDlg('Очистка общей SQL БД', Format(
+          'Удалено каналов: %d. Удалено точек: %d.',
+          [lSignalsDeleted, lValuesDeleted]), mtInformation, [mbOK], 0);
+      end;
+    finally
+      lRepository.Free;
+    end;
+  finally
+    lConfig.Free;
+    lDeleteNames.Free;
+    fPendingSqlAllowedNames.Clear;
+    btnSyncSqlChannels.Enabled := True;
+  end;
+end;
+
 procedure TCoordinatorMainForm.SdbSyncCompleted(Sender: TObject;
   const AReport, AError: string);
 begin
@@ -1138,11 +1647,77 @@ end;
 
 procedure TCoordinatorMainForm.StartHostAction(const AAddress: string;
   AAction: TCoordinatorHostAgentAction);
+var
+  lHost: TJSONObject;
 begin
   if Trim(AAddress) = '' then Exit;
+  if AAction = haaStartRecorder then
+  begin
+    lHost := fModel.HostByAddressJson(Trim(AAddress));
+    try
+      if lHost.Find('instance_id') = nil then
+      begin
+        lHost.Add('instance_id', Trim(AAddress));
+        lHost.Add('address', Trim(AAddress));
+      end;
+      if not ClaimHost(lHost) then Exit;
+    finally
+      lHost.Free;
+    end;
+  end;
   fModel.MarkAgentReachabilityChecking(Trim(AAddress));
   StartHostAgentRequest(Trim(AAddress), fConfig.HostAgentPort,
     fConfig.HostAgentToken, AAction, @HostActionCompleted);
+end;
+
+function TCoordinatorMainForm.ClaimHost(AHost: TJSONObject): Boolean;
+var
+  lOwner, lAddress, lRequest: string;
+  lForce: Boolean;
+begin
+  Result := False;
+  lAddress := AHost.Get('address', '');
+  if lAddress = '' then Exit;
+  lOwner := AHost.Get('control_owner', '');
+  if (lOwner = fServer.ControlId) and
+     (AHost.Get('control_claim', '') <> '') and
+     AHost.Get('recorder_reachable', False) then Exit(True);
+  lForce := (lOwner <> '') and (lOwner <> fServer.ControlId);
+  if lForce and (MessageDlg('Перехват управления',
+    'Recorder на ' + lAddress + ' захвачен другой панелью.' + LineEnding +
+    'Перехватить управление? Предыдущая панель больше не сможет им управлять.',
+    mtWarning, [mbYes, mbNo], 0) <> mrYes) then Exit;
+  lRequest := fServer.ClaimRecorder(lAddress, AHost.Get('instance_id', ''), lForce);
+  Result := lRequest <> '';
+  if Result then AddLog('Запрошен захват Recorder: ' + lAddress +
+    '. Подключение подтвердится ответом Recorder.');
+end;
+
+procedure TCoordinatorMainForm.btnClaimRecorderClick(Sender: TObject);
+var
+  lHost: TJSONObject;
+begin
+  lHost := fModel.HostByIdJson(SelectedHostId);
+  try
+    ClaimHost(lHost);
+  finally
+    lHost.Free;
+  end;
+end;
+
+procedure TCoordinatorMainForm.btnReleaseRecorderClick(Sender: TObject);
+var
+  lHost: TJSONObject;
+begin
+  lHost := fModel.HostByIdJson(SelectedHostId);
+  try
+    if lHost.Get('control_owner', '') <> fServer.ControlId then Exit;
+    fServer.ReleaseRecorder(lHost.Get('address', ''),
+      lHost.Get('instance_id', ''), lHost.Get('control_claim', ''));
+    AddLog('Запрошено освобождение Recorder: ' + lHost.Get('address', ''));
+  finally
+    lHost.Free;
+  end;
 end;
 
 procedure TCoordinatorMainForm.HostActionCompleted(Sender: TObject;
@@ -1196,10 +1771,8 @@ begin
 end;
 
 function TCoordinatorMainForm.WakeHost(AHost: TJSONObject): Boolean;
-const
-  BROADCAST_ADDRESS = '255.255.255.255';
 var
-  lAddress, lMacAddress, lMessage: string;
+  lAddress, lMacAddress, lMessage, lBroadcast, lError: string;
 begin
   lAddress := AHost.Get('address', '');
   lMacAddress := AHost.Get('mac_address', '');
@@ -1212,14 +1785,15 @@ begin
     Exit(False);
   end;
 
-  Result := SendWakeOnLan(lMacAddress, BROADCAST_ADDRESS);
+  lBroadcast := WakeOnLanBroadcast(lAddress);
+  Result := SendWakeOnLanDetailed(lMacAddress, lBroadcast, 9, lError);
   if Result then
     AddLog('Wake-on-LAN отправлен: хост=' + lAddress + '; MAC=' +
-      lMacAddress + '; broadcast=' + BROADCAST_ADDRESS + ':9')
+      lMacAddress + '; broadcast=' + lBroadcast + ':9')
   else
   begin
     lMessage := 'Wake-on-LAN для ' + lAddress +
-      ' не отправлен: ошибка UDP broadcast ' + BROADCAST_ADDRESS + ':9.';
+      ' не отправлен: UDP ' + lBroadcast + ':9 (' + lError + ').';
     AddLog(lMessage);
     MessageDlg('Wake-on-LAN', lMessage, mtWarning, [mbOK], 0);
   end;
@@ -1278,35 +1852,37 @@ end;
 procedure TCoordinatorMainForm.UpdateSelectedHost;
 var
   lSelectedId: string;
+  lHost: TJSONObject;
+  lOurs: Boolean;
 begin
   lSelectedId := SelectedHostId;
-  fLoading := True;
-  try
-    if gridHosts.Row > 0 then
-    begin
-      if not SameText(fEditorHostId, lSelectedId) then
+  // Polling refreshes status, not a user's unsaved address/name draft.
+  if not fHostEditorDirty then
+  begin
+    fLoading := True;
+    try
+      if gridHosts.Row > 0 then
       begin
-        fEditorHostId := lSelectedId;
-        edtSelectedHost.Text := gridHosts.Cells[2, gridHosts.Row];
-        if edtSelectedHost.Text = '' then
-          edtSelectedHost.Text := lSelectedId;
-        edtHostName.Text := gridHosts.Cells[3, gridHosts.Row];
-      end;
-    end
-    else
-    begin
-      edtSelectedHost.Clear;
-      if fEditorHostId <> '' then
+        if not SameText(fEditorHostId, lSelectedId) then
+        begin
+          fEditorHostId := lSelectedId;
+          edtSelectedHost.Text := gridHosts.Cells[2, gridHosts.Row];
+          if edtSelectedHost.Text = '' then
+            edtSelectedHost.Text := lSelectedId;
+          edtHostName.Text := gridHosts.Cells[3, gridHosts.Row];
+        end;
+      end
+      else if fEditorHostId <> '' then
       begin
         fEditorHostId := '';
         edtSelectedHost.Clear;
         edtHostName.Clear;
       end;
+      if edtSelectedHost.Text = '' then
+        edtSelectedHost.Text := SelectedHostId;
+    finally
+      fLoading := False;
     end;
-    if edtSelectedHost.Text = '' then
-      edtSelectedHost.Text := SelectedHostId;
-  finally
-    fLoading := False;
   end;
   UpdateHostEditorMode;
   btnCommandStop.Enabled := edtSelectedHost.Text <> '';
@@ -1317,17 +1893,36 @@ begin
   btnWakeSelected.Enabled := SelectedHostId <> '';
   btnDeleteHost.Enabled := SelectedHostId <> '';
   btnSetPrimarySdb.Enabled := SelectedHostId <> '';
+  lHost := fModel.HostByIdJson(lSelectedId);
+  try
+    lOurs := (lHost.Get('control_owner', '') = fServer.ControlId) and
+      lHost.Get('recorder_reachable', False);
+    btnClaimRecorder.Enabled := lSelectedId <> '';
+    if (lHost.Get('control_owner', '') <> '') and
+       (lHost.Get('control_owner', '') <> fServer.ControlId) then
+      btnClaimRecorder.Caption := 'Перехватить'
+    else btnClaimRecorder.Caption := 'Захватить';
+    btnReleaseRecorder.Enabled :=
+      lHost.Get('control_owner', '') = fServer.ControlId;
+    btnCommandStop.Enabled := lOurs;
+    btnCommandPreview.Enabled := lOurs;
+    btnCommandStart.Enabled := lOurs;
+  finally
+    lHost.Free;
+  end;
 end;
 
 procedure TCoordinatorMainForm.gridHostsSelection(Sender: TObject;
   aCol, aRow: Integer);
 begin
+  if fRefreshingHosts then Exit;
+  fHostEditorDirty := False;
   UpdateSelectedHost;
 end;
 
 procedure TCoordinatorMainForm.gridHostsDblClick(Sender: TObject);
 begin
-  if (gridHosts.Row > 0) and (gridHosts.Col = 11) then
+  if (gridHosts.Row > 0) and (gridHosts.Col = 13) then
     SetSelectedHostAsSdbPrimary;
 end;
 
@@ -1338,10 +1933,10 @@ var
   lState: string;
 begin
   if aRow = 0 then Exit;
-  if aCol = 6 then
+  if (aCol = 4) or (aCol = 8) then
   begin
-    lState := LowerCase(Trim(gridHosts.Cells[6, aRow]));
-    if SameText(lState, 'доступен') then
+    lState := LowerCase(Trim(gridHosts.Cells[aCol, aRow]));
+    if SameText(lState, 'доступен') or SameText(lState, 'подключён') then
       lColor := clGreen
     else if SameText(lState, 'нет связи') then
       lColor := clRed
@@ -1356,7 +1951,7 @@ begin
     Exit;
   end;
   if aCol <> 0 then Exit;
-  lState := LowerCase(Trim(gridHosts.Cells[7, aRow]));
+  lState := LowerCase(Trim(gridHosts.Cells[9, aRow]));
   if Pos('record', lState) > 0 then
     lColor := clGreen
   else if Pos('preview', lState) > 0 then
@@ -1382,6 +1977,20 @@ end;
 
 procedure TCoordinatorMainForm.timerRefreshTimer(Sender: TObject);
 begin
+  try
+    AdvanceSqlAllowedSync;
+  except
+    on E: Exception do
+    begin
+      fSqlAllowedGetCommandId := '';
+      fSqlAllowedStopCorrelation := '';
+      fPendingSqlAllowedNames.Clear;
+      btnSyncSqlChannels.Enabled := True;
+      AddLog('Ошибка синхронизации SQL-каналов: ' + E.Message);
+      MessageDlg('SQL-каналы', E.Message, mtError, [mbOK], 0);
+    end;
+  end;
+  fServer.RetryControlRequests;
   DrainBackgroundDiagnostics;
   RefreshHosts;
   if fSdbConfigRequestPending and

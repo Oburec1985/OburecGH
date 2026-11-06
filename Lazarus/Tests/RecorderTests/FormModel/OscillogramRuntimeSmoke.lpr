@@ -391,7 +391,7 @@ begin
 end;
 
 procedure CheckIndependentViewWindows(AComponent:TRecorderPluginVisualComponent;
-  AFactories:TRecorderComponentFactory);
+  AFactories:TRecorderComponentFactory; ARuntime:TRecorderPluginRuntime);
 var lSessions:array[0..1] of TRecorderPluginViewSession;
   lPanels:array[0..1] of TPanel; lRoots:array[0..1] of HWND;
   lDCs:array[0..1] of HDC; lContexts:array[0..1] of PtrUInt;
@@ -424,6 +424,7 @@ begin
       Application.ProcessMessages;
       Check(lSessions[I].SetDisplayWindow(1)=REC_VISUAL_OK,'Positive production view context rejected');
       AFactories.DoUpdateData; { Original nil DATA_UPDATED payload stays valid. }
+      ARuntime.NotifyAll(PN_UPDATEDATA);
       Application.ProcessMessages;
       lRoots[I]:=FindWindowEx(lPanels[I].Handle,0,nil,'Oscillogram plugin view');
       Check(lRoots[I]<>0,'Production direct root absent');
@@ -770,6 +771,7 @@ begin
     lHost.Show;
     Application.ProcessMessages;
     lFactories.DoUpdateData;
+    lRuntime.NotifyAll(PN_UPDATEDATA);
     Application.ProcessMessages;
     {$IFDEF MSWINDOWS}
     lRoot := FindWindowEx(lHost.Handle,0,nil,'Oscillogram plugin view');
@@ -780,7 +782,7 @@ begin
     Flush(Output);
     if (ParamCount = 2) and SameText(ParamStr(2),'inspect') then Sleep(10000);
     CheckWaveformPixels(lRoot);
-    CheckIndependentViewWindows(lComponent,lFactories);
+    CheckIndependentViewWindows(lComponent,lFactories,lRuntime);
     { Cursor preservation above uses a deliberately enabled blue double
       cursor. Disable it for the subsequent empty-waveform pixel assertion. }
     lJsonText := ComponentJson(lComponent,lFactory);
@@ -795,6 +797,7 @@ begin
     Check(lFactory.LoadOpaqueComponentState(lComponent)=rosSuccess,
       'Cannot restore cursor-free waveform fixture');
     lFactories.DoUpdateData;
+    lRuntime.NotifyAll(PN_UPDATEDATA);
     Application.ProcessMessages;
     { Force a cold metadata refresh to exceed the initially prepared 4096
       samples. A stale fs/catalog cannot draw this newly renamed ID-bound tag. }
@@ -805,6 +808,7 @@ begin
     lRuntime.NotifyAll(PN_RCLOADCONFIG);
     for I:=0 to 10000 do lTag.AddSample(I/10000,8*Sin(2*Pi*I/10000));
     lFactories.DoUpdateData;
+    lRuntime.NotifyAll(PN_UPDATEDATA);
     Application.ProcessMessages;
     CheckWaveformPixels(lRoot);
     Check(lFactory.SaveOpaqueComponentState(lComponent)=rosSuccess,'rename state save');
@@ -816,10 +820,12 @@ begin
     WriteLn('RESULT Oscillogram metadata rename/unit/10000Hz refresh passed');
     lTag.ClearSignalHistory;
     lFactories.DoUpdateData;
+    lRuntime.NotifyAll(PN_UPDATEDATA);
     Application.ProcessMessages;
     CheckWaveformPixels(lRoot,False);
     for I := 0 to 200 do lTag.AddSample(I/100,8*Sin(2*Pi*I/100));
     lFactories.DoUpdateData;
+    lRuntime.NotifyAll(PN_UPDATEDATA);
     Application.ProcessMessages;
     CheckWaveformPixels(lRoot);
     lHost.EditMode := True;
@@ -829,6 +835,7 @@ begin
     RecreateWnd(lHost);
     Application.ProcessMessages;
     lFactories.DoUpdateData;
+    lRuntime.NotifyAll(PN_UPDATEDATA);
     Application.ProcessMessages;
     lRoot := FindWindowEx(lHost.Handle,0,nil,'Oscillogram plugin view');
     Check(lRoot <> 0,'production view did not survive native parent recreation');

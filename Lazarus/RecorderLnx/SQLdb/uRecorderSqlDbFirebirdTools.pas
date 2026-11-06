@@ -30,12 +30,8 @@ begin
 end;
 
 function RecorderSqlDbFirebirdHostIsLocal(const AHost: string): Boolean;
-var
-  lHost: string;
 begin
-  lHost := LowerCase(Trim(AHost));
-  Result := (lHost = '') or (lHost = 'localhost') or
-    (lHost = '127.0.0.1') or (lHost = '::1');
+  Result := RecorderSqlDbHostIsLocal(AHost);
 end;
 
 function RecorderSqlDbFirebirdTcpAvailable(const AHost: string; APort: Word;

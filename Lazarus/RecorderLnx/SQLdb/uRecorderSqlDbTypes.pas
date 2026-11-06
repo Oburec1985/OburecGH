@@ -143,6 +143,10 @@ type
   private
     fBackend: TRecorderSqlDbBackend;
     fDatabase: string;
+    fRemoteDatabase: string;
+    fRemoteDatabaseHost: string;
+    fLocalHostCache: string;
+    fLocalHostCacheKnown, fLocalHostCacheValue: Boolean;
     fControlTagName: string;
     fEnabled: Boolean;
     fHost: string;
@@ -152,6 +156,8 @@ type
     fMdbObjectId: string;
     fMdbTestId: string;
     fSignalNames: TStringList;
+    fAllowedSignalNames: TStringList;
+    fAllowedSignalSelectionConfigured: Boolean;
     fSignalEstimates: TStringList;
     fSignalSelectionConfigured: Boolean;
     fAlarmSignalNames: TStringList;
@@ -168,6 +174,10 @@ type
     procedure LoadConnectionFromAppConfig;
     procedure SaveConnectionToAppConfig;
     procedure SetQueueCapacity(AValue: Integer);
+    function GetDatabase: string;
+    procedure SetDatabase(const AValue: string);
+    function GetRemoteDatabase: string;
+    procedure SetRemoteDatabase(const AValue: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -175,9 +185,12 @@ type
     procedure ResetDefaults;
     procedure LoadFromFile(const AFileName: string);
     procedure SaveToFile(const AFileName: string);
+    procedure ApplyRemoteServerAddress(const AHost: string; APort: Integer;
+      const AServerDatabase: string = '');
     procedure RequireValid;
     function ConnectionConfigurationReady(out AErrorText: string): Boolean;
     function DatabaseFileName: string;
+    function LocalDatabaseFileName: string;
     function IsLocalFileDatabase: Boolean;
     function DataDirectory: string;
     function Password: string;
@@ -187,7 +200,10 @@ type
     procedure SetSignalEstimate(const ATagName: string;
       AKind: TRecorderTagEstimateKind);
     property Backend: TRecorderSqlDbBackend read fBackend write fBackend;
-    property Database: string read fDatabase write fDatabase;
+    property Database: string read GetDatabase write SetDatabase;
+    property LocalDatabase: string read fDatabase write fDatabase;
+    property RemoteDatabase: string read GetRemoteDatabase write SetRemoteDatabase;
+    property RemoteDatabaseHost: string read fRemoteDatabaseHost;
     property ControlTagName: string read fControlTagName write fControlTagName;
     property Enabled: Boolean read fEnabled write fEnabled;
     property Host: string read fHost write fHost;
@@ -197,6 +213,10 @@ type
     property MdbObjectId: string read fMdbObjectId write fMdbObjectId;
     property MdbTestId: string read fMdbTestId write fMdbTestId;
     property SignalNames: TStringList read fSignalNames;
+    property AllowedSignalNames: TStringList read fAllowedSignalNames;
+    property AllowedSignalSelectionConfigured: Boolean
+      read fAllowedSignalSelectionConfigured
+      write fAllowedSignalSelectionConfigured;
     property SignalEstimates: TStringList read fSignalEstimates;
     property SignalSelectionConfigured: Boolean read fSignalSelectionConfigured
       write fSignalSelectionConfigured;
@@ -231,13 +251,19 @@ function RecorderSqlDbNewId: string;
 function RecorderSqlDbBackendToString(AValue: TRecorderSqlDbBackend): string;
 function RecorderSqlDbStringToBackend(const AValue: string): TRecorderSqlDbBackend;
 function RecorderSqlDbDefaultRootDirectory: string;
+function RecorderSqlDbHostIsLocal(const AHost: string): Boolean;
 
 implementation
 
 uses
-  IniFiles, uRecorderMeraPaths
+  IniFiles, uRecorderMeraPaths, uRecorderNetworkBinding
   {$ifdef unix}, BaseUnix{$endif}
   {$ifdef windows}, Registry, Windows{$endif};
+
+function RecorderSqlDbHostIsLocal(const AHost: string): Boolean;
+begin
+  Result := RecorderNetworkHostIsLocal(AHost);
+end;
 
 function RecorderSqlDbNewId: string;
 var
@@ -285,6 +311,10 @@ begin
   fSignalNames.CaseSensitive := False;
   fSignalNames.Sorted := True;
   fSignalNames.Duplicates := dupIgnore;
+  fAllowedSignalNames := TStringList.Create;
+  fAllowedSignalNames.CaseSensitive := False;
+  fAllowedSignalNames.Sorted := True;
+  fAllowedSignalNames.Duplicates := dupIgnore;
   fSignalEstimates := TStringList.Create;
   fSignalEstimates.CaseSensitive := False;
   fSignalEstimates.NameValueSeparator := '=';
@@ -297,6 +327,7 @@ end;
 
 destructor TRecorderSqlDbConfig.Destroy;
 begin
+  fAllowedSignalNames.Free;
   fAlarmSignalNames.Free;
   fSignalEstimates.Free;
   fSignalNames.Free;
@@ -308,6 +339,8 @@ begin
   if ASource = nil then Exit;
   fBackend := ASource.fBackend;
   fDatabase := ASource.fDatabase;
+  fRemoteDatabase := ASource.fRemoteDatabase;
+  fRemoteDatabaseHost := ASource.fRemoteDatabaseHost;
   fControlTagName := ASource.fControlTagName;
   fEnabled := ASource.fEnabled;
   fHost := ASource.fHost;
@@ -317,6 +350,9 @@ begin
   fMdbObjectId := ASource.fMdbObjectId;
   fMdbTestId := ASource.fMdbTestId;
   fSignalNames.Assign(ASource.fSignalNames);
+  fAllowedSignalNames.Assign(ASource.fAllowedSignalNames);
+  fAllowedSignalSelectionConfigured :=
+    ASource.fAllowedSignalSelectionConfigured;
   fSignalEstimates.Assign(ASource.fSignalEstimates);
   fSignalSelectionConfigured := ASource.fSignalSelectionConfigured;
   fAlarmSignalNames.Assign(ASource.fAlarmSignalNames);
@@ -336,15 +372,20 @@ procedure TRecorderSqlDbConfig.ResetDefaults;
 begin
   fBackend := rsbFirebird;
   fDatabase := CRecorderFirebirdDefaultDatabase;
+  fRemoteDatabase := CRecorderFirebirdDefaultDatabase;
   fControlTagName := '';
   fEnabled := False;
   fHost := CRecorderFirebirdDefaultHost;
+  fLocalHostCacheKnown := False;
+  fRemoteDatabaseHost := fHost;
   fObjectName := 'Объект мониторинга';
   fObjectType := '';
   fSerialNumber := '';
   fMdbObjectId := '';
   fMdbTestId := '';
   fSignalNames.Clear;
+  fAllowedSignalNames.Clear;
+  fAllowedSignalSelectionConfigured := False;
   fSignalEstimates.Clear;
   fSignalSelectionConfigured := False;
   fAlarmSignalNames.Clear;
@@ -378,12 +419,6 @@ begin
      ((Length(lRoot) >= 2) and (lRoot[2] = ':')) or
      (Pos('\\', lRoot) > 0) then
     lRoot := RecorderSqlDbDefaultRootDirectory;
-  if (fBackend = rsbFirebird) and
-     ((Trim(fHost) = '') or SameText(Trim(fHost), 'localhost') or
-      SameText(Trim(fHost), '127.0.0.1') or SameText(Trim(fHost), '::1')) and
-     DirectoryExists('/var/opt/mera/SQLdb') and
-     (Pos('/home/', lRoot) = 1) then
-    lRoot := '/var/opt/mera/SQLdb';
   {$else}
   if (lRoot = '') or ((lRoot <> '') and (lRoot[1] = '/')) then
     lRoot := RecorderSqlDbDefaultRootDirectory;
@@ -391,11 +426,58 @@ begin
   Result := ExcludeTrailingPathDelimiter(ExpandFileName(lRoot));
 end;
 
+function TRecorderSqlDbConfig.GetDatabase: string;
+begin
+  if IsLocalFileDatabase then Result := fDatabase
+  else Result := GetRemoteDatabase;
+end;
+
+procedure TRecorderSqlDbConfig.SetDatabase(const AValue: string);
+begin
+  if IsLocalFileDatabase then fDatabase := AValue
+  else SetRemoteDatabase(AValue);
+end;
+
+function TRecorderSqlDbConfig.GetRemoteDatabase: string;
+begin
+  if SameText(Trim(fHost), Trim(fRemoteDatabaseHost)) then
+    Result := fRemoteDatabase
+  else Result := '';
+end;
+
+procedure TRecorderSqlDbConfig.SetRemoteDatabase(const AValue: string);
+begin
+  fRemoteDatabase := AValue;
+  fRemoteDatabaseHost := Trim(fHost);
+end;
+
+procedure TRecorderSqlDbConfig.ApplyRemoteServerAddress(const AHost: string;
+  APort: Integer; const AServerDatabase: string);
+var
+  lHost: string;
+begin
+  lHost := Trim(AHost);
+  if lHost = '' then
+    raise ERecorderSqlDbError.Create('Firebird host is empty');
+  if (APort < 0) or (APort > 65535) then
+    raise ERecorderSqlDbError.Create('Firebird port is outside 0..65535');
+  if (not RecorderSqlDbHostIsLocal(lHost)) and
+     (Trim(AServerDatabase) = '') and
+     ((not SameText(lHost, Trim(fRemoteDatabaseHost))) or
+      (Trim(fRemoteDatabase) = '')) then
+    raise ERecorderSqlDbError.Create('Путь БД выбранного сервера ещё не получен');
+  { A coordinator changes the network address, never the installation's
+    database location, storage root, credentials or recording settings. }
+  fHost := lHost;
+  fPort := APort;
+  if (not IsLocalFileDatabase) and (Trim(AServerDatabase) <> '') then
+    SetRemoteDatabase(Trim(AServerDatabase));
+end;
+
 procedure TRecorderSqlDbConfig.RequireValid;
 begin
   if not fEnabled then Exit;
-  if (fBackend = rsbSQLite) or
-     ((fBackend = rsbFirebird) and (Trim(fHost) = '')) then
+  if IsLocalFileDatabase then
   begin
     if EffectiveRootDirectory = '' then
       raise ERecorderSqlDbError.Create('SQLdb root directory is empty');
@@ -404,7 +486,7 @@ begin
   begin
     if Trim(fHost) = '' then
       raise ERecorderSqlDbError.Create('Remote SQLdb host is empty');
-    if Trim(fDatabase) = '' then
+    if Trim(Database) = '' then
       raise ERecorderSqlDbError.Create('Remote SQLdb database is empty');
     // Port 0 means: use the database driver's default port.
   end;
@@ -420,7 +502,7 @@ begin
     AErrorText := 'Не задан каталог SQL БД.'
   else if (not IsLocalFileDatabase) and (Trim(fHost) = '') then
     AErrorText := 'Не задан хост SQL БД.'
-  else if (not IsLocalFileDatabase) and (Trim(fDatabase) = '') then
+  else if (not IsLocalFileDatabase) and (Trim(Database) = '') then
     AErrorText := 'Не задан путь или имя SQL БД.'
   else if (fBackend = rsbFirebird) and (Trim(fUserName) = '') then
     AErrorText := 'Не задано имя пользователя Firebird.'
@@ -430,37 +512,23 @@ begin
 end;
 
 function TRecorderSqlDbConfig.DatabaseFileName: string;
+begin
+  if IsLocalFileDatabase then Exit(LocalDatabaseFileName);
+  { A remote name/path belongs to that server. Never prefix a client root. }
+  Result := Trim(GetRemoteDatabase);
+end;
+
+function TRecorderSqlDbConfig.LocalDatabaseFileName: string;
 var
-  lName, lRoot: string;
+  lName: string;
 begin
   lName := Trim(fDatabase);
   if lName = '' then
-    if fBackend = rsbFirebird then
-      lName := CRecorderFirebirdDefaultFileName
-    else
-      lName := CRecorderSqlDbDefaultFileName;
-  if not IsLocalFileDatabase then
-  begin
-    lRoot := Trim(fRootDirectory);
-    if (lRoot = '') or (ExtractFileDrive(lName) <> '') or
-       ((Length(lName) >= 2) and (lName[2] = ':')) or
-       ((lName <> '') and (lName[1] = '/')) then
-      Exit(lName);
-    if Pos('\', lRoot) > 0 then
-    begin
-      if (lRoot[Length(lRoot)] = '\') or (lRoot[Length(lRoot)] = '/') then
-        Exit(lRoot + lName);
-      Exit(lRoot + '\' + lName);
-    end;
-    if Pos('/', lRoot) > 0 then
-    begin
-      if lRoot[Length(lRoot)] = '/' then
-        Exit(lRoot + lName);
-      Exit(lRoot + '/' + lName);
-    end;
-    Exit(lRoot + '/' + lName);
-  end;
+    if fBackend = rsbFirebird then lName := CRecorderFirebirdDefaultFileName
+    else lName := CRecorderSqlDbDefaultFileName;
   {$ifdef unix}
+  if (lName <> '') and (lName[1] = '/') then
+    Exit(ExpandFileName(lName));
   if ((Length(lName) >= 2) and (lName[2] = ':')) or
      (Pos('\\', lName) > 0) then
     lName := ExtractFileName(StringReplace(lName, '\\', '/', [rfReplaceAll]));
@@ -474,10 +542,15 @@ end;
 
 function TRecorderSqlDbConfig.IsLocalFileDatabase: Boolean;
 begin
-  Result := (fBackend = rsbSQLite) or
-    ((fBackend = rsbFirebird) and
-     ((Trim(fHost) = '') or SameText(Trim(fHost), 'localhost') or
-      SameText(Trim(fHost), '127.0.0.1') or SameText(Trim(fHost), '::1')));
+  if fBackend = rsbSQLite then Exit(True);
+  if fBackend <> rsbFirebird then Exit(False);
+  if (not fLocalHostCacheKnown) or (fLocalHostCache <> fHost) then
+  begin
+    fLocalHostCacheValue := RecorderSqlDbHostIsLocal(fHost);
+    fLocalHostCache := fHost;
+    fLocalHostCacheKnown := True;
+  end;
+  Result := fLocalHostCacheValue;
 end;
 
 function TRecorderSqlDbConfig.DataDirectory: string;
@@ -560,8 +633,10 @@ begin
       fBackend := RecorderSqlDbStringToBackend(lIni.ReadString('SQLdb', 'Backend', 'firebird'));
       fRootDirectory := lIni.ReadString('SQLdb', 'RootDirectory', fRootDirectory);
       fDatabase := lIni.ReadString('SQLdb', 'Database', fDatabase);
+      fRemoteDatabase := fDatabase;
       fControlTagName := lIni.ReadString('SQLdb', 'ControlTag', fControlTagName);
       fHost := lIni.ReadString('SQLdb', 'Host', fHost);
+      fRemoteDatabaseHost := fHost;
       fObjectName := lIni.ReadString('SQLdb', 'ObjectName', fObjectName);
       fObjectType := lIni.ReadString('SQLdb', 'ObjectType', fObjectType);
       fSerialNumber := lIni.ReadString('SQLdb', 'SerialNumber', fSerialNumber);
@@ -579,6 +654,10 @@ begin
       fSignalSelectionConfigured := lIni.ReadBool('SQLdb',
         'SignalSelectionConfigured', fSignalSelectionConfigured);
       lIni.ReadSection('SQLdbSignals', fSignalNames);
+      fAllowedSignalSelectionConfigured := lIni.ReadBool('SQLdb',
+        'AllowedSignalSelectionConfigured',
+        fAllowedSignalSelectionConfigured);
+      lIni.ReadSection('SQLdbAllowedSignals', fAllowedSignalNames);
       lIni.ReadSectionValues('SQLdbSignalEstimates', fSignalEstimates);
       fAlarmSignalSelectionConfigured := lIni.ReadBool('SQLdb',
         'AlarmSignalSelectionConfigured', fAlarmSignalSelectionConfigured);
@@ -615,7 +694,11 @@ begin
     fRootDirectory := lIni.ReadString('SQLdbConnection', 'RootDirectory',
       fRootDirectory);
     fDatabase := lIni.ReadString('SQLdbConnection', 'Database', fDatabase);
+    fRemoteDatabase := lIni.ReadString('SQLdbConnection', 'RemoteDatabase', fDatabase);
+    fDatabase := lIni.ReadString('SQLdbConnection', 'LocalDatabase', fDatabase);
     fHost := lIni.ReadString('SQLdbConnection', 'Host', fHost);
+    fRemoteDatabaseHost := lIni.ReadString('SQLdbConnection',
+      'RemoteDatabaseHost', fHost);
     fPort := lIni.ReadInteger('SQLdbConnection', 'Port', fPort);
     fTlsRequired := lIni.ReadBool('SQLdbConnection', 'TlsRequired',
       fTlsRequired);
@@ -644,7 +727,13 @@ begin
     lIni.WriteString('SQLdbConnection', 'Backend',
       RecorderSqlDbBackendToString(fBackend));
     lIni.WriteString('SQLdbConnection', 'RootDirectory', fRootDirectory);
-    lIni.WriteString('SQLdbConnection', 'Database', fDatabase);
+    { Database was an effective-value alias of LocalDatabase or
+      RemoteDatabase. Retain legacy reading, but keep one persisted source
+      for each value so changing mode cannot leave conflicting aliases. }
+    lIni.DeleteKey('SQLdbConnection', 'Database');
+    lIni.WriteString('SQLdbConnection', 'LocalDatabase', fDatabase);
+    lIni.WriteString('SQLdbConnection', 'RemoteDatabase', fRemoteDatabase);
+    lIni.WriteString('SQLdbConnection', 'RemoteDatabaseHost', fRemoteDatabaseHost);
     lIni.WriteString('SQLdbConnection', 'Host', fHost);
     lIni.WriteInteger('SQLdbConnection', 'Port', fPort);
     lIni.WriteBool('SQLdbConnection', 'TlsRequired', fTlsRequired);
@@ -663,6 +752,10 @@ var
   {$endif}
 begin
   RequireValid;
+  if SameFileName(ExpandFileName(AFileName),
+    ExpandFileName(RecorderAppConfigFileName)) then
+    raise ERecorderSqlDbError.Create(
+      'Project SQL settings cannot be saved into the application config');
   SaveConnectionToAppConfig;
   if not ForceDirectories(ExtractFileDir(ExpandFileName(AFileName))) then
     raise ERecorderSqlDbError.CreateFmt('Cannot create config directory: %s', [ExtractFileDir(AFileName)]);
@@ -680,19 +773,31 @@ begin
     lIni.DeleteKey('SQLdb', 'Database');
     lIni.DeleteKey('SQLdb', 'Host');
     lIni.DeleteKey('SQLdb', 'Port');
-    lIni.DeleteKey('SQLdb', 'UserName');
-    lIni.DeleteKey('SQLdb', 'PasswordEnvironment');
-    lIni.DeleteKey('SQLdb', 'Password');
+    { Firebird uses application-owned built-in credentials. For other
+      backends, keep legacy credentials until a protected application-level
+      credential store can migrate them: deleting them here silently loses
+      access to existing PostgreSQL databases after a restart. }
+    if fBackend = rsbFirebird then
+    begin
+      lIni.DeleteKey('SQLdb', 'UserName');
+      lIni.DeleteKey('SQLdb', 'PasswordEnvironment');
+      lIni.DeleteKey('SQLdb', 'Password');
+    end;
     lIni.DeleteKey('SQLdb', 'TlsRequired');
     lIni.WriteInteger('SQLdb', 'QueueCapacity', fQueueCapacity);
     lIni.WriteInteger('SQLdb', 'RecordPeriodMs', fRecordPeriodMs);
     lIni.WriteBool('SQLdb', 'SignalSelectionConfigured',
       fSignalSelectionConfigured);
+    lIni.WriteBool('SQLdb', 'AllowedSignalSelectionConfigured',
+      fAllowedSignalSelectionConfigured);
     lIni.WriteBool('SQLdb', 'AlarmSignalSelectionConfigured',
       fAlarmSignalSelectionConfigured);
     lIni.EraseSection('SQLdbSignals');
     for lIndex := 0 to fSignalNames.Count - 1 do
       lIni.WriteBool('SQLdbSignals', fSignalNames[lIndex], True);
+    lIni.EraseSection('SQLdbAllowedSignals');
+    for lIndex := 0 to fAllowedSignalNames.Count - 1 do
+      lIni.WriteBool('SQLdbAllowedSignals', fAllowedSignalNames[lIndex], True);
     lIni.EraseSection('SQLdbSignalEstimates');
     for lIndex := 0 to fSignalEstimates.Count - 1 do
       lIni.WriteString('SQLdbSignalEstimates',

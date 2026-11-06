@@ -4,7 +4,7 @@ program ImpactHammerUiSmoke;
 {$codepage UTF8}
 
 uses
-  Interfaces, Forms, Classes, SysUtils, Math, Controls, Graphics, StdCtrls, ExtCtrls,
+  Interfaces, Forms, Classes, SysUtils, Math, Controls, Graphics, StdCtrls, ExtCtrls, IniFiles,
   Buttons, LMessages, LCLType, uRecorderMeraBaseModel, uRecorderMdbRepository,
   uRecorderProjectFiles,
   uRecorderFormModel, uRecorderTags, uRecorderCoreServices,
@@ -862,6 +862,175 @@ begin
   end;
 end;
 
+procedure CheckLogIntensityMarkers;
+const
+  lAmplitudes: array[0..4] of Double = (0.1, 1, 10, 100, 0);
+  lOtherAmplitudes: array[0..4] of Double = (0.1, 1, 100, 1000, 0);
+var
+  lScene: T3dScene;
+  lNode: T3dNode;
+  lRepository: TRecorderFrfRepository;
+  lProvider: IRecorderFrfProvider;
+  lAdapter: TRecorderFrfIntensityAdapter;
+  lCurves: array[0..4] of TRecorderFrfCurveData;
+  lBindings: array[0..4] of TRecorderFrfIntensityBinding;
+  lIndex, lIteration: Integer;
+  lStarted, lLinearMs, lLogMs: QWord;
+
+  procedure PublishScaled(AScale: Double);
+  var lPoint: Integer;
+  begin
+    for lPoint:=0 to High(lAmplitudes) do
+    begin
+      lCurves[lPoint].Magnitude[0]:=lAmplitudes[lPoint]*AScale;
+      lCurves[lPoint].Magnitude[1]:=lOtherAmplitudes[lPoint]*AScale;
+    end;
+    Check(lRepository.Publish(lCurves),'Publish logarithmic radius fixture');
+  end;
+
+  procedure CheckRadius(APoint: Integer; AFrequency, AExpected: Double;
+    const AName: string);
+  var lMarker: TRecorderIntensityMarker;
+  begin
+    Check(lAdapter.Update(AFrequency),'Update '+AName);
+    lMarker:=lAdapter.Marker(APoint);
+    Check(not IsNan(lMarker.SizePixels) and not IsInfinite(lMarker.SizePixels),
+      AName+' radius must be finite');
+    Check(SameValue(lMarker.SizePixels,AExpected,1E-9),AName+
+      ': expected '+FloatToStr(AExpected)+', actual '+FloatToStr(lMarker.SizePixels));
+    Check(lMarker.Color=clRed,'Log radius does not alter configured color');
+  end;
+
+begin
+  lScene:=T3dScene.Create;
+  lAdapter:=TRecorderFrfIntensityAdapter.Create;
+  lRepository:=TRecorderFrfRepository.Create;
+  lProvider:=lRepository;
+  try
+    lNode:=T3dNode.Create;
+    lNode.Id:=9701;
+    lScene.AddNode(lNode);
+    for lIndex:=0 to High(lCurves) do
+    begin
+      lCurves[lIndex]:=Default(TRecorderFrfCurveData);
+      lCurves[lIndex].Id:=9702+lIndex;
+      lCurves[lIndex].FrequencyHz:=[100.0,200.0];
+      lCurves[lIndex].Magnitude:=[0.0,0.0];
+      lCurves[lIndex].PhaseRadians:=[0.0,0.0];
+      lCurves[lIndex].Coherence:=[1.0,1.0];
+      lBindings[lIndex]:=Default(TRecorderFrfIntensityBinding);
+      lBindings[lIndex].CurveId:=lCurves[lIndex].Id;
+      lBindings[lIndex].TargetNodeId:=lNode.Id;
+      lBindings[lIndex].Enabled:=True;
+      lBindings[lIndex].Gain:=1;
+      lBindings[lIndex].MarkerSizePixels:=10;
+      lBindings[lIndex].Color:=clRed;
+    end;
+    PublishScaled(1);
+    SetRecorderFrfDisplayRange(100,200);
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    CheckRadius(2,100,0.2,'Legacy linear retains preset peak 1000');
+    CheckRadius(0,100,0.002,'Legacy linear small amplitude');
+    for lIndex:=0 to High(lBindings) do lBindings[lIndex].IntensityLogScale:=True;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    CheckRadius(0,100,0,'Current-frequency minimum .1');
+    CheckRadius(1,100,20/3,'Current-frequency 1 is one-third');
+    CheckRadius(2,100,40/3,'Current-frequency 10 is two-thirds');
+    CheckRadius(3,100,20,'Current-frequency maximum 100');
+    CheckRadius(4,100,0,'Zero is excluded from positive logarithmic minimum');
+    CheckRadius(2,200,15,'Frequency movement recomputes positive endpoints');
+    SetRecorderFrfDisplayRange(199,201);
+    CheckRadius(2,100,40/3,'Log radius ignores preset-band peak');
+    SetRecorderFrfDisplayRange(100,200);
+    lBindings[0].IntensityLogScale:=False;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    CheckRadius(0,100,0.002,'Mixed linear binding keeps preset normalization');
+    CheckRadius(2,100,40/3,'Mixed log binding uses current point extrema');
+    lBindings[0].IntensityLogScale:=True;
+    lBindings[3].Enabled:=False;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    CheckRadius(1,100,10,'Disabled maximum is excluded');
+    CheckRadius(3,100,0,'Disabled binding has zero radius');
+    lBindings[3].Enabled:=True;
+    lBindings[3].Gain:=Infinity;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    CheckRadius(1,100,10,'Nonfinite maximum is excluded');
+    CheckRadius(3,100,0,'Nonfinite amplitude is not rendered');
+    lBindings[3].Gain:=NaN;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    CheckRadius(1,100,10,'NaN amplitude does not define log maximum');
+    CheckRadius(3,100,0,'NaN amplitude is not rendered');
+    lBindings[3].Gain:=1;
+    lBindings[3].TargetNodeId:=999999;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    CheckRadius(1,100,10,'Unresolved geometry does not define log maximum');
+    Check(not lAdapter.Marker(3).Visible,'Unresolved geometry is not rendered');
+    lBindings[3].TargetNodeId:=lNode.Id;
+    lBindings[0].CurveId:=999999;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    CheckRadius(1,100,0,'Missing minimum is excluded');
+    CheckRadius(2,100,10,'Missing minimum changes logarithmic span');
+    lBindings[0].CurveId:=lCurves[0].Id;
+    for lIndex:=0 to High(lBindings) do lBindings[lIndex].Gain:=-3;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    CheckRadius(2,100,40/3,'Negative gain preserves magnitude scaling');
+    PublishScaled(1E-100);
+    CheckRadius(2,100,40/3,'Tiny physical units preserve logarithmic radius');
+    CheckRadius(3,100,20,'Tiny reference maximum');
+    PublishScaled(1);
+    for lIndex:=0 to High(lBindings) do lBindings[lIndex].Gain:=1;
+    lAdapter.Configure(lProvider,lScene,[lBindings[2]]);
+    CheckRadius(0,100,20,'One measured positive point has full radius');
+    for lIndex:=0 to High(lCurves) do lCurves[lIndex].Magnitude[0]:=2;
+    Check(lRepository.Publish(lCurves),'Publish equal positive values');
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    CheckRadius(0,100,20,'Equal positive set has full radius');
+    CheckRadius(3,100,20,'Equal positive maximum does not divide by zero');
+    for lIndex:=0 to High(lCurves) do lCurves[lIndex].Magnitude[0]:=1E300;
+    lCurves[3].Magnitude[0]:=1E300*(1+1E-15);
+    Check(lRepository.Publish(lCurves),'Publish nearly equal large values');
+    Check(lAdapter.Update(100),'Update nearly equal logarithmic endpoints');
+    for lIndex:=0 to High(lBindings) do
+      Check(not IsNan(lAdapter.Marker(lIndex).SizePixels) and
+        not IsInfinite(lAdapter.Marker(lIndex).SizePixels) and
+        (lAdapter.Marker(lIndex).SizePixels>=0) and
+        (lAdapter.Marker(lIndex).SizePixels<=20),
+        'Nearly equal logarithms never divide by zero or exceed radius range');
+    for lIndex:=0 to High(lBindings) do lBindings[lIndex].Gain:=0;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    CheckRadius(2,100,0,'All-zero measured points');
+    PublishScaled(1);
+    for lIndex:=0 to High(lBindings) do lBindings[lIndex].Gain:=1;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    Check(lAdapter.Update(100,0,True),'Animated logarithmic marker');
+    Check(SameValue(lAdapter.Marker(2).SizePixels,0,1E-9),
+      'Animation remains multiplicative after logarithmic radius');
+    Check(lAdapter.Update(100,Pi/2,True),'Animated logarithmic peak');
+    Check(SameValue(lAdapter.Marker(2).SizePixels,40/3,1E-9),
+      'Animation peak retains logarithmic radius');
+    { Bounded wall-time comparison on the same warmed five-point provider.
+      No FFT, chart repaint, setup allocations or unstable timing assertion. }
+    for lIndex:=0 to High(lBindings) do lBindings[lIndex].IntensityLogScale:=False;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    lAdapter.Update(100);
+    lStarted:=GetTickCount64;
+    for lIteration:=1 to 1000000 do lAdapter.Update(100);
+    lLinearMs:=GetTickCount64-lStarted;
+    for lIndex:=0 to High(lBindings) do lBindings[lIndex].IntensityLogScale:=True;
+    lAdapter.Configure(lProvider,lScene,lBindings);
+    lAdapter.Update(100);
+    lStarted:=GetTickCount64;
+    for lIteration:=1 to 1000000 do lAdapter.Update(100);
+    lLogMs:=GetTickCount64-lStarted;
+    WriteLn('PERF radius_updates=1000000 points=5 linear_ms=',lLinearMs,' log_ms=',lLogMs);
+  finally
+    SetRecorderFrfDisplayRange(5,1000);
+    lAdapter.Free;
+    lScene.Free;
+    lProvider:=nil;
+  end;
+end;
+
 procedure CheckChartLayout(AView: TRecorderImpactHammerView;
   const ASizeName: string);
 var
@@ -974,6 +1143,8 @@ var
   OldStepHeight, OldBindingTop: Integer;
   LabelMode: IRecorderModelVertexLabelMode;
   StepMarkers: array[0..2] of TRecorderModelPointBinding;
+  lDialogBitmap: TBitmap;
+  lDialogPng: TPortableNetworkGraphic;
 begin
   Scene := T3dScene.Create;
   SceneModel := TRecorder3dComponent.Create;
@@ -1008,6 +1179,16 @@ begin
     Check(SceneModel.CurrentStepPointCount=2, 'Green frames deduplicate vertices and do not require labels/data');
     LabelMode.SetCurrentStepPoints([]);
     Check(SceneModel.CurrentStepPointCount=0, 'Empty step clears green frames');
+    StepMarkers[0].CurveId:=9703;
+    StepMarkers[0].ModifierTargetNodeId:=77;
+    StepMarkers[0].Gain:=1;
+    StepMarkers[0].Mode:=rgbmIntensity;
+    StepMarkers[0].IntensityLogScale:=True;
+    Sink.PublishBindings('log-radius-test','live-bind-scene',[StepMarkers[0]]);
+    Check((SceneModel.FrfBindingCount=1) and
+      SceneModel.FrfBindings[0].IntensityLogScale,
+      'Logarithmic radius reaches persistent 3D binding through controller');
+    Sink.RemoveBindings('log-radius-test');
     SceneModel.ShowVertexLabels := True;
     Model.Target3dComponentId := 'live-bind-scene';
     Model.Target3dNodeId := 77;
@@ -1020,6 +1201,15 @@ begin
     Dialog.chkResultValues.Checked := True;
     Dialog.ResultValuesChange(nil);
     Check(Model.ResultValuesVisible, 'Display settings update persistent value-label preference');
+    Check((Dialog.chkLogRadius<>nil) and (Dialog.FindComponent('edLogRange')=nil) and
+      (Dialog.FindComponent('lblLogRange')=nil),
+      'Logarithmic radius has no manual range controls');
+    Check(not Dialog.chkLogRadius.Checked,
+      'Legacy linear radius is the display default');
+    Dialog.chkLogRadius.Checked:=True;
+    Dialog.EditorChange(Dialog.chkLogRadius);
+    Check(Model.IntensityLogScale,
+      'Checkbox enables persistent logarithmic radius');
     Dialog.cbObject.ItemIndex := 1;
     Dialog.EditorChange(Dialog.cbObject);
     Model.Responses[1].PointNumber:=42;
@@ -1041,6 +1231,18 @@ begin
     Check((Model.Responses[1].PointNumber=42) and
       (Model.Responses[1].PointLabel='route label') and
       (Model.Responses[1].Target3dNodeId=78),'Display changes preserve geometry mappings');
+    Application.ProcessMessages;
+    Dialog.Update;
+    lDialogBitmap:=Dialog.GetFormImage;
+    lDialogPng:=TPortableNetworkGraphic.Create;
+    try
+      lDialogPng.Assign(lDialogBitmap);
+      lDialogPng.SaveToFile(IncludeTrailingPathDelimiter(GetTempDir)+
+        'frf-log-radius-dialog.png');
+    finally
+      lDialogPng.Free;
+      lDialogBitmap.Free;
+    end;
     Dialog.Close;
     Check(not Dialog.Visible, 'Close hides retained binding editor');
     Route := TRecorderFrfRoute.Create;
@@ -1122,8 +1324,34 @@ var
   Forms, Loaded: TRecorderFormManager;
   Factory: TRecorderComponentFactory;
   Page: TRecorderFormPage;
-  Model, Clone: TRecorder3dComponent;
+  Model, Clone, CopyModel: TRecorder3dComponent;
+  lValues: TMemIniFile;
   FileName: string;
+
+  procedure CheckCodecFallback(ADeleteFields: Boolean);
+  var lOldForms: TRecorderFormManager; lBinding: TRecorder3dFrfBinding;
+  begin
+    lValues:=TMemIniFile.Create(FileName);
+    try
+      if ADeleteFields then
+      begin
+        lValues.DeleteKey('Page.0.Component.0','Frf0IntensityLogScale');
+        lValues.DeleteKey('Page.0.Component.0','Frf0IntensityLogRangeDb');
+      end
+      else
+        lValues.WriteString('Page.0.Component.0','Frf0IntensityLogRangeDb','NaN');
+      lValues.UpdateFile;
+    finally lValues.Free end;
+    lOldForms:=TRecorderFormManager.Create;
+    try
+      LoadRecorderGuiConfig(FileName,lOldForms,Factory);
+      lBinding:=TRecorder3dComponent(lOldForms.Pages[0].Components[0]).FrfBindings[0];
+      if ADeleteFields then Check(not lBinding.IntensityLogScale,
+        'Legacy project without logarithmic radius keys remains linear')
+      else Check(lBinding.IntensityLogScale,
+        'Obsolete logarithmic range key is ignored');
+    finally lOldForms.Free end;
+  end;
 begin
   Forms := TRecorderFormManager.Create;
   Loaded := TRecorderFormManager.Create;
@@ -1136,6 +1364,17 @@ begin
     Model := TRecorder3dComponent.Create;
     Model.Id := 'labels-scene';
     Model.ShowVertexLabels := False;
+    with Model.AddFrfBinding do
+    begin
+      CurveId:=9704;
+      IntensityLogScale:=True;
+    end;
+    CopyModel:=TRecorder3dComponent.Create;
+    try
+      CopyModel.Assign(Model);
+      Check(CopyModel.FrfBindings[0].IntensityLogScale,
+        'Deep copy preserves logarithmic 3D radius configuration');
+    finally CopyModel.Free end;
     Page.AddComponent(Model);
     Model.SetPointLabel(42, 7, 9, '1');
     Check(Model.PointLabel(42, 7) = '1', 'Edited vertex receives requested label');
@@ -1150,8 +1389,15 @@ begin
       VertexLabels.Add('7=Датчик 1');
     end;
     SaveRecorderGuiConfig(FileName, Forms);
+    lValues:=TMemIniFile.Create(FileName);
+    try
+      Check(not lValues.ValueExists('Page.0.Component.0','Frf0IntensityLogRangeDb'),
+        'Obsolete logarithmic radius range is not saved');
+    finally lValues.Free end;
     LoadRecorderGuiConfig(FileName, Loaded, Factory);
     Clone := TRecorder3dComponent(Loaded.Pages[0].Components[0]);
+    Check(Clone.FrfBindings[0].IntensityLogScale,
+      '3D project codec preserves logarithmic radius configuration');
     Check(not Clone.ShowVertexLabels, 'Vertex label visibility must survive saving');
     Check(Clone.FindNodeRenderOverride(77) <> nil, 'Label override persisted');
     Check((Clone.PointLabel(42, 7) = '') and (Clone.PointLabel(42, 8) = '1'),
@@ -1160,6 +1406,8 @@ begin
       'Explicitly cleared vertex label must survive saving');
     Check(Clone.FindNodeRenderOverride(77).VertexLabels.Values['7'] = 'Датчик 1',
       'Vertex label text must survive saving');
+    CheckCodecFallback(False);
+    CheckCodecFallback(True);
   finally
     DeleteFile(FileName);
     Loaded.Free;
@@ -1961,7 +2209,8 @@ begin
   end;
   if (ParamCount > 0) and (ParamStr(1) = '--intensity-markers-only') then
   begin
-    try CheckIntensityMarkers; WriteLn('RESULT intensity markers passed');
+    try CheckIntensityMarkers; CheckLogIntensityMarkers;
+      WriteLn('RESULT intensity markers passed');
     except on E:Exception do begin WriteLn('FAIL intensity markers: '+E.Message); Halt(1) end end;
     Halt(0);
   end;
@@ -2055,6 +2304,7 @@ begin
     Halt(0);
   end;
   CheckIntensityMarkers;
+  CheckLogIntensityMarkers;
   with TRecorder3dFrfModifierFrame.Create(nil) do
     Free;
   Stage('initialized');

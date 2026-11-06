@@ -6,7 +6,7 @@ program RecorderCoordinator;
 {$ENDIF}
 
 uses
-  {$IFDEF UNIX}cthreads,{$ENDIF}
+  {$IFDEF UNIX}cthreads, cwstring,{$ENDIF}
   Interfaces, Forms, SysUtils,
   uCoordinatorCli, uCoordinatorMainForm, uSharedFileLogger,
   uCoordinatorSingleInstance;

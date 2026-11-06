@@ -162,6 +162,8 @@ type
 
 implementation
 
+uses uRecorderMachineStorage;
+
 { TRecorderRunControlSettings }
 
 constructor TRecorderRunControlSettings.Create;
@@ -188,7 +190,7 @@ begin
   fDisplayBufferMs := 1000;
   fDataUpdateMs := 300;
   fRecordRootDir := 'C:\USML\';
-  fRecordShareName := 'MeraFiles';
+  fRecordShareName := 'USML';
   fMeraFilesPath := RecorderMeraFilesPath;
   fWinposButtonAction := rwbaOpenDirectory;
 end;
@@ -358,7 +360,15 @@ begin
     lIni.WriteInteger('Display', 'DataUpdateMs', fDataUpdateMs);
     lIni.WriteString('Record', 'RootDir', fRecordRootDir);
     lIni.WriteString('Record', 'ShareName', fRecordShareName);
-    lIni.WriteString('Mera', 'FilesPath', fMeraFilesPath);
+    if RecorderMachineStorageInitialized then
+      lIni.DeleteKey('Mera', 'FilesPath')
+    else
+    begin
+      { Standalone tools that have not selected an active project retain the
+        legacy serialization contract. RecorderLnx initializes machine
+        storage before saving its selected project. }
+      lIni.WriteString('Mera', 'FilesPath', fMeraFilesPath);
+    end;
     lIni.WriteString('Winpos', 'ButtonAction',
       WinposButtonActionToString(fWinposButtonAction));
   finally
@@ -394,7 +404,10 @@ begin
       fDataUpdateMs);
     fRecordRootDir := lIni.ReadString('Record', 'RootDir', fRecordRootDir);
     fRecordShareName := lIni.ReadString('Record', 'ShareName', fRecordShareName);
-    fMeraFilesPath := lIni.ReadString('Mera', 'FilesPath', fMeraFilesPath);
+    if RecorderMachineStorageInitialized then
+      fMeraFilesPath := RecorderMachineMeraPath
+    else
+      fMeraFilesPath := lIni.ReadString('Mera', 'FilesPath', fMeraFilesPath);
     fWinposButtonAction := StringToWinposButtonAction(
       lIni.ReadString('Winpos', 'ButtonAction', ''), fWinposButtonAction);
     SetRecorderMeraFilesPath(fMeraFilesPath);

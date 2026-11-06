@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, DateUtils, uRecorderCoreServices, uRecorderSqlDbTypes,
-  uRecorderSqlDbRuntime, uRecorderTimeSystem;
+  uRecorderSqlDbRuntime, uRecorderTimeSystem, uRecorderTags;
 
 type
   TRecorderSqlDbManager = class
@@ -44,6 +44,8 @@ type
     procedure PersistMeasurementContext(const AObjectId, ATestId: string);
     procedure ApplyRemoteRecordingSettings(AEnabled: Boolean;
       ARecordPeriodMs: Integer);
+    procedure ApplyAllowedSignals(AAllowedNames: TStrings;
+      ARegistry: TRecorderTagRegistry);
     procedure HandleBlockEvent(ATag: TObject; ATimeSec, AValue: Double);
     function StoreDataFile(const AFileName, ADataType: string;
       AAnchorUtc: Double): Boolean;
@@ -58,7 +60,7 @@ type
 implementation
 
 uses
-  uRecorderTags, uRecorderAlarms, uRecorderDebugLog;
+  uRecorderAlarms, uRecorderDebugLog, uRecorderSqlDataSource;
 
 constructor TRecorderSqlDbManager.Create(AEventBus: TRecorderEventBus;
   ATimeSystem: TRecorderTimeSystem);
@@ -232,6 +234,32 @@ begin
     SetRecordingActive(True, 'SQLdb remote settings');
 end;
 
+procedure TRecorderSqlDbManager.ApplyAllowedSignals(AAllowedNames: TStrings;
+  ARegistry: TRecorderTagRegistry);
+var
+  lIndex: Integer;
+  lTag: TRecorderTag;
+begin
+  if (AAllowedNames = nil) or (ARegistry = nil) then
+    raise ERecorderSqlDbError.Create(
+      'Allowed SQL channels and tag registry are required');
+  SetRecordingActive(False, 'SQLdb allowed channels update');
+  fConfig.AllowedSignalNames.Assign(AAllowedNames);
+  fConfig.AllowedSignalSelectionConfigured := True;
+  fConfig.SignalNames.Clear;
+  fConfig.SignalSelectionConfigured := True;
+  for lIndex := 0 to ARegistry.TagCount - 1 do
+  begin
+    lTag := ARegistry.Tags[lIndex];
+    if (lTag <> nil) and
+       (not RecorderTagIsSqlMirror(lTag)) and
+       (fConfig.AllowedSignalNames.IndexOf(lTag.Name) >= 0) then
+      fConfig.SignalNames.Add(lTag.Name);
+  end;
+  SaveConfig;
+  Reload;
+end;
+
 procedure TRecorderSqlDbManager.StartRegistration(const AReason: string);
 begin
   if fRuntime = nil then Exit;
@@ -351,6 +379,7 @@ begin
   begin
     D := TRecorderTagUpdateEventData(AEvent.Data);
     if D.Tag = nil then Exit;
+    if RecorderTagIsSqlMirror(D.Tag) then Exit;
     { Scalar tags are written directly. Hardware tags notify with a completed
       block; for them SQL stores the configured estimate of that block below. }
     if (D.SampleCount <> 1) and (not D.BlockTailNotify) then Exit;
@@ -411,6 +440,7 @@ begin
     if not (AEvent.Data is TRecorderAlarmEventData) then Exit;
     lAlarmData := TRecorderAlarmEventData(AEvent.Data);
     if (lAlarmData.Tag = nil) or
+       RecorderTagIsSqlMirror(lAlarmData.Tag) or
        (not fConfig.AlarmEventEnabled(lAlarmData.Tag.Name)) then Exit;
     if fTimeSystem <> nil then
     begin

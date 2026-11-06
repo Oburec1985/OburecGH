@@ -23,6 +23,8 @@ type
     Count: Integer;
     LastTagName: string;
     LastValue: Double;
+    LastBlockArrayCount: Integer;
+    LastBlockTailNotify: Boolean;
     procedure HandleEvent(ASender: TObject; const AEvent: TRecorderEvent);
   end;
 
@@ -70,6 +72,11 @@ var
 begin
   if AEvent.Kind <> rceDataUpdated then
     Exit;
+  if AEvent.Data is TRecorderTagUpdateEventData then
+  begin
+    LastBlockArrayCount := Length(TRecorderTagUpdateEventData(AEvent.Data).Times);
+    LastBlockTailNotify := TRecorderTagUpdateEventData(AEvent.Data).BlockTailNotify;
+  end;
 
   lData := TRecorderTagUpdateEventData(AEvent.Data);
   Inc(Count);
@@ -134,8 +141,9 @@ begin
     AssertEquals(lSnapshot.Values[5], 16.0, 'expanded buffer latest value');
 
     { Повторный запуск аппаратного источника начинает время снова с нуля.
-      Старая эпоха не должна нарушать сортировку снимка для осциллограмм. }
-    lRegistry.PublishValue('MemTag', 0.0, 20.0);
+      Старая эпоха не должна нарушать сортировку снимка для осциллограмм.
+      Hardware blocks preserve zero; scalar PublishValue(0) means current time. }
+    lRegistry.PublishBlock(lMemTag, [0.0], [20.0], 1, True);
     lRegistry.PublishValue('MemTag', 0.1, 21.0);
     lSnapshot := lMemTag.Snapshot;
     AssertEquals(lSnapshot.Count, 2, 'time rewind starts a new signal epoch');
@@ -159,6 +167,7 @@ var
   lTag: TRecorderTag;
   lBlock: TRecorderSignalSnapshot;
   lEstimate: TRecorderTagEstimate;
+  lEstimateSettings: TRecorderTagEstimateSettings;
   lBlockCursor: QWord;
   lCursor: QWord;
   lTimes: array[0..2] of Double;
@@ -173,6 +182,9 @@ begin
     lBus.Subscribe(@lProbe.HandleEvent);
     lTag := lRegistry.CreateTag('BlockTag', 8);
     lTag.ConfigureBlockBuffer(3, 3);
+    lEstimateSettings := lTag.EstimateSettings;
+    lEstimateSettings.PortionLength := 3;
+    lTag.EstimateSettings := lEstimateSettings;
 
     lTimes[0] := 10.0;
     lTimes[1] := 10.1;
@@ -186,7 +198,9 @@ begin
     lBlock := lTag.LastBlockSnapshot;
     PrintSnapshot('SNAPSHOT BlockTag last block', lBlock);
 
-    AssertEquals(lProbe.Count, 0, 'measurement blocks are not copied through EventBus');
+    AssertEquals(lProbe.Count, 1, 'one lightweight tail notification per measurement block');
+    AssertTrue(lProbe.LastBlockTailNotify, 'measurement event is marked as tail notification');
+    AssertEquals(lProbe.LastBlockArrayCount, 1, 'only the tail point is copied, not the measurement array');
     AssertEquals(lBlock.Count, 3, 'last block count');
     AssertEquals(lBlock.Times[0], 10.0, 'last block first time');
     AssertEquals(lBlock.Values[2], 4.0, 'last block last value');
@@ -246,6 +260,8 @@ begin
     AssertEquals(lBlock.Count, 8,
       'several small transport blocks fill sample-capacity ring');
 
+    lEstimateSettings.PortionLength := 1;
+    lTag.EstimateSettings := lEstimateSettings;
     lRegistry.PublishValue('BlockTag', 11.0, 9.0);
     lBlock := lTag.LastBlockSnapshot;
     AssertEquals(lBlock.Count, 1, 'single value updates last block');

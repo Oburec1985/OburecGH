@@ -106,8 +106,10 @@ begin
     DeleteFile(CRecorderExitRequestFile);
   fTimer.Enabled := False;
   RecorderDebugLog('Получен запрос штатного завершения RecorderLnx.');
-  FreeAndNil(MainForm);
-  Application.Terminate;
+  if MainForm <> nil then
+    MainForm.Close
+  else
+    Application.Terminate;
 end;
 {$ENDIF}
 

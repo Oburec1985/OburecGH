@@ -23,13 +23,13 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
       Caption = 'Рекордер'
       ClientHeight = 590
       ClientWidth = 917
-      object pnRecorderLeft: TPanel
+      object pnRecorderLeft: TScrollBox
         Left = 0
         Height = 590
         Top = 0
         Width = 637
         Align = alClient
-        BevelOuter = bvNone
+        BorderStyle = bsNone
         ClientHeight = 590
         ClientWidth = 637
         TabOrder = 0
@@ -334,8 +334,21 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Left = 10
             Height = 23
             Top = 36
-            Width = 526
+            Width = 486
             TabOrder = 0
+          end
+          object btnPublishMeraFiles: TButton
+            Left = 502
+            Height = 26
+            Top = 34
+            Width = 34
+            Caption = '⇧'
+            Hint = 'Опубликовать каталог Mera Files в сети'
+            ParentShowHint = False
+            ShowHint = True
+            Tag = 1
+            TabOrder = 1
+            OnClick = PublishRecordDirClick
           end
           object btnMeraFilesPathBrowse: TButton
             Left = 548
@@ -566,6 +579,36 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
           Width = 122
           Caption = 'Системное время'
           TabOrder = 2
+        end
+        object gbWorkstation: TGroupBox
+          Left = 8
+          Height = 96
+          Top = 438
+          Width = 264
+          Anchors = [akTop, akLeft, akRight]
+          Caption = 'Имя АРМ'
+          ClientHeight = 76
+          ClientWidth = 260
+          TabOrder = 3
+          object edWorkstationName: TEdit
+            Left = 8
+            Height = 23
+            Top = 8
+            Width = 244
+            Anchors = [akTop, akLeft, akRight]
+            MaxLength = 100
+            TabOrder = 0
+            OnChange = WorkstationNameChanged
+          end
+          object cbUseComputerName: TCheckBox
+            Left = 8
+            Height = 23
+            Top = 40
+            Width = 220
+            Caption = 'Читать из имени ПК'
+            TabOrder = 1
+            OnChange = UseComputerNameChanged
+          end
         end
       end
     end
@@ -814,12 +857,12 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
         TabOrder = 2
         object pnFilter: TPanel
           Left = 0
-          Height = 62
+          Height = 88
           Top = 0
           Width = 181
           Align = alTop
           BevelOuter = bvNone
-          ClientHeight = 62
+          ClientHeight = 88
           ClientWidth = 181
           TabOrder = 0
           object edSelectedChannelsFilter: TEdit
@@ -856,14 +899,34 @@ object RecorderSettingsDialog: TRecorderSettingsDialog
             Caption = 'Только виртуальные'
             TabOrder = 3
           end
+          object cbFilterChannelUnits: TCheckBox
+            Left = 8
+            Height = 22
+            Top = 61
+            Width = 112
+            Caption = 'По единицам'
+            Enabled = False
+            TabOrder = 4
+          end
+          object cmbChannelUnitCategory: TComboBox
+            Left = 124
+            Height = 23
+            Top = 60
+            Width = 48
+            Anchors = [akTop, akLeft, akRight]
+            Constraints.MinWidth = 45
+            Enabled = False
+            Style = csDropDownList
+            TabOrder = 5
+          end
         end
         object fSelectedChannelsGrid: TStringGrid
           Left = 0
-          Height = 474
-          Top = 62
+          Height = 448
+          Top = 88
           Width = 181
           Align = alClient
-          ColCount = 7
+          ColCount = 10
           DragMode = dmAutomatic
           FixedCols = 0
           MouseWheelOption = mwGrid

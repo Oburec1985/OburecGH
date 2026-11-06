@@ -20,6 +20,13 @@ type
     cbEnabled: TCheckBox;
     cbMirror: TCheckBox;
     cbUnderrun: TComboBox;
+    cbFeedbackSync: TCheckBox;
+    rgPhaseCalibrationMode: TRadioGroup;
+    btnFeedbackTag: TButton;
+    edFeedbackTag: TEdit;
+    edFeedbackTimeout, edFeedbackCalibrationDuration: TFloatSpinEdit;
+    gbCalibration: TGroupBox;
+    lblFeedbackTimeout, lblFeedbackCalibrationDuration: TLabel;
     edBlockSize: TSpinEdit;
     edEndpoint: TEdit;
     edInputSearch: TEdit;
@@ -50,6 +57,8 @@ type
     procedure MirrorTagClick(Sender: TObject);
     procedure OkClick(Sender: TObject);
     procedure DeviceChange(Sender: TObject);
+    procedure SelectFeedbackTag(Sender: TObject);
+    procedure FeedbackSyncClick(Sender: TObject);
   private
     fComponent: TRecorderDacComponent;
     fFactory: TRecorderDacComponentFactory;
@@ -58,6 +67,7 @@ type
     fEndpoints: TRecorderDacEndpoints;
     fInputSelectedId: TRecorderTagId;
     fMirrorSelectedId: TRecorderTagId;
+    fFeedbackSelectedId: TRecorderTagId;
     procedure FillTagList(AList: TListBox; const AFilter: string;
       ASelectedId: TRecorderTagId);
     function SelectedTag(AList: TListBox): TRecorderTag;
@@ -72,6 +82,8 @@ type
   end;
 
 implementation
+
+uses uRecorderTagPickerDialog;
 
 {$R *.lfm}
 
@@ -139,9 +151,26 @@ begin
   fInputSelectedId := fComponent.InputTagId;
   fMirrorSelectedId := fComponent.MirrorTagId;
   edMirrorName.Text := fComponent.MirrorTagName;
+  fFeedbackSelectedId := fComponent.FeedbackTagId;
+  edFeedbackTag.Text := fComponent.FeedbackTagName;
+  cbFeedbackSync.Checked := fComponent.SynchronizeByFeedback;
+  rgPhaseCalibrationMode.ItemIndex := Ord(fComponent.PhaseCalibrationMode);
+  FeedbackSyncClick(nil);
+  edFeedbackTimeout.Value := fComponent.FeedbackTimeoutSec;
+  edFeedbackCalibrationDuration.Value := fComponent.FeedbackCalibrationDurationSec;
   FillTagList(lbInput, '', fInputSelectedId);
   FillTagList(lbMirror, '', fMirrorSelectedId);
   UpdateMirrorControls;
+end;
+
+procedure TRecorderDacSettingsDialog.SelectFeedbackTag(Sender: TObject);
+var
+  lTag: TRecorderTag;
+begin
+  if not ShowRecorderTagPickerDialog(Self, fRegistry,
+    edFeedbackTag.Text, True, lTag, True) then Exit;
+  fFeedbackSelectedId := lTag.Id;
+  edFeedbackTag.Text := lTag.Name;
 end;
 
 procedure TRecorderDacSettingsDialog.DeviceChange(Sender: TObject);
@@ -234,6 +263,11 @@ begin
   if lTag <> nil then edMirrorName.Text := lTag.Name;
 end;
 
+procedure TRecorderDacSettingsDialog.FeedbackSyncClick(Sender: TObject);
+begin
+  rgPhaseCalibrationMode.Enabled := cbFeedbackSync.Checked;
+end;
+
 procedure TRecorderDacSettingsDialog.MirrorClick(Sender: TObject);
 begin
   UpdateMirrorControls;
@@ -254,6 +288,32 @@ var
   lTag: TRecorderTag;
 begin
   Result := False;
+  if cbFeedbackSync.Checked then
+  begin
+    lTag := nil;
+    if fRegistry <> nil then lTag := fRegistry.FindById(fFeedbackSelectedId);
+    if (lTag = nil) or lTag.IsVirtual or not RecorderTagCanProvideBlocks(lTag) then
+    begin
+      AMessage := 'Выберите аппаратный векторный тег обратной связи.';
+      Exit;
+    end;
+  end;
+  if edFeedbackTimeout.Value <= 0 then
+  begin
+    AMessage := 'Время ожидания должно быть больше нуля.';
+    Exit;
+  end;
+  if (edFeedbackCalibrationDuration.Value < 0.6) or
+    (edFeedbackCalibrationDuration.Value > 30) then
+  begin
+    AMessage := 'Время калибровочного сигнала должно быть от 0,6 до 30 с.';
+    Exit;
+  end;
+  if edFeedbackTimeout.Value < edFeedbackCalibrationDuration.Value + 0.5 then
+  begin
+    AMessage := 'Ожидание должно превышать время калибровочного сигнала минимум на 0,5 с.';
+    Exit;
+  end;
   if cbMirror.Checked then
   begin
     if fRegistry = nil then
@@ -305,6 +365,13 @@ begin
     fComponent.InputTagName := lInput.Name;
   end;
   fComponent.MirrorEnabled := cbMirror.Checked;
+  fComponent.FeedbackTagId := fFeedbackSelectedId;
+  fComponent.FeedbackTagName := edFeedbackTag.Text;
+  fComponent.SynchronizeByFeedback := cbFeedbackSync.Checked;
+  fComponent.PhaseCalibrationMode := TRecorderDacPhaseCalibrationMode(
+    rgPhaseCalibrationMode.ItemIndex);
+  fComponent.FeedbackTimeoutSec := edFeedbackTimeout.Value;
+  fComponent.FeedbackCalibrationDurationSec := edFeedbackCalibrationDuration.Value;
   if cbMirror.Checked then
   begin
     fComponent.MirrorTagName := Trim(edMirrorName.Text);

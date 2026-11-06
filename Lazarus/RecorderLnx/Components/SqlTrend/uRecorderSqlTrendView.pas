@@ -63,6 +63,7 @@ type
     fExportButton: TButton;
     fOpenMeraEventButton: TButton;
     fDisplayCombo: TComboBox;
+    fDisplayLabel: TLabel;
     fDisplayNextButton: TSpeedButton;
     fDisplayPrevButton: TSpeedButton;
     fCursorDragging: Boolean;
@@ -84,6 +85,7 @@ type
     fFullAxisMin: array of Double;
     fFullFromUtc, fFullToUtc: Double;
     fFromUtc, fToUtc: Double;
+    fAutoZoomYOnLoad: Boolean;
     fLoadPending: Boolean;
     fLegendColors: array of TColor;
     fLegendGrid: TStringGrid;
@@ -145,6 +147,9 @@ type
     procedure LegendGridDblClick({%H-}Sender: TObject);
     function LegendLineIndex(ARow: Integer): Integer;
     procedure LoadAxisControls;
+    procedure LayoutAxisControls;
+    procedure AutoZoomYAxis;
+    procedure RestoreConfiguredAxisRanges;
     procedure ResetZoomClick({%H-}Sender: TObject);
     procedure ReloadTimerTimer({%H-}Sender: TObject);
     procedure LiveReloadTimerTimer({%H-}Sender: TObject);
@@ -174,6 +179,7 @@ type
     procedure UpdateMeraEventButton;
   protected
     procedure Paint; override;
+    procedure Resize; override;
     procedure DblClick; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
@@ -553,10 +559,10 @@ begin
   fOpenMeraEventButton.Caption := 'Открыть в WinПОС';
   fOpenMeraEventButton.Enabled := False;
   fOpenMeraEventButton.OnClick := @OpenMeraEventButtonClick;
-  lLabel := TLabel.Create(fAxisPanel);
-  lLabel.Parent := fAxisPanel;
-  lLabel.SetBounds(6, 39, 92, 18);
-  lLabel.Caption := 'Отображение:';
+  fDisplayLabel := TLabel.Create(fAxisPanel);
+  fDisplayLabel.Parent := fAxisPanel;
+  fDisplayLabel.SetBounds(6, 39, 92, 18);
+  fDisplayLabel.Caption := 'Отображение:';
   fDisplayPrevButton := TSpeedButton.Create(fAxisPanel);
   fDisplayPrevButton.Parent := fAxisPanel;
   fDisplayPrevButton.SetBounds(100, 34, 28, 24);
@@ -577,6 +583,7 @@ begin
   fExportButton.SetBounds(424, 34, 110, 24);
   fExportButton.Caption := 'Экспорт';
   fExportButton.OnClick := @ExportButtonClick;
+  LayoutAxisControls;
   fReloadTimer := TTimer.Create(Self);
   fReloadTimer.Enabled := False;
   fReloadTimer.Interval := 50;
@@ -612,6 +619,81 @@ begin
   fAllEventsMenuItem.Caption := 'Показать все события';
   fAllEventsMenuItem.OnClick := @EventFilterClick;
   fEventPopup.Items.Add(fAllEventsMenuItem);
+end;
+
+procedure TRecorderSqlTrendView.LayoutAxisControls;
+const
+  CGap = 6;
+  CFirstRowTop = 3;
+  CSecondRowTop = 34;
+  CThirdRowTop = 64;
+var
+  lDeleteLeft, lOpenLeft, lButtonPadding, lDesiredHeight: Integer;
+  lUseThirdRow: Boolean;
+  lBitmap: TBitmap;
+begin
+  if (fAxisPanel = nil) or (fExportButton = nil) then Exit;
+  lBitmap := TBitmap.Create;
+  try
+  lBitmap.Canvas.Font.Assign(Font);
+  lButtonPadding := lBitmap.Canvas.TextWidth('MM');
+  fResetZoomButton.Width := Max(100,
+    lBitmap.Canvas.TextWidth(fResetZoomButton.Caption) + lButtonPadding);
+  fCursorButton.Width := Max(112,
+    lBitmap.Canvas.TextWidth(fCursorButton.Caption) + lButtonPadding);
+  fDeleteIntervalButton.Width := Max(138,
+    lBitmap.Canvas.TextWidth(fDeleteIntervalButton.Caption) + lButtonPadding);
+  fOpenMeraEventButton.Width := Max(154,
+    lBitmap.Canvas.TextWidth(fOpenMeraEventButton.Caption) + lButtonPadding);
+  fExportButton.Width := Max(110,
+    lBitmap.Canvas.TextWidth(fExportButton.Caption) + lButtonPadding);
+  finally
+    lBitmap.Free;
+  end;
+
+  fCursorButton.Left := fResetZoomButton.Left + fResetZoomButton.Width + CGap;
+  fCursorModeCombo.Left := fCursorButton.Left + fCursorButton.Width + CGap;
+  lDeleteLeft := fCursorModeCombo.Left + fCursorModeCombo.Width + CGap;
+  lOpenLeft := lDeleteLeft + fDeleteIntervalButton.Width + CGap;
+  lUseThirdRow := lOpenLeft + fOpenMeraEventButton.Width + CGap >
+    fAxisPanel.ClientWidth;
+  if lUseThirdRow then
+  begin
+    fDeleteIntervalButton.SetBounds(6, CSecondRowTop,
+      fDeleteIntervalButton.Width, 26);
+    fOpenMeraEventButton.SetBounds(
+      fDeleteIntervalButton.Left + fDeleteIntervalButton.Width + CGap,
+      CSecondRowTop, fOpenMeraEventButton.Width, 26);
+    fDisplayLabel.Top := CThirdRowTop + 5;
+    fDisplayPrevButton.Top := CThirdRowTop;
+    fDisplayCombo.Top := CThirdRowTop;
+    fDisplayNextButton.Top := CThirdRowTop;
+    fExportButton.Top := CThirdRowTop;
+    lDesiredHeight := 94;
+  end
+  else
+  begin
+    fDeleteIntervalButton.SetBounds(lDeleteLeft, CFirstRowTop,
+      fDeleteIntervalButton.Width, 26);
+    fOpenMeraEventButton.SetBounds(lOpenLeft, CFirstRowTop,
+      fOpenMeraEventButton.Width, 26);
+    fDisplayLabel.Top := CSecondRowTop + 5;
+    fDisplayPrevButton.Top := CSecondRowTop;
+    fDisplayCombo.Top := CSecondRowTop;
+    fDisplayNextButton.Top := CSecondRowTop;
+    fExportButton.Top := CSecondRowTop;
+    lDesiredHeight := 64;
+  end;
+  fExportButton.Left := fDisplayNextButton.Left +
+    fDisplayNextButton.Width + CGap;
+  if fAxisPanel.Height <> lDesiredHeight then
+    fAxisPanel.Height := lDesiredHeight;
+end;
+
+procedure TRecorderSqlTrendView.Resize;
+begin
+  inherited Resize;
+  LayoutAxisControls;
 end;
 
 procedure TRecorderSqlTrendView.EventFilterClick(Sender: TObject);
@@ -968,6 +1050,9 @@ begin
   if (fComponent = nil) or (fDisplayCombo.ItemIndex < 0) or
     (fDisplayCombo.ItemIndex = fComponent.ActiveDisplayIndex) then Exit;
   fComponent.ActiveDisplayIndex := fDisplayCombo.ItemIndex;
+  { The new display can contain another set of signals.  Calculate its Y
+    ranges only after the matching SQL data has arrived. }
+  fAutoZoomYOnLoad := True;
   Configure(fComponent, nil);
 end;
 
@@ -1266,8 +1351,8 @@ end;
 
 destructor TRecorderSqlTrendView.Destroy;
 begin
-  fReloadTimer.Enabled := False;
-  fLiveReloadTimer.Enabled := False;
+  if fReloadTimer <> nil then fReloadTimer.Enabled := False;
+  if fLiveReloadTimer <> nil then fLiveReloadTimer.Enabled := False;
   if fWorker <> nil then
   begin
     fWorker.fOwner := nil;
@@ -1308,14 +1393,17 @@ end;
 
 function TRecorderSqlTrendView.GetPlotRect: TRect;
 var
-  lColumnWidth, lColumnCount, lRowCount: Integer;
+  lColumnWidth, lColumnCount, lRowCount, lXAxisCaptionHeight: Integer;
 begin
   Result.Right := Max(65, fLegendSplitter.Left - 8);
   Result.Left := 112;
   GetAxisHeaderLayout(Result.Right, lColumnWidth, lColumnCount, lRowCount);
   Result.Top := 8 + lRowCount * (Canvas.TextHeight('Ag') + 2);
+  { The time axis uses one row for the interval ends and a second row for
+    intermediate ticks. Reserve their real font height instead of fixed pixels. }
+  lXAxisCaptionHeight := 2 * Canvas.TextHeight('Ag') + 14;
   Result.Bottom := Max(Result.Top + 1,
-    ClientHeight - fAxisPanel.Height - 42);
+    ClientHeight - fAxisPanel.Height - lXAxisCaptionHeight);
 end;
 
 function TRecorderSqlTrendView.AxisCaption(AIndex: Integer): string;
@@ -1415,6 +1503,59 @@ begin
   Invalidate;
 end;
 
+procedure TRecorderSqlTrendView.AutoZoomYAxis;
+var
+  I, lLineIndex, lAxisIndex: Integer;
+  lHasAxis: array of Boolean;
+  lRange, lPadding: Double;
+begin
+  if (fComponent = nil) or (fComponent.ActiveDisplay = nil) or
+    (Length(fAxisMin) = 0) then Exit;
+  SetLength(lHasAxis, Length(fAxisMin));
+  for I := 0 to High(fPoints) do
+  begin
+    lLineIndex := LineIndex(fPoints[I].SignalName);
+    if (lLineIndex < 0) or
+      (not fComponent.ActiveDisplay.Lines[lLineIndex].Visible) then Continue;
+    lAxisIndex := EnsureRange(
+      fComponent.ActiveDisplay.Lines[lLineIndex].AxisIndex, 0,
+      High(fAxisMin));
+    if not lHasAxis[lAxisIndex] then
+    begin
+      fFullAxisMin[lAxisIndex] := fPoints[I].Value;
+      fFullAxisMax[lAxisIndex] := fPoints[I].Value;
+      lHasAxis[lAxisIndex] := True;
+    end
+    else
+    begin
+      fFullAxisMin[lAxisIndex] := Min(fFullAxisMin[lAxisIndex], fPoints[I].Value);
+      fFullAxisMax[lAxisIndex] := Max(fFullAxisMax[lAxisIndex], fPoints[I].Value);
+    end;
+  end;
+  for I := 0 to High(fAxisMin) do
+    if lHasAxis[I] then
+    begin
+      lRange := fFullAxisMax[I] - fFullAxisMin[I];
+      if lRange > 0 then
+        lPadding := lRange * 0.10
+      else
+        lPadding := Max(1.0, Abs(fFullAxisMin[I]) * 0.10);
+      fAxisMin[I] := fFullAxisMin[I] - lPadding;
+      fAxisMax[I] := fFullAxisMax[I] + lPadding;
+    end;
+  LoadAxisControls;
+  Invalidate;
+end;
+
+procedure TRecorderSqlTrendView.RestoreConfiguredAxisRanges;
+begin
+  { A chart double click means "return to the preset scale".  The preset is
+    stored in the active display axes and is intentionally not overwritten by
+    automatic or mouse zoom. }
+  SyncAxisRangesFromComponent(True);
+  Invalidate;
+end;
+
 procedure TRecorderSqlTrendView.ResetZoomClick(Sender: TObject);
 var
   I, lLineIndex, lAxisIndex: Integer;
@@ -1507,7 +1648,7 @@ end;
 procedure TRecorderSqlTrendView.DblClick;
 begin
   inherited DblClick;
-  ResetZoomClick(Self);
+  RestoreConfiguredAxisRanges;
 end;
 
 procedure TRecorderSqlTrendView.RefreshControl(ATagRegistry: TRecorderTagRegistry;
@@ -1678,6 +1819,11 @@ begin
       fFullFromUtc := AWorker.fFromUtc;
     fFullToUtc := AWorker.fToUtc;
     ClampCurrentDateXRange;
+    if fAutoZoomYOnLoad then
+    begin
+      fAutoZoomYOnLoad := False;
+      AutoZoomYAxis;
+    end;
   end;
   if fLoadPending then fReloadTimer.Enabled := True;
   UpdateDeleteIntervalButton;

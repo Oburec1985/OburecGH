@@ -160,6 +160,7 @@ type
     SignalUnitName: string;
     Description: string;
     FrequencyHz: Double;
+    LastFrequencyHz: Double;
     ValueFormatName: string;
     StartTimeSec: Double;
     ExplicitXRequired: Boolean;
@@ -715,19 +716,75 @@ procedure EnsureMeraTimeStream(ASignal: TRecorderMeraSignalWriter;
   const AFrameDir: string);
 var
   I: Int64;
-  lTime: Double;
+  lTimes: array[0..8191] of Double;
+  lTimeCount: Integer;
+  lPortions: TStringList;
+  lPortion, lSplit: Integer;
+  lBaseIndex, lNextIndex: Int64;
+  lBaseTime, lNextTime: Double;
+  lLine: string;
+  lFormat: TFormatSettings;
+  function ReadNextPortion: Boolean;
+  begin
+    Result := False;
+    while lPortion < lPortions.Count do
+    begin
+      lLine := Trim(lPortions[lPortion]);
+      Inc(lPortion);
+      lSplit := Pos(' ', lLine);
+      if (lSplit > 0) and
+        TryStrToFloat(Copy(lLine, 1, lSplit - 1), lNextTime, lFormat) and
+        TryStrToInt64(Trim(Copy(lLine, lSplit + 1, MaxInt)), lNextIndex) and
+        (lNextIndex >= 0) and (lNextIndex < ASignal.SampleCount) then
+        Exit(True);
+    end;
+  end;
 begin
   if ASignal.TimeStream <> nil then
     Exit;
 
   ASignal.TimeStream := TFileStream.Create(MeraFileSystemName(AFrameDir +
     ASignal.SectionName + '.x'), fmCreate);
-  if (ASignal.SampleCount > 0) and (ASignal.FrequencyHz > 0) then
+  if (ASignal.SampleCount <= 0) or (ASignal.FrequencyHz <= 0) then Exit;
+  { A later rate change upgrades this signal to explicit X. Reconstruct all
+    earlier constant-rate portions with their own start, not one continuous
+    sequence which would erase pauses/restarts already recorded in .prt. }
+  lPortions := TStringList.Create;
+  try
+    if ASignal.PrtStream <> nil then
+    begin
+      ASignal.PrtStream.Position := 0;
+      lPortions.LoadFromStream(ASignal.PrtStream);
+      ASignal.PrtStream.Position := ASignal.PrtStream.Size;
+    end;
+    lFormat := DefaultFormatSettings;
+    lFormat.DecimalSeparator := '.';
+    lPortion := 0;
+    lBaseTime := ASignal.StartTimeSec;
+    lBaseIndex := 0;
+    lTimeCount := 0;
+    if not ReadNextPortion then lNextIndex := High(Int64);
     for I := 0 to ASignal.SampleCount - 1 do
     begin
-      lTime := ASignal.StartTimeSec + I / ASignal.FrequencyHz;
-      ASignal.TimeStream.WriteBuffer(lTime, SizeOf(lTime));
+      while I >= lNextIndex do
+      begin
+        lBaseTime := lNextTime;
+        lBaseIndex := lNextIndex;
+        if not ReadNextPortion then lNextIndex := High(Int64);
+      end;
+      lTimes[lTimeCount] := lBaseTime + (I - lBaseIndex) / ASignal.FrequencyHz;
+      Inc(lTimeCount);
+      if lTimeCount = Length(lTimes) then
+      begin
+        ASignal.TimeStream.WriteBuffer(lTimes[0], lTimeCount * SizeOf(Double));
+        lTimeCount := 0;
+      end;
     end;
+    if lTimeCount > 0 then
+      ASignal.TimeStream.WriteBuffer(lTimes[0], lTimeCount * SizeOf(Double));
+  finally
+    lPortions.Free;
+  end;
 end;
 
 { TRecorderMeraTagWriter.RequireOpen
@@ -797,9 +854,11 @@ begin
       if (Trim(lSignal.UtsChannelName) <> '') and
         (FindSignal(lSignal.UtsChannelName) <> nil) then
         lText.Add('UTS_Channel=' + lSignal.UtsChannelName);
-      { Original Recorder keeps the nominal channel frequency in the MERA
-        descriptor even for VT_UTS/VT_PAIR signals that also have XFile. }
-      if lSignal.FrequencyHz > 0 then
+      { Keep the final applied rate in the descriptor. FrequencyHz remains
+        the original implicit clock used to backfill older samples into X. }
+      if lSignal.LastFrequencyHz > 0 then
+        lText.Add('Freq=' + FloatToMera(lSignal.LastFrequencyHz))
+      else if lSignal.FrequencyHz > 0 then
         lText.Add('Freq=' + FloatToMera(lSignal.FrequencyHz));
       if not lSignal.ExplicitXRequired then
       begin
@@ -928,6 +987,9 @@ begin
     if (Trim(lSignal.ValueFormatName) = '') or SameText(lSignal.ValueFormatName, 'R8') then
       lSignal.ValueFormatName := ExtractMeraValueFormat(ADescription);
     if AForceExplicitX or
+      ((APollFrequencyHz > 0) and (lSignal.FrequencyHz > 0) and
+       (Abs(APollFrequencyHz - lSignal.FrequencyHz) >
+        1E-10 * lSignal.FrequencyHz)) or
       MeraBlockHasExplicitX(ATimes, ACount, lSignal.FrequencyHz) then
       lSignal.ExplicitXRequired := True;
     if (Trim(lSignal.SensorCalibrationName) = '') and
@@ -972,6 +1034,7 @@ begin
       lSignal.TimeStream.WriteBuffer(ATimes[0], ACount * SizeOf(Double));
     end;
     Inc(lSignal.SampleCount, ACount);
+    if APollFrequencyHz > 0 then lSignal.LastFrequencyHz := APollFrequencyHz;
     lSignal.LastTimeSec := ATimes[ACount - 1];
     lSignal.HasLastTime := True;
     lSignal.LastBlockBeginTimeSec := ATimes[0];

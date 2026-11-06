@@ -31,6 +31,10 @@ type
 procedure StartHostAgentRequest(const AHost: string; APort: Word;
   const AToken: string; AAction: TCoordinatorHostAgentAction;
   AOnComplete: TCoordinatorHostAgentResultEvent);
+function HostAgentHttpRequest(const AHost: string; APort: Word;
+  const AToken, APath: string; APost: Boolean; ATimeoutMs: Cardinal;
+  out AResponse: string; out AHttpStatus: Integer;
+  out AError: string): Boolean;
 
 implementation
 
@@ -237,17 +241,22 @@ end;
 procedure TCoordinatorHostAgentTask.Execute;
 var
   lPath: string;
+  lTimeoutMs: Integer;
 begin
+  lTimeoutMs := 1500;
   case fAction of
     haaStatus:
       lPath := '/api/v1/status';
     haaStartRecorder:
       lPath := '/api/v1/recorder/start';
     haaShutdown:
+    begin
       lPath := '/api/v1/system/shutdown';
+      lTimeoutMs := 20000; // HostAgent waits up to 15 seconds for Recorder.
+    end;
   end;
   HostAgentHttpRequest(fHost, fPort, fToken, lPath,
-    fAction <> haaStatus, 1500, fResponse, fHttpStatus, fError);
+    fAction <> haaStatus, lTimeoutMs, fResponse, fHttpStatus, fError);
   TThread.Queue(Self, @Deliver);
 end;
 

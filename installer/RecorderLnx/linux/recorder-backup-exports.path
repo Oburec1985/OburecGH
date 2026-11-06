@@ -1,0 +1,11 @@
+[Unit]
+Description=Watch RecorderLnx application and storage settings
+
+[Path]
+PathChanged=/opt/mera/RecorderLnx/RecorderLnx.paths.ini
+PathChanged=/srv/recorderlnx/MeraFiles/RecorderLnx/app.ini
+PathChanged=/srv/recorderlnx/MeraFiles/RecorderLnx/storage.ini
+Unit=recorder-backup-exports.service
+
+[Install]
+WantedBy=multi-user.target

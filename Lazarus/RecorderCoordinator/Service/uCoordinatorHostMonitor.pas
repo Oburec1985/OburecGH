@@ -12,22 +12,30 @@ type
   TCoordinatorHostMonitor = class(TThread)
   private
     fModel: TCoordinatorModel;
+    fAgentPort: Word;
+    fAgentToken: string;
     function PingHost(const AAddress: string): Boolean;
     function WaitUntilNextCycle(AMilliseconds: Cardinal): Boolean;
     procedure ProbeHosts;
   protected
     procedure Execute; override;
   public
-    constructor Create(AModel: TCoordinatorModel);
+    constructor Create(AModel: TCoordinatorModel; AAgentPort: Word;
+      const AAgentToken: string);
   end;
 
 implementation
 
-constructor TCoordinatorHostMonitor.Create(AModel: TCoordinatorModel);
+uses uCoordinatorHostAgentClient;
+
+constructor TCoordinatorHostMonitor.Create(AModel: TCoordinatorModel;
+  AAgentPort: Word; const AAgentToken: string);
 begin
   inherited Create(True);
   FreeOnTerminate := False;
   fModel := AModel;
+  fAgentPort := AAgentPort;
+  fAgentToken := AAgentToken;
 end;
 
 function TCoordinatorHostMonitor.PingHost(const AAddress: string): Boolean;
@@ -81,8 +89,9 @@ end;
 
 procedure TCoordinatorHostMonitor.ProbeHosts;
 var
-  lAddress: string;
-  lIndex: Integer;
+  lAddress, lResponse, lError: string;
+  lIndex, lHttpStatus: Integer;
+  lAgentReachable: Boolean;
   lTargets: TJSONArray;
 begin
   lTargets := fModel.HostProbeTargets;
@@ -91,8 +100,12 @@ begin
     begin
       if Terminated then Exit;
       lAddress := lTargets.Objects[lIndex].Get('address', '');
-      fModel.MarkPcReachabilityChecking(lAddress);
       fModel.ApplyPcReachability(lAddress, PingHost(lAddress), Now);
+      if Terminated then Exit;
+      lAgentReachable := HostAgentHttpRequest(lAddress, fAgentPort,
+        fAgentToken, '/api/v1/status', False, 1500, lResponse, lHttpStatus,
+        lError);
+      fModel.ApplyAgentReachability(lAddress, lAgentReachable, Now);
     end;
   finally
     lTargets.Free;

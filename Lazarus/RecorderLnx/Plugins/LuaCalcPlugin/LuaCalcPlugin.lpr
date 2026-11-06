@@ -4,7 +4,7 @@ library LuaCalcPlugin;
 {$codepage UTF8}
 
 uses
-  SysUtils, uRecorderPluginApi, uLuaCalcEngine, uLuaCalcPlugin;
+  SysUtils, uRecorderPluginApi, uRecorderPluginFramework, uLuaPluginAdapter;
 
 function GetPluginType: LongInt; cdecl;
 begin
@@ -25,39 +25,11 @@ begin
   AInfo.Version := 1;
 end;
 
-function CreatePluginClass: Pointer; cdecl;
-begin
-  Result := TLuaCalcPlugin.Create;
-end;
-
-function DestroyPluginClass(AInstance: Pointer): LongInt; cdecl;
-begin
-  TLuaCalcPlugin(AInstance).Free;
-  Result := 0;
-end;
-
-function PluginCreate(AInstance: Pointer;
-  AHostApi: PRecorderPluginHostApi): LongBool; cdecl;
-begin
-  Result := (AInstance <> nil) and TLuaCalcPlugin(AInstance).Initialize(AHostApi);
-end;
-
-function PluginNotify(AInstance: Pointer; AEvent: LongInt;
-  AData: Pointer): LongBool; cdecl;
-begin
-  Result := (AInstance <> nil) and TLuaCalcPlugin(AInstance).Notify(AEvent);
-end;
-
-function PluginClose(AInstance: Pointer): LongBool; cdecl;
-begin
-  Result := (AInstance <> nil);
-  if Result then TLuaCalcPlugin(AInstance).Close;
-end;
-
 exports
   GetPluginType, GetPluginDescription, GetPluginInfo,
   CreatePluginClass, DestroyPluginClass, PluginCreate, PluginNotify,
   PluginClose;
 
 begin
+  ConfigurePluginFramework(@CreateLuaPlugin);
 end.

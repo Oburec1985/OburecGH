@@ -4,10 +4,11 @@ library SampleInfoPlugin;
 {$codepage UTF8}
 
 uses
-  Interfaces, Forms, SysUtils, uRecorderPluginApi, uOscPluginV2;
+  Interfaces, Forms, SysUtils, uRecorderPluginApi,
+  uRecorderPluginFramework, uCreateComponents;
 
 const
-  PluginDescription: PAnsiChar = 'Self-contained Oscillograph, visual ABI 2.7';
+  PluginDescription: PAnsiChar = 'Self-contained Oscillograph, visual ABI 2.8';
 
 function GetPluginType: LongInt; cdecl;
 begin
@@ -30,12 +31,15 @@ begin
 end;
 
 exports
-  RecorderVisualGetDescriptorV2 name 'RecorderVisualGetDescriptorV2',
+  RecorderVisualGetDescriptorV2,
+  RecorderVisualUsesPluginNotifications,
+  CreatePluginClass, DestroyPluginClass, PluginCreate, PluginNotify, PluginClose,
   GetPluginType name 'GetPluginType',
   GetPluginDescription name 'GetPluginDescription',
   GetPluginInfo name 'GetPluginInfo';
 
 begin
+  ConfigureFramework(@CreateComponents);
   Application.Initialize;
   Application.ShowMainForm := False;
 end.

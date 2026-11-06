@@ -66,6 +66,16 @@ type
       out AReadback: string): TRcOperationResult;
   end;
 
+  IPxiMx248RuntimeSampleRateSettings = interface
+    ['{DCC7E647-45AF-4DDA-A5B2-15437433E923}']
+    function RuntimeSetSampleRate(AHz: Double; out AReadback: string): TRcOperationResult;
+  end;
+
+  IPxiMx248SampleRateDevice = interface
+    ['{BC210681-C09A-4879-AAC6-E40503474DD4}']
+    function SetSampleRate(AHz: Double; out AReadback: string): TRcOperationResult;
+  end;
+
 procedure PreparePxiMx248Block(var ABlock: TRcAcquisitionBlock;
   AChannelCount, ASampleCapacity: Integer);
 

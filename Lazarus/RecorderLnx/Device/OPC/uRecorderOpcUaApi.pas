@@ -20,13 +20,20 @@ function RecorderOpcUaLastError(AHandle: TRecorderOpcUaHandle): string;
 function RecorderOpcUaClientCreate(const AEndpoint, AUserName,
   APassword: string; APublishingIntervalMs, ASessionTimeoutMs: Cardinal;
   ARequestTimeoutMs: Cardinal = 4000;
-  ATimestampsToReturn: Cardinal = 1): TRecorderOpcUaHandle;
+  ATimestampsToReturn: Cardinal = 1;
+  ABrowseTimeoutMs: Cardinal = 180000): TRecorderOpcUaHandle;
 function RecorderOpcUaClientAddNode(AHandle: TRecorderOpcUaHandle;
   const ANodeId: string; AReadable: Boolean = True;
-  AWritable: Boolean = False; const ADataTypeNodeId: string = ''): Integer;
+  AWritable: Boolean = False; const ADataTypeNodeId: string = '';
+  AIsMessage: Boolean = False): Integer;
 function RecorderOpcUaClientConnect(AHandle: TRecorderOpcUaHandle): Boolean;
+function RecorderOpcUaClientStartSubscription(
+  AHandle: TRecorderOpcUaHandle; APublishingIntervalMs: Cardinal): Boolean;
 function RecorderOpcUaClientBrowse(AHandle: TRecorderOpcUaHandle;
   ALines: TStrings; AMaxReferencesPerNode: Cardinal = 100): Boolean;
+function RecorderOpcUaClientBrowseChildren(AHandle: TRecorderOpcUaHandle;
+  const ANodeId, ABrowsePath: string; ALines: TStrings;
+  AMaxReferencesPerNode: Cardinal = 100): Boolean;
 function RecorderOpcUaClientIterate(AHandle: TRecorderOpcUaHandle;
   ATimeoutMs: Cardinal; AMaxNodesPerRead: Cardinal = 100): Boolean;
 function RecorderOpcUaClientReadChanged(AHandle: TRecorderOpcUaHandle;
@@ -56,7 +63,10 @@ procedure RecorderOpcUaServerDestroy(AHandle: TRecorderOpcUaHandle);
 implementation
 
 uses
-  Contnrs, Math, uRecorderOpcUaBinaryClient;
+  Contnrs, Math, uRecorderOpcUaBinaryClient, uRecorderDebugLog;
+
+const
+  CRecorderOpcUaBadTooManyOperations = $80100000;
 
 type
   TRecorderOpcUaStringMatrix = array of
@@ -88,9 +98,10 @@ type
     NumericChunks: TRecorderOpcUaStringMatrix;
     StringChunks: TRecorderOpcUaStringMatrix;
     ChunkSize: Cardinal;
+    SubscriptionEnabled: Boolean;
     constructor Create(const AEndpoint, AUserName, APassword: string;
       ASessionTimeoutMs, ARequestTimeoutMs,
-      ATimestampsToReturn: Cardinal);
+      ATimestampsToReturn, ABrowseTimeoutMs: Cardinal);
     destructor Destroy; override;
   end;
 
@@ -99,11 +110,12 @@ type
 
 constructor TRecorderOpcUaClientHandle.Create(const AEndpoint, AUserName,
   APassword: string; ASessionTimeoutMs, ARequestTimeoutMs,
-  ATimestampsToReturn: Cardinal);
+  ATimestampsToReturn, ABrowseTimeoutMs: Cardinal);
 begin
   inherited Create;
   Client := TRecorderOpcUaBinaryClient.Create(AEndpoint, AUserName, APassword,
-    ASessionTimeoutMs, ARequestTimeoutMs, ATimestampsToReturn);
+    ASessionTimeoutMs, ARequestTimeoutMs, ATimestampsToReturn,
+    ABrowseTimeoutMs);
   NodeIds := TStringList.Create;
 end;
 
@@ -161,10 +173,11 @@ end;
 function RecorderOpcUaClientCreate(const AEndpoint, AUserName,
   APassword: string; APublishingIntervalMs,
   ASessionTimeoutMs, ARequestTimeoutMs,
-  ATimestampsToReturn: Cardinal): TRecorderOpcUaHandle;
+  ATimestampsToReturn, ABrowseTimeoutMs: Cardinal): TRecorderOpcUaHandle;
 begin
   Result := TRecorderOpcUaClientHandle.Create(AEndpoint, AUserName, APassword,
-    ASessionTimeoutMs, ARequestTimeoutMs, ATimestampsToReturn);
+    ASessionTimeoutMs, ARequestTimeoutMs, ATimestampsToReturn,
+    ABrowseTimeoutMs);
   if APublishingIntervalMs = 0 then
     TRecorderOpcUaClientHandle(Result).ErrorText :=
       'Publishing interval must be greater than zero';
@@ -172,7 +185,7 @@ end;
 
 function RecorderOpcUaClientAddNode(AHandle: TRecorderOpcUaHandle;
   const ANodeId: string; AReadable: Boolean; AWritable: Boolean;
-  const ADataTypeNodeId: string): Integer;
+  const ADataTypeNodeId: string; AIsMessage: Boolean): Integer;
 var
   lHandle: TRecorderOpcUaClientHandle;
 begin
@@ -194,7 +207,8 @@ begin
   lHandle.Readable[Result] := AReadable;
   lHandle.Writable[Result] := AWritable;
   lHandle.DataTypeNodeIds[Result] := Trim(ADataTypeNodeId);
-  lHandle.IsStringNode[Result] := IsStringDataType(ADataTypeNodeId);
+  lHandle.IsStringNode[Result] := AIsMessage or
+    IsStringDataType(ADataTypeNodeId);
   if not AReadable then Exit;
   if lHandle.IsStringNode[Result] then
   begin
@@ -289,6 +303,36 @@ begin
   lHandle.ErrorText := lHandle.Client.ErrorText;
 end;
 
+function RecorderOpcUaClientStartSubscription(
+  AHandle: TRecorderOpcUaHandle; APublishingIntervalMs: Cardinal): Boolean;
+var
+  I, LCount, LPos: Integer;
+  lHandle: TRecorderOpcUaClientHandle;
+  lNodeIds: uRecorderOpcUaBinaryClient.TRecorderOpcUaStringArray;
+  lClientHandles: uRecorderOpcUaBinaryClient.TRecorderOpcUaCardinalArray;
+begin
+  Result := False;
+  if AHandle = nil then Exit;
+  lHandle := TRecorderOpcUaClientHandle(AHandle);
+  LCount := 0;
+  for I := 0 to High(lHandle.Readable) do
+    if lHandle.Readable[I] then Inc(LCount);
+  SetLength(lNodeIds, LCount);
+  SetLength(lClientHandles, LCount);
+  LPos := 0;
+  for I := 0 to High(lHandle.Readable) do
+    if lHandle.Readable[I] then
+    begin
+      lNodeIds[LPos] := lHandle.NodeIds[I];
+      lClientHandles[LPos] := Cardinal(I + 1);
+      Inc(LPos);
+    end;
+  Result := lHandle.Client.StartSubscription(lNodeIds, lClientHandles,
+    APublishingIntervalMs);
+  lHandle.SubscriptionEnabled := Result;
+  lHandle.ErrorText := lHandle.Client.ErrorText;
+end;
+
 function RecorderOpcUaClientBrowse(AHandle: TRecorderOpcUaHandle;
   ALines: TStrings; AMaxReferencesPerNode: Cardinal): Boolean;
 var
@@ -337,75 +381,200 @@ begin
   end;
 end;
 
+function RecorderOpcUaClientBrowseChildren(AHandle: TRecorderOpcUaHandle;
+  const ANodeId, ABrowsePath: string; ALines: TStrings;
+  AMaxReferencesPerNode: Cardinal): Boolean;
+var
+  I, J: Integer;
+  lHandle: TRecorderOpcUaClientHandle;
+  lNode: TRecorderOpcUaDiscoveredNode;
+  lNodes: TObjectList;
+begin
+  Result := False;
+  if (AHandle = nil) or (ALines = nil) then Exit;
+  lHandle := TRecorderOpcUaClientHandle(AHandle);
+  lNodes := TObjectList.Create(True);
+  try
+    Result := lHandle.Client.BrowseChildren(ANodeId, ABrowsePath, lNodes,
+      AMaxReferencesPerNode);
+    lHandle.ErrorText := lHandle.Client.ErrorText;
+    if not Result then Exit;
+    ALines.BeginUpdate;
+    try
+      ALines.Clear;
+      for I := 0 to lNodes.Count - 1 do
+      begin
+        lNode := TRecorderOpcUaDiscoveredNode(lNodes[I]);
+        ALines.Add(lNode.NodeId + #9 + lNode.DisplayName + #9 +
+          lNode.BrowsePath + #9 + lNode.TypeDefinition + #9 +
+          IntToStr(lNode.AccessLevel) + #9 + IntToStr(lNode.UserAccessLevel) +
+          #9 + lNode.DataTypeNodeId + #9 + lNode.DataTypeName + #9 +
+          StringReplace(StringReplace(StringReplace(lNode.ValueText, #9, ' ',
+          [rfReplaceAll]), #13, ' ', [rfReplaceAll]), #10, ' ', [rfReplaceAll]) +
+          #9 + IntToStr(lNode.ValueRank) + #9 +
+          BoolToStr(lNode.Historizing, True) + #9 +
+          BoolToStr(lNode.CanHistoryRead, True) + #9 +
+          BoolToStr(lNode.CanHistoryWrite, True) + #9 +
+          IntToStr(lNode.NodeClass) + #9 + lNode.ValueTimestamp + #9 +
+          IntToStr(lNode.ArrayValues.Count));
+        for J := 0 to lNode.ArrayValues.Count - 1 do
+          ALines[ALines.Count - 1] := ALines[ALines.Count - 1] + #9 +
+            StringReplace(StringReplace(StringReplace(lNode.ArrayValues[J],
+            #9, ' ', [rfReplaceAll]), #13, ' ', [rfReplaceAll]), #10, ' ',
+            [rfReplaceAll]);
+      end;
+    finally
+      ALines.EndUpdate;
+    end;
+  finally
+    lNodes.Free;
+  end;
+end;
+
 function RecorderOpcUaClientIterate(AHandle: TRecorderOpcUaHandle;
   ATimeoutMs: Cardinal; AMaxNodesPerRead: Cardinal): Boolean;
 var
   I, J, lStart, lChunkCount, lIndex: Integer;
+  lRetryWithSmallerChunk: Boolean;
+  lChunkError: string;
   lHandle: TRecorderOpcUaClientHandle;
   lValues, lTimes: uRecorderOpcUaBinaryClient.TRecorderOpcUaDoubleArray;
   lStringValues: uRecorderOpcUaBinaryClient.TRecorderOpcUaStringArray;
   lQualities: TRecorderOpcUaCardinalArray;
+  lNotifications: uRecorderOpcUaBinaryClient.TRecorderOpcUaDataChangeArray;
+  lNotification: uRecorderOpcUaBinaryClient.TRecorderOpcUaDataChange;
+  lTextValue: string;
 begin
   Result := False;
   if AHandle = nil then Exit;
   lHandle := TRecorderOpcUaClientHandle(AHandle);
+  if lHandle.SubscriptionEnabled then
+  begin
+    if not lHandle.Client.ReceiveSubscriptionChanges(lNotifications) then
+    begin
+      lHandle.ErrorText := lHandle.Client.ErrorText;
+      Exit;
+    end;
+    for I := 0 to High(lNotifications) do
+    begin
+      lNotification := lNotifications[I];
+      if (lNotification.Status and $80000000) <> 0 then Continue;
+      if (lNotification.ClientHandle = 0) or
+        (lNotification.ClientHandle > Cardinal(Length(lHandle.Values))) then
+        Continue;
+      lIndex := Integer(lNotification.ClientHandle) - 1;
+      if lHandle.IsStringNode[lIndex] then
+      begin
+        if lNotification.IsString then
+          lTextValue := lNotification.StringValue
+        else
+          lTextValue := FloatToStr(lNotification.NumericValue);
+        lHandle.Changed[lIndex] := (not lHandle.HasValues[lIndex]) or
+          (lHandle.StringValues[lIndex] <> lTextValue) or
+          (not SameValue(lHandle.Times[lIndex], lNotification.TimestampSec)) or
+          (lHandle.Qualities[lIndex] <> lNotification.Status);
+        lHandle.StringValues[lIndex] := lTextValue;
+      end
+      else
+      begin
+        if lNotification.IsString then Continue;
+        lHandle.Changed[lIndex] := (not lHandle.HasValues[lIndex]) or
+          (not SameValue(lHandle.Values[lIndex], lNotification.NumericValue));
+        lHandle.Values[lIndex] := lNotification.NumericValue;
+      end;
+      lHandle.Times[lIndex] := lNotification.TimestampSec;
+      lHandle.Qualities[lIndex] := lNotification.Status;
+      lHandle.HasValues[lIndex] := True;
+    end;
+    lHandle.ErrorText := lHandle.Client.ErrorText;
+    Exit(True);
+  end;
   if AMaxNodesPerRead < 1 then AMaxNodesPerRead := 1;
-  if lHandle.ChunkSize <> AMaxNodesPerRead then
-  begin
-    BuildReadChunks(lHandle.NumericNodeIds, AMaxNodesPerRead,
-      lHandle.NumericChunks);
-    BuildReadChunks(lHandle.StringNodeIds, AMaxNodesPerRead,
-      lHandle.StringChunks);
+  if lHandle.ChunkSize = 0 then
+    lHandle.ChunkSize := AMaxNodesPerRead
+  else if AMaxNodesPerRead < lHandle.ChunkSize then
     lHandle.ChunkSize := AMaxNodesPerRead;
-  end;
-  lStart := 0;
-  for I := 0 to High(lHandle.NumericChunks) do
-  begin
-    lChunkCount := Length(lHandle.NumericChunks[I]);
-    if not lHandle.Client.ReadDoubles(lHandle.NumericChunks[I],
-      lValues, lTimes, lQualities) then
+  repeat
+    lRetryWithSmallerChunk := False;
+    BuildReadChunks(lHandle.NumericNodeIds, lHandle.ChunkSize,
+      lHandle.NumericChunks);
+    BuildReadChunks(lHandle.StringNodeIds, lHandle.ChunkSize,
+      lHandle.StringChunks);
+    lStart := 0;
+    for I := 0 to High(lHandle.NumericChunks) do
     begin
-      lHandle.ErrorText := lHandle.Client.ErrorText;
-      if lHandle.ErrorText = '' then
-        lHandle.ErrorText := 'OPC UA batch read failed';
-      Exit;
+      lChunkCount := Length(lHandle.NumericChunks[I]);
+      if not lHandle.Client.ReadDoubles(lHandle.NumericChunks[I],
+        lValues, lTimes, lQualities) then
+      begin
+        lChunkError := lHandle.Client.ErrorText;
+        if (Pos('status 0x' + IntToHex(
+          CRecorderOpcUaBadTooManyOperations, 8), LowerCase(lChunkError)) > 0)
+          and (lHandle.ChunkSize > 1) then
+        begin
+          lHandle.ChunkSize := Max(1, lHandle.ChunkSize div 2);
+          RecorderDebugLog(Format(
+            '[OPC UA] server rejected ReadRequest size; retrying with %d nodes: %s',
+            [lHandle.ChunkSize, lChunkError]));
+          lRetryWithSmallerChunk := True;
+          Break;
+        end;
+        lHandle.ErrorText := lChunkError;
+        if lHandle.ErrorText = '' then
+          lHandle.ErrorText := 'OPC UA batch read failed';
+        Exit;
+      end;
+      for J := 0 to lChunkCount - 1 do
+      begin
+        lIndex := lHandle.NumericIndexes[lStart + J];
+        lHandle.Changed[lIndex] := (not lHandle.HasValues[lIndex]) or
+          (not SameValue(lHandle.Values[lIndex], lValues[J]));
+        lHandle.Values[lIndex] := lValues[J];
+        lHandle.Times[lIndex] := lTimes[J];
+        lHandle.Qualities[lIndex] := lQualities[J];
+        lHandle.HasValues[lIndex] := True;
+      end;
+      Inc(lStart, lChunkCount);
     end;
-    for J := 0 to lChunkCount - 1 do
+    if lRetryWithSmallerChunk then Continue;
+    lStart := 0;
+    for I := 0 to High(lHandle.StringChunks) do
     begin
-      lIndex := lHandle.NumericIndexes[lStart + J];
-      lHandle.Changed[lIndex] := (not lHandle.HasValues[lIndex]) or
-        (not SameValue(lHandle.Values[lIndex], lValues[J]));
-      lHandle.Values[lIndex] := lValues[J];
-      lHandle.Times[lIndex] := lTimes[J];
-      lHandle.Qualities[lIndex] := lQualities[J];
-      lHandle.HasValues[lIndex] := True;
+      lChunkCount := Length(lHandle.StringChunks[I]);
+      if not lHandle.Client.ReadStrings(lHandle.StringChunks[I],
+        lStringValues, lTimes, lQualities) then
+      begin
+        lChunkError := lHandle.Client.ErrorText;
+        if (Pos('status 0x' + IntToHex(
+          CRecorderOpcUaBadTooManyOperations, 8), LowerCase(lChunkError)) > 0)
+          and (lHandle.ChunkSize > 1) then
+        begin
+          lHandle.ChunkSize := Max(1, lHandle.ChunkSize div 2);
+          RecorderDebugLog(Format(
+            '[OPC UA] server rejected ReadRequest size; retrying with %d nodes: %s',
+            [lHandle.ChunkSize, lChunkError]));
+          lRetryWithSmallerChunk := True;
+          Break;
+        end;
+        lHandle.ErrorText := lChunkError;
+        Exit;
+      end;
+      for J := 0 to lChunkCount - 1 do
+      begin
+        lIndex := lHandle.StringIndexes[lStart + J];
+        lHandle.Changed[lIndex] := (not lHandle.HasValues[lIndex]) or
+          (lHandle.StringValues[lIndex] <> lStringValues[J]) or
+          (not SameValue(lHandle.Times[lIndex], lTimes[J])) or
+          (lHandle.Qualities[lIndex] <> lQualities[J]);
+        lHandle.StringValues[lIndex] := lStringValues[J];
+        lHandle.Times[lIndex] := lTimes[J];
+        lHandle.Qualities[lIndex] := lQualities[J];
+        lHandle.HasValues[lIndex] := True;
+      end;
+      Inc(lStart, lChunkCount);
     end;
-    Inc(lStart, lChunkCount);
-  end;
-  lStart := 0;
-  for I := 0 to High(lHandle.StringChunks) do
-  begin
-    lChunkCount := Length(lHandle.StringChunks[I]);
-    if not lHandle.Client.ReadStrings(lHandle.StringChunks[I], lStringValues, lTimes,
-      lQualities) then
-    begin
-      lHandle.ErrorText := lHandle.Client.ErrorText;
-      Exit;
-    end;
-    for J := 0 to lChunkCount - 1 do
-    begin
-      lIndex := lHandle.StringIndexes[lStart + J];
-      lHandle.Changed[lIndex] := (not lHandle.HasValues[lIndex]) or
-        (lHandle.StringValues[lIndex] <> lStringValues[J]) or
-        (not SameValue(lHandle.Times[lIndex], lTimes[J])) or
-        (lHandle.Qualities[lIndex] <> lQualities[J]);
-      lHandle.StringValues[lIndex] := lStringValues[J];
-      lHandle.Times[lIndex] := lTimes[J];
-      lHandle.Qualities[lIndex] := lQualities[J];
-      lHandle.HasValues[lIndex] := True;
-    end;
-    Inc(lStart, lChunkCount);
-  end;
+  until not lRetryWithSmallerChunk;
+  lHandle.ErrorText := '';
   if ATimeoutMs > 0 then Sleep(Min(ATimeoutMs, 10));
   Result := True;
 end;

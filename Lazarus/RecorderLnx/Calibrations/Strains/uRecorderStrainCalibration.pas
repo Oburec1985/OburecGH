@@ -9,13 +9,9 @@ uses
   Classes, SysUtils, Math, uRecorderTags;
 
 type
-  TRecorderStrainScheme = (rssQuarterActive, rssHalfPoisson,
-    rssHalfOpposed, rssFullOneActive, rssFullTwoOpposed,
-    rssFullPoisson, rssFullFourActive);
-  TRecorderStrainInputUnit = (rsiRatio, rsiMilliVoltPerVolt,
-    rsiVolt, rsiMilliVolt, rsiMilliVoltPerMilliAmp, rsiOhm);
-  TRecorderStrainOutputUnit = (rsoStrain, rsoMicrostrain,
-    rsoPascal, rsoMegaPascal, rsoMilliVolt);
+  TRecorderStrainScheme = (rssQuarterActive, rssHalfPoisson, rssHalfOpposed, rssFullOneActive, rssFullTwoOpposed, rssFullPoisson, rssFullFourActive);
+  TRecorderStrainInputUnit = (rsiRatio, rsiMilliVoltPerVolt, rsiVolt, rsiMilliVolt, rsiMilliVoltPerMilliAmp, rsiOhm);
+  TRecorderStrainOutputUnit = (rsoStrain, rsoMicrostrain, rsoPascal, rsoMegaPascal, rsoMilliVolt);
   TRecorderStrainExcitationKind = (rsekVoltage, rsekCurrent);
 
   TRecorderStrainConfig = class
@@ -80,14 +76,11 @@ begin
     lValue := StrToIntDef(L.Values['scheme'], Ord(Scheme));
     Scheme := TRecorderStrainScheme(EnsureRange(lValue, Ord(Low(Scheme)), Ord(High(Scheme))));
     lValue := StrToIntDef(L.Values['input'], Ord(InputUnit));
-    InputUnit := TRecorderStrainInputUnit(EnsureRange(lValue,
-      Ord(Low(InputUnit)), Ord(High(InputUnit))));
+    InputUnit := TRecorderStrainInputUnit(EnsureRange(lValue, Ord(Low(InputUnit)), Ord(High(InputUnit))));
     lValue := StrToIntDef(L.Values['output'], Ord(OutputUnit));
-    OutputUnit := TRecorderStrainOutputUnit(EnsureRange(lValue,
-      Ord(Low(OutputUnit)), Ord(High(OutputUnit))));
+    OutputUnit := TRecorderStrainOutputUnit(EnsureRange(lValue, Ord(Low(OutputUnit)), Ord(High(OutputUnit))));
     lValue := StrToIntDef(L.Values['excitationKind'], Ord(ExcitationKind));
-    ExcitationKind := TRecorderStrainExcitationKind(EnsureRange(lValue,
-      Ord(Low(ExcitationKind)), Ord(High(ExcitationKind))));
+    ExcitationKind := TRecorderStrainExcitationKind(EnsureRange(lValue, Ord(Low(ExcitationKind)), Ord(High(ExcitationKind))));
     ExcitationValue := StrToFloatDef(L.Values['excitation'], ExcitationValue);
     GaugeFactor := StrToFloatDef(L.Values['gaugeFactor'], GaugeFactor);
     Poisson := StrToFloatDef(L.Values['poisson'], Poisson);

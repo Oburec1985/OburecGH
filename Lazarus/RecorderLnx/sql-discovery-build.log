@@ -1,0 +1,8 @@
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(1953,24) Hint: (5091) Local variable "lProcedures" of a managed type does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/./Core/uRecorderDataSources.pas(1985,24) Hint: (5091) Local variable "lProcedures" of a managed type does not seem to be initialized
+(9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/SqlDiscoveryProbe.or
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/SqlDiscoveryProbe
+(1008) 77276 lines compiled, 8.2 sec
+(1021) 17 warning(s) issued
+(1022) 87 hint(s) issued
+(1023) 6 note(s) issued

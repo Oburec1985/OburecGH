@@ -233,7 +233,6 @@ procedure TRecorderBuiltInFormsFrame.PrepareDigitalCanvas(ACol, ARow: Integer;
   AState: TGridDrawState);
 var
   lColor: LongInt;
-  lRow: Integer;
   lTag: TRecorderTag;
   lUnit: string;
 begin
@@ -256,10 +255,7 @@ begin
   end;
   if (fRecorder = nil) or (fRecorder.TagRegistry = nil) or
     (fRecorder.AlarmEngine = nil) then Exit;
-  lRow := ARow;
-  while (lRow > 0) and (fDigitalGrid.Cells[0, lRow] = '') do Dec(lRow);
-  if lRow <= 0 then Exit;
-  lTag := fRecorder.TagRegistry.FindByName(fDigitalGrid.Cells[0, lRow]);
+  lTag := TRecorderTag(fDigitalGrid.Objects[0, ARow]);
   if lTag = nil then Exit;
   if lTag.SignalBuffer.Count = 0 then lColor := $808080
   else lColor := fRecorder.AlarmEngine.GetTagAlarmColor(lTag);

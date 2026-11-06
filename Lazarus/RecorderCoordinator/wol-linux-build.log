@@ -1,0 +1,167 @@
+SetPrimaryConfigPath NewValue="/home/user/.lazarus_work" -> "/home/user/.lazarus_work"
+Hint: (lazarus) Missing state file of freetypelaz 1.0: /usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux/freetypelaz.compiled
+Error: (lazarus) unable to create package output directory "/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux" of package "freetypelaz 1.0"
+Hint: (lazarus) normal output directory of package freetypelaz 1.0 is not writable: "/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus_work/lib/freetypelaz/lib/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for LCLBase 2.2.6
+  Old="/usr/lib/lazarus/2.2.6/lcl/forms;/usr/lib/lazarus/2.2.6/lcl/widgetset;/usr/lib/lazarus/2.2.6/lcl/nonwin32;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl"
+  Now="/usr/lib/lazarus/2.2.6/lcl/forms;/usr/lib/lazarus/2.2.6/lcl/widgetset;/usr/lib/lazarus/2.2.6/lcl/nonwin32;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus_work/lib/freetypelaz/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/LCLBase.compiled"
+Hint: (lazarus) normal output directory of package LCLBase 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus_work/lib/LCLBase/units/x86_64-linux
+Hint: (lazarus) Compiler unit paths changed for DateTimeCtrls 1.5.1
+  Old="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/datetimectrls"
+  Now="/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus_work/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus_work/lib/LCLBase/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/datetimectrls"
+  State file="/usr/lib/lazarus/2.2.6/components/datetimectrls/lib/x86_64-linux/gtk2/DateTimeCtrls.compiled"
+Hint: (lazarus) normal output directory of package DateTimeCtrls 1.5.1 is not writable: "/usr/lib/lazarus/2.2.6/components/datetimectrls/lib/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus_work/lib/DateTimeCtrls/lib/x86_64-linux/gtk2
+Hint: (lazarus) Compiler unit paths changed for LCL 2.2.6
+  Old="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/components/freetype/lib/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  Now="/usr/lib/lazarus/2.2.6/lcl/interfaces/gtk2;/usr/lib/lazarus/2.2.6/packager/units/x86_64-linux;/usr/lib/lazarus/2.2.6/components/lazutils/lib/x86_64-linux;/home/user/.lazarus_work/lib/freetypelaz/lib/x86_64-linux;/home/user/.lazarus_work/lib/LCLBase/units/x86_64-linux;/usr/lib/lazarus/2.2.6/lcl/interfaces"
+  State file="/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/LCL.compiled"
+Hint: (lazarus) normal output directory of package LCL 2.2.6 is not writable: "/usr/lib/lazarus/2.2.6/lcl/units/x86_64-linux/gtk2/"
+TParsedCompilerOptions.SetOutputDirectoryOverride New=/home/user/.lazarus_work/lib/units/x86_64-linux/gtk2
+Hint: (11030) Start of reading config file /etc/fpc.cfg
+Hint: (11031) End of reading config file /etc/fpc.cfg
+Free Pascal Compiler version 3.2.2+dfsg-20+b5 [2025/12/26] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Linux for x86-64
+(3104) Compiling RecorderCoordinator.lpr
+(3104) Compiling ./UI/uCoordinatorMainForm.pas
+(3104) Compiling ./Service/uCoordinatorWakeOnLan.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./Service/uCoordinatorWakeOnLan.pas(48,14) Warning: (5043) Symbol "NetToHost" is deprecated
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./Service/uCoordinatorWakeOnLan.pas(137,19) Hint: (5057) Local variable "lPacket" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./Service/uCoordinatorWakeOnLan.pas(157,21) Hint: (5057) Local variable "lTarget" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(245,47) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(245,70) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(245,92) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(248,66) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(248,72) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(250,54) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(251,7) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(251,45) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(251,51) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(124,26) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(125,27) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(121,46) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(119,45) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(381,34) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(381,32) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(488,65) Warning: (4104) Implicit string type conversion from "ShortString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(488,86) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(488,94) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(490,12) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(490,20) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(122,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(130,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(130,52) Hint: (5024) Parameter "aCol" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(130,58) Hint: (5024) Parameter "aRow" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(115,37) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(113,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(563,72) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(563,88) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(114,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(596,60) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(597,5) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(599,138) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(608,80) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(608,88) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(618,76) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(619,12) Warning: (4104) Implicit string type conversion from "ShortString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(619,33) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(619,41) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(620,72) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(620,80) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(108,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(90,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(755,45) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(755,54) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(774,51) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(774,58) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(91,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(795,82) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(796,5) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(796,20) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(809,77) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(809,84) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(93,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(123,37) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(857,61) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(857,70) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(117,28) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(865,66) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(865,74) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(118,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(907,65) Warning: (4104) Implicit string type conversion from "UTF8String" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(907,72) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(109,41) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(958,65) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(958,89) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(110,37) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(989,25) Warning: (4104) Implicit string type conversion from "UTF8String" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(989,32) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1056,9) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1057,83) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1073,68) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1073,83) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(111,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1090,62) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1090,68) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(180,32) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(94,36) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(95,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(99,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(97,41) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(96,38) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(98,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(120,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(112,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1225,24) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1226,141) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1230,70) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1231,81) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(102,37) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1255,76) Warning: (4104) Implicit string type conversion from "UTF8String" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1255,95) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(103,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1283,42) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1284,21) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1284,51) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1284,67) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1286,42) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1287,21) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1287,51) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1287,67) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(163,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1319,41) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1319,50) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1329,58) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1330,7) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1330,38) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1330,55) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1333,41) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1334,42) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1334,64) Warning: (4104) Implicit string type conversion from "AnsiString" to "UnicodeString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(1334,71) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(101,39) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(100,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(105,40) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(104,35) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(107,36) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(106,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(129,34) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(129,51) Hint: (5024) Parameter "aCol" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(129,57) Hint: (5024) Parameter "aRow" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(128,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(126,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(127,21) Hint: (5024) Parameter "aState" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(116,31) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(132,33) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(131,37) Hint: (5024) Parameter "Sender" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(131,54) Hint: (5024) Parameter "aCol" not used
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./UI/uCoordinatorMainForm.pas(131,60) Hint: (5024) Parameter "aRow" not used
+(9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/lib/x86_64-linux/RecorderCoordinator.or
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/lib/x86_64-linux/RecorderCoordinator
+(1008) 1765 lines compiled, 5.6 sec
+(1021) 79 warning(s) issued
+(1022) 54 hint(s) issued

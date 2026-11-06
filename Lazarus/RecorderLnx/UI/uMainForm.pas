@@ -41,7 +41,7 @@ uses
   StrUtils, DateUtils, fpjson, jsonparser, LMessages,
   {$IFDEF MSWINDOWS}Windows,{$ENDIF}
   uRecorderAppVersion, uRecorderStateMachine, uRecorderRunControlSettings,
-  uRecorderFormModel, uRecorderPluginRuntime, uRecorderPluginConfig,
+  uRecorderFormModel, uRecorderDacComponentModel, uRecorderPluginRuntime, uRecorderPluginConfig,
   uRecorderPluginApi,
   uRecorderCoreServices, uRecorderTags, uRecorderDataSources, uRecorder,
   uRecorderEventQueue, uRecorderTimeSystem, uRecorderBlockClock, uRecorderUiTestData, uFormPagesDialog,
@@ -161,6 +161,7 @@ type
     fComponentPalette: TRecorderComponentPalette;
     fDeleteComponentButton: TSpeedButton;         // Кнопка удаления выбранного компонента мнемосхемы
     fPendingFactory: TRecorderComponentFactoryBase;
+    fTagListPollRates: array of Double;
     
     // Элементы базового формуляра графиков (Base Page)
     fBuiltInForms: TRecorderBuiltInFormsFrame;    // UI-контроллер встроенных формуляров
@@ -190,6 +191,8 @@ type
     fLogLines: TStringList;                       // Полная история нижнего журнала с категориями
     fHardwareStatusSourceIds: TStringList;        // Переиспользуемый список источников для UI health snapshot
     fUiUpdateTimer: TTimer;                       // Таймер периодического обновления UI из очереди событий
+    fCloseRetryTimer: TTimer;
+    fCloseCommitted: Boolean;
     fDataConsumeTimer: TTimer;                    // Настраиваемый цикл чтения новых данных из колец тегов
     fLastUiDataRevisionSignature: QWord;          // Сводная ревизия колец тегов для защиты UI от холостого repaint
     fLastPluginInputRevision: QWord;              // Только входы источников; выходы расчётов не запускают Lua повторно
@@ -342,7 +345,7 @@ type
     { Применяет периоды обновления отображения из настроек запуска. }
     procedure ApplyDisplayTimingSettings;
     // Загрузка/сохранение конфигураций проекта
-    procedure LoadProjectPackage;
+    procedure LoadProjectPackage(AMigrateNetworkSetting: Boolean = False);
     procedure SaveProjectPackage;
     { Переназначает текущий каталог пакета конфигурации проекта. }
     procedure SetProjectConfigDir(const ADirectoryName: string);
@@ -374,6 +377,8 @@ type
     function CurrentTagListSelectionName: string;
     // отобразить список тегов
     procedure RebuildTagList(const AFilter: string);
+    procedure RefreshTagListFrequencies;
+    function TagFrequencyText(ATag: TRecorderTag): string;
     procedure FocusTagInList(const ATagName: string);
     procedure FormEditorTagActivated(const ATagName: string);
     { Собирает выбранные в списке TListBox теги }
@@ -429,6 +434,8 @@ type
     procedure DeviceTestStartPreview;
     procedure DeviceTestLog(const AMessage: string);
     procedure DeviceTestFinished(Sender: TObject);
+    procedure ScheduleCloseRetry;
+    procedure CloseRetryTimerTick(Sender: TObject);
     procedure PrepareRuntimeForConfiguration;
     procedure PrepareAlgorithmsForFormConfiguration;
     procedure PrepareHardwareForConfiguration;
@@ -448,15 +455,22 @@ type
     procedure UpdateActiveSourceIds;
     procedure LogConfigurationResult(AResult: TRecorderConfigurationResult);
   protected
+    procedure DoClose(var CloseAction: TCloseAction); override;
     procedure WndProc(var TheMessage: TLMessage); override;
   public
+    function CloseQuery: Boolean; override;
+    {$IFDEF RECORDER_CLOSE_TEST}
+    procedure CloseTestSetRuntime(ARuntime: TRecorderPluginRuntime);
+    function CloseTestCommitted: Boolean;
+    {$ENDIF}
     property OnStartupReady: TNotifyEvent read fOnStartupReady write fOnStartupReady;
     procedure OpenRecordSession;
     procedure CloseRecordSession;
     procedure ResetDisplaySessions;
     procedure StartAcquisition;
     procedure StopAcquisition;
-    procedure RunStateChanged(AOldState, ANewState: TRecorderState);
+    procedure RunStateChanged(AOldState, ANewState: TRecorderState;
+      ATransition: TRecorderStateTransition);
     procedure LifecycleMessage(const AMessage: string);
     procedure CaptureProgrammingState(AState: TRecorderSourceProgrammingState);
     function SourceProgrammingApplied(const ASourceId, ASignature: string): Boolean;
@@ -623,11 +637,13 @@ begin
   lbTags.PopupMenu := lPopupMenu;
 
   InitializeFormPages;
+  InitializeRecorderMachineStorageForActiveProject(fProjectConfigDir,
+    fRecorder.RunSettings);
   LoadRunSettings;
   UpdateWinposButtonAction;
   ApplyDisplayTimingSettings;
   lStageStartedAt := GetTickCount64;
-  LoadProjectPackage;
+  LoadProjectPackage(True);
   RecorderDebugLog(Format('[Startup] LoadProjectPackage elapsed=%dms',
     [GetTickCount64 - lStageStartedAt]));
   ConfigureOptionalSqlDb;
@@ -734,7 +750,7 @@ begin
     Exit;
   end;
   fAutoPreviewTimer.Enabled := False;
-  Application.Terminate;
+  Close;
 end;
 
 procedure TMainForm.ScheduleCommandLineDeviceTests;
@@ -798,11 +814,82 @@ end;
 procedure TMainForm.DeviceTestFinished(Sender: TObject);
 begin
   RecorderReleaseDeviceTest(Sender);
-  Application.Terminate;
+  Close;
+end;
+
+{$IFDEF RECORDER_CLOSE_TEST}
+{ Только для изолированного теста CreateNew без запуска источников данных. }
+procedure TMainForm.CloseTestSetRuntime(ARuntime: TRecorderPluginRuntime);
+begin
+  fPluginRuntime := ARuntime;
+end;
+
+function TMainForm.CloseTestCommitted: Boolean;
+begin
+  Result := fCloseCommitted;
+end;
+{$ENDIF}
+
+function TMainForm.CloseQuery: Boolean;
+begin
+  if fCloseCommitted then Result := True
+  else Result := inherited CloseQuery;
+  if not Result then Exit;
+  if (fPluginRuntime <> nil) and not fPluginRuntime.CanShutdown then
+  begin
+    Result := False;
+    ScheduleCloseRetry;
+  end;
+end;
+
+procedure TMainForm.DoClose(var CloseAction: TCloseAction);
+begin
+  if fCloseCommitted then CloseAction := caFree
+  else inherited DoClose(CloseAction);
+  { LCL позволяет обработчикам отменить закрытие после CloseQuery; не
+    останавливаем плагины, пока окончательное действие не стало caFree. }
+  if (CloseAction = caFree) and (fPluginRuntime <> nil) and
+    not fPluginRuntime.TryBeginShutdown then
+  begin
+    if fPluginRuntime.ShutdownStarted then
+    begin
+      if not fCloseCommitted then
+      begin
+        Caption := 'Завершение: ожидание остановки плагинов…';
+        AddLog('Ожидание завершения плагинов перед закрытием.', rlkSystem);
+      end;
+      fCloseCommitted := True;
+      Enabled := False;
+      if fUiUpdateTimer <> nil then fUiUpdateTimer.Enabled := False;
+      if fDataConsumeTimer <> nil then fDataConsumeTimer.Enabled := False;
+      if fCoordinatorTimer <> nil then fCoordinatorTimer.Enabled := False;
+    end;
+    CloseAction := caNone;
+    ScheduleCloseRetry;
+  end;
+end;
+
+procedure TMainForm.ScheduleCloseRetry;
+begin
+  if fCloseRetryTimer = nil then
+  begin
+    fCloseRetryTimer := TTimer.Create(Self);
+    fCloseRetryTimer.Interval := 100;
+    fCloseRetryTimer.OnTimer := @CloseRetryTimerTick;
+  end;
+  fCloseRetryTimer.Enabled := True;
+end;
+
+procedure TMainForm.CloseRetryTimerTick(Sender: TObject);
+begin
+  fCloseRetryTimer.Enabled := False;
+  Close;
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
+  if (fPluginRuntime <> nil) and not fPluginRuntime.TryBeginShutdown then
+    raise Exception.Create('Закрытие Recorder из callback плагина запрещено');
   SetRecorderImpactDefaultSavePathProvider(nil);
   SaveMainWindowLayout;
   FreeAndNil(fWindowDragTrace);
@@ -1122,11 +1209,18 @@ begin
 end;
 
 function TMainForm.CoordinatorStateJson: string;
+var
+  lName: string;
+  lUseComputerName: Boolean;
 begin
-  Result := Format('{"state":%s,"run_state":%s,"project_dir":%s}',
+  fCoordinatorClient.GetWorkstationName(lName, lUseComputerName);
+  Result := Format('{"state":%s,"run_state":%s,"project_dir":%s,"sql_local_database":%s,' +
+    '"workstation_name":%s,"use_computer_name":%s}',
     [JsonQuoted(CoordinatorRuntimeState),
      JsonQuoted(TRecorderStateMachine.StateToString(
-       fRecorder.StateMachine.State)), JsonQuoted(fProjectConfigDir)]);
+       fRecorder.StateMachine.State)), JsonQuoted(fProjectConfigDir),
+     JsonQuoted(fRecorder.SqlDbManager.Config.LocalDatabaseFileName),
+     JsonQuoted(lName), LowerCase(BoolToStr(lUseComputerName, True))]);
 end;
 
 function TMainForm.CoordinatorRecordingJson(ACompleted: Boolean): string;
@@ -1149,13 +1243,11 @@ begin
     lMera := '';
     lMeasureName := 'Запись RecorderLnx';
   end;
-  {$IFDEF UNIX}
   lShareName := Trim(fRecorder.RunSettings.RecordShareName);
-  lHost := Trim(GetEnvironmentVariable('HOSTNAME'));
+  lHost := Trim(RecorderComputerName);
   if (lMera <> '') and (lHost <> '') and (lShareName <> '') then
     lMera := 'smb://' + lHost + '/' + lShareName + '/' +
       RecorderMeraRelativeFileName(lMeasureName);
-  {$ENDIF}
   if fCoordinatorRecordingStartedUtc > 0 then
     lStarted := DateToISO8601(fCoordinatorRecordingStartedUtc, True)
   else
@@ -1189,10 +1281,13 @@ var
   lCode: TRecorderCoordinatorResultCode;
   lText, lPayload: string;
   lCommandPayload: TJSONData;
-  lFirebirdHost: string;
-  lFirebirdDatabase: string;
-  lFirebirdUserName: string;
-  lSqlRecordingEnabled: Boolean;
+  lAllowedData: TJSONData;
+  lAllowedArray: TJSONArray;
+  lAllowedNames: TStringList;
+  lAllowedResult: TJSONObject;
+  lIndex: Integer;
+  lFirebirdHost, lWorkstationName: string;
+  lSqlRecordingEnabled, lUseComputerName: Boolean;
 begin
   if (ACommand.ExecuteAtUtc > 0) and
     (ACommand.ExecuteAtUtc > RecorderCoordinatorUtcNow) then
@@ -1219,6 +1314,38 @@ begin
     end
     else if SameText(ACommand.CommandType, 'state.get') then
       lPayload := CoordinatorStateJson
+    else if SameText(ACommand.CommandType, 'workstation.name.get') or
+      SameText(ACommand.CommandType, 'workstation.name.set') then
+    begin
+      if SameText(ACommand.CommandType, 'workstation.name.set') then
+      begin
+        if not fCoordinatorClient.AllowRemoteControl then
+        begin
+          lCode := rcrcAccessDenied;
+          lText := 'Remote managed actions are disabled';
+        end
+        else
+        begin
+          lCommandPayload := GetJSON(ACommand.PayloadJson);
+          try
+            if not (lCommandPayload is TJSONObject) then
+              raise Exception.Create('Command payload must be a JSON object');
+            fCoordinatorClient.SetWorkstationName(
+              TJSONObject(lCommandPayload).Get('name', ''),
+              TJSONObject(lCommandPayload).Get('use_computer_name', False));
+          finally
+            lCommandPayload.Free;
+          end;
+        end;
+      end;
+      if lCode = rcrcNoError then
+      begin
+        fCoordinatorClient.GetWorkstationName(lWorkstationName, lUseComputerName);
+        lPayload := Format('{"name":%s,"workstation_name":%s,"use_computer_name":%s}',
+          [JsonQuoted(lWorkstationName), JsonQuoted(lWorkstationName),
+           LowerCase(BoolToStr(lUseComputerName, True))]);
+      end;
+    end
     else if SameText(ACommand.CommandType, 'recording.current.get') or
       SameText(ACommand.CommandType, 'recording.get') or
       SameText(ACommand.CommandType, 'recording.location.resolve') then
@@ -1292,23 +1419,14 @@ begin
           lFirebirdHost := Trim(TJSONObject(lCommandPayload).Get('host', ''));
           if lFirebirdHost = '' then
             raise Exception.Create('Firebird host is empty');
-          lFirebirdDatabase := Trim(TJSONObject(lCommandPayload).Get(
-            'database', CRecorderFirebirdDefaultDatabase));
-          lFirebirdUserName := Trim(TJSONObject(lCommandPayload).Get(
-            'username', CRecorderFirebirdDefaultUserName));
-          fRecorder.SqlDbManager.Config.Host := lFirebirdHost;
-          fRecorder.SqlDbManager.Config.Port :=
-            TJSONObject(lCommandPayload).Get('port', 3050);
-          fRecorder.SqlDbManager.Config.Database := lFirebirdDatabase;
-          fRecorder.SqlDbManager.Config.UserName := lFirebirdUserName;
-          fRecorder.SqlDbManager.Config.StoredPassword :=
-            TJSONObject(lCommandPayload).Get('password',
-              CRecorderFirebirdDefaultPassword);
+          fRecorder.SqlDbManager.Config.ApplyRemoteServerAddress(lFirebirdHost,
+            TJSONObject(lCommandPayload).Get('port', 3050),
+            TJSONObject(lCommandPayload).Get('server_database', ''));
           fRecorder.SqlDbManager.SaveConfig;
           fRecorder.SqlDbManager.Reload;
           lPayload := Format('{"host":%s}', [JsonQuoted(lFirebirdHost)]);
           AddLog(UTF8Encode('Настройки SQL БД изменены координатором: ') +
-            lFirebirdHost + ':3050');
+            lFirebirdHost + ':' + IntToStr(fRecorder.SqlDbManager.Config.Port));
         finally
           lCommandPayload.Free;
         end;
@@ -1347,6 +1465,68 @@ begin
           else
             AddLog(UTF8Encode('SQL-запись выключена координатором'));
         finally
+          lCommandPayload.Free;
+        end;
+      end;
+    end
+    else if SameText(ACommand.CommandType,
+      'config.sql_allowed_channels.get') then
+    begin
+      lAllowedResult := TJSONObject.Create;
+      try
+        lAllowedArray := TJSONArray.Create;
+        for lIndex := 0 to
+          fRecorder.SqlDbManager.Config.AllowedSignalNames.Count - 1 do
+          lAllowedArray.Add(
+            fRecorder.SqlDbManager.Config.AllowedSignalNames[lIndex]);
+        lAllowedResult.Add('configured',
+          fRecorder.SqlDbManager.Config.AllowedSignalSelectionConfigured);
+        lAllowedResult.Add('allowed_channels', lAllowedArray);
+        lPayload := lAllowedResult.AsJSON;
+      finally
+        lAllowedResult.Free;
+      end;
+    end
+    else if SameText(ACommand.CommandType,
+      'config.sql_allowed_channels.set') then
+    begin
+      if not fCoordinatorClient.AllowRemoteControl then
+      begin
+        lCode := rcrcAccessDenied;
+        lText := 'Remote managed actions are disabled';
+      end
+      else if fRecorder.StateMachine.State <> rsStop then
+      begin
+        lCode := rcrcNotReady;
+        lText := 'Recorder must be stopped before SQL channel selection';
+      end
+      else
+      begin
+        lCommandPayload := GetJSON(ACommand.PayloadJson);
+        lAllowedNames := TStringList.Create;
+        try
+          if not (lCommandPayload is TJSONObject) then
+            raise Exception.Create('Command payload must be a JSON object');
+          lAllowedData := TJSONObject(lCommandPayload).Find(
+            'allowed_channels');
+          if not (lAllowedData is TJSONArray) then
+            raise Exception.Create('allowed_channels array is required');
+          lAllowedNames.CaseSensitive := False;
+          lAllowedNames.Sorted := True;
+          lAllowedNames.Duplicates := dupIgnore;
+          for lIndex := 0 to TJSONArray(lAllowedData).Count - 1 do
+            lAllowedNames.Add(TJSONArray(lAllowedData).Strings[lIndex]);
+          fRecorder.SqlDbManager.ApplyAllowedSignals(lAllowedNames,
+            fRecorder.TagRegistry);
+          lPayload := Format('{"allowed_count":%d,"local_count":%d}',
+            [lAllowedNames.Count,
+             fRecorder.SqlDbManager.Config.SignalNames.Count]);
+          AddLog(Format(
+            'Координатор применил разрешённые SQL-каналы: всего %d, локально %d',
+            [lAllowedNames.Count,
+             fRecorder.SqlDbManager.Config.SignalNames.Count]));
+        finally
+          lAllowedNames.Free;
           lCommandPayload.Free;
         end;
       end;
@@ -1453,7 +1633,7 @@ begin
       lDataSourcesChanged := False;
       lSettingsAccepted := ShowRecorderSettingsDialog(Self, fRecorder,
         ilCommandButtons, ilCommandButtons, lDataSourcesChanged,
-        fPluginRuntime);
+        fPluginRuntime, fCoordinatorClient);
       lExitStarted := GetTickCount64;
       if lSettingsAccepted then
       begin
@@ -1728,7 +1908,7 @@ begin
   if fLogLines <> nil then
     fLogLines.AddObject(lLine, TObject(PtrInt(Ord(AKind))));
   if (mmLog <> nil) and LogKindVisible(AKind) then
-    mmLog.Lines.Add(lLine);
+    mmLog.Lines.Insert(0, lLine);
   RecorderDebugLog(lLine);
 end;
 
@@ -1917,7 +2097,7 @@ begin
   mmLog.Lines.BeginUpdate;
   try
     mmLog.Lines.Clear;
-    for I := 0 to fLogLines.Count - 1 do
+    for I := fLogLines.Count - 1 downto 0 do
     begin
       lKind := TRecorderLogKind(PtrInt(fLogLines.Objects[I]));
       if LogKindVisible(lKind) then
@@ -2369,6 +2549,13 @@ end;
 { Отрисовка цифрового формуляра со списком рассчитанных оценок }
 procedure TMainForm.RenderDigitalPage(ARebuild: Boolean);
 begin
+  if not ARebuild then
+  begin
+    if fBuiltInForms <> nil then
+      fBuiltInForms.RenderDigital(False);
+    Exit;
+  end;
+
   EnsureBaseToolbar;
   ShowBaseToolbar(False);
   fBuiltInForms.Visible := False;
@@ -2503,13 +2690,13 @@ begin
 end;
 
 { Комплексная загрузка всего пакета настроек проекта (теги, формы, gui, ini) }
-procedure TMainForm.LoadProjectPackage;
+procedure TMainForm.LoadProjectPackage(AMigrateNetworkSetting: Boolean);
 var
   lFiles: TRecorderProjectFileSet;
 begin
   ClearDetachedForms;
   lFiles := LoadRecorderProjectPackage(fProjectConfigDir,
-    fRecorder.TagRegistry, fFormManager, fComponentFactory);
+    fRecorder.TagRegistry, fFormManager, fComponentFactory, AMigrateNetworkSetting);
   if fRecorder.AlarmEngine <> nil then
     fRecorder.AlarmEngine.Reset;
   if FileExists(lFiles.MainConfigFileName) then
@@ -2787,7 +2974,9 @@ begin
   if fCoordinatorCorrelationId = '' then
     fCoordinatorCorrelationId := RecorderCoordinatorNewId;
   fCoordinatorRecordingStartedUtc := RecorderCoordinatorUtcNow;
-  fRecordFrameManager.WriteFrameInfo(CProjectBaseName, 'RecorderLnx MERA record');
+  fRecordFrameManager.WriteFrameInfo(
+    ExtractFileName(ExcludeTrailingPathDelimiter(fProjectConfigDir)),
+    'RecorderLnx MERA record');
   fMeraWriter.Open(lFrameDir);
   ResetRecordTagCursors;
   UpdateMainCaption;
@@ -2825,7 +3014,7 @@ begin
     lTag := fRecorder.TagRegistry.Tags[I];
     { Запись стартует с нового отсчёта. Курсор отсчётов работает
       одинаково для аппаратных блоков, Mera File и редких OPC-событий. }
-    fRecordTagCursors[I] := lTag.SignalBuffer.CurrentCursor;
+    fRecordTagCursors[I] := lTag.RecordingSignalBuffer.CurrentCursor;
     fRecordTagBlocks[I].Count := 0;
     fRecordTagMetadata[I] := lMetadataService.Resolve(
       fRecorder.TagRegistry, lTag);
@@ -2957,6 +3146,36 @@ begin
     Result := '';
 end;
 
+function TMainForm.TagFrequencyText(ATag: TRecorderTag): string;
+begin
+  if ATag.PollFrequencyHz <= 0 then Exit('-');
+  Result := FormatFloat('0.######', ATag.PollFrequencyHz);
+  if SameText(ATag.ModuleType, 'OPC UA') then
+    Result := 'до ' + Result + ' Гц'
+  else
+    Result := Result + ' Hz';
+end;
+
+procedure TMainForm.RefreshTagListFrequencies;
+var
+  I: Integer;
+  lItem: TListItem;
+  lTag: TRecorderTag;
+  lRate: Double;
+begin
+  if not lbTags.Visible or not Visible or (WindowState = wsMinimized) then Exit;
+  for I := 0 to Min(lbTags.Items.Count, Length(fTagListPollRates)) - 1 do
+  begin
+    lItem := lbTags.Items[I];
+    lTag := TRecorderTag(lItem.Data);
+    if lTag = nil then Continue;
+    lRate := lTag.PollFrequencyHz;
+    if fTagListPollRates[I] = lRate then Continue;
+    fTagListPollRates[I] := lRate;
+    lItem.SubItems[0] := TagFrequencyText(lTag);
+  end;
+end;
+
 procedure TMainForm.RebuildTagList(const AFilter: string);
 var
   I: Integer;
@@ -2979,6 +3198,7 @@ begin
   lbTags.Items.BeginUpdate;
   try
     lbTags.Items.Clear;
+    SetLength(fTagListPollRates, fRecorder.TagRegistry.TagCount);
     lFilter := LowerCase(Trim(AFilter));
 
     for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
@@ -2991,15 +3211,13 @@ begin
         lTag.Description)) = 0) then
         Continue;
 
-      if lTag.PollFrequencyHz > 0 then
-        lFrequencyText := FormatFloat('0.######', lTag.PollFrequencyHz) + ' Hz'
-      else
-        lFrequencyText := '-';
+      lFrequencyText := TagFrequencyText(lTag);
 
       lItem := lbTags.Items.Add;
       lItem.Caption := lTag.Name;
       lItem.SubItems.Add(lFrequencyText);
       lItem.Data := lTag;
+      fTagListPollRates[lItem.Index] := lTag.PollFrequencyHz;
     end;
 
     if lSelectedTag <> nil then
@@ -3334,7 +3552,7 @@ begin
           (fRecordTagMetadata[I].UtsChannelName <> '') and
           not fRecordTimebase.OriginReady(fRecordTagTimeDomains[I]) then
           Continue;
-        lTag.SignalBuffer.SnapshotSinceInto(fRecordTagCursors[I],
+        lTag.RecordingSignalBuffer.SnapshotSinceInto(fRecordTagCursors[I],
           fRecordTagBlocks[I].Times, fRecordTagBlocks[I].Values,
           fRecordTagBlocks[I].Count);
         if fRecordTagBlocks[I].Count > 0 then
@@ -3349,7 +3567,7 @@ begin
           fMeraWriter.WriteBlock(lTag.Name, lTag.UnitName, lTag.Description,
             lTag.SensorCalibrationName, lTag.AmplifierCalibrationName,
             fRecordTagBlocks[I].Times, fRecordTagBlocks[I].Values,
-            fRecordTagBlocks[I].Count, lTag.PollFrequencyHz,
+            fRecordTagBlocks[I].Count, lTag.RecordingPollFrequencyHz,
             fRecordTagMetadata[I].IsUts,
             fRecordTagMetadata[I].UtsChannelName);
         end;
@@ -3465,6 +3683,7 @@ begin
       fRuntimeViewDirty := False;
 
   lServiceStartMs := GetTickCount64;
+  if Application.ModalLevel = 0 then RefreshTagListFrequencies;
   UpdateTimeView;
   Inc(fDiagServiceUiMs, GetTickCount64 - lServiceStartMs);
   LogUpdateDiagnostics;
@@ -3512,13 +3731,9 @@ begin
     Exit;
 
   if ASnapshot.HasAlarmData then
-  begin
-    if ASnapshot.AlarmActive then
-      AddLog('[ALARM] ' + ASnapshot.Text, rlkAlarm)
-    else
-      AddLog('[ALARM RESET] ' + ASnapshot.Text, rlkAlarm);
+    { Tag setpoints/ranges still publish alarm notifications, but neither
+      activation nor reset belongs in the application system journal. }
     Exit;
-  end;
 
   if not ASnapshot.HasTagData then
     Exit;
@@ -4052,19 +4267,24 @@ begin
   StopDataSources;
 end;
 
-procedure TMainForm.RunStateChanged(AOldState, ANewState: TRecorderState);
+procedure TMainForm.RunStateChanged(AOldState, ANewState: TRecorderState;
+  ATransition: TRecorderStateTransition);
+var
+  lDacFactory: TRecorderComponentFactoryBase;
 begin
+  { DAC stream lifetime follows acquisition, independently of file recording. }
+  lDacFactory := fComponentFactory.FindFactory(TRecorderDacComponent.TypeId);
+  if lDacFactory is TRecorderDacComponentFactory then
+    if ANewState in [rsPreview, rsRecord] then
+      TRecorderDacComponentFactory(lDacFactory).EnterPreview
+    else if ANewState = rsStop then
+      TRecorderDacComponentFactory(lDacFactory).LeavePreview;
   if (ANewState = rsRecord) and (AOldState <> rsRecord) then
     fComponentManager.DoStart
   else if (AOldState = rsRecord) and (ANewState <> rsRecord) then
     fComponentManager.DoStop;
   if fPluginRuntime <> nil then
-  begin
-    if (ANewState = rsRecord) and (AOldState <> rsRecord) then
-      fPluginRuntime.NotifyAll(PN_RCSTART)
-    else if (AOldState = rsRecord) and (ANewState <> rsRecord) then
-      fPluginRuntime.NotifyAll(PN_RCSTOP);
-  end;
+    fPluginRuntime.NotifyRunTransition(ATransition);
   UpdateStateView;
   UpdateCoordinatorSnapshot;
 end;

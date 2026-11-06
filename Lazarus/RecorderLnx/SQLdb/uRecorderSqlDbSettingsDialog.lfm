@@ -154,6 +154,34 @@ object RecorderSqlDbSettingsDialog: TRecorderSqlDbSettingsDialog
       OnClick = btnSweepDbClick
       TabOrder = 4
     end
+    object btnAllowedDbSignals: TButton
+      Left = 452
+      Height = 28
+      Top = 114
+      Width = 157
+      Anchors = [akTop, akRight]
+      Caption = 'Разрешённые каналы...'
+      OnClick = btnAllowedDbSignalsClick
+      TabOrder = 5
+    end
+    object btnEnableAllDbSignals: TButton
+      Left = 12
+      Height = 28
+      Top = 114
+      Width = 157
+      Caption = 'Включить все'
+      OnClick = btnEnableAllDbSignalsClick
+      TabOrder = 6
+    end
+    object btnToggleSelectedDbSignals: TButton
+      Left = 177
+      Height = 28
+      Top = 114
+      Width = 157
+      Caption = 'Включить/выключить выбранные'
+      OnClick = btnToggleSelectedDbSignalsClick
+      TabOrder = 7
+    end
   end
   object gbSignals: TGroupBox
     Left = 650

@@ -9,9 +9,42 @@ function RunCoordinatorCli: Integer;
 implementation
 
 uses
-  Classes, SysUtils, fphttpclient, fpjson, jsonparser,
+  Classes, SysUtils, fphttpclient, fpjson, jsonparser, HTTPDefs,
   uCoordinatorModel, uCoordinatorConfig, uCoordinatorHttpServer,
-  uCoordinatorSqlEventStore;
+  uCoordinatorSqlEventStore
+  {$IFDEF WINDOWS}, Windows{$ENDIF};
+
+procedure CliWriteLine(const AValue: UTF8String; AError: Boolean = False);
+{$IFDEF WINDOWS}
+var
+  lHandle: THandle;
+  lHandleKind, lWritten, lConsoleMode: DWORD;
+  lBytes: UTF8String;
+  lWide: UnicodeString;
+begin
+  if AError then lHandleKind := DWORD(STD_ERROR_HANDLE)
+  else lHandleKind := DWORD(STD_OUTPUT_HANDLE);
+  lHandle := GetStdHandle(lHandleKind);
+  if (lHandle = 0) or (lHandle = INVALID_HANDLE_VALUE) then
+  begin
+    AttachConsole(ATTACH_PARENT_PROCESS);
+    lHandle := GetStdHandle(lHandleKind);
+    if (lHandle = 0) or (lHandle = INVALID_HANDLE_VALUE) then Exit;
+  end;
+  lBytes := AValue + LineEnding;
+  if GetConsoleMode(lHandle, lConsoleMode) then
+  begin
+    lWide := UTF8Decode(lBytes);
+    WriteConsoleW(lHandle, PWideChar(lWide), Length(lWide), lWritten, nil);
+  end
+  else
+    WriteFile(lHandle, lBytes[1], Length(lBytes), lWritten, nil);
+{$ELSE}
+begin
+  if AError then WriteLn(StdErr, AValue)
+  else WriteLn(AValue);
+{$ENDIF}
+end;
 
 function ParamValue(const AName, ADefault: string): string;
 var
@@ -35,24 +68,32 @@ end;
 
 procedure PrintUsage;
 begin
-  WriteLn('RecorderCoordinator');
-  WriteLn('  --serve [--listen=0.0.0.0] [--port=8765]');
-  WriteLn('  --cli --status [--url=http://127.0.0.1:8765]');
-  WriteLn('  --cli --list-hosts [--url=http://127.0.0.1:8765]');
-  WriteLn('  --cli --command=start|stop --host=<instance-id> [--url=...]');
+  CliWriteLine('RecorderCoordinator');
+  CliWriteLine('  --serve [--listen=0.0.0.0] [--port=8765]');
+  CliWriteLine('  --cli --status [--url=http://127.0.0.1:8765]');
+  CliWriteLine('  --cli --list-hosts [--url=http://127.0.0.1:8765]');
+  CliWriteLine('  --cli --command=start|stop --host=<instance-id> [--url=...]');
+  CliWriteLine('  --cli --command=workstation.name.get --host=<IPv4> [--url=...]');
+  CliWriteLine('  --cli --command=workstation.name.set --host=<IPv4> --workstation-name=<name> [--url=...]');
+  CliWriteLine('  --cli --command=workstation.name.set --host=<IPv4> --use-computer-name [--url=...]');
 end;
 
-function HttpGet(const AUrl: string): string;
+function HttpGet(const AUrl: string; ATimeoutMs: Integer = 0): string;
 var lClient: TFPHTTPClient;
 begin
   lClient := TFPHTTPClient.Create(nil);
   try
+    if ATimeoutMs > 0 then
+    begin
+      lClient.ConnectTimeout := ATimeoutMs;
+      lClient.IOTimeout := ATimeoutMs;
+    end;
     lClient.AddHeader('Accept', 'application/json');
     Result := lClient.Get(AUrl);
   finally lClient.Free; end;
 end;
 
-function HttpPost(const AUrl, ABody: string): string;
+function HttpPost(const AUrl, ABody: string; ATimeoutMs: Integer = 0): string;
 var
   lClient: TFPHTTPClient;
   lInput: TStringStream;
@@ -60,6 +101,11 @@ begin
   lClient := TFPHTTPClient.Create(nil);
   lInput := TStringStream.Create(ABody);
   try
+    if ATimeoutMs > 0 then
+    begin
+      lClient.ConnectTimeout := ATimeoutMs;
+      lClient.IOTimeout := ATimeoutMs;
+    end;
     lClient.AddHeader('Content-Type', 'application/json');
     lClient.RequestBody := lInput;
     Result := lClient.Post(AUrl);
@@ -68,6 +114,89 @@ begin
     lInput.Free;
     lClient.Free;
   end;
+end;
+
+function ParseCommandResponse(const AResponse: string): TJSONObject;
+var
+  lData: TJSONData;
+begin
+  lData := GetJSON(AResponse);
+  if not (lData is TJSONObject) then
+  begin
+    lData.Free;
+    raise Exception.Create('Invalid command response');
+  end;
+  Result := TJSONObject(lData);
+end;
+
+function RunWorkstationNameCommand(const ABaseUrl, ACommand, AHost: string): Integer;
+const
+  CRequestTimeoutMs = 3000;
+  CCommandWaitMs = 20000;
+var
+  lRequest, lPayload, lResponse: TJSONObject;
+  lName, lCommandId, lState, lStatusUrl: string;
+  lUseComputerName: Boolean;
+  lDeadline: QWord;
+begin
+  lName := Trim(ParamValue('--workstation-name', ''));
+  lUseComputerName := HasParam('--use-computer-name');
+  if (ACommand = 'workstation.name.set') and
+     ((lName <> '') = lUseComputerName) then
+  begin
+    PrintUsage;
+    Exit(2);
+  end;
+
+  lRequest := TJSONObject.Create;
+  try
+    lRequest.Add('address', AHost);
+    lRequest.Add('command', ACommand);
+    if ACommand = 'workstation.name.set' then
+    begin
+      lPayload := TJSONObject.Create;
+      lRequest.Add('payload', lPayload);
+      lPayload.Add('name', lName);
+      lPayload.Add('use_computer_name', lUseComputerName);
+    end;
+    lResponse := ParseCommandResponse(HttpPost(ABaseUrl + '/api/v1/commands',
+      lRequest.AsJSON, CRequestTimeoutMs));
+    try
+      lCommandId := lResponse.Get('command_id', '');
+      if lCommandId = '' then
+        raise Exception.Create('Command rejected: ' + lResponse.AsJSON);
+    finally
+      lResponse.Free;
+    end;
+  finally
+    lRequest.Free;
+  end;
+
+  lStatusUrl := ABaseUrl + '/api/v1/commands/status?command_id=' +
+    HTTPEncode(lCommandId);
+  lDeadline := GetTickCount64 + CCommandWaitMs;
+  repeat
+    lResponse := ParseCommandResponse(HttpGet(lStatusUrl, CRequestTimeoutMs));
+    try
+      lState := lResponse.Get('state', '');
+      if (lState <> 'pending') and (lState <> 'accepted') then
+      begin
+        if (lState = 'completed') and
+           (lResponse.Get('result_code', '') = 'noError') then
+        begin
+          CliWriteLine(lResponse.AsJSON);
+          Exit(0);
+        end;
+        CliWriteLine(lResponse.AsJSON, True);
+        Exit(1);
+      end;
+    finally
+      lResponse.Free;
+    end;
+    Sleep(250);
+  until GetTickCount64 >= lDeadline;
+  CliWriteLine('Timed out waiting for command ' + lCommandId, True);
+  Result := 1;
 end;
 
 function RunServer: Integer;
@@ -80,10 +209,12 @@ begin
   Result := 1;
   lModel := TCoordinatorModel.Create;
   lConfig := TCoordinatorConfig.Create(ChangeFileExt(ParamStr(0), '.ini'));
-  lServer := TCoordinatorHttpServer.Create(lModel);
+  lServer := nil;
   lEventStore := nil;
   try
     lConfig.Load;
+    lServer := TCoordinatorHttpServer.Create(lModel, lConfig.HostAgentPort,
+      lConfig.HostAgentToken);
     lEventStore := TCoordinatorSqlEventStore.Create(lConfig.SqlDbConfigFile);
     lModel.OnRecordingLifecycle := @lEventStore.HandleLifecycle;
     lModel.EventWindowSec := lConfig.EventWindowSec;
@@ -92,8 +223,9 @@ begin
     lConfig.ListenAddress := ParamValue('--listen', lConfig.ListenAddress);
     lConfig.Port := StrToIntDef(ParamValue('--port', IntToStr(lConfig.Port)), lConfig.Port);
     lServer.Start(lConfig.ListenAddress, lConfig.Port);
-    WriteLn('RecorderCoordinator listening on ', lConfig.ListenAddress, ':', lConfig.Port);
-    WriteLn('Press Ctrl+C to stop.');
+    CliWriteLine('RecorderCoordinator listening on ' + lConfig.ListenAddress +
+      ':' + IntToStr(lConfig.Port));
+    CliWriteLine('Press Ctrl+C to stop.');
     while True do
     begin
       CheckSynchronize(50);
@@ -120,6 +252,9 @@ begin
     PrintUsage;
     Exit(2);
   end;
+  if (lCommand = 'workstation.name.get') or
+     (lCommand = 'workstation.name.set') then
+    Exit(RunWorkstationNameCommand(ABaseUrl, lCommand, lHost));
   lJson := TJSONObject.Create;
   try
     lJson.Add('instance_id', lHost);
@@ -128,7 +263,7 @@ begin
   finally
     lJson.Free;
   end;
-  WriteLn(HttpPost(ABaseUrl + '/api/v1/commands', lBody));
+  CliWriteLine(HttpPost(ABaseUrl + '/api/v1/commands', lBody));
   Result := 0;
 end;
 
@@ -140,9 +275,9 @@ begin
     if HasParam('--serve') then Exit(RunServer);
     lBaseUrl := ParamValue('--url', 'http://127.0.0.1:8765');
     if HasParam('--status') then
-      WriteLn(HttpGet(lBaseUrl + '/api/v1/status'))
+      CliWriteLine(HttpGet(lBaseUrl + '/api/v1/status'))
     else if HasParam('--list-hosts') then
-      WriteLn(HttpGet(lBaseUrl + '/api/v1/hosts'))
+      CliWriteLine(HttpGet(lBaseUrl + '/api/v1/hosts'))
     else if ParamValue('--command', '') <> '' then
       Exit(RunRemoteCommand(lBaseUrl))
     else
@@ -154,7 +289,7 @@ begin
   except
     on E: Exception do
     begin
-      WriteLn(StdErr, 'ERROR: ', E.Message);
+      CliWriteLine('ERROR: ' + E.Message, True);
       Result := 1;
     end;
   end;

@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12" />
+    <General>
+      <Flags>
+        <MainUnitHasTitleStatement Value="False" />
+      </Flags>
+      <SessionStorage Value="InProjectDir" />
+      <Title Value="RecorderLnx" />
+      <UseAppBundle Value="False" />
+      <ResourceType Value="res" />
+    </General>
+    <BuildModes>
+      <Item Name="Default" Default="True" />
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2" />
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2" />
+    </RunParams>
+    <RequiredPackages>
+      <Item>
+        <PackageName Value="SynEdit" />
+      </Item>
+      <Item>
+        <PackageName Value="bgracontrols" />
+      </Item>
+      <Item>
+        <PackageName Value="DateTimeCtrls" />
+      </Item>
+      <Item>
+        <PackageName Value="LzrObrPack" />
+      </Item>
+      <Item>
+        <PackageName Value="TAChartLazarusPkg" />
+      </Item>
+      <Item>
+        <PackageName Value="LCL" />
+      </Item>
+    </RequiredPackages>
+    <Units>
+      <Unit>
+        <Filename Value="SqlDbPathDialogProbe.lpr" />
+      </Unit>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11" />
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)" />
+      <OtherUnitFiles Value="../../;../../Algs;../../Core;../../UI;../../Mdb;../../Components/Common;../../Components/Donut;../../Components/Editor;../../Components/FrequencyResponse;../../Components/ImpactHammer;../../Components/Lissajous;../../Components/MeasurementSection;../../Components/Oscillogram;../../Components/SignalGenerator;../../Components/Spectrum;../../Components/SqlTrend;../../Components/Standard;../../Components/ThreeD;../../Components/Trend;../../Calibrations;../../Calibrations/Strains;../../Device;../../Device/Modbus;../../Device/Modbus/Core;../../Device/Modbus/Runtime;../../Device/Modbus/UI;../../Device/DAC/Core;../../Device/DAC/Component;../../Device/DAC/Audio;../../Device/DAC/Null;../../Device/DAC/PXIe;../../Device/OPC;../../Device/MIC140;../../Device/MIC140/UI;../../Device/MIC140/utils;../../Device/mic185;../../Device/mic185/UI;../../Device/MCbus;../../Device/MCbus/UI;../../Device/Architecture;../../Device/PXI/MX248/Core;../../Device/PXI/MX248/Runtime;../../Device/PXI/MX248/Transport/Windows;../../Device/PXI/MX248/UI;../../SDB;../../SQLdb;../../SQLdb/SqlTrend;../../Plugins/SDK;../../Plugins/LuaCalcPlugin;../../../SharedUtils;../../../SharedUtils/math;../../../SharedUtils/3d/core;../../../SharedUtils/3d/contracts;../../../SharedUtils/3d/io;../../../SharedUtils/3d/interaction;../../../SharedUtils/3d/motion;../../../SharedUtils/3d/lcl;../../../SharedUtils/3d/render/opengl;../../../Tests/RecorderTests/UITestData;../../../third_party/fpspreadsheet" />
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)" />
+    </SearchPaths>
+    <Linking>
+      <Debugging>
+        <DebugInfoType Value="dsDwarf3" />
+      </Debugging>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True" />
+        </Win32>
+      </Options>
+    </Linking>
+    <Other>
+      <CustomOptions Value="-vm4104,4105,5024,6058" />
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions>
+      <Item>
+        <Name Value="EAbort" />
+      </Item>
+      <Item>
+        <Name Value="ECodetoolError" />
+      </Item>
+      <Item>
+        <Name Value="EFOpenError" />
+      </Item>
+      <Item>
+        <Name Value="ERecorderStateError" />
+      </Item>
+      <Item>
+        <Name Value="ERecorderSqlDbError" />
+      </Item>
+      <Item>
+        <Name Value="EIBDatabaseError" />
+      </Item>
+      <Item>
+        <Name Value="EResNotFound" />
+      </Item>
+      <Item>
+        <Name Value="RunError(5)" />
+      </Item>
+      <Item>
+        <Name Value="EInOutError" />
+      </Item>
+      <Item>
+        <Name Value="EAccessViolation" />
+      </Item>
+      <Item>
+        <Name Value="EInvalidGraphic" />
+      </Item>
+      <Item>
+        <Name Value="EInvalidOperation" />
+      </Item>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

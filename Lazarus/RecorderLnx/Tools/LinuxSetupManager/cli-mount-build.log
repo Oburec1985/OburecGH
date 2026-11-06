@@ -1,0 +1,6 @@
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/LinuxSetupManager/uLinuxSetupManagerEmbedded.pas(75,79) Warning: (4105) Implicit string type conversion with potential data loss from "UnicodeString" to "AnsiString"
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/Tools/LinuxSetupManager/lib/x86_64-linux/LinuxSetupManagerCli
+(1008) 5991 lines compiled, 1.0 sec
+(1021) 342 warning(s) issued
+(1022) 15 hint(s) issued
+(1023) 2 note(s) issued

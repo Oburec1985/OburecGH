@@ -13,7 +13,7 @@ uses
   uRecorderImpactHammerContracts;
 
 const
-  RECORDER_IMPACT_HAMMER_CONFIG_VERSION = 16;
+  RECORDER_IMPACT_HAMMER_CONFIG_VERSION = 17;
 
 type
   TImpactTriggerPolarity = (itpPositive, itpNegative, itpAbsolute);
@@ -94,6 +94,7 @@ type
     fTarget3dNodeId: QWord;
     fGeometryBindingMode: TRecorderGeometryBindingMode;
     fMarkerSizePixels: Double;
+    fIntensityLogScale: Boolean;
     fMarkerColor: TColor;
     fMarkerVisualization:TRecorderPointVisualization;
     fScenarioEnabled:Boolean;
@@ -185,6 +186,7 @@ type
     property GeometryBindingMode: TRecorderGeometryBindingMode
       read fGeometryBindingMode write fGeometryBindingMode;
     property MarkerSizePixels: Double read fMarkerSizePixels write fMarkerSizePixels;
+    property IntensityLogScale: Boolean read fIntensityLogScale write fIntensityLogScale;
     property MarkerColor: TColor read fMarkerColor write fMarkerColor;
     property MarkerVisualization:TRecorderPointVisualization read fMarkerVisualization write fMarkerVisualization;
     property ScenarioEnabled:Boolean read fScenarioEnabled write fScenarioEnabled;
@@ -322,6 +324,7 @@ begin
   fBasePointNumber := 0;
   fGeometryBindingMode := rgbmIntensity;
   fMarkerSizePixels := 10;
+  fIntensityLogScale := False;
   fMarkerColor := clRed;
   fMarkerVisualization:=rpvSphere;
   fMarkerGradientEnabled := False;
@@ -400,6 +403,7 @@ begin
   fTarget3dNodeId := ASource.fTarget3dNodeId;
   fGeometryBindingMode := ASource.fGeometryBindingMode;
   fMarkerSizePixels := ASource.fMarkerSizePixels;
+  fIntensityLogScale := ASource.fIntensityLogScale;
   fMarkerColor := ASource.fMarkerColor;
   fMarkerVisualization:=ASource.fMarkerVisualization;
   fScenarioEnabled:=ASource.fScenarioEnabled;
@@ -652,6 +656,7 @@ begin
   Put(AValues, APrefix + 'Target3dComponentId', fTarget3dComponentId);
   Put(AValues, APrefix + 'Target3dNodeId', IntToStr(fTarget3dNodeId));
   Put(AValues, APrefix + 'MarkerSizePixels', FloatToStr(fMarkerSizePixels));
+  Put(AValues, APrefix + 'IntensityLogScale', BoolToStr(fIntensityLogScale, True));
   Put(AValues, APrefix + 'MarkerColor', IntToStr(fMarkerColor));
   Put(AValues, APrefix+'MarkerVisualization',IntToStr(Ord(fMarkerVisualization)));
   Put(AValues, APrefix+'ScenarioEnabled',BoolToStr(fScenarioEnabled,True));
@@ -798,6 +803,7 @@ begin
   fTarget3dComponentId := AValues.Values[APrefix + 'Target3dComponentId'];
   fTarget3dNodeId := ReadQWord(AValues, APrefix + 'Target3dNodeId', 0);
   fMarkerSizePixels := ReadFloat(AValues, APrefix + 'MarkerSizePixels', 10);
+  fIntensityLogScale := StrToBoolDef(AValues.Values[APrefix + 'IntensityLogScale'], False);
   fMarkerColor := ReadInt(AValues, APrefix + 'MarkerColor', clRed);
   fScenarioEnabled:=StrToBoolDef(AValues.Values[APrefix+'ScenarioEnabled'],False);
   fMarkerVisualization:=TRecorderPointVisualization(EnsureRange(

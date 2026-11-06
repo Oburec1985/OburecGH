@@ -26,7 +26,7 @@ function CreateRecorderMic140SettingsGuideForm(AOwner: TComponent): TForm;
 implementation
 
 uses
-  Math, uRecorderMic140ChannelDialog, uRecorderConfiguredSourceEditor,
+  Math, Graphics, uRecorderMic140ChannelDialog, uRecorderConfiguredSourceEditor,
   uComponentServices, uRecorderMic140Calibration;
 
 type
@@ -54,6 +54,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure GridClick(Sender: TObject);
     procedure GridDblClick(Sender: TObject);
+    procedure GridPrepareCanvas(Sender: TObject; ACol, ARow: Integer;
+      AState: TGridDrawState);
+    procedure ThermoCompChange(Sender: TObject);
     procedure GridMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure ChannelPropertiesClick(Sender: TObject);
@@ -68,6 +71,7 @@ type
     fDeviceSerial: Integer;
     fDevSubRev: Integer;
     fChannelSettings: array of TRecorderMic140ChannelSettings;
+    fCjcCalibrationMissing: array of Boolean;
     fGridPopup: TPopupMenu;
     procedure InitGrid;
     procedure EnsureChannelSettings(AChannelCount: Integer);
@@ -135,7 +139,7 @@ end;
 
 procedure TRecorderMic140SettingsDialog.InitGrid;
 begin
-  fGrid.ColCount := 8;
+  fGrid.ColCount := 9;
   fGrid.Cells[0, 0] := 'Исп.';
   fGrid.Cells[1, 0] := 'Адрес';
   fGrid.Cells[2, 0] := 'Имя';
@@ -143,7 +147,8 @@ begin
   fGrid.Cells[4, 0] := 'Канал КХС';
   fGrid.Cells[5, 0] := 'Диапазон [mV]';
   fGrid.Cells[6, 0] := 'ГХ';
-  fGrid.Cells[7, 0] := 'Баланс';
+  fGrid.Cells[7, 0] := 'Апп. ГХ';
+  fGrid.Cells[8, 0] := 'Баланс';
   fGrid.ColWidths[0] := 36;
   fGrid.ColWidths[1] := 76;
   fGrid.ColWidths[2] := 120;
@@ -152,6 +157,7 @@ begin
   fGrid.ColWidths[5] := 88;
   fGrid.ColWidths[6] := 100;
   fGrid.ColWidths[7] := 64;
+  fGrid.ColWidths[8] := 64;
 end;
 
 procedure TRecorderMic140SettingsDialog.ConfigureContext(
@@ -284,7 +290,7 @@ end;
 procedure TRecorderMic140SettingsDialog.FillGrid(AChannelCount: Integer;
   ASelected: TStrings);
 var
-  I: Integer;
+  I, lCjcIndex: Integer;
   lAddress: string;
   lGrad: string;
   lOwned: TStringList;
@@ -304,6 +310,7 @@ begin
   end;
   try
     fGrid.RowCount := AChannelCount + 1;
+    SetLength(fCjcCalibrationMissing, AChannelCount);
     for I := 1 to AChannelCount do
     begin
       lAddress := IntToStr(I);
@@ -319,17 +326,42 @@ begin
       else
         lGrad := RecorderMic140FormatAdcRangeMv(lSettings.RangeIndex);
       fGrid.Cells[3, I] := lGrad;
-      fGrid.Cells[4, I] := RecorderMic140TemperatureDisplayText(
-        RecorderMic140ChannelCjcNumber(lSettings, I - 1, fDevSubRev),
-        fDevSubRev);
+      lCjcIndex := RecorderMic140ChannelCjcNumber(lSettings, I - 1, fDevSubRev);
+      fGrid.Cells[4, I] := RecorderMic140TemperatureDisplayText(lCjcIndex, fDevSubRev);
+      fCjcCalibrationMissing[I - 1] := (fDeviceSerial > 0) and
+        RecorderMic140ChannelUsesTemperature(lSettings) and (lCjcIndex >= 0) and
+        not RecorderMic140HasTInHardwareCalibration(fTagRegistry,
+          fDeviceSerial, lCjcIndex, fDevSubRev);
       fGrid.Cells[5, I] := RecorderMic140FormatAdcRangeMv(lSettings.RangeIndex);
       fGrid.Cells[6, I] := lSettings.ThermocoupleScaleName;
-      fGrid.Cells[7, I] := FormatFloat('0.000', lSettings.SoftBalance);
+      if fDeviceSerial <= 0 then
+        fGrid.Cells[7, I] := '—'
+      else if RecorderMic140HasHardwareCalibration(fTagRegistry,
+        fDeviceSerial, lSettings.RangeIndex, I) then
+        fGrid.Cells[7, I] := 'Есть'
+      else
+        fGrid.Cells[7, I] := 'Нет';
+      fGrid.Cells[8, I] := FormatFloat('0.000', lSettings.SoftBalance);
     end;
     SGChange(fGrid, 32, 220, 18);
+    fGrid.Invalidate;
   finally
     lOwned.Free;
   end;
+end;
+
+procedure TRecorderMic140SettingsDialog.GridPrepareCanvas(Sender: TObject;
+  ACol, ARow: Integer; AState: TGridDrawState);
+begin
+  if (ACol <> 4) or (ARow < 1) or (ARow > Length(fCjcCalibrationMissing)) or
+    not fThermoCompCheck.Checked or not fCjcCalibrationMissing[ARow - 1] then Exit;
+  fGrid.Canvas.Brush.Color := $00D1D1FF;
+  fGrid.Canvas.Font.Color := clMaroon;
+end;
+
+procedure TRecorderMic140SettingsDialog.ThermoCompChange(Sender: TObject);
+begin
+  if fGrid <> nil then fGrid.Invalidate;
 end;
 
 function CreateRecorderMic140SettingsGuideForm(AOwner: TComponent): TForm;

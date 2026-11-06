@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, DateUtils, SyncObjs, fpjson, jsonparser,
-  uSharedFileLogger, uCoordinatorHostStore;
+  uSharedFileLogger, uCoordinatorHostStore, uCoordinatorSqlQueueStore;
 
 type
   TCoordinatorHost = class
@@ -15,6 +15,8 @@ type
     InstanceId: string;
     Address: string;
     HostName: string;
+    WorkstationName: string;
+    UseComputerName: Boolean;
     MacAddress: string;
     ExecutablePath: string;
     OperatingSystem: string;
@@ -22,9 +24,12 @@ type
     State: string;
     CurrentRecordingId: string;
     CurrentMeasurementPath: string;
+    SqlLocalDatabase: string;
     LastSeenUtc: TDateTime;
     LastHttpSeenUtc: TDateTime;
     Managed: Boolean;
+    ControlOwner: string;
+    ControlClaim: string;
     PcReachable: Boolean;
     PcReachabilityKnown: Boolean;
     PcConnectionState: string;
@@ -55,12 +60,15 @@ type
     CommandId: string;
     InstanceId: string;
     CommandName: string;
+    ControlClaim: string;
     CorrelationId: string;
     ExecuteAtUtc: string;
     PayloadJson: string;
     State: string;
     ResultCode: string;
     ResultText: string;
+    WorkstationResultJson: string;
+    LastSentMs: QWord;
     function ToJson: TJSONObject;
   end;
 
@@ -91,6 +99,7 @@ type
     fCommands: TFPList;
     fDiagnostics: TStringList;
     fHostStore: TCoordinatorHostStore;
+    fSqlQueueStore: TCoordinatorSqlQueueStore;
     fIgnoredHosts: TFPList;
     fIgnoredHostsFileName: string;
     procedure AddDiagnosticLocked(const AText: string);
@@ -112,24 +121,32 @@ type
     procedure LoadIgnoredHostsLocked;
     procedure MergeStoredIdentityAliases;
     procedure SaveHostsLocked;
+    procedure LoadSqlCommandsLocked;
+    procedure SaveSqlCommandsLocked;
     procedure SaveIgnoredHostsLocked;
+    function SqlPayloadForServerLocked(APayload: TJSONObject): string;
     function IsHostIgnored(const AInstanceId, AAddress,
       AMacAddress: string): Boolean;
   public
     EventWindowSec: Integer;
+    ControlId: string;
     CreateRecordingEvents: Boolean;
     StartAllOnAnyRecording: Boolean;
     OnRecordingLifecycle: TCoordinatorRecordingLifecycleHandler;
     constructor Create;
     destructor Destroy; override;
-    procedure EnableHostPersistence(const AFileName: string = '');
+    procedure EnableHostPersistence(const AFileName: string = '';
+      AEnableExperimentalSqlQueue: Boolean = False);
     function RegisterHello(AData: TJSONObject): TJSONObject;
     function RegisterDiscovery(AData: TJSONObject): TJSONObject;
+    procedure ApplyControlOwner(const AInstanceId, AOwnerId, AClaimId: string);
     function ApplyHeartbeat(AData: TJSONObject): TJSONObject;
     function AddRecordingEvent(AData: TJSONObject): TJSONObject;
     function EnqueueCommand(AData: TJSONObject): TJSONObject;
     function NextCommand(const AInstanceId: string): TJSONObject;
     function CompleteCommand(AData: TJSONObject): TJSONObject;
+    function WorkstationCommandStatus(const ACommandId: string): TJSONObject;
+    function CommandGroupStatus(const ACorrelationId: string): TJSONObject;
     function CurrentRecording(const AInstanceId: string): TJSONObject;
     function HostsJson: TJSONArray;
     function HostByIdJson(const AInstanceId: string): TJSONObject;
@@ -162,7 +179,7 @@ function ParseJsonDateTime(const AValue: string; const ADefault: TDateTime): TDa
 
 implementation
 
-uses IniFiles;
+uses IniFiles, uRecorderNetworkBinding;
 
 function IsUuidLike(const AValue: string): Boolean; forward;
 function IsUsableHostAddress(const AValue: string): Boolean; forward;
@@ -254,7 +271,10 @@ begin
   Result := TJSONObject.Create;
   Result.Add('instance_id', InstanceId);
   Result.Add('address', Address);
-  Result.Add('host_name', HostName);
+  if WorkstationName <> '' then Result.Add('host_name', WorkstationName)
+  else Result.Add('host_name', HostName);
+  Result.Add('workstation_name', WorkstationName);
+  Result.Add('use_computer_name', UseComputerName);
   Result.Add('mac_address', MacAddress);
   Result.Add('executable_path', ExecutablePath);
   Result.Add('os', OperatingSystem);
@@ -286,7 +306,10 @@ begin
   Result.Add('last_seen_utc', JsonDateTime(LastSeenUtc));
   Result.Add('current_recording_id', CurrentRecordingId);
   Result.Add('measurement_path', CurrentMeasurementPath);
+  Result.Add('sql_local_database', SqlLocalDatabase);
   Result.Add('managed', Managed);
+  Result.Add('control_owner', ControlOwner);
+  Result.Add('control_claim', ControlClaim);
 end;
 
 constructor TCoordinatorEvent.Create;
@@ -336,6 +359,7 @@ var
   lPayload: TJSONData;
 begin
   Result := TJSONObject.Create;
+  Result.Add('coordinator_claim_id', ControlClaim);
   Result.Add('command_id', CommandId);
   Result.Add('instance_id', InstanceId);
   Result.Add('command', CommandName);
@@ -351,6 +375,8 @@ begin
   Result.Add('state', State);
   Result.Add('result_code', ResultCode);
   Result.Add('result_text', ResultText);
+  if WorkstationResultJson <> '' then
+    Result.Add('result', GetJSON(WorkstationResultJson));
 end;
 
 constructor TCoordinatorModel.Create;
@@ -379,6 +405,7 @@ begin
   fCommands.Free;
   fIgnoredHosts.Free;
   fHostStore.Free;
+  fSqlQueueStore.Free;
   fDiagnostics.Free;
   fEvents.Free;
   fHosts.Free;
@@ -476,19 +503,112 @@ begin
     end;
 end;
 
-procedure TCoordinatorModel.EnableHostPersistence(const AFileName: string);
+procedure TCoordinatorModel.LoadSqlCommandsLocked;
 var
-  lFileName: string;
+  lStored: TStoredSqlCommands;
+  lCommand: TCoordinatorCommand;
+  lPayload: TJSONObject;
+  lIndex: Integer;
+begin
+  if fSqlQueueStore = nil then Exit;
+  lStored := fSqlQueueStore.Load;
+  for lIndex := 0 to High(lStored) do
+  begin
+    if FindCommand(lStored[lIndex].CommandId) <> nil then Continue;
+    lPayload := TJSONObject.Create;
+    try
+      lPayload.Add('host', lStored[lIndex].Host);
+      lPayload.Add('port', lStored[lIndex].Port);
+      if lStored[lIndex].ServerDatabase <> '' then
+        lPayload.Add('server_database', lStored[lIndex].ServerDatabase);
+      lCommand := TCoordinatorCommand.Create;
+      lCommand.CommandId := lStored[lIndex].CommandId;
+      lCommand.InstanceId := lStored[lIndex].InstanceId;
+      lCommand.CorrelationId := lStored[lIndex].CorrelationId;
+      lCommand.CommandName := 'config.sql_database.set';
+      lCommand.PayloadJson := lPayload.AsJSON;
+      lCommand.State := 'pending';
+      fCommands.Add(lCommand);
+    finally
+      lPayload.Free;
+    end;
+  end;
+end;
+
+procedure TCoordinatorModel.SaveSqlCommandsLocked;
+var
+  lStored: TStoredSqlCommands;
+  lCommand: TCoordinatorCommand;
+  lData: TJSONData;
+  lPayload: TJSONObject;
+  lIndex, lCount: Integer;
+begin
+  if fSqlQueueStore = nil then Exit;
+  lCount := 0;
+  for lIndex := 0 to fCommands.Count - 1 do
+  begin
+    lCommand := TCoordinatorCommand(fCommands[lIndex]);
+    if not SameText(lCommand.CommandName, 'config.sql_database.set') or
+       not (SameText(lCommand.State, 'pending') or SameText(lCommand.State, 'accepted')) then
+      Continue;
+    lData := GetJSON(lCommand.PayloadJson);
+    try
+      if not (lData is TJSONObject) then
+        raise Exception.Create('Invalid SQL configuration command payload');
+      lPayload := TJSONObject(lData);
+      SetLength(lStored, lCount + 1);
+      lStored[lCount].CommandId := lCommand.CommandId;
+      lStored[lCount].InstanceId := lCommand.InstanceId;
+      lStored[lCount].CorrelationId := lCommand.CorrelationId;
+      lStored[lCount].Host := Trim(lPayload.Get('host', ''));
+      lStored[lCount].Database := '';
+      lStored[lCount].ServerDatabase := Trim(lPayload.Get('server_database', ''));
+      lStored[lCount].Port := lPayload.Get('port', 3050);
+      if (lStored[lCount].CommandId = '') or (lStored[lCount].InstanceId = '') or
+         (lStored[lCount].Host = '') or
+         (lStored[lCount].Port < 0) or (lStored[lCount].Port > 65535) then
+        raise Exception.Create('Incomplete SQL configuration command');
+      Inc(lCount);
+    finally
+      lData.Free;
+    end;
+  end;
+  fSqlQueueStore.Save(lStored);
+end;
+
+procedure TCoordinatorModel.EnableHostPersistence(const AFileName: string;
+  AEnableExperimentalSqlQueue: Boolean);
+var
+  lFileName, lSqlQueueFile: string;
 begin
   lFileName := Trim(AFileName);
-  if lFileName = '' then lFileName := DefaultCoordinatorHostStoreFile;
+  if lFileName = '' then
+  begin
+    lFileName := DefaultCoordinatorHostStoreFile;
+    lSqlQueueFile := IncludeTrailingPathDelimiter(GetAppConfigDir(False)) +
+      'sql-queue.json';
+    if AEnableExperimentalSqlQueue and
+       (not ForceDirectories(ExtractFileDir(lSqlQueueFile))) then
+      raise Exception.Create('Cannot create SQL command queue directory');
+  end
+  else
+    lSqlQueueFile := lFileName + '.sql-queue.json';
   fLock.Acquire;
   try
+    if fHostStore <> nil then
+      raise Exception.Create('Host persistence is already enabled');
     FreeAndNil(fHostStore);
+    FreeAndNil(fSqlQueueStore);
     fHostStore := TCoordinatorHostStore.Create(lFileName);
+    if AEnableExperimentalSqlQueue then
+      fSqlQueueStore := TCoordinatorSqlQueueStore.Create(lSqlQueueFile);
+    if (not AEnableExperimentalSqlQueue) and FileExists(lSqlQueueFile) then
+      AddDiagnosticLocked('Experimental SQL queue exists but is disabled; ' +
+        'pending entries were not loaded or changed');
     fIgnoredHostsFileName := lFileName;
     LoadIgnoredHostsLocked;
     LoadStoredHosts;
+    LoadSqlCommandsLocked;
     SaveHostsLocked;
   finally
     fLock.Release;
@@ -709,6 +829,15 @@ begin
     (Pos('\\', lValue) = 0);
 end;
 
+function PreserveConfiguredLocalAddress(const ACurrent, AIncoming: string): Boolean;
+begin
+  Result := (Trim(ACurrent) <> '') and (Trim(AIncoming) <> '') and
+    (NormalizedAddress(ACurrent) <> '<local>') and
+    not SameText(ACurrent, AIncoming) and
+    RecorderNetworkHostIsLocal(ACurrent) and
+    RecorderNetworkHostIsLocal(AIncoming);
+end;
+
 function NormalizedMacAddress(const AValue: string): string;
 begin
   Result := LowerCase(Trim(AValue));
@@ -831,6 +960,7 @@ begin
   begin
     AHost.Address := AAlias.Address;
     AHost.State := AAlias.State;
+    AHost.SqlLocalDatabase := AAlias.SqlLocalDatabase;
     AHost.LastHttpSeenUtc := AAlias.LastHttpSeenUtc;
   end
   else if AHost.Address = '' then
@@ -849,6 +979,8 @@ begin
     AHost.CurrentRecordingId := AAlias.CurrentRecordingId;
   if AHost.CurrentMeasurementPath = '' then
     AHost.CurrentMeasurementPath := AAlias.CurrentMeasurementPath;
+  if (AHost.SqlLocalDatabase = '') and (AHost.LastHttpSeenUtc = 0) then
+    AHost.SqlLocalDatabase := AAlias.SqlLocalDatabase;
   AHost.Managed := AHost.Managed or AAlias.Managed;
   if AAlias.PcReachabilityKnown and
     ((not AHost.PcReachabilityKnown) or (AAlias.LastPingUtc > AHost.LastPingUtc)) then
@@ -876,6 +1008,7 @@ begin
   for lIndex := 0 to fCommands.Count - 1 do
     if SameText(TCoordinatorCommand(fCommands[lIndex]).InstanceId, lOldId) then
       TCoordinatorCommand(fCommands[lIndex]).InstanceId := AHost.InstanceId;
+  if fCommands.Count > 0 then SaveSqlCommandsLocked;
   fHosts.Remove(AAlias);
   AAlias.Free;
 end;
@@ -1017,9 +1150,12 @@ begin
       SameText(lHost.State, 'recording') or
       HasActiveStartCommand(lHost.InstanceId) then
       Continue;
+    if (ControlId <> '') and ((lHost.ControlOwner <> ControlId) or
+      (lHost.ControlClaim = '')) then Continue;
     lCommand := TCoordinatorCommand.Create;
     lCommand.CommandId := NewId;
     lCommand.InstanceId := lHost.InstanceId;
+    lCommand.ControlClaim := lHost.ControlClaim;
     lCommand.CommandName := 'recording.start';
     lCommand.CorrelationId := lCorrelation;
     lCommand.State := 'pending';
@@ -1072,6 +1208,7 @@ begin
             lHost.InstanceId) then
             TCoordinatorCommand(fCommands[lIndex]).InstanceId := lId;
         lHost.InstanceId := lId;
+        if fCommands.Count > 0 then SaveSqlCommandsLocked;
       end;
       lPersistNeeded := True;
     end
@@ -1092,7 +1229,8 @@ begin
       fHosts.Add(lHost);
       lPersistNeeded := True;
     end;
-    if (lAddress <> '') and (not SameText(lHost.Address, lAddress)) then
+    if (lAddress <> '') and (not SameText(lHost.Address, lAddress)) and
+      not PreserveConfiguredLocalAddress(lHost.Address, lAddress) then
     begin
       lHost.Address := lAddress;
       lPersistNeeded := True;
@@ -1129,6 +1267,10 @@ begin
     lHost := MergeNamedIdentityAlias(lHost);
     if lHost <> lAlias then lPersistNeeded := True;
     lHost.State := JsonString(AData, 'state', lHost.State);
+    lHost.ControlOwner := JsonString(AData, 'coordinator_instance_id',
+      lHost.ControlOwner);
+    lHost.ControlClaim := JsonString(AData, 'coordinator_claim_id',
+      lHost.ControlClaim);
     if lHasRemoteAddress then
     begin
       lHost.LastSeenUtc := Now;
@@ -1137,6 +1279,28 @@ begin
     if lPersistNeeded then SaveHostsLocked;
     Result := lHost.ToJson;
     Result.Add('result_code', 'noError');
+  finally
+    fLock.Release;
+  end;
+end;
+
+procedure TCoordinatorModel.ApplyControlOwner(const AInstanceId, AOwnerId,
+  AClaimId: string);
+var
+  lHost: TCoordinatorHost;
+begin
+  fLock.Acquire;
+  try
+    lHost := FindHost(AInstanceId);
+    if lHost = nil then Exit;
+    if (lHost.ControlOwner <> AOwnerId) or
+       (lHost.ControlClaim <> AClaimId) then
+    begin
+      { Discovery may revoke ownership but never proves an HTTP session. }
+      lHost.LastHttpSeenUtc := 0;
+      lHost.ControlOwner := AOwnerId;
+      lHost.ControlClaim := AClaimId;
+    end;
   finally
     fLock.Release;
   end;
@@ -1179,6 +1343,7 @@ begin
             lHost.InstanceId) then
             TCoordinatorCommand(fCommands[lIndex]).InstanceId := lId;
         lHost.InstanceId := lId;
+        if fCommands.Count > 0 then SaveSqlCommandsLocked;
       end;
       lPersistNeeded := True;
     end
@@ -1194,6 +1359,7 @@ begin
     begin
       lHost := TCoordinatorHost.Create;
       lHost.InstanceId := lId;
+      if fCommands.Count > 0 then SaveSqlCommandsLocked;
       lHost.State := 'discovered';
       fHosts.Add(lHost);
       lPersistNeeded := True;
@@ -1219,12 +1385,15 @@ begin
     if (lHost.LastHttpSeenUtc = 0) or
       (SecondsBetween(Now, lHost.LastHttpSeenUtc) > CHttpStatePrioritySec) then
     begin
-      if (lAddress <> '') and (not SameText(lHost.Address, lAddress)) then
+      if (lAddress <> '') and (not SameText(lHost.Address, lAddress)) and
+        not PreserveConfiguredLocalAddress(lHost.Address, lAddress) then
       begin
         lHost.Address := lAddress;
         lPersistNeeded := True;
       end;
       lHost.State := 'discovered';
+      lHost.WorkstationName := Trim(JsonString(AData, 'workstation_name',
+        lHost.WorkstationName));
     end;
     lHost.LastSeenUtc := Now;
     if lPersistNeeded then SaveHostsLocked;
@@ -1251,7 +1420,15 @@ begin
       lPreviousState := lHost.State;
       lState := JsonPayloadObject(AData, 'state');
       if lState <> nil then
+      begin
         lHost.State := JsonString(lState, 'state', lHost.State);
+        lHost.SqlLocalDatabase := Trim(JsonString(lState,
+          'sql_local_database', ''));
+        lHost.WorkstationName := Trim(JsonString(lState, 'workstation_name',
+          lHost.WorkstationName));
+        lHost.UseComputerName := JsonBoolean(lState, 'use_computer_name',
+          lHost.UseComputerName);
+      end;
       lCurrentState := lHost.State;
       lRecording := JsonPayloadObject(AData, 'recording');
       if lRecording <> nil then
@@ -1471,17 +1648,63 @@ begin
   end;
 end;
 
+function TCoordinatorModel.SqlPayloadForServerLocked(
+  APayload: TJSONObject): string;
+var
+  lPayload: TJSONObject;
+  lServer: TCoordinatorHost;
+  lPath: string;
+begin
+  lPayload := TJSONObject(APayload.Clone);
+  try
+    { A panel's local database path is not a path on the selected Firebird PC.
+      Only that PC's Recorder heartbeat can supply its local database path. }
+    lPayload.Delete('server_database');
+    lPayload.Delete('database');
+    lServer := nil;
+    if Trim(lPayload.Get('host', '')) <> '' then
+      lServer := FindHostByAddress(Trim(lPayload.Get('host', '')));
+    if lServer <> nil then
+    begin
+      lPath := Trim(lServer.SqlLocalDatabase);
+      if (lPath <> '') and ((lPath[1] = '/') or
+        (Copy(lPath, 1, 2) = '\\') or
+        ((Length(lPath) > 2) and (lPath[2] = ':') and
+         (lPath[3] in ['\', '/']))) then
+        lPayload.Add('server_database', lPath);
+    end;
+    Result := lPayload.AsJSON;
+  finally
+    lPayload.Free;
+  end;
+end;
+
 function TCoordinatorModel.EnqueueCommand(AData: TJSONObject): TJSONObject;
 var
   lCommand: TCoordinatorCommand;
-  lTarget, lCorrelation: string;
+  lHost: TCoordinatorHost;
+  lTarget, lCorrelation, lAddress: string;
   lPayload: TJSONData;
   lPayloadJson: string;
-  lIndex, lCount: Integer;
+  lIndex, lCount, lFirstNew: Integer;
+  lIsSql: Boolean;
 begin
   fLock.Acquire;
   try
     lTarget := JsonString(AData, 'instance_id', '');
+    lAddress := Trim(JsonString(AData, 'address', ''));
+    if lAddress <> '' then
+    begin
+      lHost := FindHostByAddress(lAddress);
+      if lHost = nil then
+      begin
+        Result := TJSONObject.Create;
+        Result.Add('result_code', 'notFound');
+        Result.Add('result_text', 'No Recorder host at ' + lAddress);
+        Exit;
+      end;
+      lTarget := lHost.InstanceId;
+    end;
     lCorrelation := NormalizeCorrelationId(
       JsonString(AData, 'correlation_id', ''));
     if lCorrelation = '' then lCorrelation := NewId;
@@ -1490,14 +1713,23 @@ begin
       lPayloadJson := lPayload.AsJSON
     else
       lPayloadJson := '{}';
+    lIsSql := SameText(JsonString(AData, 'command', 'status'),
+      'config.sql_database.set');
+    if lIsSql and (lPayload is TJSONObject) then
+      lPayloadJson := SqlPayloadForServerLocked(TJSONObject(lPayload));
+    lFirstNew := fCommands.Count;
     if lTarget = '*' then
     begin
       lCount := 0;
       for lIndex := 0 to fHosts.Count - 1 do
       begin
+        lHost := TCoordinatorHost(fHosts[lIndex]);
+        if (ControlId <> '') and ((lHost.ControlOwner <> ControlId) or
+          (lHost.ControlClaim = '')) then Continue;
         lCommand := TCoordinatorCommand.Create;
         lCommand.CommandId := NewId;
         lCommand.InstanceId := TCoordinatorHost(fHosts[lIndex]).InstanceId;
+        lCommand.ControlClaim := lHost.ControlClaim;
         lCommand.CommandName := JsonString(AData, 'command', 'status');
         lCommand.CorrelationId := lCorrelation;
         lCommand.ExecuteAtUtc := JsonString(AData, 'execute_at_utc', '');
@@ -1506,21 +1738,50 @@ begin
         fCommands.Add(lCommand);
         Inc(lCount);
       end;
+      if lIsSql then
+      try
+        SaveSqlCommandsLocked;
+      except
+        while fCommands.Count > lFirstNew do
+        begin
+          TObject(fCommands[fCommands.Count - 1]).Free;
+          fCommands.Delete(fCommands.Count - 1);
+        end;
+        raise;
+      end;
       Result := TJSONObject.Create;
       Result.Add('result_code', 'noError');
       Result.Add('correlation_id', lCorrelation);
       Result.Add('queued_count', lCount);
       Exit;
     end;
+    lHost := FindHost(lTarget);
+    if (ControlId <> '') and ((lHost = nil) or
+      (lHost.ControlOwner <> ControlId) or (lHost.ControlClaim = '')) then
+    begin
+      Result := TJSONObject.Create;
+      Result.Add('result_code', 'notOwner');
+      Result.Add('result_text', 'Recorder must be captured before sending commands');
+      Exit;
+    end;
     lCommand := TCoordinatorCommand.Create;
     lCommand.CommandId := JsonString(AData, 'command_id', NewId);
     lCommand.InstanceId := lTarget;
+    if lHost <> nil then lCommand.ControlClaim := lHost.ControlClaim;
     lCommand.CommandName := JsonString(AData, 'command', 'status');
     lCommand.CorrelationId := lCorrelation;
     lCommand.ExecuteAtUtc := JsonString(AData, 'execute_at_utc', '');
     lCommand.PayloadJson := lPayloadJson;
     lCommand.State := 'pending';
     fCommands.Add(lCommand);
+    if lIsSql then
+    try
+      SaveSqlCommandsLocked;
+    except
+      fCommands.Remove(lCommand);
+      lCommand.Free;
+      raise;
+    end;
     Result := lCommand.ToJson;
   finally
     fLock.Release;
@@ -1528,19 +1789,109 @@ begin
 end;
 
 function TCoordinatorModel.NextCommand(const AInstanceId: string): TJSONObject;
+const
+  CSqlRetryMs = 10000;
 var
-  lIndex: Integer;
-  lCommand: TCoordinatorCommand;
+  lIndex, lPriorIndex: Integer;
+  lCommand, lPriorCommand: TCoordinatorCommand;
+  lSqlBlocked: Boolean;
+  lHost: TCoordinatorHost;
 begin
   fLock.Acquire;
   try
     Result := TJSONObject.Create;
+    if ControlId <> '' then
+    begin
+      lHost := FindHost(AInstanceId);
+      if (lHost = nil) or (lHost.ControlOwner <> ControlId) or
+        (lHost.ControlClaim = '') then
+      begin
+        Result.Add('result_code', 'notOwner');
+        Exit;
+      end;
+      for lIndex := 0 to fCommands.Count - 1 do
+      begin
+        lCommand := TCoordinatorCommand(fCommands[lIndex]);
+        if SameText(lCommand.InstanceId, AInstanceId) and
+          (lCommand.ControlClaim <> lHost.ControlClaim) and
+          ((lCommand.State = 'pending') or (lCommand.State = 'accepted')) then
+        begin
+          lCommand.State := 'cancelled';
+          lCommand.ResultCode := 'ownershipChanged';
+        end;
+      end;
+    end;
+    lSqlBlocked := False;
+    if fSqlQueueStore = nil then
+    begin
+      for lIndex := 0 to fCommands.Count - 1 do
+      begin
+        lCommand := TCoordinatorCommand(fCommands[lIndex]);
+        if SameText(lCommand.InstanceId, AInstanceId) and
+           SameText(lCommand.State, 'pending') then
+        begin
+          lCommand.State := 'accepted';
+          Result.Free;
+          Exit(lCommand.ToJson);
+        end;
+      end;
+      Result.Add('result_code', 'noCommand');
+      Exit;
+    end;
+    { A retrying configuration command must never delay an explicit stop. }
     for lIndex := 0 to fCommands.Count - 1 do
     begin
       lCommand := TCoordinatorCommand(fCommands[lIndex]);
+      if SameText(lCommand.InstanceId, AInstanceId) and
+         SameText(lCommand.CommandName, 'recording.stop') and
+         SameText(lCommand.State, 'pending') then
+      begin
+        { A stale start or preview must not run after a newer stop. }
+        for lPriorIndex := 0 to lIndex - 1 do
+        begin
+          lPriorCommand := TCoordinatorCommand(fCommands[lPriorIndex]);
+          if SameText(lPriorCommand.InstanceId, AInstanceId) and
+             SameText(lPriorCommand.State, 'pending') and
+             (SameText(lPriorCommand.CommandName, 'recording.start') or
+              SameText(lPriorCommand.CommandName, 'recording.start_at') or
+              SameText(lPriorCommand.CommandName, 'recording.preview')) then
+          begin
+            lPriorCommand.State := 'cancelled';
+            lPriorCommand.ResultCode := 'superseded';
+          end;
+        end;
+        lCommand.State := 'accepted';
+        lCommand.LastSentMs := GetTickCount64;
+        Result.Free;
+        Exit(lCommand.ToJson);
+      end;
+    end;
+    for lIndex := 0 to fCommands.Count - 1 do
+    begin
+      lCommand := TCoordinatorCommand(fCommands[lIndex]);
+      if SameText(lCommand.InstanceId, AInstanceId) and
+         SameText(lCommand.CommandName, 'config.sql_database.set') and
+         SameText(lCommand.State, 'accepted') then
+      begin
+        { Preserve per-host order: a later revision must not overtake an
+          unacknowledged earlier command. Repeating SQL configuration is
+          idempotent and recovers a lost reply. }
+        if (lCommand.LastSentMs <> 0) and
+           (GetTickCount64 - lCommand.LastSentMs < CSqlRetryMs) then
+        begin
+          lSqlBlocked := True;
+          Continue;
+        end;
+        lCommand.LastSentMs := GetTickCount64;
+        Result.Free;
+        Exit(lCommand.ToJson);
+      end;
       if (lCommand.State = 'pending') and SameText(lCommand.InstanceId, AInstanceId) then
       begin
+        if lSqlBlocked and SameText(lCommand.CommandName,
+          'config.sql_database.set') then Continue;
         lCommand.State := 'accepted';
+        lCommand.LastSentMs := GetTickCount64;
         Result.Free;
         Exit(lCommand.ToJson);
       end;
@@ -1557,6 +1908,7 @@ var
   lHost: TCoordinatorHost;
   lCommandResult: TJSONObject;
   lMeraFilesPath: string;
+  lOldState, lOldCode, lOldText: string;
 begin
   fLock.Acquire;
   try
@@ -1566,11 +1918,27 @@ begin
       Result.Add('result_code', 'notFound')
     else
     begin
+      lOldState := lCommand.State;
+      lOldCode := lCommand.ResultCode;
+      lOldText := lCommand.ResultText;
       lCommand.State := JsonString(AData, 'state', 'completed');
       lCommand.ResultCode := JsonString(AData, 'result_code',
         JsonString(AData, 'code', 'noError'));
       lCommand.ResultText := JsonString(AData, 'result_text',
         JsonString(AData, 'text', ''));
+      if (fSqlQueueStore <> nil) and
+         SameText(lCommand.CommandName, 'config.sql_database.set') and
+         SameText(lCommand.ResultCode, 'notReady') then
+        lCommand.State := 'accepted';
+      if SameText(lCommand.CommandName, 'config.sql_database.set') then
+      try
+        SaveSqlCommandsLocked;
+      except
+        lCommand.State := lOldState;
+        lCommand.ResultCode := lOldCode;
+        lCommand.ResultText := lOldText;
+        raise;
+      end;
       if SameText(lCommand.CommandName, 'config.get') and
         SameText(lCommand.ResultCode, 'noError') then
       begin
@@ -1588,9 +1956,86 @@ begin
           end;
         end;
       end;
+      if ((lCommand.CommandName = 'workstation.name.get') or
+          (lCommand.CommandName = 'workstation.name.set')) and
+         SameText(lCommand.ResultCode, 'noError') then
+      begin
+        lCommandResult := JsonPayloadObject(AData, 'result');
+        if lCommandResult <> nil then
+        begin
+          lCommand.WorkstationResultJson := lCommandResult.AsJSON;
+          lHost := FindHost(lCommand.InstanceId);
+          if (lHost <> nil) and (lHost.ControlClaim = lCommand.ControlClaim) then
+          begin
+            lHost.WorkstationName := Trim(JsonString(lCommandResult, 'name',
+              lHost.WorkstationName));
+            lHost.UseComputerName := JsonBoolean(lCommandResult,
+              'use_computer_name', lHost.UseComputerName);
+          end;
+        end;
+      end;
+      if SameText(lCommand.CommandName,
+        'config.sql_allowed_channels.get') and
+        SameText(lCommand.ResultCode, 'noError') then
+      begin
+        lCommandResult := JsonPayloadObject(AData, 'result');
+        if lCommandResult <> nil then
+          lCommand.WorkstationResultJson := lCommandResult.AsJSON;
+      end;
       Result.Free;
       Result := lCommand.ToJson;
     end;
+  finally
+    fLock.Release;
+  end;
+end;
+
+function TCoordinatorModel.WorkstationCommandStatus(
+  const ACommandId: string): TJSONObject;
+var
+  lCommand: TCoordinatorCommand;
+begin
+  fLock.Acquire;
+  try
+    lCommand := FindCommand(ACommandId);
+    if (lCommand <> nil) and
+      ((lCommand.CommandName = 'workstation.name.get') or
+       (lCommand.CommandName = 'workstation.name.set')) then
+      Exit(lCommand.ToJson);
+    Result := TJSONObject.Create;
+    Result.Add('result_code', 'notFound');
+  finally
+    fLock.Release;
+  end;
+end;
+
+function TCoordinatorModel.CommandGroupStatus(
+  const ACorrelationId: string): TJSONObject;
+var
+  lCommand: TCoordinatorCommand;
+  lIndex, lTotal, lCompleted, lFailed: Integer;
+begin
+  lTotal := 0;
+  lCompleted := 0;
+  lFailed := 0;
+  fLock.Acquire;
+  try
+    for lIndex := 0 to fCommands.Count - 1 do
+    begin
+      lCommand := TCoordinatorCommand(fCommands[lIndex]);
+      if not SameText(lCommand.CorrelationId, ACorrelationId) then Continue;
+      Inc(lTotal);
+      if SameText(lCommand.State, 'completed') or
+         SameText(lCommand.State, 'cancelled') then
+      begin
+        Inc(lCompleted);
+        if not SameText(lCommand.ResultCode, 'noError') then Inc(lFailed);
+      end;
+    end;
+    Result := TJSONObject.Create;
+    Result.Add('total', lTotal);
+    Result.Add('completed', lCompleted);
+    Result.Add('failed', lFailed);
   finally
     fLock.Release;
   end;
@@ -1632,12 +2077,31 @@ begin
 end;
 
 function TCoordinatorModel.HostsJson: TJSONArray;
-var lIndex: Integer;
+var
+  lIndex, lCommandIndex: Integer;
+  lHost: TCoordinatorHost;
+  lCommand: TCoordinatorCommand;
+  lItem: TJSONObject;
 begin
   fLock.Acquire;
   try
     Result := TJSONArray.Create;
-    for lIndex := 0 to fHosts.Count - 1 do Result.Add(TCoordinatorHost(fHosts[lIndex]).ToJson);
+    for lIndex := 0 to fHosts.Count - 1 do
+    begin
+      lHost := TCoordinatorHost(fHosts[lIndex]);
+      lItem := lHost.ToJson;
+      for lCommandIndex := fCommands.Count - 1 downto 0 do
+      begin
+        lCommand := TCoordinatorCommand(fCommands[lCommandIndex]);
+        if not SameText(lCommand.InstanceId, lHost.InstanceId) then Continue;
+        if SameText(lCommand.CommandName, 'config.get') then Continue;
+        lItem.Add('last_command', lCommand.CommandName);
+        lItem.Add('last_command_state', lCommand.State);
+        lItem.Add('last_command_result', lCommand.ResultCode);
+        Break;
+      end;
+      Result.Add(lItem);
+    end;
   finally fLock.Release; end;
 end;
 

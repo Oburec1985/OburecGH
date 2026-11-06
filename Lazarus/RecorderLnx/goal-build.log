@@ -1,0 +1,16 @@
+/mnt/win_share/OburecGH/Lazarus/RecorderHostAgent/./Core/uRecorderHostAgentBackup.pas(152,31) Warning: (5044) Symbol "faSymLink" is not portable
+/mnt/win_share/OburecGH/Lazarus/RecorderHostAgent/./Service/uRecorderHostAgentServer.pas(53,22) Hint: (5057) Local variable "lAddress" does not seem to be initialized
+/mnt/win_share/OburecGH/Lazarus/RecorderHostAgent/./Service/uRecorderHostAgentServer.pas(14,33) Hint: (5024) Parameter "Sender" not used
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderHostAgent
+(1008) 863 lines compiled, 0.8 sec
+(1021) 3 warning(s) issued
+(1022) 6 hint(s) issued
+(1023) 1 note(s) issued
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(48,49) Hint: (5023) Unit "uMc201LegacyMdpClient" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(49,3) Hint: (5023) Unit "uMc032Device" not used in RecorderLnx
+(9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx.or
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
+(1008) 244452 lines compiled, 46.5 sec
+(1021) 51 warning(s) issued
+(1022) 547 hint(s) issued
+(1023) 43 note(s) issued

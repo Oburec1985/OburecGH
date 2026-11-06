@@ -24,6 +24,7 @@ type
     ReadCount: Integer;
     SamplesPerRead: Integer;
     ConfigurePxiCount: Integer;
+    LastRtsiClock, LastRtsiSync, LastTriggerMode, LastTriggerSource, LastTriggerLevel: Integer;
     function Connect: TRcOperationResult;
     function Initialize(out ASerialNumber, AVersion: string): TRcOperationResult;
     function TestLink: TRcOperationResult;
@@ -81,6 +82,11 @@ function TFakeTransport.ConfigurePxi(ARtsiSev, ARtsiClock, ARtsiSync,
   TRcOperationResult;
 begin
   Inc(ConfigurePxiCount);
+  LastRtsiClock := ARtsiClock;
+  LastRtsiSync := ARtsiSync;
+  LastTriggerMode := ATriggerMode;
+  LastTriggerSource := ATriggerSource;
+  LastTriggerLevel := ATriggerLevel;
   Result := TRcOperationResult.Success;
 end;
 
@@ -239,6 +245,52 @@ begin
   end;
 end;
 
+procedure TestOwnedSampleRate;
+var
+  lFake: TFakeTransport;
+  lDevice: IRecorderDevice;
+  lSource: IRecorderDataSource;
+  lRuntime: IPxiMx248RuntimeSettings;
+  lRate: IPxiMx248RuntimeSampleRateSettings;
+  lRegistry: TRecorderTagRegistry;
+  lReadback: string;
+  lResult: TRcOperationResult;
+begin
+  lFake := TFakeTransport.Create;
+  lDevice := TRcPxiMx248DeviceAdapter.Create('rate-board', 'MX248', lFake);
+  lSource := TRecorderPxiMx248DataSource.Create('pxi-mx248:2:14', lDevice, 4);
+  lRegistry := TRecorderTagRegistry.Create;
+  try
+    lSource.ConfigureTags(lRegistry);
+    lSource.PrepareHardware;
+    Check(Supports(lSource, IPxiMx248RuntimeSettings, lRuntime), 'Missing live interface');
+    lResult := lRuntime.RuntimeApplyLive('sample-rate-hz=422;block-samples=4',
+      2, 3, 1, 4, 5, lReadback);
+    Check(lResult.IsSuccess, lResult.MessageText);
+    Check(Supports(lSource, IPxiMx248RuntimeSampleRateSettings, lRate), 'Missing sample rate interface');
+    lResult := lRate.RuntimeSetSampleRate(512000, lReadback);
+    Check(lResult.IsSuccess, lResult.MessageText);
+    Check((lFake.ConnectCount = 1) and (lFake.InitializeCount = 1),
+      'Sample-rate setting must reuse the unique initialized session');
+    Check((lFake.LastRtsiClock = 2) and (lFake.LastRtsiSync = 3) and
+      (lFake.LastTriggerMode = 1) and (lFake.LastTriggerSource = 4) and
+      (lFake.LastTriggerLevel = 5), 'Sample-rate-only change preserves PXI and trigger settings');
+    Check(Pos('block-samples=4', lDevice.GetProp('block-samples')) > 0,
+      'Sample-rate-only change preserves acquisition fields');
+    lSource.Start;
+    lResult := lRate.RuntimeSetSampleRate(216000, lReadback);
+    Check(lResult.Code = rocInvalidState, 'Running sample-rate mutation must be rejected');
+    Check(lFake.ProgramCount = 3, 'Running rejection must not program hardware');
+    lSource.Stop;
+  finally
+    lRuntime := nil;
+    lRate := nil;
+    lSource := nil;
+    lRegistry.Free;
+    lDevice := nil;
+  end;
+end;
+
 procedure TestHighRateTickDrainsMultipleBlocks;
 var
   lDevice: IRecorderDevice;
@@ -275,6 +327,7 @@ end;
 begin
   try
     TestAdapterAndDataSource;
+    TestOwnedSampleRate;
     TestHighRateTickDrainsMultipleBlocks;
     WriteLn('RESULT PXI MX-248 runtime passed');
   except

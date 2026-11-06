@@ -40,8 +40,6 @@ $linuxLuaRuntime = Join-Path $installerDir 'runtime\liblua5.4.so.0'
 $outputDir = Join-Path $installerDir 'Output'
 $outputFile = Join-Path $outputDir "recorderlnx_${Version}_${Architecture}.deb"
 $previousOutputFile = Join-Path $outputDir "recorderlnx_${Version}_${Architecture}.previous.deb"
-$appConfig = Join-Path $repoRoot 'Lazarus\RecorderLnx\config\app.ini'
-$projectSqlConfig = Join-Path $repoRoot 'Lazarus\RecorderLnx\config\projects\default\sql-db.ini'
 
 if (-not (Test-Path $linuxExe)) {
     throw "Linux binary not found: $linuxExe. Build RecorderLnx on Linux first."
@@ -49,19 +47,6 @@ if (-not (Test-Path $linuxExe)) {
 if (-not (Test-Path $builder)) {
     throw "Deb builder not found: $builder"
 }
-if (-not (Test-Path -LiteralPath $appConfig)) {
-    throw "RecorderLnx app.ini not found: $appConfig"
-}
-if (-not (Test-Path -LiteralPath $projectSqlConfig)) {
-    throw "RecorderLnx project sql-db.ini not found: $projectSqlConfig"
-}
-if (-not (Select-String -LiteralPath $appConfig -Pattern '^\[SQLdbConnection\]$' -Quiet)) {
-    throw "RecorderLnx app.ini does not contain [SQLdbConnection]: $appConfig"
-}
-if (Select-String -LiteralPath $projectSqlConfig -Pattern '^(Host|Port|Database|UserName|Password)=' -Quiet) {
-    throw "Project sql-db.ini contains system connection settings: $projectSqlConfig"
-}
-
 if (-not (Test-Path -LiteralPath $linuxAgentExe)) {
     throw "Linux RecorderHostAgent build output not found beside RecorderLnx: $linuxAgentExe"
 }

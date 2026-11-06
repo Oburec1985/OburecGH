@@ -1,7 +1,7 @@
 object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
-  Left = 300
+  Left = 301
   Height = 800
-  Top = 200
+  Top = 92
   Width = 830
   Caption = 'Маршрут измерений FRF'
   ClientHeight = 800
@@ -10,45 +10,47 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
   Constraints.MinWidth = 830
   FormStyle = fsStayOnTop
   Position = poScreenCenter
-  LCLVersion = '4.2.0.0'
+  LCLVersion = '2.2.6.0'
   object lblScene: TLabel
     Left = 12
-    Height = 0
+    Height = 19
     Top = 17
-    Width = 0
+    Width = 59
     Caption = '3D-сцена'
+    ParentColor = False
   end
   object cbScene: TComboBox
     Left = 12
-    Height = 25
+    Height = 35
     Top = 45
     Width = 270
     ItemHeight = 0
-    Style = csDropDownList
-    TabOrder = 14
     OnChange = SceneChange
     OnDropDown = SceneDropDown
+    Style = csDropDownList
+    TabOrder = 13
   end
   object lblObject: TLabel
     Left = 294
-    Height = 0
+    Height = 19
     Top = 17
-    Width = 0
+    Width = 123
     Caption = 'Объект геометрии'
+    ParentColor = False
   end
   object cbObject: TComboBox
     Left = 294
-    Height = 25
+    Height = 35
     Hint = 'Объект геометрии'
     Top = 45
     Width = 250
     ItemHeight = 0
+    OnChange = ObjectChange
+    OnDropDown = ObjectDropDown
     ParentShowHint = False
     ShowHint = True
     Style = csDropDownList
     TabOrder = 0
-    OnChange = ObjectChange
-    OnDropDown = ObjectDropDown
   end
   object rgVertexLabels: TRadioGroup
     Left = 556
@@ -64,15 +66,15 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     ChildSizing.ShrinkVertical = crsScaleChilds
     ChildSizing.Layout = cclLeftToRightThenTopToBottom
     ChildSizing.ControlsPerLine = 1
-    ClientHeight = 64
-    ClientWidth = 250
+    ClientHeight = 44
+    ClientWidth = 248
     ItemIndex = 0
     Items.Strings = (
       'Все вершины'
       'Вершины текущего шага'
     )
-    TabOrder = 16
     OnClick = VertexLabelsChange
+    TabOrder = 16
   end
   object btnAdd: TButton
     Left = 542
@@ -80,8 +82,8 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     Top = 75
     Width = 82
     Caption = '+ Шаг'
-    TabOrder = 1
     OnClick = AddClick
+    TabOrder = 1
   end
   object btnDelete: TButton
     Left = 725
@@ -89,8 +91,8 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     Top = 75
     Width = 82
     Caption = 'Удалить'
-    TabOrder = 3
     OnClick = DeleteClick
+    TabOrder = 3
   end
   object btnCopyStep: TButton
     Left = 632
@@ -98,8 +100,8 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     Top = 75
     Width = 90
     Caption = 'Копия шага'
-    TabOrder = 2
     OnClick = CopyStepClick
+    TabOrder = 2
   end
   object gridRoute: TStringGrid
     AnchorSideBottom.Control = splitSteps
@@ -129,10 +131,11 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
   end
   object lblPointLabel: TLabel
     Left = 12
-    Height = 0
+    Height = 19
     Top = 82
-    Width = 0
+    Width = 62
     Caption = 'Имя шага'
+    ParentColor = False
   end
   object splitSteps: TSplitter
     Cursor = crVSplit
@@ -149,12 +152,12 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
   end
   object edPointLabel: TEdit
     Left = 110
-    Height = 25
+    Height = 31
     Top = 78
     Width = 420
+    OnKeyDown = InputKeyDown
     TabOrder = 11
     TextHint = 'Имя шага маршрута'
-    OnKeyDown = InputKeyDown
   end
   object pnlBindings: TPanel
     AnchorSideTop.Control = splitSteps
@@ -168,25 +171,25 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     ClientHeight = 225
     ClientWidth = 795
     Constraints.MinHeight = 180
-    TabOrder = 15
+    TabOrder = 14
     object edSearch: TEdit
       Left = 0
-      Height = 25
+      Height = 31
       Top = 2
       Width = 270
+      OnChange = SearchChange
       TabOrder = 0
       TextHint = 'Поиск канала по имени'
-      OnChange = SearchChange
     end
     object cbChannel: TComboBox
       Left = 282
-      Height = 25
+      Height = 35
       Top = 2
       Width = 250
       ItemHeight = 0
+      OnKeyDown = InputKeyDown
       Style = csDropDownList
       TabOrder = 1
-      OnKeyDown = InputKeyDown
     end
     object btnAddBinding: TButton
       Left = 0
@@ -194,8 +197,8 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
       Top = 40
       Width = 180
       Caption = 'Добавить привязку'
-      TabOrder = 2
       OnClick = AddBindingClick
+      TabOrder = 2
     end
     object btnDeleteBinding: TButton
       Left = 190
@@ -203,8 +206,8 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
       Top = 40
       Width = 180
       Caption = 'Удалить привязку'
-      TabOrder = 3
       OnClick = DeleteBindingClick
+      TabOrder = 3
     end
     object lblSelectedVertex: TLabel
       Left = 380
@@ -213,6 +216,7 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
       Width = 410
       AutoSize = False
       Caption = 'Выберите вершину на сцене'
+      ParentColor = False
     end
     object gridBindings: TStringGrid
       Left = 0
@@ -221,22 +225,22 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
       Width = 795
       Anchors = [akTop, akLeft, akRight, akBottom]
       ColCount = 4
-      Columns = <
+      Columns = <      
         item
           ReadOnly = True
           Title.Caption = 'Канал FRF'
           Width = 180
-        end
+        end      
         item
           ReadOnly = True
           Title.Caption = 'Объект'
           Width = 230
-        end
+        end      
         item
           ButtonStyle = cbsPickList
           Title.Caption = 'Точка'
           Width = 130
-        end
+        end      
         item
           ReadOnly = True
           Title.Caption = 'Сцена'
@@ -269,14 +273,15 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     TabOrder = 17
     object lblPointTag: TLabel
       Left = 0
-      Height = 0
+      Height = 19
       Top = 10
-      Width = 0
+      Width = 111
       Caption = 'Тег номера шага:'
+      ParentColor = False
     end
     object edPointTag: TEdit
       Left = 130
-      Height = 25
+      Height = 31
       Top = 6
       Width = 450
       Anchors = [akTop, akLeft, akRight]
@@ -292,9 +297,9 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
       Width = 100
       Anchors = [akTop, akRight]
       Caption = 'Выбрать…'
+      OnClick = PointTagClick
       TabOrder = 1
       Visible = False
-      OnClick = PointTagClick
     end
     object btnClearPointTag: TButton
       Left = 698
@@ -303,96 +308,95 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
       Width = 97
       Anchors = [akTop, akRight]
       Caption = 'Очистить'
+      OnClick = ClearPointTagClick
       TabOrder = 2
       Visible = False
-      OnClick = ClearPointTagClick
     end
     object chkPointTagSync: TCheckBox
-      Left = 620
-      Height = 0
+      Left = 668
+      Height = 21
       Top = 5
-      Width = 170
+      Width = 122
       Anchors = [akTop, akRight]
       Caption = 'Синхро с тегом'
-      TabOrder = 3
       OnClick = AutomationChange
+      TabOrder = 3
     end
     object cbPointTag: TComboBox
       Left = 130
-      Height = 25
+      Height = 31
       Top = 6
       Width = 480
       Anchors = [akTop, akLeft, akRight]
       ItemHeight = 0
-      Style = csDropDown
+      OnChange = AutomationSearchChange
+      OnDropDown = AutomationTagDropDown
+      OnKeyDown = AutomationTagKeyDown
+      OnSelect = AutomationTagSelect
       TabOrder = 4
       TextHint = 'Поиск тега шага: имя, адрес, описание'
-      OnChange = AutomationSearchChange
-      OnSelect = AutomationTagSelect
-      OnKeyDown = AutomationTagKeyDown
-      OnDropDown = AutomationTagDropDown
     end
     object chkRouteAuto: TCheckBox
       Left = 0
-      Height = 0
+      Height = 21
       Top = 42
-      Width = 130
+      Width = 103
       Caption = 'Авто режим'
-      TabOrder = 5
       OnClick = AutomationChange
+      TabOrder = 5
     end
     object lblAtPointTag: TLabel
       Left = 0
-      Height = 0
+      Height = 19
       Top = 80
-      Width = 0
+      Width = 61
       Caption = 'На точке:'
+      ParentColor = False
     end
     object chkAutoOverwrite: TCheckBox
       Left = 160
-      Height = 0
+      Height = 21
       Top = 42
-      Width = 360
+      Width = 275
       Caption = 'Перезаписывать сохранённые данные'
-      TabOrder = 9
       OnClick = AutomationChange
+      TabOrder = 9
     end
     object cbAtPointTag: TComboBox
       Left = 130
-      Height = 25
+      Height = 31
       Top = 74
       Width = 665
       Anchors = [akTop, akLeft, akRight]
       ItemHeight = 0
-      Style = csDropDown
+      OnChange = AutomationSearchChange
+      OnDropDown = AutomationTagDropDown
+      OnKeyDown = AutomationTagKeyDown
+      OnSelect = AutomationTagSelect
       TabOrder = 6
       TextHint = 'Поиск: имя, адрес, описание'
-      OnChange = AutomationSearchChange
-      OnSelect = AutomationTagSelect
-      OnKeyDown = AutomationTagKeyDown
-      OnDropDown = AutomationTagDropDown
     end
     object lblNextStepTag: TLabel
       Left = 0
-      Height = 0
+      Height = 19
       Top = 114
-      Width = 0
+      Width = 68
       Caption = 'След. шаг:'
+      ParentColor = False
     end
     object cbNextStepTag: TComboBox
       Left = 130
-      Height = 25
+      Height = 31
       Top = 108
       Width = 480
       Anchors = [akTop, akLeft, akRight]
       ItemHeight = 0
-      Style = csDropDown
+      OnChange = AutomationSearchChange
+      OnDropDown = AutomationTagDropDown
+      OnKeyDown = AutomationTagKeyDown
+      OnSelect = AutomationTagSelect
       TabOrder = 7
       TextHint = 'Поиск: имя, адрес, описание'
-      OnChange = AutomationSearchChange
-      OnSelect = AutomationTagSelect
-      OnKeyDown = AutomationTagKeyDown
-      OnDropDown = AutomationTagDropDown
     end
     object lblNextStepPulse: TLabel
       Left = 620
@@ -402,39 +406,40 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
       Anchors = [akTop, akRight]
       AutoSize = False
       Caption = 'Импульс, мс:'
+      ParentColor = False
     end
     object edNextStepPulse: TEdit
       Left = 714
-      Height = 25
+      Height = 31
       Top = 108
       Width = 81
       Anchors = [akTop, akRight]
       NumbersOnly = True
-      TabOrder = 8
       OnEditingDone = PulseEditingDone
+      TabOrder = 8
     end
   end
   object edFolder: TEdit
     Left = 12
-    Height = 25
-    Top = 656
+    Height = 31
+    Top = 650
     Width = 360
     Anchors = [akLeft, akRight, akBottom]
     TabOrder = 5
     TextHint = 'Папка сохранённых реализаций'
   end
   object chkMdb: TCheckBox
-    Left = 378
-    Height = 23
+    Left = 383
+    Height = 21
     Hint = 'Использовать каталог текущего объекта базы данных испытаний для FRF'
-    Top = 658
-    Width = 190
+    Top = 660
+    Width = 185
     Anchors = [akRight, akBottom]
     Caption = 'MDB — использовать БД'
+    OnClick = MdbChange
     ParentShowHint = False
     ShowHint = True
     TabOrder = 12
-    OnClick = MdbChange
   end
   object btnFolder: TButton
     Left = 578
@@ -443,8 +448,8 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     Width = 100
     Anchors = [akRight, akBottom]
     Caption = 'Папка…'
-    TabOrder = 6
     OnClick = FolderClick
+    TabOrder = 6
   end
   object btnLoad: TButton
     Left = 689
@@ -453,8 +458,8 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     Width = 118
     Anchors = [akRight, akBottom]
     Caption = 'Загрузить маршрут'
-    TabOrder = 7
     OnClick = LoadClick
+    TabOrder = 7
   end
   object lblState: TLabel
     Left = 12
@@ -463,6 +468,7 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     Width = 795
     Anchors = [akLeft, akRight, akBottom]
     AutoSize = False
+    ParentColor = False
     WordWrap = True
   end
   object btnSave: TButton
@@ -472,8 +478,8 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     Width = 155
     Anchors = [akLeft, akBottom]
     Caption = 'Сохранить маршрут'
-    TabOrder = 8
     OnClick = SaveClick
+    TabOrder = 8
   end
   object btnApply: TButton
     Left = 179
@@ -482,8 +488,8 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     Width = 275
     Anchors = [akLeft, akBottom]
     Caption = 'Применить имя шага'
-    TabOrder = 9
     OnClick = ApplyClick
+    TabOrder = 9
   end
   object btnAssemble: TButton
     Left = 466
@@ -492,7 +498,7 @@ object RecorderFrfRouteDialog: TRecorderFrfRouteDialog
     Width = 341
     Anchors = [akLeft, akRight, akBottom]
     Caption = 'Показать интенсивность из сохранённых FRF'
-    TabOrder = 10
     OnClick = AssembleClick
+    TabOrder = 10
   end
 end

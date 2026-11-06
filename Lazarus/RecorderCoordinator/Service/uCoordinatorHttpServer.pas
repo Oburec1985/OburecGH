@@ -10,6 +10,14 @@ uses
   uRecorderLanDiscovery;
 
 type
+  TCoordinatorPendingClaim = class
+  public
+    Address, InstanceId, ClaimId: string;
+    Force: Boolean;
+    Attempts: Integer;
+    NextAttempt: QWord;
+  end;
+
   TCoordinatorFpHttpServer = class(TFPHTTPServer)
   public
     procedure SetListenAddress(const AValue: string);
@@ -37,6 +45,10 @@ type
     fDiscovery: TRecorderLanDiscovery;
     fHostMonitor: TCoordinatorHostMonitor;
     fLastError: string;
+    fControlId, fControlToken: string;
+    fPendingClaims: TFPList;
+    procedure DiscoveryOwnerFound(const AInstanceId, AOwnerId,
+      AClaimId: string);
     procedure ReleaseFinishedThread;
     function PortAvailable(APort: Word): Boolean;
     procedure DiscoveryRecorderFound(const AInstanceId, ADisplayName,
@@ -48,17 +60,26 @@ type
     procedure SendJson(var AResponse: TFPHTTPConnectionResponse;
       AData: TJSONData; AStatusCode: Integer = 200);
   public
-    constructor Create(AModel: TCoordinatorModel);
+    constructor Create(AModel: TCoordinatorModel; AAgentPort: Word = 8766;
+      const AAgentToken: string = '');
     destructor Destroy; override;
     procedure Start(const AAddress: string; APort: Word);
     procedure Stop;
     procedure SearchRecorders;
+    procedure ConfigureControl(const AInstanceId, AToken: string);
+    function ClaimRecorder(const AAddress, AInstanceId: string;
+      AForce: Boolean): string;
+    procedure ReleaseRecorder(const AAddress, AInstanceId, AClaimId: string);
+    procedure RetryControlRequests;
+    property ControlId: string read fControlId;
     function Active: Boolean;
     function Stopping: Boolean;
     function LastError: string;
   end;
 
 implementation
+
+uses uRecorderNetworkBinding;
 
 constructor TCoordinatorListenerThread.Create(AServer: TCoordinatorFpHttpServer);
 begin
@@ -118,10 +139,17 @@ begin
   Address := AValue;
 end;
 
-constructor TCoordinatorHttpServer.Create(AModel: TCoordinatorModel);
+constructor TCoordinatorHttpServer.Create(AModel: TCoordinatorModel;
+  AAgentPort: Word; const AAgentToken: string);
+var
+  lId: TGUID;
 begin
   inherited Create;
+  CreateGUID(lId);
+  fControlId := GUIDToString(lId);
+  fPendingClaims := TFPList.Create;
   fModel := AModel;
+  fModel.ControlId := fControlId;
   fModel.EnableHostPersistence;
   fServer := TCoordinatorFpHttpServer.Create(nil);
   fServer.Threaded := True;
@@ -130,8 +158,108 @@ begin
     needed to make the loop observe that state. }
   fServer.AcceptIdleTimeout := 50;
   fServer.OnRequest := @HandleRequest;
-  fHostMonitor := TCoordinatorHostMonitor.Create(fModel);
+  fHostMonitor := TCoordinatorHostMonitor.Create(fModel, AAgentPort, AAgentToken);
   fHostMonitor.Start;
+end;
+
+procedure TCoordinatorHttpServer.ConfigureControl(const AInstanceId,
+  AToken: string);
+begin
+  if fDiscovery <> nil then
+    raise Exception.Create('Control identity cannot change while running');
+  if Trim(AInstanceId) <> '' then fControlId := AInstanceId;
+  fModel.ControlId := fControlId;
+  fControlToken := AToken;
+end;
+
+procedure TCoordinatorHttpServer.DiscoveryOwnerFound(const AInstanceId,
+  AOwnerId, AClaimId: string);
+begin
+  fModel.ApplyControlOwner(AInstanceId, AOwnerId, AClaimId);
+end;
+
+function TCoordinatorHttpServer.ClaimRecorder(const AAddress,
+  AInstanceId: string; AForce: Boolean): string;
+var
+  lClaim: TCoordinatorPendingClaim;
+  lId: TGUID;
+  lIndex: Integer;
+begin
+  Result := '';
+  if (fDiscovery = nil) or (Trim(AAddress) = '') then Exit;
+  for lIndex := fPendingClaims.Count - 1 downto 0 do
+    if SameText(TCoordinatorPendingClaim(fPendingClaims[lIndex]).Address,
+      AAddress) then
+    begin
+      TObject(fPendingClaims[lIndex]).Free;
+      fPendingClaims.Delete(lIndex);
+    end;
+  lClaim := TCoordinatorPendingClaim.Create;
+  lClaim.Address := AAddress;
+  lClaim.InstanceId := AInstanceId;
+  lClaim.Force := AForce;
+  CreateGUID(lId);
+  lClaim.ClaimId := GUIDToString(lId);
+  Result := lClaim.ClaimId;
+  fPendingClaims.Add(lClaim);
+  fDiscovery.RequestSearch;
+  RetryControlRequests;
+end;
+
+procedure TCoordinatorHttpServer.ReleaseRecorder(const AAddress,
+  AInstanceId, AClaimId: string);
+var
+  lIndex: Integer;
+begin
+  for lIndex := fPendingClaims.Count - 1 downto 0 do
+    if SameText(TCoordinatorPendingClaim(fPendingClaims[lIndex]).Address,
+      AAddress) then
+    begin
+      TObject(fPendingClaims[lIndex]).Free;
+      fPendingClaims.Delete(lIndex);
+    end;
+  if fDiscovery <> nil then
+    fDiscovery.RequestRelease(AAddress, AInstanceId, AClaimId);
+end;
+
+procedure TCoordinatorHttpServer.RetryControlRequests;
+var
+  lIndex: Integer;
+  lClaim: TCoordinatorPendingClaim;
+  lHost: TJSONObject;
+begin
+  if fDiscovery = nil then Exit;
+  for lIndex := fPendingClaims.Count - 1 downto 0 do
+  begin
+    lClaim := TCoordinatorPendingClaim(fPendingClaims[lIndex]);
+    lHost := fModel.HostByAddressJson(lClaim.Address);
+    try
+      if (lHost.Get('control_owner', '') = fControlId) and
+         (lHost.Get('control_claim', '') = lClaim.ClaimId) and
+         lHost.Get('recorder_reachable', False) then
+      begin
+        lClaim.Free;
+        fPendingClaims.Delete(lIndex);
+        Continue;
+      end;
+      if lClaim.NextAttempt > GetTickCount64 then Continue;
+      if lClaim.Attempts >= 6 then
+      begin
+        SharedLogger.Error('Recorder claim timed out: ' + lClaim.Address);
+        lClaim.Free;
+        fPendingClaims.Delete(lIndex);
+        Continue;
+      end;
+      if lHost.Get('instance_id', '') <> '' then
+        lClaim.InstanceId := lHost.Get('instance_id', '');
+      fDiscovery.RequestClaim(lClaim.Address, lClaim.InstanceId,
+        lClaim.ClaimId, lClaim.Force and (lClaim.Attempts = 0));
+      Inc(lClaim.Attempts);
+      lClaim.NextAttempt := GetTickCount64 + 2000;
+    finally
+      lHost.Free;
+    end;
+  end;
 end;
 
 procedure TCoordinatorHttpServer.DiscoveryRecorderFound(const AInstanceId,
@@ -144,6 +272,7 @@ begin
   try
     lHost.Add('instance_id', AInstanceId);
     lHost.Add('host_name', ADisplayName);
+    lHost.Add('workstation_name', ADisplayName);
     lHost.Add('remote_address', AAddress);
     lHost.Add('mac_addresses', AMacAddresses);
     lHost.Add('state', 'discovered');
@@ -174,6 +303,8 @@ begin
 end;
 
 destructor TCoordinatorHttpServer.Destroy;
+var
+  lIndex: Integer;
 begin
   FreeAndNil(fDiscovery);
   Stop;
@@ -189,6 +320,9 @@ begin
     Sleep(1);
   ReleaseFinishedThread;
   fServer.Free;
+  for lIndex := 0 to fPendingClaims.Count - 1 do
+    TObject(fPendingClaims[lIndex]).Free;
+  fPendingClaims.Free;
   inherited Destroy;
 end;
 
@@ -199,6 +333,10 @@ begin
 end;
 
 procedure TCoordinatorHttpServer.Start(const AAddress: string; APort: Word);
+var
+  lLocalAddresses: TStringList;
+  I: Integer;
+  lAddress: string;
 begin
   SharedLogger.Info(Format('HTTP start requested address=%s port=%d',
     [AAddress, APort]));
@@ -219,9 +357,26 @@ begin
   fServer.Port := APort;
   fThread := TCoordinatorListenerThread.Create(fServer);
   fThread.Start;
-  fDiscovery := TRecorderLanDiscovery.Create(rdrCoordinator, 'coordinator',
-    'Recorder Coordinator', APort);
+  lLocalAddresses := TStringList.Create;
+  try
+    RecorderEnumerateLocalIPv4(lLocalAddresses);
+    for I := lLocalAddresses.Count - 1 downto 0 do
+    begin
+      lAddress := RecorderNetworkAddressFromDisplay(lLocalAddresses[I]);
+      if (lAddress = '') or (Pos('127.', lAddress) = 1) or
+        (Pos('169.254.', lAddress) = 1) then
+        lLocalAddresses.Delete(I)
+      else
+        lLocalAddresses[I] := lAddress;
+    end;
+    fDiscovery := TRecorderLanDiscovery.Create(rdrCoordinator, fControlId,
+      'Recorder Coordinator', APort, '', lLocalAddresses.CommaText);
+  finally
+    lLocalAddresses.Free;
+  end;
+  fDiscovery.SetControlToken(fControlToken);
   fDiscovery.OnFound := @DiscoveryRecorderFound;
+  fDiscovery.OnOwnerFound := @DiscoveryOwnerFound;
   fDiscovery.Start;
 end;
 
@@ -302,7 +457,12 @@ begin
     [ARequest.Method, lPath, ARequest.RemoteAddress]));
   try
     if (ARequest.Method = 'GET') and (lPath = '/api/v1/status') then
-      SendJson(AResponse, fModel.StatusJson)
+    begin
+      lBody := fModel.StatusJson;
+      lBody.Add('coordinator_instance_id', fControlId);
+      SendJson(AResponse, lBody);
+      lBody := nil;
+    end
     else if (ARequest.Method = 'GET') and (lPath = '/api/v1/hosts') then
       SendJson(AResponse, fModel.HostsJson)
     else if (ARequest.Method = 'GET') and (lPath = '/api/v1/events') then
@@ -335,6 +495,11 @@ begin
       lBody := ReadBody(ARequest);
       SendJson(AResponse, fModel.EnqueueCommand(lBody), 201);
     end
+    else if (ARequest.Method = 'GET') and
+      ((lPath = '/api/v1/commands/status') or
+       (Pos('/api/v1/commands/status?', lPath) = 1)) then
+      SendJson(AResponse, fModel.WorkstationCommandStatus(
+        ARequest.QueryFields.Values['command_id']))
     else if (ARequest.Method = 'GET') and (Pos('/api/v1/commands/next', lPath) = 1) then
     begin
       lInstanceId := ARequest.QueryFields.Values['instance_id'];

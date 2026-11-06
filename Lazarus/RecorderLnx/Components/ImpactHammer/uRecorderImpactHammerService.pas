@@ -2819,6 +2819,7 @@ begin
   ABinding.Color:=fModel.MarkerColor;
   ABinding.Visualization:=fModel.MarkerVisualization;
   ABinding.MarkerSizePixels:=fModel.MarkerSizePixels;
+  ABinding.IntensityLogScale:=fModel.IntensityLogScale;
   ABinding.GradientEnabled:=fModel.MarkerGradientEnabled;
   ABinding.CreateColorModifier:=fModel.CreateColorModifier;
   ABinding.HideAnchors:=not fModel.ShowAnchorMarkers;

@@ -332,9 +332,42 @@ begin
   Writeln('RESULT AudioRestart 20 cycles passed');
 end;
 
+procedure TestConstantLevel;
+var
+  lProvider: IRecorderDacSampleProvider;
+  lConfig: TRecorderDacConfig;
+  lResult: TRecorderDacResult;
+  lBuffer: array[0..9] of Double;
+  lCount, I, lTrial, lBlock: Integer;
+  lLevel: Double;
+begin
+  lConfig := DefaultConfig;
+  for lTrial := 0 to 1 do
+  begin
+    if lTrial = 0 then lLevel := 0.25 else lLevel := -0.375;
+    lProvider := TRecorderDacConstantProvider.Create(lLevel);
+    Check(lProvider.Configure(lConfig, lResult), lResult.Text);
+    for lBlock := 0 to 3 do
+    begin
+      if lBlock = 2 then lProvider.Reset;
+      Check(lProvider.FillBlock(@lBuffer[0], Length(lBuffer), lCount, lResult), lResult.Text);
+      Check(lCount = Length(lBuffer), 'Constant provider must keep continuous full blocks');
+      for I := 0 to lCount - 1 do
+        Check(lBuffer[I] = lLevel, 'Constant samples must equal signed level across reset');
+    end;
+  end;
+  lProvider := TRecorderDacConstantProvider.Create(2);
+  Check(not lProvider.Configure(lConfig, lResult), 'Out-of-range DC level rejected');
+  lProvider := TRecorderDacConstantProvider.Create(0.1);
+  lConfig.ChannelCount := 2;
+  Check(not lProvider.Configure(lConfig, lResult), 'Multichannel DC level rejected');
+  Writeln('RESULT ConstantLevel positive/negative continuous/reset and range validation passed');
+end;
+
 begin
   try
     if FindCmdLineSwitch('audio-restart') then TestAudioRestart;
+    TestConstantLevel;
     TestGeneratorToDacToTag;
     TestPulseSeries;
     TestTagToDac;

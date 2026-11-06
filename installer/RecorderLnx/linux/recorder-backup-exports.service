@@ -1,0 +1,9 @@
+[Unit]
+Description=Refresh read-only RecorderLnx backup exports
+After=network-online.target smbd.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /usr/local/libexec/recorderlnx/recorder_backup_exports.py

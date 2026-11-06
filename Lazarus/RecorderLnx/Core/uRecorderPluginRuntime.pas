@@ -14,7 +14,8 @@ interface
 
 uses
   Classes, SysUtils, DynLibs, uRecorderFormModel, uRecorderPluginApi,
-  uRecorderTags, uRecorderAlarms, uRecorderVisualComponentApiV2;
+  uRecorderTags, uRecorderAlarms, uRecorderVisualComponentApiV2,
+  uRecorderStateMachine;
 
 type
   { Host-owned session. The runtime invalidates it before unloading a library,
@@ -51,20 +52,29 @@ type
     fAlarmEngine: IRecorderAlarmEngine;
     fProjectDirectory: string;
     fPlugins: TList;
+    { Частично загруженные плагины, которые ещё не смогли остановить потоки. }
+    fQuarantinedPlugins: TList;
     fPendingFactories: TList;
     fOnLogMessage: TRecorderPluginLogEvent;
-    fVisualServices: TRecorderVisualHostServicesV2;
+    fServiceGateway: TObject;
     fVisualScratchTimes: TRecorderDoubleArray;
     fVisualScratchValues: TRecorderDoubleArray;
+    fShutdownStarted: Boolean;
     function GetLoadedCount: Integer;
   public
     constructor Create(ARegistry: TRecorderComponentFactory; ATagRegistry: TRecorderTagRegistry = nil; AAlarmEngine: IRecorderAlarmEngine = nil);
     destructor Destroy; override;
+    { Уничтожение runtime из callback запрещено: владелец обязан сначала
+      проверить этот предикат, пока ещё возможно отменить своё уничтожение. }
+    function CanShutdown: Boolean;
+    function TryBeginShutdown: Boolean;
     procedure LoadConfigured(const AConfigFileName: string);
-    procedure NotifyAll(AEvent: LongInt);
+    procedure NotifyAll(AEvent: LongInt; AData: Pointer = nil);
+    procedure NotifyRunTransition(ATransition: TRecorderStateTransition);
     procedure NotifyCatalogChanged;
     function LoadedPluginDetails(const AFileName: string; out APath, AVersion: string): Boolean;
     property LoadedCount: Integer read GetLoadedCount;
+    property ShutdownStarted: Boolean read fShutdownStarted;
     property ProjectDirectory: string read fProjectDirectory write fProjectDirectory;
     property OnLogMessage: TRecorderPluginLogEvent read fOnLogMessage write fOnLogMessage;
   end;
@@ -80,8 +90,120 @@ function RecorderPluginVisualOpenView(AComponent: TRecorderPluginVisualComponent
 implementation
 
 uses
-  Math, uRecorderPluginInfo, uRecorderPluginConfig, uRecorderDebugLog,
+  Math, SyncObjs, uRecorderPluginInfo, uRecorderPluginConfig, uRecorderDebugLog,
   uRecorderUnitManager;
+
+type
+  { При удержанной DLL таблицы и контекст сохраняются до конца процесса;
+    при штатной выгрузке они освобождаются после завершения вызовов.
+    Доступ к runtime защищён счётчиком активных вызовов; блокировка не
+    удерживается во время callback. }
+  TPluginServiceGateway = class
+  private
+    fLock: TCriticalSection;
+    fDrained: TEvent;
+    fRuntime: TRecorderPluginRuntime;
+    fActive: Integer;
+    fClosing: Boolean;
+    fClosingThread: TThreadID;
+  public
+    Visual: TRecorderVisualHostServicesV2;
+    Host: TRecorderPluginHostApi;
+    Retain: Boolean;
+    constructor Create(ARuntime: TRecorderPluginRuntime);
+    destructor Destroy; override;
+    function Enter: TRecorderPluginRuntime;
+    procedure Leave;
+    procedure Shutdown;
+    function CanBeginShutdown: Boolean;
+    function TryBeginShutdown: Boolean;
+  end;
+
+threadvar
+  gPluginServiceDepth: Integer;
+
+constructor TPluginServiceGateway.Create(ARuntime: TRecorderPluginRuntime);
+begin
+  inherited Create;
+  fLock := TCriticalSection.Create;
+  fDrained := TEvent.Create(nil, True, True, '');
+  fRuntime := ARuntime;
+end;
+
+destructor TPluginServiceGateway.Destroy;
+begin
+  fDrained.Free;
+  fLock.Free;
+  inherited Destroy;
+end;
+
+function TPluginServiceGateway.Enter: TRecorderPluginRuntime;
+begin
+  fLock.Acquire;
+  try
+    Result := fRuntime;
+    if fClosing and (GetCurrentThreadId <> fClosingThread) then
+      Result := nil;
+    if Result <> nil then
+    begin
+      Inc(fActive);
+      Inc(gPluginServiceDepth);
+    end;
+  finally
+    fLock.Release;
+  end;
+end;
+
+function TPluginServiceGateway.CanBeginShutdown: Boolean;
+begin
+  fLock.Acquire;
+  try
+    Result := (gPluginServiceDepth = 0) and (fActive = 0) and
+      ((not fClosing) or (fClosingThread = GetCurrentThreadId));
+  finally
+    fLock.Release;
+  end;
+end;
+
+function TPluginServiceGateway.TryBeginShutdown: Boolean;
+begin
+  fLock.Acquire;
+  try
+    Result := (gPluginServiceDepth = 0) and (fActive = 0) and
+      ((not fClosing) or (fClosingThread = GetCurrentThreadId));
+    if Result and not fClosing then
+    begin
+      fClosing := True;
+      fClosingThread := GetCurrentThreadId;
+    end;
+  finally
+    fLock.Release;
+  end;
+end;
+
+procedure TPluginServiceGateway.Leave;
+begin
+  fLock.Acquire;
+  try
+    Dec(gPluginServiceDepth);
+    Dec(fActive);
+    if (fActive = 0) and (fRuntime = nil) then fDrained.SetEvent;
+  finally
+    fLock.Release;
+  end;
+end;
+
+procedure TPluginServiceGateway.Shutdown;
+begin
+  fLock.Acquire;
+  try
+    fRuntime := nil;
+    if fActive > 0 then fDrained.ResetEvent;
+  finally
+    fLock.Release;
+  end;
+  fDrained.WaitFor(INFINITE);
+end;
 
 function EnumerateVisualTagsV2(AContext: Pointer; AIndex: LongWord;
   AInfo: PRecorderVisualTagInfoV2): LongInt; cdecl;
@@ -374,16 +496,24 @@ end;
 type
   TLoadedPlugin = class
     Handle: TLibHandle;
+    Gateway: TPluginServiceGateway;
     Instance: Pointer;
     FileName: string;
     Version: string;
     CloseProc: TRecorderPluginClose;
     NotifyProc: TRecorderPluginNotify;
     DestroyProc: TRecorderPluginDestroyClass;
+    HostApi: TRecorderPluginHostApi;
     FactoryTypeIds: TStringList;
     IsVisualV2: Boolean;
+    PluginOwnsNotifications: Boolean;
     UnloadSafe: Boolean;
+    UnloadPrepared: Boolean;
+    ClosePrepared: Boolean;
+    CloseFailureLogged: Boolean;
     constructor Create;
+    function PrepareClose: Boolean;
+    procedure PrepareUnload;
     destructor Destroy; override;
   end;
 
@@ -432,6 +562,7 @@ type
     procedure DoStart; override;
     procedure DoStop; override;
     procedure DoUpdateData; override;
+    procedure DispatchRunEvent(AKind: LongWord);
     procedure CatalogChanged;
   end;
 
@@ -444,17 +575,58 @@ begin
   FactoryTypeIds := TStringList.Create;
 end;
 
+{ PluginClose останавливает и ожидает собственные потоки до уничтожения
+  экземпляров. При отказе повторная попытка не разрушает состояние плагина.
+  Старый V2 без PluginClose работает только в UI-потоке. }
+function TLoadedPlugin.PrepareClose: Boolean;
+begin
+  if ClosePrepared then Exit(True);
+  Result := True;
+  try
+    if Assigned(CloseProc) and (Instance <> nil) then
+      Result := CloseProc(Instance);
+  except
+    Result := False;
+  end;
+  if Result then
+  begin
+    ClosePrepared := True;
+    CloseFailureLogged := False;
+  end
+  else if not CloseFailureLogged then
+  begin
+    CloseFailureLogged := True;
+    RecorderDebugLog('[Plugin] Close failed; keeping plugin and retrying: ' + FileName);
+  end;
+end;
+
+{ Вызывается после Close и уничтожения визуальных экземпляров; DLL остаётся
+  загруженной до остановки и дренирования gateway. }
+procedure TLoadedPlugin.PrepareUnload;
+begin
+  if UnloadPrepared then Exit;
+  UnloadPrepared := True;
+  try
+    if UnloadSafe and not PrepareClose then UnloadSafe := False;
+    if UnloadSafe and Assigned(DestroyProc) and (Instance <> nil) then
+      if DestroyProc(Instance) <> 0 then UnloadSafe := False;
+  except
+    UnloadSafe := False;
+  end;
+  if not UnloadSafe then
+  begin
+    if Gateway <> nil then Gateway.Retain := True;
+    RecorderDebugLog('[Plugin V2] Keeping library loaded after failed destruction: ' + FileName);
+  end;
+end;
+
 destructor TLoadedPlugin.Destroy;
 begin
-  if Assigned(CloseProc) and (Instance <> nil) then
-    CloseProc(Instance);
-  if Assigned(DestroyProc) and (Instance <> nil) then
-    DestroyProc(Instance);
+  { При ошибке частичной загрузки PrepareUnload может не быть вызван заранее. }
+  PrepareUnload;
   FactoryTypeIds.Free;
   if (Handle <> NilHandle) and UnloadSafe then
     FreeLibrary(Handle);
-  if not UnloadSafe then
-    RecorderDebugLog('[Plugin V2] Keeping library loaded after failed destruction: ' + FileName);
   inherited Destroy;
 end;
 
@@ -835,12 +1007,9 @@ begin
 end;
 
 procedure TPluginVisualFactory.DoStart;
-var
-  I: Integer;
 begin
-  for I := 0 to ChildCount - 1 do
-    Dispatch(TRecorderPluginVisualComponent(Children[I]),
-      REC_VISUAL_DISPATCH_START);
+  { Уведомления V2 приходят через NotifyRunTransition, а не через общий
+    компонентный цикл записи, который также используется встроенными типами. }
 end;
 
 procedure TPluginVisualFactory.CatalogChanged;
@@ -853,18 +1022,23 @@ begin
 end;
 
 procedure TPluginVisualFactory.DoStop;
+begin
+end;
+
+procedure TPluginVisualFactory.DispatchRunEvent(AKind: LongWord);
 var
   I: Integer;
 begin
   for I := 0 to ChildCount - 1 do
-    Dispatch(TRecorderPluginVisualComponent(Children[I]),
-      REC_VISUAL_DISPATCH_STOP);
+    if not Dispatch(TRecorderPluginVisualComponent(Children[I]), AKind) then
+      RecorderDebugLog('[Plugin V2] lifecycle dispatch failed for ' + TypeId);
 end;
 
 procedure TPluginVisualFactory.DoUpdateData;
 var
   I: Integer;
 begin
+  if fLibraryOwner.PluginOwnsNotifications then Exit;
   for I := 0 to ChildCount - 1 do
     Dispatch(TRecorderPluginVisualComponent(Children[I]),
       REC_VISUAL_DISPATCH_DATA_UPDATED);
@@ -1258,6 +1432,245 @@ begin
     RecorderDebugLog('[Lua worker] ' + lMessage);
 end;
 
+{ Вход выполняет лишь короткую регистрацию вызова, без удержания lock в коде хоста. }
+function GatewayEnumerateVisualTagsV2(AContext: Pointer; AIndex: LongWord; AInfo: PRecorderVisualTagInfoV2): LongInt; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := REC_VISUAL_ERROR;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := EnumerateVisualTagsV2(lRuntime, AIndex, AInfo); except Result := REC_VISUAL_ERROR; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayCopyLatestVisualTagHistoryV2(AContext: Pointer; ATagId: QWord; AWindowSeconds: Double; ATimes, AValues: PDouble; ACapacity: LongWord; out ACount: LongWord; out ARevision: QWord; out AWindowStartSec, ALatestTimeSec: Double): LongInt; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := REC_VISUAL_ERROR; ACount := 0; ARevision := 0; AWindowStartSec := 0; ALatestTimeSec := 0;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := CopyLatestVisualTagHistoryV2(lRuntime, ATagId, AWindowSeconds, ATimes, AValues, ACapacity, ACount, ARevision, AWindowStartSec, ALatestTimeSec); except Result := REC_VISUAL_ERROR; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayCopyRangeVisualHistoryV2(AContext: Pointer; ATagId: QWord; AFromTimeSec, AToTimeSec: Double; AIncludePrevious: LongWord; ATimes, AValues: PDouble; ACapacity: LongWord; out ACount: LongWord; out ARevision: QWord; out AWindowStartSec, ALatestTimeSec: Double): LongInt; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := REC_VISUAL_ERROR; ACount := 0; ARevision := 0; AWindowStartSec := 0; ALatestTimeSec := 0;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := CopyRangeVisualHistoryV2(lRuntime, ATagId, AFromTimeSec, AToTimeSec, AIncludePrevious, ATimes, AValues, ACapacity, ACount, ARevision, AWindowStartSec, ALatestTimeSec); except Result := REC_VISUAL_ERROR; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayGetVisualSignalInfoV2(AContext: Pointer; ATagId: QWord; AInfo: PRecorderVisualSignalInfoV2): LongInt; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := REC_VISUAL_ERROR;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := GetVisualSignalInfoV2(lRuntime, ATagId, AInfo); except Result := REC_VISUAL_ERROR; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayGetVisualSelectedTagIdV2(AContext: Pointer; out ATagId: QWord): LongInt; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := REC_VISUAL_ERROR; ATagId := 0;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := GetVisualSelectedTagIdV2(lRuntime, ATagId); except Result := REC_VISUAL_ERROR; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayReadVisualEstimateV2(AContext: Pointer; ATagId: QWord; AKind: LongWord; AEstimate: PRecorderVisualEstimateV2): LongInt; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := REC_VISUAL_ERROR;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := ReadVisualEstimateV2(lRuntime, ATagId, AKind, AEstimate); except Result := REC_VISUAL_ERROR; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayGetVisualEstimateSettingsV2(AContext: Pointer; ATagId: QWord; ASettings: PRecorderVisualEstimateSettingsV2): LongInt; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := REC_VISUAL_ERROR;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := GetVisualEstimateSettingsV2(lRuntime, ATagId, ASettings); except Result := REC_VISUAL_ERROR; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayEnumerateVisualUnitsV2(AContext: Pointer; AIndex: LongWord; AInfo: PRecorderVisualUnitInfoV2): LongInt; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := REC_VISUAL_ERROR;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := EnumerateVisualUnitsV2(lRuntime, AIndex, AInfo); except Result := REC_VISUAL_ERROR; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayVisualConversionFactorV2(AContext: Pointer; AFromUnit, AToUnit: PAnsiChar; out AFactor: Double): LongInt; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := REC_VISUAL_ERROR; AFactor := 0;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := VisualConversionFactorV2(lRuntime, AFromUnit, AToUnit, AFactor); except Result := REC_VISUAL_ERROR; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayPluginTagCount(AContext: Pointer): LongInt; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := 0;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := PluginTagCount(lRuntime); except Result := 0; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayPluginGetTagInfo(AContext: Pointer; AIndex: LongInt; AInfo: PRecorderPluginTagInfo): LongBool; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := False;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := PluginGetTagInfo(lRuntime, AIndex, AInfo); except Result := False; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayPluginReadTagValue(AContext: Pointer; AName: PAnsiChar; out ATimeSec, AValue: Double): LongBool; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := False; ATimeSec := 0; AValue := 0;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := PluginReadTagValue(lRuntime, AName, ATimeSec, AValue); except Result := False; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayPluginPublishTagValue(AContext: Pointer; AName: PAnsiChar; AValue: Double): LongBool; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := False;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := PluginPublishTagValue(lRuntime, AName, AValue); except Result := False; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayPluginGetProjectDirectory(AContext: Pointer; ABuffer: PAnsiChar; ABufferSize: LongInt): LongInt; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := 0;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := PluginGetProjectDirectory(lRuntime, ABuffer, ABufferSize); except Result := 0; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayPluginTagExists(AContext: Pointer; AName: PAnsiChar): LongBool; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := False;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := PluginTagExists(lRuntime, AName); except Result := False; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayPluginGetTagAlarmLevel(AContext: Pointer; AName: PAnsiChar; out ALevel: LongInt): LongBool; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := False; ALevel := 0;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := PluginGetTagAlarmLevel(lRuntime, AName, ALevel); except Result := False; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayPluginGetTagSetpoint(AContext: Pointer; AName: PAnsiChar; AKind: LongInt; out AThreshold: Double; out AEnabled: LongBool): LongBool; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := False; AThreshold := 0; AEnabled := False;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := PluginGetTagSetpoint(lRuntime, AName, AKind, AThreshold, AEnabled); except Result := False; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayPluginSetTagSetpoint(AContext: Pointer; AName: PAnsiChar; AKind: LongInt; AThreshold: Double; AEnabled: LongBool): LongBool; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := False;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := PluginSetTagSetpoint(lRuntime, AName, AKind, AThreshold, AEnabled); except Result := False; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+function GatewayPluginGetRecorderTime(AContext: Pointer; out ATimeSec: Double): LongBool; cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  Result := False; ATimeSec := 0;
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try Result := PluginGetRecorderTime(lRuntime, ATimeSec); except Result := False; end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
+
+procedure GatewayPluginLogMessage(AContext: Pointer; AMessage: PAnsiChar); cdecl;
+var lRuntime: TRecorderPluginRuntime;
+begin
+  if AContext = nil then Exit;
+  lRuntime := TPluginServiceGateway(AContext).Enter;
+  if lRuntime = nil then Exit;
+  try
+    try PluginLogMessage(lRuntime, AMessage); except end;
+  finally TPluginServiceGateway(AContext).Leave; end;
+end;
 function ReadPluginText(AData: PAnsiChar; ACapacity: SizeUInt;
   out AText: string): Boolean;
 var
@@ -1370,7 +1783,7 @@ begin
       ReadPluginText(@lDescriptors[I].Category[0],
         SizeOf(lDescriptors[I].Category), lGroup);
       lFactory := TPluginVisualFactory.Create(lTypeId, lCaption, lGroup,
-        lDescriptors[I], @ARuntime.fVisualServices, APlugin);
+        lDescriptors[I], @TPluginServiceGateway(ARuntime.fServiceGateway).Visual, APlugin);
       try
         ARuntime.fRegistry.RegisterFactory(lFactory);
       except
@@ -1414,20 +1827,39 @@ begin
   fRegistry := ARegistry;
   fTagRegistry := ATagRegistry;
   fAlarmEngine := AAlarmEngine;
-  fVisualServices.Header.Size := SizeOf(fVisualServices);
-  fVisualServices.Header.AbiMajor := REC_VISUAL_ABI_V2_MAJOR;
-  fVisualServices.Header.AbiMinor := REC_VISUAL_ABI_V2_MINOR;
-  fVisualServices.Context := Self;
-  fVisualServices.EnumerateTags := @EnumerateVisualTagsV2;
-  fVisualServices.CopyLatestHistory := @CopyLatestVisualTagHistoryV2;
-  fVisualServices.CopyRangeHistory := @CopyRangeVisualHistoryV2;
-  fVisualServices.GetSignalInfo := @GetVisualSignalInfoV2;
-  fVisualServices.GetSelectedTagId := @GetVisualSelectedTagIdV2;
-  fVisualServices.ReadEstimate := @ReadVisualEstimateV2;
-  fVisualServices.GetTagEstimateSettings := @GetVisualEstimateSettingsV2;
-  fVisualServices.EnumerateUnits := @EnumerateVisualUnitsV2;
-  fVisualServices.ConversionFactor := @VisualConversionFactorV2;
+  fServiceGateway := TPluginServiceGateway.Create(Self);
+  with TPluginServiceGateway(fServiceGateway) do
+  begin
+    Visual.Header.Size := SizeOf(Visual);
+    Visual.Header.AbiMajor := REC_VISUAL_ABI_V2_MAJOR;
+    Visual.Header.AbiMinor := REC_VISUAL_ABI_V2_MINOR;
+    Visual.Context := Self.fServiceGateway;
+    Visual.EnumerateTags := @GatewayEnumerateVisualTagsV2;
+    Visual.CopyLatestHistory := @GatewayCopyLatestVisualTagHistoryV2;
+    Visual.CopyRangeHistory := @GatewayCopyRangeVisualHistoryV2;
+    Visual.GetSignalInfo := @GatewayGetVisualSignalInfoV2;
+    Visual.GetSelectedTagId := @GatewayGetVisualSelectedTagIdV2;
+    Visual.ReadEstimate := @GatewayReadVisualEstimateV2;
+    Visual.GetTagEstimateSettings := @GatewayGetVisualEstimateSettingsV2;
+    Visual.EnumerateUnits := @GatewayEnumerateVisualUnitsV2;
+    Visual.ConversionFactor := @GatewayVisualConversionFactorV2;
+    Host.Size := SizeOf(Host);
+    Host.HostContext := Self.fServiceGateway;
+    Host.RegisterOscillogramFactory := nil;
+    Host.TagCount := @GatewayPluginTagCount;
+    Host.GetTagInfo := @GatewayPluginGetTagInfo;
+    Host.ReadTagValue := @GatewayPluginReadTagValue;
+    Host.PublishTagValue := @GatewayPluginPublishTagValue;
+    Host.GetProjectDirectory := @GatewayPluginGetProjectDirectory;
+    Host.LogMessage := @GatewayPluginLogMessage;
+    Host.TagExists := @GatewayPluginTagExists;
+    Host.GetTagAlarmLevel := @GatewayPluginGetTagAlarmLevel;
+    Host.GetTagSetpoint := @GatewayPluginGetTagSetpoint;
+    Host.SetTagSetpoint := @GatewayPluginSetTagSetpoint;
+    Host.GetRecorderTime := @GatewayPluginGetRecorderTime;
+  end;
   fPlugins := TList.Create;
+  fQuarantinedPlugins := TList.Create;
   fPendingFactories := TList.Create;
 end;
 
@@ -1436,19 +1868,68 @@ var
   I, J: Integer;
   lPlugin: TLoadedPlugin;
 begin
-  for I := fPendingFactories.Count - 1 downto 0 do
-    TObject(fPendingFactories[I]).Free;
+  if not TryBeginShutdown then
+    raise Exception.Create('Нельзя уничтожать runtime внутри callback плагина');
+  if fPendingFactories <> nil then
+    for I := fPendingFactories.Count - 1 downto 0 do
+      TObject(fPendingFactories[I]).Free;
   fPendingFactories.Free;
-  for I := fPlugins.Count - 1 downto 0 do
-  begin
-    lPlugin := TLoadedPlugin(fPlugins[I]);
-    for J := lPlugin.FactoryTypeIds.Count - 1 downto 0 do
-      fRegistry.UnregisterFactory(lPlugin.FactoryTypeIds[J]);
-    lPlugin.FactoryTypeIds.Clear;
-    lPlugin.Free;
-  end;
+  if fPlugins <> nil then
+    for I := fPlugins.Count - 1 downto 0 do
+    begin
+      lPlugin := TLoadedPlugin(fPlugins[I]);
+      for J := lPlugin.FactoryTypeIds.Count - 1 downto 0 do
+        fRegistry.UnregisterFactory(lPlugin.FactoryTypeIds[J]);
+      lPlugin.FactoryTypeIds.Clear;
+      lPlugin.PrepareUnload;
+    end;
+  if fQuarantinedPlugins <> nil then
+    for I := fQuarantinedPlugins.Count - 1 downto 0 do
+      TLoadedPlugin(fQuarantinedPlugins[I]).PrepareUnload;
+  if fServiceGateway <> nil then
+    TPluginServiceGateway(fServiceGateway).Shutdown;
+  { Начатые callback вернулись из gateway; только теперь выгружаем DLL. }
+  if fPlugins <> nil then
+    for I := fPlugins.Count - 1 downto 0 do
+      TObject(fPlugins[I]).Free;
   fPlugins.Free;
+  if fQuarantinedPlugins <> nil then
+    for I := fQuarantinedPlugins.Count - 1 downto 0 do
+      TObject(fQuarantinedPlugins[I]).Free;
+  fQuarantinedPlugins.Free;
+  if fServiceGateway <> nil then
+  begin
+    if not TPluginServiceGateway(fServiceGateway).Retain then
+      fServiceGateway.Free;
+  end;
+  fServiceGateway := nil;
   inherited Destroy;
+end;
+
+function TRecorderPluginRuntime.CanShutdown: Boolean;
+begin
+  Result := (fServiceGateway = nil) or
+    TPluginServiceGateway(fServiceGateway).CanBeginShutdown;
+end;
+
+{ Вызывать до освобождения runtime: если callback занят, ничего не меняется.
+  После успеха только поток закрытия может синхронно пользоваться сервисами. }
+function TRecorderPluginRuntime.TryBeginShutdown: Boolean;
+var
+  I: Integer;
+begin
+  Result := (fServiceGateway = nil) or
+    TPluginServiceGateway(fServiceGateway).TryBeginShutdown;
+  if not Result then Exit;
+  fShutdownStarted := True;
+  if fPlugins <> nil then
+  { Не освобождаем граф приложения, пока все плагины не подтвердили остановку
+    своих потоков. Успешные Close повторно не вызываются при очередной попытке. }
+  for I := 0 to fPlugins.Count - 1 do
+    if not TLoadedPlugin(fPlugins[I]).PrepareClose then Result := False;
+  if fQuarantinedPlugins <> nil then
+    for I := 0 to fQuarantinedPlugins.Count - 1 do
+      if not TLoadedPlugin(fQuarantinedPlugins[I]).PrepareClose then Result := False;
 end;
 
 function TRecorderPluginRuntime.GetLoadedCount: Integer;
@@ -1488,7 +1969,9 @@ var
   lGetVisualDescriptor: TRecorderVisualGetDescriptorV2;
   lFactory: TRecorderComponentFactoryBase;
   lInfo: TRecorderPluginInfo;
-  lApi: TRecorderPluginHostApi;
+  lLoadedMessage: string;
+  lCompleteLifecycle: Boolean;
+  lUsesPluginNotifications: function: LongBool; cdecl;
   I, J: Integer;
 begin
   lCatalog := TRecorderPluginCatalog.Create;
@@ -1497,6 +1980,7 @@ begin
     for I := 0 to lCatalog.Count - 1 do
     begin
       lPlugin := TLoadedPlugin.Create;
+      lPlugin.Gateway := TPluginServiceGateway(fServiceGateway);
       try
         try
         lPlugin.FileName := ExpandFileName(
@@ -1530,16 +2014,6 @@ begin
           lPlugin.Version := 'GetPluginInfo отсутствует';
         Pointer(lGetVisualDescriptor) := GetProcedureAddress(lPlugin.Handle,
           'RecorderVisualGetDescriptorV2');
-        if Assigned(lGetVisualDescriptor) then
-        begin
-          if LoadVisualV2Plugin(Self, lPlugin, lGetVisualDescriptor) then
-          begin
-            RecorderDebugLog('[Plugin V2] loaded version=' + lPlugin.Version +
-              '; path=' + lPlugin.FileName);
-            lPlugin := nil;
-          end;
-          Continue;
-        end;
         Pointer(lCreate) := GetProcedureAddress(lPlugin.Handle, 'PluginCreate');
         Pointer(lPlugin.CloseProc) := GetProcedureAddress(lPlugin.Handle,
           'PluginClose');
@@ -1547,43 +2021,66 @@ begin
           'PluginNotify');
         Pointer(lPlugin.DestroyProc) := GetProcedureAddress(lPlugin.Handle,
           'DestroyPluginClass');
-        if not Assigned(lCreateClass) or not Assigned(lCreate) or
-          not Assigned(lPlugin.DestroyProc) then
+        { Новый маршрут включается явным маркером. Старые V2-библиотеки
+          загружаются по дескрипторам, как и до введения общего PluginClass. }
+        lCompleteLifecycle := Assigned(lCreateClass) and Assigned(lCreate) and
+          Assigned(lPlugin.DestroyProc) and Assigned(lPlugin.CloseProc) and
+          Assigned(lPlugin.NotifyProc);
+        Pointer(lUsesPluginNotifications) := GetProcedureAddress(lPlugin.Handle,
+          'RecorderVisualUsesPluginNotifications');
+        if Assigned(lUsesPluginNotifications) then
+        begin
+          lPlugin.PluginOwnsNotifications := lUsesPluginNotifications();
+          if lPlugin.PluginOwnsNotifications and
+            (not Assigned(lGetVisualDescriptor) or not lCompleteLifecycle) then
+          begin
+            RecorderDebugLog('[Plugin V2] notification routing requires complete lifecycle: ' +
+              lCatalog.Entries[I].FileName);
+            Continue;
+          end;
+        end;
+        if not Assigned(lGetVisualDescriptor) and
+          (not Assigned(lCreateClass) or not Assigned(lCreate) or
+          not Assigned(lPlugin.DestroyProc)) then
         begin
           RecorderDebugLog('[Plugin] lifecycle exports missing: ' +
             lCatalog.Entries[I].FileName);
           Continue;
         end;
-        if Assigned(lGetType) and (lGetType() <> PLUGIN_CLASS) then
+        if (not Assigned(lGetVisualDescriptor) or lPlugin.PluginOwnsNotifications) and
+          Assigned(lGetType) and (lGetType() <> PLUGIN_CLASS) then
         begin
           RecorderDebugLog('[Plugin] unsupported plugin type: ' +
             lCatalog.Entries[I].FileName);
           Continue;
         end;
+        if not Assigned(lGetVisualDescriptor) or lPlugin.PluginOwnsNotifications then
+        begin
         lPlugin.Instance := lCreateClass();
-        if lPlugin.Instance = nil then
-          Continue;
-        lApi := Default(TRecorderPluginHostApi);
-        lApi.Size := SizeOf(lApi);
-        lApi.HostContext := Self;
-        { Reserved legacy ABI slot: plugin components use generic V2 discovery,
-          never a concrete host model. }
-        lApi.RegisterOscillogramFactory := nil;
-        lApi.TagCount := @PluginTagCount;
-        lApi.GetTagInfo := @PluginGetTagInfo;
-        lApi.ReadTagValue := @PluginReadTagValue;
-        lApi.PublishTagValue := @PluginPublishTagValue;
-        lApi.GetProjectDirectory := @PluginGetProjectDirectory;
-        lApi.LogMessage := @PluginLogMessage;
-        lApi.TagExists := @PluginTagExists;
-        lApi.GetTagAlarmLevel := @PluginGetTagAlarmLevel;
-        lApi.GetTagSetpoint := @PluginGetTagSetpoint;
-        lApi.SetTagSetpoint := @PluginSetTagSetpoint;
-        lApi.GetRecorderTime := @PluginGetRecorderTime;
-        if not lCreate(lPlugin.Instance, @lApi) then
+        if lPlugin.Instance = nil then Continue;
+        if not lCreate(lPlugin.Instance,
+          @TPluginServiceGateway(fServiceGateway).Host) then
         begin
           RecorderDebugLog('[Plugin] PluginCreate rejected: ' +
             lCatalog.Entries[I].FileName);
+          Continue;
+        end;
+        end;
+        if Assigned(lGetVisualDescriptor) then
+        begin
+          if not lPlugin.PluginOwnsNotifications then
+          begin
+            lPlugin.CloseProc := nil;
+            lPlugin.NotifyProc := nil;
+            lPlugin.DestroyProc := nil;
+          end;
+          lLoadedMessage := '[Plugin V2] loaded version=' + lPlugin.Version +
+            '; path=' + lPlugin.FileName;
+          if LoadVisualV2Plugin(Self, lPlugin, lGetVisualDescriptor) then
+          begin
+            lPlugin := nil;
+            RecorderDebugLog(lLoadedMessage);
+          end;
           Continue;
         end;
         while fPendingFactories.Count > 0 do
@@ -1598,10 +2095,11 @@ begin
             raise;
           end;
         end;
+        lLoadedMessage := '[Plugin] loaded version=' + lPlugin.Version +
+          '; path=' + lPlugin.FileName;
         fPlugins.Add(lPlugin);
-        RecorderDebugLog('[Plugin] loaded version=' + lPlugin.Version +
-          '; path=' + lPlugin.FileName);
         lPlugin := nil;
+        RecorderDebugLog(lLoadedMessage);
         except
           on E: Exception do
             RecorderDebugLog('[Plugin] load failed ' +
@@ -1618,11 +2116,55 @@ begin
               lPlugin.FactoryTypeIds[lPlugin.FactoryTypeIds.Count - 1]);
             lPlugin.FactoryTypeIds.Delete(lPlugin.FactoryTypeIds.Count - 1);
           end;
+        if (lPlugin <> nil) and not lPlugin.PrepareClose then
+        begin
+          { Не терять объект и его живые потоки после отказа инициализации. }
+          fQuarantinedPlugins.Add(lPlugin);
+          lPlugin := nil;
+        end;
         lPlugin.Free;
       end;
     end;
   finally
     lCatalog.Free;
+  end;
+end;
+
+procedure TRecorderPluginRuntime.NotifyRunTransition(
+  ATransition: TRecorderStateTransition);
+var
+  lEvent: LongInt;
+  lDispatch: LongWord;
+  lData: Pointer;
+  lPlugin: TLoadedPlugin;
+  lFactory: TRecorderComponentFactoryBase;
+  I, J: Integer;
+begin
+  if fShutdownStarted then Exit;
+  lData := nil;
+  case ATransition of
+    rstStopToView, rstStopToRecord, rstViewToRecord, rstRecordToView:
+      begin lEvent := PN_RCSTART; lDispatch := REC_VISUAL_DISPATCH_START; end;
+    rstViewToStop, rstRecordToStop:
+      begin lEvent := PN_RCSTOP; lDispatch := REC_VISUAL_DISPATCH_STOP; end;
+  else
+    Exit;
+  end;
+  if ATransition in [rstStopToRecord, rstViewToRecord] then
+    lData := Pointer(PtrUInt(1));
+  { Новые плагины получают уведомление через PluginClass и менеджер. }
+  NotifyAll(lEvent, lData);
+  { Старые V2 без PluginClass получают то же событие непосредственно экземплярам. }
+  for I := 0 to fPlugins.Count - 1 do
+  begin
+    lPlugin := TLoadedPlugin(fPlugins[I]);
+    if not lPlugin.IsVisualV2 or lPlugin.PluginOwnsNotifications then Continue;
+    for J := 0 to lPlugin.FactoryTypeIds.Count - 1 do
+    begin
+      lFactory := fRegistry.FindFactory(lPlugin.FactoryTypeIds[J]);
+      if lFactory is TPluginVisualFactory then
+        TPluginVisualFactory(lFactory).DispatchRunEvent(lDispatch);
+    end;
   end;
 end;
 
@@ -1632,6 +2174,7 @@ var
   lPlugin: TLoadedPlugin;
   lFactory: TRecorderComponentFactoryBase;
 begin
+  if fShutdownStarted then Exit;
   for I := 0 to fPlugins.Count - 1 do
   begin
     lPlugin := TLoadedPlugin(fPlugins[I]);
@@ -1645,11 +2188,12 @@ begin
   end;
 end;
 
-procedure TRecorderPluginRuntime.NotifyAll(AEvent: LongInt);
+procedure TRecorderPluginRuntime.NotifyAll(AEvent: LongInt; AData: Pointer);
 var
   I: Integer;
   lPlugin: TLoadedPlugin;
 begin
+  if fShutdownStarted then Exit;
   if AEvent in [PN_RCLOADCONFIG, PN_LEAVERCCONFIG, PN_RCINITIALIZED] then
     NotifyCatalogChanged;
   if (AEvent = PN_UPDATEDATA) and (fTagRegistry <> nil) then
@@ -1658,12 +2202,12 @@ begin
     for I := 0 to fPlugins.Count - 1 do
     begin
       lPlugin := TLoadedPlugin(fPlugins[I]);
-      if lPlugin.IsVisualV2 then
-        Continue;
       if not Assigned(lPlugin.NotifyProc) then
         Continue;
       try
-        lPlugin.NotifyProc(lPlugin.Instance, AEvent, nil);
+        if not lPlugin.NotifyProc(lPlugin.Instance, AEvent, AData) then
+          RecorderDebugLog(Format('[Plugin] notify %d rejected by %s',
+            [AEvent, lPlugin.FileName]));
       except
         on E: Exception do
           RecorderDebugLog(Format('[Plugin] notify %d failed: %s',

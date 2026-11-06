@@ -240,6 +240,8 @@ type
     fRangeMax: Double;                                         { Максимум шкалы }
     fRangeMin: Double;                                         { Минимум шкалы }
     fSignalBuffer: TRecorderSignalBuffer;                      { Буфер сигнала }
+    fRecordingSignalBuffer: TRecorderSignalBuffer;
+    fRecordingPollFrequencyHz: Double;
     fSourceId: string;                                         { Идентификатор источника }
     fSetpointHysteresisEnabled: Boolean;                       { Разрешить гистерезис уставки }
     fSetpointSoundUntilEnd: Boolean;                           { Звук до сброса предупреждения }
@@ -261,6 +263,8 @@ type
     fUnitName: string;                                         { Единица измерения }
     fSourceUnitName: string;                                   { Единица исходного значения до ГХ }
     function GetBlockCounter: QWord;
+    function GetRecordingSignalBuffer: TRecorderSignalBuffer;
+    function GetRecordingPollFrequencyHz: Double;
     function GetSignalRevision: QWord;
     function GetIsVector: Boolean;
     function GetSetpoint(AKind: TRecorderTagSetpointKind): TRecorderTagSetpoint;
@@ -292,6 +296,9 @@ type
     procedure AddSamples(const ATimes, AValues: array of Double; ACount: Integer);
     { Расширяет кольцевой буфер тега без потери последних точек. }
     procedure EnsureBufferCapacity(ACapacity: Integer);
+    { Configuration-thread opt-in. Live provisional samples remain separate
+      from the persistent recording cursor; existing tags keep the same ring. }
+    procedure EnsureRecordingBuffer(ACapacity, ABlockSamples: Integer);
     procedure ConfigureBlockBuffer(ABlockSamples, ABlockCount: Integer);
     { Очищает историю сигнала после смены режима/ГХ канала. }
     procedure ClearSignalHistory;
@@ -374,6 +381,9 @@ type
       write SetChannelCalibrationEnabled;
     property TextValue: string read fTextValue write fTextValue;
     property SignalBuffer: TRecorderSignalBuffer read fSignalBuffer;
+    property RecordingSignalBuffer: TRecorderSignalBuffer read GetRecordingSignalBuffer;
+    property RecordingPollFrequencyHz: Double read GetRecordingPollFrequencyHz
+      write fRecordingPollFrequencyHz;
     property CalibrationScaleBuilt: Boolean read fCalibrationScaleBuilt;
     property CalibrationScaleLinear: Boolean read fCalibrationScaleLinear;
     property ResultScale: Double read fResultScale;
@@ -1690,6 +1700,7 @@ begin
   DoneCriticalSection(fExternalWriteLock);
   DoneCriticalSection(fEstimateLock);
   fSignalBuffer.Free;
+  fRecordingSignalBuffer.Free;
   fCalibrationNames.Free;
   inherited Destroy;
 end;
@@ -1721,6 +1732,39 @@ procedure TRecorderTag.EnsureBufferCapacity(ACapacity: Integer);
 begin
   if ACapacity > fSignalBuffer.Capacity then
     fSignalBuffer.SetCapacity(ACapacity);
+end;
+
+function TRecorderTag.GetRecordingSignalBuffer: TRecorderSignalBuffer;
+begin
+  if fRecordingSignalBuffer <> nil then Result := fRecordingSignalBuffer
+  else Result := fSignalBuffer;
+end;
+
+function TRecorderTag.GetRecordingPollFrequencyHz: Double;
+begin
+  if (fRecordingSignalBuffer <> nil) and (fRecordingPollFrequencyHz > 0) then
+    Result := fRecordingPollFrequencyHz
+  else Result := fPollFrequencyHz;
+end;
+
+procedure TRecorderTag.EnsureRecordingBuffer(ACapacity, ABlockSamples: Integer);
+var
+  lBuffer: TRecorderSignalBuffer;
+begin
+  if fRecordingSignalBuffer = nil then
+  begin
+    lBuffer := TRecorderSignalBuffer.Create(ACapacity);
+    { Preserve cursors acquired before this opt-in; no provisional sample is
+      copied into the recording history. These fields belong to this unit. }
+    lBuffer.fTotalSamples := fSignalBuffer.CurrentCursor;
+    lBuffer.ConfigureBlockRing(ABlockSamples, 8);
+    fRecordingPollFrequencyHz := fPollFrequencyHz;
+    fRecordingSignalBuffer := lBuffer;
+    Exit;
+  end
+  else if ACapacity > fRecordingSignalBuffer.Capacity then
+    fRecordingSignalBuffer.SetCapacity(ACapacity);
+  fRecordingSignalBuffer.ConfigureBlockRing(ABlockSamples, 8);
 end;
 
 procedure TRecorderTag.ConfigureBlockBuffer(ABlockSamples, ABlockCount: Integer);

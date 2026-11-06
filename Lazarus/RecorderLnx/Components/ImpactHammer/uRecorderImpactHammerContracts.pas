@@ -127,6 +127,7 @@ type
     Visualization: TRecorderPointVisualization;
     Color: LongInt;
     MarkerSizePixels: Double;
+    IntensityLogScale: Boolean;
     IntensitySource: TRecorderIntensitySource;
     BandRms,GradientEnabled:Boolean;
     BandTolerancePercent:Double;

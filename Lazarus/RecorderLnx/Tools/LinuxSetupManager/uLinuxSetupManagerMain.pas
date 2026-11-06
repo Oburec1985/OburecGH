@@ -34,6 +34,8 @@ type
     fPublishUserEdit: TEdit;
     fPublishWritableCheck: TCheckBox;
     fPublishedShares: TListView;
+    fPublishedUpdateButton: TButton;
+    fPublishedDeleteButton: TButton;
     fHostEdit: TEdit;
     fSmbShareEdit: TEdit;
     fLocalNameEdit: TEdit;
@@ -130,6 +132,8 @@ const
   CCurrentScreenHelper = '/usr/local/sbin/recorderlnx-current-screen-rdp';
   CMountRoot = '/home/user/Сеть/MeraFiles';
   CRegistryDir = '/etc/recorderlnx/network-shares.d';
+  CPublishedWritable = 1;
+  CPublishedEditable = 2;
 
 function AddLabel(AOwner: TComponent; AParent: TWinControl; ALeft, ATop,
   AWidth: Integer; const ACaption: string): TLabel;
@@ -198,7 +202,12 @@ begin
   Result :=
     'Что делает:' + LineEnding +
     'Публикует выбранный локальный каталог как SMB-ресурс с заданным сетевым ' +
-    'именем. Для Samba используется постоянная точка /srv/recorderlnx/<имя>.' +
+    'именем. Для новой публикации используется постоянная точка /srv/recorderlnx/<имя>.' +
+    LineEnding +
+    'Список показывает файловые ресурсы действующей конфигурации Samba, включая ' +
+    'созданные другими средствами. Выбор строки загружает путь, пользователей и режим записи. ' +
+    'Изменение обычной публикации сохраняет остальные параметры Samba и не переносит файлы. ' +
+    'Ресурсы из include и динамические секции доступны только для просмотра.' +
     LineEnding + LineEnding +
     'Команда:' + LineEnding +
     'sudo /usr/local/sbin/recorderlnx-share-folder "/путь/к/каталогу" MeraFiles' +
@@ -342,6 +351,7 @@ procedure TLinuxSetupManagerForm.BuildUi;
 var
   lRightPanel, lDescriptionPanel, lContentPanel: TPanel;
   lDescriptionSplitter: TSplitter;
+  lDescriptionTitle: TLabel;
 begin
   Caption := 'Настройка Linux';
   SetBounds(180, 120, 1000, 700);
@@ -376,6 +386,7 @@ begin
   lDescriptionPanel := TPanel.Create(Self);
   lDescriptionPanel.Parent := lRightPanel;
   lDescriptionPanel.Align := alBottom;
+  lDescriptionPanel.BevelOuter := bvNone;
   lDescriptionPanel.Height := 190;
   lDescriptionPanel.Constraints.MinHeight := 80;
   lDescriptionSplitter := TSplitter.Create(Self);
@@ -385,16 +396,24 @@ begin
   lDescriptionSplitter.Color := $00D9AF78;
   lDescriptionSplitter.ParentColor := False;
   lDescriptionSplitter.ResizeAnchor := akBottom;
+  lDescriptionSplitter.Top := lDescriptionPanel.Top - lDescriptionSplitter.Height;
   lContentPanel := TPanel.Create(Self);
   lContentPanel.Parent := lRightPanel;
   lContentPanel.Align := alClient;
   lContentPanel.BevelOuter := bvNone;
   lContentPanel.Constraints.MinHeight := 300;
-  AddLabel(Self, lDescriptionPanel, 12, 8, 250, 'Что делает эта функция');
+  lDescriptionTitle := AddLabel(Self, lDescriptionPanel, 12, 8, 250,
+    'Что делает эта функция');
+  lDescriptionTitle.Align := alTop;
+  lDescriptionTitle.AutoSize := True;
+  lDescriptionTitle.BorderSpacing.Around := 8;
   fDescriptionMemo := TMemo.Create(Self);
   fDescriptionMemo.Parent := lDescriptionPanel;
-  fDescriptionMemo.SetBounds(12, 32, 500, 145);
-  fDescriptionMemo.Anchors := [akLeft, akTop, akRight, akBottom];
+  // Keep the description inside the panel at any DPI and splitter position.
+  fDescriptionMemo.Align := alClient;
+  fDescriptionMemo.BorderSpacing.Left := 12;
+  fDescriptionMemo.BorderSpacing.Right := 12;
+  fDescriptionMemo.BorderSpacing.Bottom := 12;
   fDescriptionMemo.ReadOnly := True;
   fDescriptionMemo.WordWrap := True;
   fDescriptionMemo.ScrollBars := ssVertical;
@@ -450,7 +469,7 @@ begin
   fPublishUserEdit.Parent := fSharePanel;
   fPublishUserEdit.SetBounds(170, 132, 340, 28);
   fPublishUserEdit.Anchors := [akLeft, akTop, akRight];
-  fPublishUserEdit.Text := GetEnvironmentVariable('USER');
+  fPublishUserEdit.Text := 'user';
   fPublishWritableCheck := TCheckBox.Create(Self);
   fPublishWritableCheck.Parent := fSharePanel;
   fPublishWritableCheck.SetBounds(16, 166, 300, 25);
@@ -460,10 +479,12 @@ begin
     @PublishShareClick);
   AddButton(Self, fSharePanel, 142, 200, 92, 'Обновить',
     @RefreshPublishedClick);
-  AddButton(Self, fSharePanel, 242, 200, 125, 'Изменить путь',
+  fPublishedUpdateButton := AddButton(Self, fSharePanel, 242, 200, 125, 'Изменить путь',
     @UpdatePublishedClick);
-  AddButton(Self, fSharePanel, 375, 200, 135, 'Удалить ресурс',
+  fPublishedDeleteButton := AddButton(Self, fSharePanel, 375, 200, 135, 'Удалить ресурс',
     @DeletePublishedClick);
+  fPublishedUpdateButton.Enabled := False;
+  fPublishedDeleteButton.Enabled := False;
   AddButton(Self, fSharePanel, 375, 234, 135, 'Настроить SMB…',
     @ConfigureSmbClick);
   AddLabel(Self, fSharePanel, 16, 270, 490, 'Опубликованные ресурсы');
@@ -478,6 +499,8 @@ begin
   fPublishedShares.Columns[0].Width := 140;
   fPublishedShares.Columns.Add.Caption := 'Локальный каталог';
   fPublishedShares.Columns[1].Width := 340;
+  fPublishedShares.Columns.Add.Caption := 'Пользователи';
+  fPublishedShares.Columns[2].Width := 160;
   fPublishedShares.OnSelectItem := @PublishedShareSelect;
   fConnectPanel := TPanel.Create(Self);
   fConnectPanel.Parent := lContentPanel;
@@ -1478,6 +1501,8 @@ begin
   if fPublishedShares.Selected <> nil then
     lName := fPublishedShares.Selected.Caption;
   fPublishedShares.Items.Clear;
+  fPublishedUpdateButton.Enabled := False;
+  fPublishedDeleteButton.Enabled := False;
   if not RunPublishAction(['list'], False, lOutput) then
   begin
     fStatusLabel.Caption := 'Не удалось прочитать публикации: ' + lOutput;
@@ -1495,7 +1520,12 @@ begin
       lItem := fPublishedShares.Items.Add;
       lItem.Caption := TJSONObject(lRow).Get('name', '');
       lItem.SubItems.Add(TJSONObject(lRow).Get('path', ''));
-      lItem.Data := Pointer(PtrInt(Ord(TJSONObject(lRow).Get('writable', False))));
+      lItem.SubItems.Add(TJSONObject(lRow).Get('users', ''));
+      // The final subitem is metadata, not a visible column.
+      lItem.SubItems.Add(TJSONObject(lRow).Get('edit_reason', ''));
+      lItem.Data := Pointer(PtrInt(
+        Ord(TJSONObject(lRow).Get('writable', False)) * CPublishedWritable +
+        Ord(TJSONObject(lRow).Get('editable', True)) * CPublishedEditable));
       if lItem.Caption = lName then lItem.Selected := True;
     end;
   except
@@ -1513,10 +1543,17 @@ end;
 procedure TLinuxSetupManagerForm.PublishedShareSelect(Sender: TObject;
   Item: TListItem; Selected: Boolean);
 begin
+  fPublishedUpdateButton.Enabled := Selected and (Item <> nil) and
+    ((PtrInt(Item.Data) and CPublishedEditable) <> 0);
+  fPublishedDeleteButton.Enabled := fPublishedUpdateButton.Enabled;
   if not Selected or (Item = nil) or (Item.SubItems.Count = 0) then Exit;
   fPublishShareNameEdit.Text := Item.Caption;
   fSharePathEdit.Text := Item.SubItems[0];
-  fPublishWritableCheck.Checked := PtrInt(Item.Data) <> 0;
+  fPublishWritableCheck.Checked := (PtrInt(Item.Data) and CPublishedWritable) <> 0;
+  if Item.SubItems.Count > 1 then
+    fPublishUserEdit.Text := Item.SubItems[1];
+  if (not fPublishedUpdateButton.Enabled) and (Item.SubItems.Count > 2) then
+    fStatusLabel.Caption := Item.SubItems[2];
 end;
 
 procedure TLinuxSetupManagerForm.UpdatePublishedClick(Sender: TObject);
@@ -1539,11 +1576,7 @@ begin
   end;
   if MessageDlg('Изменить каталог ресурса ' + lName + ' на ' + lPath + '?',
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
-  if lUser = '' then
-  begin
-    MessageDlg('Укажите пользователя SMB.', mtWarning, [mbOK], 0);
-    Exit;
-  end;
+  // Empty users preserve an existing publication's access policy.
   if fPublishWritableCheck.Checked then lMode := 'rw' else lMode := 'ro';
   if RunPublishAction(['update', lName, lPath, lUser, lMode], True, lOutput) then
   begin

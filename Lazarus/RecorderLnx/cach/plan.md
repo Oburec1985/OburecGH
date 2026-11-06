@@ -1,4 +1,170 @@
+# Плагинный фреймворк — сближение с оригиналом
+
+- [x] Уточнены ограничения: JSON сохраняется; имена конкретных плагинов, форм и их классов не переименовываются.
+- [x] Общие классы `TExtRecorderPack`, `cCompMng`, `cRecBasicFactory`; маршруты `_Create`, `Notify` → `ProcessNotify`, `doWriteSettings` → `SaveSettings`, `doReadSettings` → `LoadSettings`.
+- [x] Каталог метаданных тегов вынесен в SDK; прежние имена адаптера осциллографа сохранены на время миграции.
+- [x] В SDK выделен общий читающий `cTag` для уже используемых снимков истории; осциллограф наследует его, запись не переносится.
+- [x] Общая фабрика учитывает экземпляры и раздаёт doStart/doStop/doUpdateData, не прекращая рассылку при ошибке другого получателя; переходы Preview/Record/Stop для плагинов следуют оригиналу и учитывают armed origin. Копирование истории только по запросу компонента.
+- [x] ABI 2.8 передаёт режим просмотра/записи через безопасный контекст START; doRecorderInit вызывается после обновления каталога.
+- [x] Close останавливает потоки до уничтожения объектов; gateway удерживает сервисы при pinned DLL, частично загруженные плагины с отказом Close остаются под управлением хоста для повтора. Отмена и retry закрытия проверены отдельным LCL smoke.
+- [ ] Проверить видимость сообщения об ожидании закрытия на нативном снимке: тест проверяет заголовок окна, но скрытый фоновый запуск не предоставил окно для снимка.
+- [ ] При появлении потребителя последовательных блоков дополнить читающий `cTag` независимым курсором и обнаружением потери: для этого ABI должен атомарно выдавать номера и эпоху. Текущему осциллографу доступны необходимые снимки истории; сохранять методы RLNX, когда они не уступают по функциональности. Не переносить запись и побочное переименование исходного тега из settagname.
+- [ ] При следующих компонентах сопоставлять конкретные потребности остальных общих методов и событий конфигурации с оригиналом; не дублировать существующий маршрут обновления каталогов и JSON. Не выдавать ABI-буфер за оригинальный INI/COM интерфейс.
+
+# FRF: логарифмический радиус — 2026-10-30
+
+- [x] Уточнённая log-нормировка по minpositive/max текущих измеренных точек; поле 60 дБ удалено.
+- [x] Полная передача display → route/live bindings → 3D, конфигурация/Assign/legacy defaults.
+- [x] Forced Windows main build и модель/диалог roundtrip.
+- [x] Adapter numeric/current-frequency/preset isolation/edgecases, controller и 3D codec regressions; снимок без поля диапазона.
+
+# OPC UA — handoff с работами за 2026-10-28
+
+# DAC feedback — 2026-10-28
+
+- [x] 2026-10-29: nativeADC finalNCC сactualtimestamps, actualdiscreteDACtemplate, coarse256seedonly; minactualperiod/4, mismatched/jitteredgrids tests и main/lifecycle OK. Локальный пакет676B69B4.
+- [ ] Передать676B69B4 на MIC315 после восстановления сети (ping/SMB недоступны), затем аппаратный retest.
+
+- [x] 2026-10-29: NCC256-grid boundedsearch, firstideal/secondobserved, ρ/gain diagnostics; manualkspin withphase-preserving FIFO transition; MERA lastFreq. Main+focusedtests pass, staged0FF01720.
+- [ ] Аппаратно проверить NCC и ручной k, затем реальный MERA Freq после нескольких поправок.
+
+- [x] 2026-10-29: live Fs_eff в sidebar без rebuild, видимый Fs/k у кнопки калибровки, k_rate в логах и lifecycle assertions.
+
+- [x] 2026-10-29: два гладких колокола и максимум зеркала/отклика; actual Fs11025, дробная вершина, latency250ms и запись проверены тестами; main build0, пакет284DE9D4 staged.
+- [ ] Аппаратная приёмка калибровки именно колоколами на MIC315.
+
+- [x] 2026-10-29 повторный отказ: ранний transient и граница окна, accepted-only diagnostics, DC Play без калибровки, diagnostics/ пакета.
+- [ ] Подтвердить физически новую пару фронтов при задержке USB около 250 мс и DC Play.
+
+- [x] 2026-10-29: AC-отклик по доминирующему лепестку, живое предварительное зеркало и отдельная исправленная история записи; постоянный уровень; MX248 same-owner sample rate. 16 бит сохранены.
+- [ ] Аппаратно проверить новый пакет DD81473D: калибровку, DC и остановленное изменение MX248 на 512 кГц.
+
+- [x] 2026-10-29: верхняя кнопка «Калибровка фазы», radio MeasurementStart/Play/Button, migration старых config.
+- [x] ApplyOutputSettings не является Play; auto queuedPlay не отменяет калибровку; Manual сохраняет play/mute.
+- [x] Missing endpoint не заменяется первым; верхний status реальной ошибки; Default.rdp MIC315 audiomode0→1 с backup.
+- [x] Авто50% измеренной ступени вместо manualthreshold, signal duration default5с, streamstart Preview/Play option.
+- [x] Persistent native stream: zeros/mute/Play/provider replacement, acquisitionStop shutdown, Record transitions no-op.
+- [x] Effective Fs применяется к генератору и resampling, до готовности Fs_eff рабочий сигнал gated.
+- [x] Lifecycle regression: native backend call counts, Stop/Disable pending, hidden config changes, error preservation.
+- [x] Два фронта: offset + effective Fs, интервал в настройках, статус/ppm, защита первого блока и нескольких запусков MERA.
+- [x] Без корреляции; аппаратная Fs неизменна, коррекция только часов зеркала.
+- [x] Marker→PXI threshold anchor, pending mirror, common record domain, timeout/cancel/gap validation.
+- [x] Component picker/settings/status, explicit physical endpoint and Play-only output.
+- [x] Forced main build, core/feedback/production MERA tests, updater dryrun and stage hashes.
+- [x] One-edge updater SUCCESS verified on MIC315; package moved out of screens.
+- [ ] User launches `C:\Mera Files\DacCalibrationUpdate\Run-Mic315Updater.cmd` for the two-edge build; verify updater log.
+- [ ] Real feedback `2 AIn1`, repeated starts and recorded MERA alignment.
+- [ ] Raw mirror/AI comparison for analog sine distortion; hardware underrun/CPU measurements.
+
+# Stale device connection warning after successful reconnect — 2026-10-28
+
+- [x] Trace `Device connection test failed` warning registry separately from live datasource state.
+- [x] Clear stale warning when a new live session is registered successfully.
+- [x] Forced Win64 build `RecorderLnx-device-warning-reconnect.exe` (see build result in error journal).
+- [ ] Verify warning disappears in the user's live Preview after OPC UA reconnects.
+
+# OPC UA timestamp labels and Recorder time mapping — 2026-10-28
+
+- [x] Confirm Read and Subscribe parse OPC UA `SourceTimestamp` / `ServerTimestamp` and pass selected time to the tag sample X coordinate.
+- [x] Clarify timestamp mode names in the datasource editor and document fallback when timestamps are absent.
+- [x] Forced Win64 build `RecorderLnx-opc-timestamp-labels.exe` (237589 lines, exit 0).
+- [ ] OPC timestamp currently maps UTC to the session origin using PC UTC; it is not mapped through Recorder's global UTS mechanism. Design that separately before claiming cross-source UTS synchronization.
+
+# OPC UA: состояние «Добавлять путь» для выбранной ветки — 2026-10-28
+
+- [x] Сделать флажок доступным для папок, содержащих используемые дочерние каналы.
+- [x] Вычислять состояние по BrowsePath всех каналов ветки и не сбрасывать его при выборе группы.
+- [x] Forced Win64 build `RecorderLnx-opc-path-branch.exe` (237585 строк, exit 0).
+- [ ] Проверить в GUI на живом дереве; убедиться, что путь добавляется/снимается у всех потомков.
+
+# OPC UA arrays / complex values and digital form stability — 2026-10-28
+
+# Digital form flicker: prevent timer-triggered page layout — 2026-10-28
+
+- [x] Separate page activation/layout from timer-driven cell refresh.
+- [x] Update changed value cells individually; invalidate tag rows only when alarm text changes.
+- [x] Forced Win64 build `RecorderLnx-digital-no-flicker.exe` (237521 lines, exit 0).
+- [ ] Visual verification in the user's active project remains pending.
+
+# OPC UA Boolean display, tag log spam and nominal rate — 2026-10-28
+
+- [x] Trace repeated `Tags_[1]` log entries to `logMessage(name_tag)` in the active project's Lua script; remove that debug call.
+- [x] Configure OPC UA Boolean tags to use the latest value instead of averaging `0/1` to `0.5`.
+- [x] Limit advertised OPC UA sampling rate by both the OPC interval and source runner interval; show it as an upper bound.
+- [x] Forced Win64 build to a separate executable; live GUI verification remains pending.
+
+# OPC UA `.130`: adaptive ReadRequest limit — 2026-10-28
+
+- [x] Compare configured `blinkerplc` and `Tags_[1]` NodeIds and access roles.
+- [x] Find active log response `BadTooManyOperations` at `maxNodesPerRead=1000`.
+- [x] Retry Read with halved request sizes on this status; retain server limit per session and log fallback.
+- [x] Forced Win64 build `RecorderLnx-opc-read-adaptive.exe` (exit 0).
+- [ ] Live verification against `.130` remains pending.
+
+- [x] Persist `ValueRank` with selected OPC UA channels so arrays route to messages instead of numeric scalar tags.
+- [x] Decode array Variant values in both Read and Subscribe and preserve element type, values, dimensions, and null-array marker as JSON.
+- [x] Serialize built-in structured values and nested Variant/DataValue; preserve ExtensionObject type id, encoding, and raw body (Base64/XML).
+- [x] Keep custom ExtensionObject fields opaque when the server schema is unavailable; scalar Recorder tags remain scalar-only.
+- [x] Stabilize digital-form rows with per-row tag/estimate references; refresh only visible value/alarm cells and avoid name lookup while painting.
+- [x] Forced Win64 build of RecorderLnx to `lib/x86_64-win64/RecorderLnx-arrays-check.exe` (237465 lines, exit 0).
+- [ ] Live GUI visual verification of stable digital-form rows remains outstanding.
+
+- [x] Собрать актуальные OPC UA units, LFM, интеграционные файлы и диагностику в `D:\works\bu\opc`.
+- [x] Сверить SHA-256 девяти протокольных файлов с рабочей копией и `Docs/opc ua/src`; компилируемые артефакты исключены.
+- [x] Написать повторяемый агентский prompt с темами Browse, UI crash, mDNS, multicast констант, Preview и проверок.
+
+# OPC UA mDNS multicast subscription fails on Windows — 2026-10-28
+
+- [x] Reproduce the exact Winsock call in a small Pascal probe and capture error codes for option values 3, 5, and 12.
+- [x] Use platform-specific named `IP_ADD_MEMBERSHIP` constants: Winsock2 modern SDK 12; Linux 35.
+- [x] Include the Winsock error code in diagnostics; mirror the changed OPC UA units into `Docs/opc ua/src`.
+- [x] Forced Win64 build and runtime probe using the application's constant; the real discovery function no longer reports multicast subscription failure.
+- [ ] Linux build/runtime probe is still required on a Linux host.
+
+# OPC UA: crash on opening datasource editor and Preview lag check — 2026-10-28
+
+- [x] Shorten Endpoint URL field and keep the «Поиск» button immediately visible beside it, independent of a maximized window width.
+- [x] Fix null `fDiscoveryButton` on editor open by declaring the search button in the LFM loaded by `inherited Create`.
+- [x] Remove unreachable legacy `CreateNew` UI construction that followed `Exit` in `CreateEditor`.
+- [x] Rebuild RecorderLnx Win64 successfully after restoring full OPC editor source from its mirrored documentation copy.
+- [x] Inspect Preview lifecycle and logs: `StartAll` only starts workers; captured transitions took 0 ms to start sources and 4–5 ms to publish `Stop -> Preview`.
+- [ ] Lag itself was not reproduced. Existing UI-thread logs show full mnemonic rebuilds around 219–234 ms and network warmup around 1.75 s during hardware preparation; measure the user's next occurrence with window-message latency sampling to distinguish UI blocking from host load.
+
+# OPC UA — поиск серверов через mDNS — 2026-10-28
+
+- [x] Кнопка «Поиск» рядом с Endpoint URL ищет OPC UA TCP анонсы `_opcua-tcp` через mDNS multicast.
+- [x] Поиск идёт в worker-потоке; найденные DiscoveryUrl показываются в интерактивном списке.
+- [x] Модули и документация OPC UA зеркалированы в `Docs/opc ua/src`.
+- [x] Forced Win64 build `RecorderLnx-opc-discovery.exe`, exit 0.
+- [ ] Linux build не подтверждён: Windows cross-target Lazarus не имеет Linux RTL/FCL unit-файлов; WSL-дистрибутива нет.
+- [ ] Проверить с сервером, реально публикующим mDNS анонс (в текущем окружении это не подтверждалось).
+
+# Дерево устройств — единый значок рабочих OPC UA — 2026-10-28
+
+- [x] Рабочие OPC UA datasource показываются одинаковой иконкой вне зависимости от числа привязанных каналов.
+- [x] Сохранить отдельные значки отключённых/недоступных источников.
+- [x] Forced Win64 build `RecorderLnx-opc-device-icons.exe`, exit 0.
+
 # OPC UA — редактор имён используемых тегов — 2026-10-23
+
+# OPC UA: make slow Browse timeout visible — 2026-10-28
+
+- [x] Add persisted `BrowseTimeoutMs`, separate from ordinary Read/Write TimeoutHint.
+- [x] Show per-response Browse/BrowseNext timeout in datasource dialog (default 180 s, minimum 30 s).
+- [x] Apply setting to socket wait and RequestHeader TimeoutHint for Browse, BrowseNext and attribute reads.
+- [ ] Forced Win64 build after exposing the setting.
+
+# OPC UA: cache identity and changed endpoint — 2026-10-27
+
+- [x] Bind the saved Browse tree to the Endpoint that produced it.
+- [x] Clear the displayed Browse cache immediately when Refresh is pressed for a different Endpoint.
+- [x] Discard legacy Browse snapshots with no recorded Endpoint; their origin cannot be verified.
+- [x] Show Browse completion/failure diagnostics with Endpoint and cached/found node counts.
+- [x] Preserve existing Recorder tags on Endpoint change using stable `recorderTagId`; legacy configs fall back to old `SourceId + NodeId`.
+- [x] Unregister old and register new active OPC UA `SourceId` after the endpoint change.
+- [x] Use a 30-second minimum socket and OPC UA RequestHeader timeout throughout Browse/BrowseNext/attribute reads, then restore normal I/O timeout.
+- [x] Live `.140:4840` probe: Connect OK, Browse returned 769 nodes, scalar STRING read returned Good quality; elapsed about 171 seconds.
+- [x] Forced final Win64 build to `lib/x86_64-win64/RecorderLnx-opc-browse-timeout-final.exe` (235445 lines, exit 0).
 
 - [x] Заменить кнопку адреса на галку: включение дописывает NodeId выбранным тегам, снятие удаляет его из имён.
 - [x] Для множественного выбора показывать самую длинную общую подстроку в любом месте имён; `***` отмечает найденную часть.
@@ -16,6 +182,21 @@
 - [x] Повторный Browse запускать только кнопкой `Обновить дерево`.
 - [x] В общем диалоге тега показывать `SourceId | NodeId`.
 - [x] Forced Win64 build и smoke-запуск.
+
+# OPC UA: BrowsePath в имени и сплиттеры редактора — 2026-10-26
+
+- [x] Галка ставит BrowsePath с точками перед именем тега, при снятии путь удаляется.
+- [x] Исправлены ResizeAnchor вертикальных сплиттеров и совпадение имени splitter-компонента с полем формы.
+- [x] Добавлена кнопка «Добавить» для префикса к именам выбранных тегов.
+- [x] Forced Win64 build в отдельный exe из-за блокировки штатного RecorderLnx.exe.
+
+# OPC UA: префикс BrowsePath и предпросмотр имени — 2026-10-27
+
+- [x] Добавлять BrowsePath без последнего сегмента (имени узла), преобразовав `/` в точки.
+- [x] При переходе со старого полного BrowsePath удалять прежнее значение перед добавлением нового префикса.
+- [x] Под полем редактирования показывать предпросмотр первого выбранного тега: исходное имя `>>>` результат.
+- [x] Предпросмотр учитывает режим последнего действия: удалить, заменить или добавить префикс.
+- [x] Forced Win64 build в отдельный exe; штатное приложение занято.
 
 # FRF: живые окна и mouse-release — 2026-10-19
 
@@ -2237,3 +2418,82 @@ Linux-сборка выполнена по SSH на Astra VM `192.168.112.128`.
 - [x] Build and smoke-test RecorderLnx.
 - [ ] Manually refresh and save each old project once to persist its complete server Browse tree.
 
+# OPC UA BrowsePath name operation dialog — 2026-10-27
+
+- [x] Join BrowsePath prefix and tag name with a dot.
+- [x] Replace inline name actions with a modal Delete/Add operation dialog and live preview.
+- [x] Remove the obsolete Replace button and handler.
+- [x] Build Win64 output `RecorderLnx-opc-name-popup.exe`.
+- [ ] Check dialog layout and interaction in the running UI.
+
+# OPC UA full-path names and per-tag path state — 2026-10-27
+
+- [x] New imported tags default to the full dotted BrowsePath.
+- [x] Show “Добавлять путь” from the focused tag's name, not from any selected tag.
+- [x] Remove stray leading/trailing dots when path inclusion is turned off; clean legacy leading dots on load.
+- [x] Widen the editor and let the selected-name field grow with its properties pane.
+- [x] Build Win64 output `RecorderLnx-opc-fullpath.exe`.
+- [ ] Check full-path visibility and checkbox behavior in the running UI.
+
+
+# OPC UA name dialog label and preview wrapping — 2026-10-27
+
+- [x] Rename and move the name-edit button below the path checkbox.
+- [x] Wrap long names in the modal preview with the result on a new line.
+- [x] Build alternate Win64 executable; standard executable was locked by a running process.
+
+# OPC UA name removal cleanup — 2026-10-27
+
+- [x] Strip delimiter dots left at the edge after deleting a substring.
+- [x] Use matching normalization in preview and final application.
+- [x] Build Win64 alternate executable; standard output remains locked.
+
+# OPC UA fast interactive Browse — 2026-10-28
+
+- [x] Add interactive read mode (read Objects, then selected branch).
+- [x] Persist interactive branch rows in the endpoint-specific Browse cache.
+- [x] Clear stale offline marker using both computed and configured source ids.
+- [x] Probe `.140:4840`: root 4 children / 0.34 s; DeviceSet 2 children / 0.40 s.
+- [x] Forced Win64 build `RecorderLnx-opc-interactive-browse.exe` (236150 lines).
+- [ ] Check the source icon and branch interaction in the full application.
+
+# OPC UA editor entry crash — 2026-10-28
+
+- [x] Add the interactive Browse button to `uRecorderOpcUaSourceEditor.lfm`;
+  the constructor calls `UpdateControlState` while loading the LFM, before its
+  legacy unreachable dynamic-control block.
+- [x] Forced Win64 build `RecorderLnx-opc-editor-entry-fix.exe` (236150 lines).
+- [ ] Confirm opening datasource settings in the running app.
+
+# OPC UA interactive Browse crash — 2026-10-28
+
+- [x] Replace browse-tree `Selections[]` indexing with a live `Items[]` walk
+  using `TTreeNode.Selected`.
+- [x] Clear visual nodes before freeing the model objects referenced by node Data;
+  preserve selected NodeIds separately during rebuild.
+- [x] Forced Win64 build `RecorderLnx-opc-interactive-tree-lifetime-fix.exe`
+  (236204 lines, exit 0).
+- [ ] Confirm the button and branch read in the running GUI.
+
+# OPC UA Objects folder constant — 2026-10-28
+
+- [x] Document the standard `Objects` NodeId and centralize it with its BrowsePath.
+- [x] Replace UI literals and binary-client duplicate with shared named constants.
+- [x] Forced Win64 build `RecorderLnx-opc-standard-node-ids.exe` (236207 lines).
+
+# OPC UA live protocol settings and table editors — 2026-10-28
+
+- [x] Audit screenshot settings against config persistence and transport use.
+- [x] Make timestamp selection affect decoded and published Recorder sample times.
+- [x] Add in-cell dropdown editors for supported categorical settings (Read mode; timestamp source).
+- [x] Keep Subscription and HistoryRead marked unsupported by this client.
+- [x] Document behavior and sync OPC UA sources to Docs/opc ua/src and D:\works\bu\opc.
+- [x] Forced Win64 build passed to RecorderLnx-params-check.exe; default exe was locked.
+
+# OPC UA Subscribe receive mode — 2026-10-28
+
+- [x] Persist and expose Read/Subscribe in the protocol settings dropdown.
+- [x] Implement CreateSubscription, CreateMonitoredItems and Publish for scalar numeric, Boolean and String values.
+- [x] Route DataChange notifications into existing latest-value tag/message publication and acknowledge notifications.
+- [x] Forced Win64 build passed to RecorderLnx-subscribe-check.exe (237136 lines).
+- [ ] Verify live Subscribe against OPC UA endpoints (.130 and .140) and Linux build/runtime.

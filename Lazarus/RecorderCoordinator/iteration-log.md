@@ -1,5 +1,42 @@
 # Журнал итераций RecorderCoordinator
 
+## 2026-11-06 — упрощение ресурсов бэкапа, в работе
+
+**Запрос:** убрать сетевые RecorderProgram, RecorderCalibr, RecorderSDB; проекты оставить, данные и временный пускач передавать через MeraFiles и HostAgent.
+**Сделано:** на KIP1–4 удалены три Samba секции, сохранены /etc/samba/smb.conf.before-backup-share-reduction-20261106; helper обновлён для RecorderProjects. Две read-only CIFS точки MeraFiles/RecorderProjects настроены на АРМ/KIP3/KIP4. HostAgent с prepare/verify/cleanup установлен и запущен на KIP1–4; rcPanel 0.1.33 собрана и установлена на АРМ/KIP3/KIP4, работающие процессы не перезапущены.
+**Проверка:** Windows/Linux сборки; fake HTTP тесты панели; на всех четырёх KIP проверены реальные prepare/verify/cleanup. Новая rcPanel ожидает MeraFiles=рабочий runtime Mera, тогда как в момент проверки Samba MeraFiles ещё указывает в /srv/recorderlnx/MeraFiles. В соседнем чате независимо выполняется разделение MeraFiles и USML.
+**Осталось:** после завершения изменений соседнего чата проверить Samba пути и обновить CIFS-монтирования, выполнить полный бэкап четырёх KIP через новую rcPanel, перезапустить работающую панель без прерывания пользовательских действий. Сейчас старая панель не может бэкапить удалённые шары; новая тоже не может завершить бэкап до перенастройки MeraFiles. Не заменять чужую работающую конфигурацию.
+
+
+## 2026-11-05 — автоисточник бэкапа и NTFS
+
+**Запрос:** автоматическая смена источника при смене каталога проекта, сохранение копий на NTFS.
+**Сделано:** rcPanel 0.1.32 проверяет поколения экспорта до и после копирования, ожидает автоматического переподключения устаревшего CIFS; NTFS/CIFS учитывают права монтирования и предупреждают о доступности. На KIP1–4 настроены systemd path/timer и ограниченный обновляющий Samba exports helper; на АРМ/KIP3/KIP4 автоотключение CIFS при простое. Сервер .92 публикует /mnt/sda1/RecorderBackups, на АРМ и KIP3/4 доступен /home/user/Сеть/RecorderBackups. Linux RCPanel установлена .200/.66/.85, работающие процессы не перезапускались.
+**Проверка:** сборки Windows/Linux, семь тестов helper, backend Linux/Windows, смена настроек во время копирования и stale marker; реальные копии всех четырёх KIP с АРМ на NTFS с конфигурациями, программой и плагинами успешно созданы. Прямая проверка переключения действующего проекта не выполнялась: RecorderLnx работает на всех четырёх KIP. На серверной NTFS права позволяют чтение другими локальными пользователями.
+**Статус:** для новой панели требуется её перезапуск. В пакете helper и units присутствуют, автоматическая первичная настройка Samba при установке пакета не реализована. MemoryDB MCP недоступен, индексация ожидается.
+
+## 2026-11-05 — резервное копирование рабочих мест
+
+**Запрос:** из rcPanel создавать копии конфигураций, плагинов и программы KIP в выбранном каталоге, по именам рабочих мест.
+**Сделано:** диалог выбора состава и машин; фоновое версионированное копирование `<путь>/<имя>/<дата-UUID>`, проверки источников, защиты, ошибок и неполных снимков. На KIP1–4 опубликованы ограниченные read-only Samba ресурсы программы, проектов, Calibr/SDB; на АРМ/KIP3/KIP4 созданы read-only автомонтирования и metadata проверенных источников. RCPanel 0.1.31 установлена на .200/.66/.85 с резервными бинарниками `*.before-backup-20261105`.
+**Проверка:** forced-сборки Windows/Linux, backend-тесты и копирование всех категорий с АРМ на четырёх KIP; в реальном диалоге АРМ подтверждены доступность кнопок, четыре успешных результата и совпадение SHA256 исполняемых файлов. Временные снимки удалены. Проверено, что экспорт смонтирован read-only.
+**Статус:** готово для настроенных источников; перенос активного проекта за опубликованный корень требует перенастройки экспорта, внешние ресурсы вне опубликованных папок не копируются; конфигурация, меняющаяся одновременно с копированием, не является атомарным снимком. CIFS/NTFS с недостаточной защитой назначения могут отклоняться. MemoryDB MCP недоступен.
+
+## 2026-11-03 — согласование настроек rcPanel и RecorderLnx
+
+**Запрос:** разделить настройки программы и испытания и устранить расходящиеся копии SQL и Mera Files.
+**Сделано:** панель определяет bootstrap app.ini RecorderLnx и выбранный проект; рабочий Mera Files читает из storage.ini или, до миграции, из активного legacy run-control. Для прежнего стандартного SQL-пути выполняется переход на ссылку app.ini; прочие явно заданные пути сохраняются.
+**Проверка:** Windows/Linux сборки и изолированные тесты конфигурации, отсутствующего, повреждённого и legacy storage; Linux rcPanel установлена на .66, .85 и .200, SHA256 `a2bd581d...`, резервные бинарники `*.before-config-20261103`.
+**Статус:** установлено, интерактивный запуск новой версии не проверен. Открытая панель пока не перечитывает смену проекта на лету. MemoryDB MCP недоступен.
+
+## 2026-11-02 — связь RecorderLnx и результаты команд rcPanel
+
+**Запрос:** индицировать отсутствие связи rcPanel с RecorderLnx и результат команд; собрать и установить Linux rcPanel/RecorderLnx.
+**Сделано:** таблица показывает отдельную связь RecorderLnx по HTTP heartbeat и последнюю команду по каждому хосту: ожидание, выполняется, подтверждённый успех или ошибка; данные команды/пароль в HostsJson не добавлены. Установлены новые Linux RecorderLnx на .17/.45/.66/.85/.92/.200 и rcPanel на .66/.85/.200 через атомарную замену, старые бинарники сохранены с суффиксом before-status-20261102. Работающие процессы не останавливались.
+**Проверка:** forced-сборки rcPanel Windows/Linux и RecorderLnx Linux; CoordinatorHostIdentityTest проверил pending/accepted/completed/noError/accessDenied и отсутствие payload; ldd на шести узлах без missing, хэши совпадают. RecorderLnx SHA256 eb17ab169bcbc72f857a522a91ef1877bedd71741b9055fa7f60b81a32c082c1, rcPanel SHA256 6651608f29933464a84ffb9b60ec7704e9facab19c968d1ed76ff5646fba1617.
+**Статус:** файлы установлены, новые процессы и визуальная проверка ещё не запускались. Состояние команд хранится в памяти текущего координатора и не доказывает доставку после его перезапуска. Прежняя задача устойчивой доставки настроек и автоматической подготовки прав Firebird остаётся открытой.
+
+
 ## 2026-10-08  — нижняя панель хоста и контекстное добавление
 
 **Запрос:** вернуть редактор выбранного хоста под таблицу, убрать кнопку
@@ -1216,3 +1253,30 @@ RecorderLnx. Linux RCPanel собран и установлен на KIP-3 `192.
 версию 0.1.24, HTTP API запускается на `0.0.0.0:8765`.
 
 **Статус:** готово.
+
+## 2026-11-02 — Захват Recorder любой RCPanel
+**Запрос:** убратьпостояннуюпривязкукпанели; явныйперехватспредупреждением.
+**Сделано:** runtimeownership/claim/release/15slease; BaseUrlINIignored,stableIDs; discoverypassive; RCPanel0.1.29 LFMbuttons; sessionfencingoldcommands/results; durableeventorigin+recordingorigin; retiredclaimreplayguard.
+**Проверка:** forcedWindows/LinuxRecorder+PanelbuildsOK; policy/discovery/session/identitytestsPASS; реальный2HTTPpanel+UDPclientintegrationPASSinclforce/release/expiry/queuedoldcmd/replay; LCLGUIprobePASS. LiveARMclaimconfirmedARM/server/KIP3/KIP4; позжеARM/server/KIP2штатнозакрыты, неавтоперезапускались. KIP1такжезакрыт. FinalRecorderB116...,Panel1218... installedRecorderall6,PanelARM/KIP3/KIP4. Backups.before-claim-20261102. DEBrepackedE680... copiedserverObmen/distr. MIC200недоступенвпредыдущемdeploy, небылобновлён.
+**Документ:** Docs/coordinator-control-ownership.md. MemoryDB MCPнедоступен; indexingpending.
+## 2026-11-02 — Раздельные локальный и серверный пути Firebird
+**Запрос:** сменаадресавRCPanelнедолжназатиратьлокальныйпуть; приremoteпоказыватьпутьсервера, приblank/selfIPлокальный.
+**Сделано:** ConfigLocalDatabase/RemoteDatabase/RemoteDatabaseHost; ownIPv4безDNS; modeawareDatabase; metadataHTTPsql_local_database→Panelserver_database; senderlegacydatabaseignored/queuepathassociated; UIhostdraftswitch/nofabricateddefault. ServerвосстановленаоднастрокаDatabase=/mnt/sda1/base/firebird/recorderlnx.fdbизbackup, файлБДнетронут.
+**Проверка:** forcedWindows/LinuxRecorder191+RCPanel30OK; focusedconfig/queue/servermetadataWindowsPASS; realLinuxLCLfixturePASS; readonlyLCLliveServer92localpathPASS, ARMremotepathPASS; actualPanelcommandARM/KIP3/KIP4noError preservingLocalDatabase. Recorderbinaryall6installedSHA3B6C..., PanelARM/KIP3/KIP4F896..., backups.before-sql-address-20261102. DEB191SHA3092CA... serverObmen/distr. KIP1/2runtimeverificationpendingpersistentuserunit afterSSHsessioncleanup.
+**Документы:** Docs/sql-database-paths.md, errors/2026-11-02-coordinator-sql-address-overwrites-database.md. MemoryDB MCPнедоступен; indexingpending. 
+## 2026-11-03 — Выключение и Wake-on-LAN из RCPanel
+АРМ /20 без default route: limited broadcast давал errno 101. RCPanel выбирает broadcast по маске подходящего IPv4 интерфейса, сообщает этап и код ошибки сокета. HostAgent исключает zombie RecorderLnx при ожидании штатного выхода, панель ждёт выключение до 20 секунд. Сборки Linux/Windows прошли. На АРМ установлена панель, на сервере .92 HostAgent. Кнопка выключения выбранного сервера вернула HTTP 202, затем ping пропал. Кнопка включения отправила пакет на 192.168.15.255:9. Сервер вновь доступен по SSH, boot ID изменился, Firebird active, HostAgent ready. АРМ отдельно пробуждён с сервера Ethernet WoL. MemoryDB недоступен в текущей сессии.
+
+## 2026-11-03 — Имя АРМ и индикация HostAgent
+HostAgent опрашивается фоновым монитором через GET /api/v1/status с портом и токеном из конфигурации. Статус Recorder и доступность ПК отображаются отдельно. Имя АРМ в настройках Recorder по умолчанию берётся из имени ПК. Ручное редактирование снимает автоматический режим, повторное включение возвращает имя ПК. Имя и режим публикуются в heartbeat, discovery обновляет имя без перезапуска. RCPanel отображает имя из Recorder и отправляет переименование по адресу выбранного ПК. CLI workstation.name.get/set принимает --host=<IP>, --workstation-name=<имя> или --use-computer-name, ждёт подтверждённого результата. На Linux выбран отдельный флаг, поскольку GTK перехватывает --name.
+Сборки Windows/Linux обеих программ прошли. На КИП2 проверены фоновый HostAgent без команды запуска, сетевой get, ручное кириллическое имя, отображение имени в API панели, повторное чтение и возврат к KIP-2 в автоматическом режиме. Проверка CLI выполнена отдельным временным экземпляром панели, остановленным после теста. Recorder обновлён на 6 ПК, RCPanel на АРМ и КИП3/4. Резервные копии before-armname-20261103. MemoryDB MCP недоступен.
+
+## 2026-11-05 — Сохранение выбранного Firebird-сервера RCPanel
+**Запрос:** после «Установить всем» адрес192.168.9.92 заменялся66 при повторном запуске.
+**Причина:** DefaultFirebirdHost возвращал константу, выбранный адрес не сохранялся.
+**Изменение:** Config.FirebirdHost в events/firebird_host; кнопка применения сохраняет адрес перед отправкой, общая кнопка Save также сохраняет поле. Старт читает сохранённый адрес, старый INI получает fallback из SQL-настроек.
+**Проверка:** forced Windows/Linux builds OK, изолированный Config regression PASS и actual LCL probe PASS (три формы, применение92, закрытие/открытие, дополнительноеSave). На АРМ настоящей кнопкой сохранено92, приложение штатно закрыто и открыто, поле92 подтверждено снимком. Бинарники обновлены АРМ/KIP3/KIP4, installer payload обновлён, SHA10f6dbc5666cc4e1ca4c9f1ae96cc3cc6983e795bd68231ce9a23d124bbd1ce7. Резервные копии before-firebird-host-20261105.
+MemoryDB недоступен, индексирование ожидает восстановления.
+
+## 2026-11-05 — Синхронизация разрешённых SQL-каналов
+RCPanel читает настроенный разрешённый список у выбранного RecorderLnx, останавливает все управляемые RecorderLnx и ждёт подтверждения каждой остановки. Только после успешной остановки всех узлов список раздаётся командой `config.sql_allowed_channels.set`. При любой ошибке остановки применение отменяется. Удаление неразрешённых сигналов из общей Firebird БД предлагается и выполняется один раз со стороны RCPanel, а не каждым RecorderLnx. Полная Win64-сборка RecorderCoordinator прошла.

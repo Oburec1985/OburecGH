@@ -1,0 +1,8 @@
+(3104) Compiling ./Core/uCoordinatorSingleInstance.pas
+/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/./Core/uCoordinatorSingleInstance.pas(33,3) Hint: (5028) Local const "CCoordinatorInstanceName" is not used
+(9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/lib/x86_64-linux/RecorderCoordinator.or
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/lib/x86_64-linux/RecorderCoordinator
+(1008) 25498 lines compiled, 8.3 sec
+(1021) 219 warning(s) issued
+(1022) 130 hint(s) issued
+(1023) 10 note(s) issued

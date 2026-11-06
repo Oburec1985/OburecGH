@@ -735,6 +735,8 @@ procedure CheckWildcardConfigPayload;
 var
   lCommand, lData, lHost, lPayload, lResult: TJSONObject;
   lModel: TCoordinatorModel;
+  lHosts: TJSONArray;
+  lCommandId: string;
 begin
   lModel := TCoordinatorModel.Create;
   try
@@ -768,8 +770,16 @@ begin
       lData.Free;
     end;
 
+    lHosts := lModel.HostsJson;
+    try
+      Check(lHosts.Objects[0].Get('last_command_state', '') = 'pending',
+        'pending command was not shown for its host');
+    finally
+      lHosts.Free;
+    end;
     lCommand := lModel.NextCommand('payload-recorder');
     try
+      lCommandId := lCommand.Get('command_id', '');
       Check(lCommand.Get('command', '') = 'config.sql_database.set',
         'wildcard config command type changed in queue');
       lPayload := TJSONObject(lCommand.Find('payload'));
@@ -780,6 +790,50 @@ begin
         'wildcard config port changed in queue');
     finally
       lCommand.Free;
+    end;
+    lHosts := lModel.HostsJson;
+    try
+      Check(lHosts.Objects[0].Get('last_command_state', '') = 'accepted',
+        'accepted command was not shown for its host');
+      Check(lHosts.Objects[0].Find('payload') = nil,
+        'host status must not expose command payload');
+    finally
+      lHosts.Free;
+    end;
+    lData := TJSONObject.Create;
+    try
+      lData.Add('command_id', lCommandId);
+      lData.Add('state', 'completed');
+      lData.Add('result_code', 'noError');
+      lResult := lModel.CompleteCommand(lData);
+      lResult.Free;
+    finally
+      lData.Free;
+    end;
+    lHosts := lModel.HostsJson;
+    try
+      Check(lHosts.Objects[0].Get('last_command_state', '') = 'completed',
+        'completed command was not shown for its host');
+      Check(lHosts.Objects[0].Get('last_command_result', '') = 'noError',
+        'command result was not shown for its host');
+    finally
+      lHosts.Free;
+    end;
+    lData := TJSONObject.Create;
+    try
+      lData.Add('command_id', lCommandId);
+      lData.Add('result_code', 'accessDenied');
+      lResult := lModel.CompleteCommand(lData);
+      lResult.Free;
+    finally
+      lData.Free;
+    end;
+    lHosts := lModel.HostsJson;
+    try
+      Check(lHosts.Objects[0].Get('last_command_result', '') = 'accessDenied',
+        'failed command result was not shown for its host');
+    finally
+      lHosts.Free;
     end;
   finally
     lModel.Free;

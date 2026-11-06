@@ -1,22 +1,20 @@
 unit uOscDataAdapter;
 
-{ Plugin-owned tag catalog and reusable history snapshots. No RecorderLnx
-  domain class may be added here. Only the flat SDK service table crosses ABI.
-  Configure/Prepare allocate; Refresh never grows buffers. UI-thread only.
-  Snapshot pointers remain valid until the next successful Refresh or Prepare. }
-{$mode objfpc}{$H+}
+{ Привязка тега осциллографа и повторно используемые снимки истории.
+  Через ABI передаётся только плоская таблица сервисов SDK. Подготовка может
+  выделять память, Refresh не увеличивает буферы; работа в потоке интерфейса.
+  Указатели снимка действительны до следующего успешного Refresh или Prepare. }
+{$mode objfpc}{$H+}{$codepage UTF8}
 
 interface
 
-uses SysUtils, Math, uRecorderVisualComponentApiV2, uSharedStatistics;
+uses SysUtils, Math, uRecorderVisualComponentApiV2, uSharedStatistics,
+  uPluginTagServices;
 
 type
-  TOscTagMeta = record
-    Id, Flags: QWord;
-    Name, UnitName, Address, Description: UTF8String;
-    PollFrequencyHz, RangeMin, RangeMax: Double;
-  end;
-  TOscTagCatalog = array of TOscTagMeta;
+  { Переходные имена для существующего кода осциллографа. }
+  TOscTagMeta = TPluginTagMeta;
+  TOscTagCatalog = TPluginTagCatalog;
   TOscHistoryStatus = (ohReady, ohEmpty, ohMissing, ohCapacityRequired,
     ohUnavailable, ohError);
   TOscHistorySnapshot = record
@@ -63,53 +61,13 @@ implementation
 
 function OscServicesAvailable(AServices: PRecorderVisualHostServicesV2): Boolean;
 begin
-  Result := (AServices <> nil);
-  if not Result then Exit;
-  Result := (AServices^.Header.Size >= PtrUInt(@AServices^.CopyLatestHistory) -
-    PtrUInt(AServices) + SizeOf(AServices^.CopyLatestHistory))
-    and (AServices^.Header.AbiMajor = REC_VISUAL_ABI_V2_MAJOR);
-  if not Result then Exit;
-  Result := Assigned(AServices^.EnumerateTags) and
-    Assigned(AServices^.CopyLatestHistory);
-end;
-
-function FixedUtf8(AText: PAnsiChar; ACapacity: SizeInt): UTF8String;
-var lLength: SizeInt;
-begin
-  lLength := 0;
-  while (lLength < ACapacity) and (AText[lLength] <> #0) do Inc(lLength);
-  SetString(Result, AText, lLength);
+  Result := PluginTagServicesAvailable(AServices);
 end;
 
 function LoadOscTagCatalog(AServices: PRecorderVisualHostServicesV2;
   out ACatalog: TOscTagCatalog): LongInt;
-var lInfo: TRecorderVisualTagInfoV2; lIndex: LongWord; lMeta: TOscTagMeta;
 begin
-  ACatalog := nil;
-  if not OscServicesAvailable(AServices) then Exit(REC_VISUAL_NOT_HANDLED);
-  lIndex := 0;
-  repeat
-    lInfo := Default(TRecorderVisualTagInfoV2);
-    lInfo.Header.Size := SizeOf(lInfo);
-    lInfo.Header.AbiMajor := REC_VISUAL_ABI_V2_MAJOR;
-    lInfo.Header.AbiMinor := REC_VISUAL_ABI_V2_MINOR;
-    Result := AServices^.EnumerateTags(AServices^.Context, lIndex, @lInfo);
-    if Result = REC_VISUAL_END_OF_ENUMERATION then Exit(REC_VISUAL_OK);
-    if Result <> REC_VISUAL_OK then begin ACatalog := nil; Exit; end;
-    if (lInfo.Header.Size < SizeOf(lInfo)) or
-      (lInfo.Header.AbiMajor <> REC_VISUAL_ABI_V2_MAJOR) or (lInfo.TagId = 0) then
-    begin ACatalog := nil; Exit(REC_VISUAL_ERROR); end;
-    lMeta.Id := lInfo.TagId; lMeta.Flags := lInfo.Flags;
-    lMeta.PollFrequencyHz := lInfo.PollFrequencyHz;
-    lMeta.RangeMin := lInfo.RangeMin; lMeta.RangeMax := lInfo.RangeMax;
-    lMeta.Name := FixedUtf8(@lInfo.Name[0], SizeOf(lInfo.Name));
-    lMeta.UnitName := FixedUtf8(@lInfo.UnitName[0], SizeOf(lInfo.UnitName));
-    lMeta.Address := FixedUtf8(@lInfo.Address[0], SizeOf(lInfo.Address));
-    lMeta.Description := FixedUtf8(@lInfo.Description[0], SizeOf(lInfo.Description));
-    SetLength(ACatalog, lIndex + 1); ACatalog[lIndex] := lMeta;
-    Inc(lIndex);
-  until lIndex = 65536;
-  ACatalog := nil; Result := REC_VISUAL_ERROR;
+  Result := LoadPluginTagCatalog(AServices, ACatalog);
 end;
 
 function ResolveOscTag(AServices: PRecorderVisualHostServicesV2;

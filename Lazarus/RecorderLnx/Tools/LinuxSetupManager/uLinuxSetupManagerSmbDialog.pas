@@ -99,8 +99,7 @@ begin
   fShares.Hint := 'Галочка разрешает выбранному пользователю доступ к ресурсу';
   fLabels[3] := AddLabel(Self, Self, 402, 'Выбранный пользователь');
   fUser := AddEdit(Self, Self, 398, False);
-  fUser.Text := GetEnvironmentVariable('USER');
-  if fUser.Text = '' then fUser.Text := 'user';
+  fUser.Text := 'user';
   fLabels[4] := AddLabel(Self, Self, 438, 'Новый пароль SMB');
   fPassword := AddEdit(Self, Self, 434, True);
   fLabels[5] := AddLabel(Self, Self, 474, 'Подтверждение');
@@ -267,10 +266,16 @@ begin
   try
     lLines.Text := lOutput;
     fUsers.Items.Assign(lLines);
+    fUsers.ItemIndex := -1;
     for lIndex := 0 to fUsers.Items.Count - 1 do
       if SameText(fUsers.Items[lIndex], lSelected) then fUsers.ItemIndex := lIndex;
-    if (fUsers.ItemIndex < 0) and (fUsers.Items.Count > 0) then fUsers.ItemIndex := 0;
-    if fUsers.ItemIndex >= 0 then begin fUser.Text := fUsers.Items[fUsers.ItemIndex]; LoadAccess; end;
+    if fUsers.ItemIndex >= 0 then
+    begin
+      fUser.Text := fUsers.Items[fUsers.ItemIndex];
+      LoadAccess;
+    end
+    else
+      fShares.Clear;
   finally lLines.Free; end;
 end;
 

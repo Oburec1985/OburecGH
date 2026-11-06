@@ -15,7 +15,7 @@ function HostAgentShutdown(AConfig: TRecorderHostAgentConfig;
 implementation
 
 uses
-  Classes, Process
+  Classes, Process, IniFiles
   {$ifdef unix}
   , BaseUnix
   {$endif}
@@ -86,6 +86,65 @@ begin
 end;
 {$endif}
 
+function ConfiguredLocalFirebirdPath(AConfig: TRecorderHostAgentConfig): string;
+var
+  lFile, lPath, lRoot, lPathsFile, lDbRoot, lDefaultRoot, lBackend: string;
+  lIni: TIniFile;
+begin
+  Result := '';
+  lRoot := AConfig.BackupMeraRoot;
+  lPathsFile := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) +
+    'RecorderLnx.paths.ini';
+  if FileExists(lPathsFile) then
+  begin
+    lIni := TIniFile.Create(lPathsFile);
+    try
+      lPath := Trim(lIni.ReadString('Paths', 'MeraFiles', ''));
+      if (lPath <> '') and ((lPath[1] = DirectorySeparator) or
+         ((Length(lPath) >= 3) and (lPath[2] = ':'))) then lRoot := lPath;
+    finally
+      lIni.Free;
+    end;
+  end;
+  lFile := IncludeTrailingPathDelimiter(lRoot) +
+    'RecorderLnx' + DirectorySeparator + 'app.ini';
+  if not FileExists(lFile) then Exit;
+  lIni := TIniFile.Create(lFile);
+  try
+    { Match the SQL configuration's legacy keys and current app.ini keys.
+      The explicit local path takes precedence over the legacy Database. }
+    lBackend := lIni.ReadString('SQLdb', 'Backend', 'firebird');
+    lDefaultRoot := Trim(GetEnvironmentVariable('RECORDERLNX_SQLDB_ROOT'));
+    if lDefaultRoot = '' then
+      lDefaultRoot := IncludeTrailingPathDelimiter(lRoot) + 'SQLdb';
+    lDbRoot := lIni.ReadString('SQLdb', 'RootDirectory', lDefaultRoot);
+    lPath := lIni.ReadString('SQLdb', 'Database',
+      '/var/opt/mera/SQLdb/recorderlnx.fdb');
+    lBackend := lIni.ReadString('SQLdbConnection', 'Backend', lBackend);
+    if not SameText(Trim(lBackend), 'firebird') then Exit;
+    lDbRoot := Trim(lIni.ReadString('SQLdbConnection', 'RootDirectory', lDbRoot));
+    lPath := lIni.ReadString('SQLdbConnection', 'Database', lPath);
+    lPath := Trim(lIni.ReadString('SQLdbConnection', 'LocalDatabase', lPath));
+    if lPath = '' then lPath := 'recorderlnx.fdb';
+    {$ifdef unix}
+    if lPath[1] = '/' then Exit(ExpandFileName(lPath));
+    if ((Length(lPath) >= 2) and (lPath[2] = ':')) or
+      (Pos('\\', lPath) > 0) then
+      lPath := ExtractFileName(StringReplace(lPath, '\\', '/', [rfReplaceAll]));
+    if (lDbRoot = '') or ((Length(lDbRoot) >= 2) and (lDbRoot[2] = ':')) or
+      (Pos('\\', lDbRoot) > 0) then lDbRoot := lDefaultRoot;
+    {$else}
+    if lPath[1] = '/' then lPath := ExtractFileName(lPath);
+    if (lDbRoot = '') or (lDbRoot[1] = '/') then lDbRoot := lDefaultRoot;
+    {$endif}
+    if ExtractFileDrive(lPath) <> '' then Exit(ExpandFileName(lPath));
+    Result := IncludeTrailingPathDelimiter(ExcludeTrailingPathDelimiter(
+      ExpandFileName(lDbRoot))) + lPath;
+  finally
+    lIni.Free;
+  end;
+end;
+
 function HostAgentStatusJson(AConfig: TRecorderHostAgentConfig): TJSONObject;
 begin
   Result := TJSONObject.Create;
@@ -95,6 +154,7 @@ begin
   Result.Add('status', 'ready');
   Result.Add('recorder_available', FileExists(AConfig.RecorderPath));
   Result.Add('shutdown_enabled', AConfig.AllowShutdown);
+  Result.Add('sql_local_database', ConfiguredLocalFirebirdPath(AConfig));
 end;
 
 function HostAgentLaunchRecorder(AConfig: TRecorderHostAgentConfig;
@@ -137,18 +197,34 @@ end;
 {$ifndef windows}
 function RecorderIsRunning: Boolean;
 var
-  lProcess: TProcess;
+  lSearch: TSearchRec;
+  lPid, lStateOffset: Integer;
+  lStat: TextFile;
+  lLine: string;
 begin
-  lProcess := TProcess.Create(nil);
+  Result := False;
+  if FindFirst('/proc/*', faDirectory, lSearch) <> 0 then Exit;
   try
-    lProcess.Executable := '/usr/bin/pgrep';
-    lProcess.Parameters.Add('-x');
-    lProcess.Parameters.Add('RecorderLnx');
-    lProcess.Options := [poNoConsole, poWaitOnExit];
-    lProcess.Execute;
-    Result := lProcess.ExitStatus = 0;
+    repeat
+      if not TryStrToInt(lSearch.Name, lPid) then Continue;
+      AssignFile(lStat, '/proc/' + lSearch.Name + '/stat');
+      try
+        Reset(lStat);
+        try
+          ReadLn(lStat, lLine);
+        finally
+          CloseFile(lStat);
+        end;
+      except
+        on EInOutError do Continue; // Process exited during enumeration.
+      end;
+      lStateOffset := LastDelimiter(')', lLine) + 2;
+      if (lStateOffset <= Length(lLine)) and
+         (Copy(lLine, 1, lStateOffset - 1) = lSearch.Name + ' (RecorderLnx) ') and
+         not (lLine[lStateOffset] in ['Z', 'X', 'x']) then Exit(True);
+    until FindNext(lSearch) <> 0;
   finally
-    lProcess.Free;
+    FindClose(lSearch);
   end;
 end;
 

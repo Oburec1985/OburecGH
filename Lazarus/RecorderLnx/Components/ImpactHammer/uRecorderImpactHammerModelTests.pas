@@ -95,6 +95,7 @@ begin
   try
     Check(Component.FftSize = 4096, 'Default FFT size');
     Check(Component.Estimator = ifeH1, 'Default estimator');
+    Check(not Component.IntensityLogScale, 'Intensity radius defaults to linear');
     Check(Component.ResponseCount = 0, 'Default responses');
     Component.AddResponse;
     Check(not Component.Responses[0].BandRms, 'Band RMS default disabled');
@@ -139,6 +140,7 @@ begin
     Source.Target3dNodeId := 77;
     Source.GeometryBindingMode := rgbmIntensity;
     Source.MarkerSizePixels := 22;
+    Source.IntensityLogScale := True;
     Source.MarkerColor := clYellow;
     Source.MarkerGradientEnabled := True;
     Source.CreateColorModifier := True;
@@ -168,6 +170,8 @@ begin
     AxisState.YMax := 10;
     Source.AxisStates[irtFrfMagnitude] := AxisState;
     Copy.Assign(Source);
+    Check(Copy.IntensityLogScale,
+      'Assign preserves logarithmic intensity radius settings');
     Source.Responses[0].PointId := 'changed';
     Check(Copy.Responses[0].PointId = 'P-17', 'Assign must be deep');
     Copy.SaveToStrings(Values, 'Impact.');
@@ -206,6 +210,8 @@ begin
       'Target 3D component roundtrip');
     Check(Loaded.Target3dNodeId = 77, 'Target object roundtrip');
     Check(Loaded.MarkerSizePixels = 22, 'Common marker size roundtrip');
+    Check(Loaded.IntensityLogScale,
+      'Logarithmic intensity radius settings roundtrip');
     Check(Loaded.MarkerColor = clYellow, 'Common marker color roundtrip');
     Check(Loaded.MarkerGradientEnabled, 'Common gradient roundtrip');
     Check(Loaded.CreateColorModifier, 'Color modifier creation roundtrip');
@@ -249,6 +255,39 @@ begin
     Loaded.Free;
     Copy.Free;
     Source.Free;
+  end;
+end;
+
+procedure TestLegacyIntensityRadius;
+var
+  lSource, lLoaded: TRecorderImpactHammerComponent;
+  lValues: TStringList;
+  lError: string;
+begin
+  lSource := TRecorderImpactHammerComponent.Create;
+  lLoaded := TRecorderImpactHammerComponent.Create;
+  lValues := TStringList.Create;
+  try
+    ConfigureValid(lSource);
+    lSource.SaveToStrings(lValues, 'Impact.');
+    lValues.Values['Impact.Version'] := '16';
+    lValues.Delete(lValues.IndexOfName('Impact.IntensityLogScale'));
+    { Loading a legacy file must not retain a previously edited log preference. }
+    lLoaded.IntensityLogScale := True;
+    Check(lLoaded.LoadFromStrings(lValues, 'Impact.', lError), lError);
+    Check(not lLoaded.IntensityLogScale, 'Legacy intensity radius remains linear');
+    lSource.IntensityLogScale := True;
+    lSource.SaveToStrings(lValues, 'Impact.');
+    Check(lLoaded.LoadFromStrings(lValues, 'Impact.', lError), lError);
+    Check(lLoaded.IntensityLogScale, 'Enabled logarithmic radius persists');
+    lSource.IntensityLogScale := False;
+    lSource.SaveToStrings(lValues, 'Impact.');
+    Check(lLoaded.LoadFromStrings(lValues, 'Impact.', lError), lError);
+    Check(not lLoaded.IntensityLogScale, 'Disabled logarithmic radius persists');
+  finally
+    lValues.Free;
+    lLoaded.Free;
+    lSource.Free;
   end;
 end;
 
@@ -379,8 +418,13 @@ begin
     Model.SaveToStrings(After,'Test.');
     Check(Before.Text=After.Text,'Opening geometry dialog must not mutate model');
     Dlg.edSize.Text:='33'; Dlg.chkGradient.Checked:=True;
+    Check(not Dlg.chkLogRadius.Checked,
+      'Linear display starts with the logarithmic radius checkbox unchecked');
+    Dlg.chkLogRadius.Checked := True;
     Dlg.cbVisualization.ItemIndex:=Ord(rpvVector);
     Dlg.EditorChange(nil);
+    Check(Model.IntensityLogScale,
+      'Logarithmic radius controls update the common display preference');
     Check(Dlg.cbVisualization.ItemIndex=Ord(rpvVector),
       'Display type stays common when changing channel');
     Dlg.chkIntensityOnly.Checked:=True; Dlg.EditorChange(nil);
@@ -403,6 +447,15 @@ begin
     Check(Model.Responses[1].PointLabel='2','Display does not edit point label');
     Check(Dlg.edSize.Text='33','Reopened common marker size');
     Check(Dlg.chkGradient.Checked,'Reopened common gradient');
+    Check(Dlg.chkLogRadius.Checked,
+      'Reopened logarithmic radius controls preserve their values');
+    Dlg.chkLogRadius.Checked := False;
+    Dlg.EditorChange(nil);
+    Check(not Model.IntensityLogScale,
+      'Disabling logarithmic radius updates the common display preference');
+    Check((Model.Responses[0].PointNumber=7) and
+      (Model.Responses[1].PointNumber=8) and (Model.Responses[2].PointNumber=9),
+      'Changing radius scale preserves route point mappings');
     Check(Dlg.cbVisualization.ItemIndex=Ord(rpvVector),'Reopened common display type');
   finally
     Dlg.Free; Before.Free; After.Free; Model.Free;
@@ -422,11 +475,18 @@ begin
     Check(Dlg.edSize.Text = '10', 'Geometry marker size resource');
     Check(Dlg.FindComponent('grdChannels') = nil, 'Display has no obsolete mapping table');
     Check(Dlg.chkGradient.Visible, 'Common gradient checkbox visible');
+    Check(Dlg.chkLogRadius.Visible, 'Logarithmic radius checkbox visible');
+    Check(Dlg.FindComponent('edLogRange') = nil,
+      'Logarithmic radius has no fixed range editor');
+    Check(Dlg.FindComponent('lblLogRange') = nil,
+      'Logarithmic radius has no fixed range caption');
+    Check(Assigned(Dlg.chkLogRadius.OnClick), 'Logarithmic radius live preview event');
     Check(Assigned(Dlg.cbVisualization.OnChange), 'Geometry live preview event');
   finally Dlg.Free; end;
   TestDefaults;
   TestGeometryEditAndReopen;
   TestAssignAndRoundTrip;
+  TestLegacyIntensityRadius;
   TestEditableDraftRoundTrip;
   TestValidation;
   TestPresenterVisibilityAndCursor;

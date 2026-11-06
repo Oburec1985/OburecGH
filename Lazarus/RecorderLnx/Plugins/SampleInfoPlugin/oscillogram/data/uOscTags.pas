@@ -1,13 +1,13 @@
 unit uOscTags;
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$codepage UTF8}
 { Plugin-owned compatibility data facade. Metadata and settings load at
   Configure; RefreshInfo is called once per data notification. Reads never
   reach RecorderLnx objects. Caller arrays must be prepared before runtime. }
 interface
 uses Classes, SysUtils, Math, uOscModel, uOscDataAdapter,
-  uRecorderVisualComponentApiV2;
+  uRecorderVisualComponentApiV2, uPluginTag;
 type
-  TOscDoubleArray = array of Double;
+  TOscDoubleArray = TPluginDoubleArray;
   TOscEstimateValue = record Valid: Boolean; Value: Double; end;
   TOscEstimateSettings = record
     EnabledKinds: array[TOscEstimate] of Boolean;
@@ -19,18 +19,14 @@ type
     Count: Integer;
     LatestTime: Double;
   end;
-  EOscDataRead = class(Exception);
-  TOscTag = class
+  EOscDataRead = EPluginDataRead;
+  TOscTag = class(cTag)
   private
-    fServices: PRecorderVisualHostServicesV2;
     fSignal: TOscSignalInfo;
     fUnitName: UTF8String;
     fEstimates: array[TOscEstimate] of TOscEstimateValue;
     function GetBlockCounter: QWord;
-    procedure AcceptRead(AStatus: LongInt; ARequired, ACapacity: LongWord;
-      out ACount: Integer);
   public
-    Id: QWord;
     Name, Address, Description: UTF8String;
     AutoRange: Boolean;
     SourceVisible: Boolean;
@@ -41,15 +37,6 @@ type
     destructor Destroy; override;
     function RefreshInfo: LongInt;
     function Estimate(AKind: TOscEstimate): TOscEstimateValue;
-    procedure CopyLatestInto(AWindowSeconds: Double;
-      var ATimes,AValues: TOscDoubleArray; out ACount: Integer;
-      out ADisplayStart: Double); overload;
-    procedure CopyLatestInto(AWindowSeconds: Double;
-      var ATimes,AValues: TOscDoubleArray; out ACount: Integer;
-      out ADisplayStart: Double; out ARevision: QWord); overload;
-    procedure SnapshotRangeInto(AFromTimeSec: Double; AIncludePrevious: Boolean;
-      var ATimes,AValues: TOscDoubleArray; out ACount: Integer;
-      AToTimeSec: Double = MaxDouble);
     property SignalBuffer: TOscSignalInfo read fSignal;
     property UnitName: UTF8String read fUnitName;
     property BlockCounter: QWord read GetBlockCounter;
@@ -95,8 +82,8 @@ constructor TOscTag.Create(AServices: PRecorderVisualHostServicesV2;
   const AMeta: TOscTagMeta);
 var lSettings: TRecorderVisualEstimateSettingsV2; lKind: TOscEstimate;
 begin
-  inherited Create; fServices:=AServices; fSignal:=TOscSignalInfo.Create;
-  Id:=AMeta.Id; Name:=AMeta.Name; fUnitName:=AMeta.UnitName;
+  inherited Create(AServices, AMeta.Id); fSignal:=TOscSignalInfo.Create;
+  Name:=AMeta.Name; fUnitName:=AMeta.UnitName;
   Address:=AMeta.Address; Description:=AMeta.Description;
   RangeMin:=AMeta.RangeMin; RangeMax:=AMeta.RangeMax;
   PollFrequencyHz:=AMeta.PollFrequencyHz;
@@ -148,45 +135,6 @@ begin
 end;
 function TOscTag.Estimate(AKind:TOscEstimate):TOscEstimateValue;
 begin Result:=fEstimates[AKind]; end;
-procedure TOscTag.AcceptRead(AStatus:LongInt; ARequired,ACapacity:LongWord; out ACount:Integer);
-begin
-  ACount:=0;
-  if AStatus=REC_VISUAL_NOT_FOUND then Exit;
-  if AStatus=REC_VISUAL_BUFFER_TOO_SMALL then
-    raise EOscDataRead.CreateFmt('History capacity %d required; prepared %d',[ARequired,ACapacity]);
-  if (AStatus<>REC_VISUAL_OK) or (ARequired>ACapacity) then
-    raise EOscDataRead.CreateFmt('History callback status %d',[AStatus]);
-  ACount:=ARequired;
-end;
-procedure TOscTag.CopyLatestInto(AWindowSeconds:Double; var ATimes,AValues:TOscDoubleArray;
-  out ACount:Integer; out ADisplayStart:Double);
-var lRevision:QWord;
-begin CopyLatestInto(AWindowSeconds,ATimes,AValues,ACount,ADisplayStart,lRevision); end;
-procedure TOscTag.CopyLatestInto(AWindowSeconds:Double; var ATimes,AValues:TOscDoubleArray;
-  out ACount:Integer; out ADisplayStart:Double; out ARevision:QWord);
-var lTimes,lValues:PDouble; lCapacity,lCount:LongWord; lLatest:Double; lStatus:LongInt;
-begin
-  if not OscServicesAvailable(fServices) then
-    raise EOscDataRead.Create('Latest history service unavailable');
-  lTimes:=nil; lValues:=nil; lCapacity:=Min(Length(ATimes),Length(AValues));
-  if lCapacity>0 then begin lTimes:=@ATimes[0]; lValues:=@AValues[0]; end;
-  lStatus:=fServices^.CopyLatestHistory(fServices^.Context,Id,AWindowSeconds,
-    lTimes,lValues,lCapacity,lCount,ARevision,ADisplayStart,lLatest);
-  AcceptRead(lStatus,lCount,lCapacity,ACount);
-end;
-procedure TOscTag.SnapshotRangeInto(AFromTimeSec:Double; AIncludePrevious:Boolean;
-  var ATimes,AValues:TOscDoubleArray; out ACount:Integer; AToTimeSec:Double);
-var lTimes,lValues:PDouble; lCapacity,lCount:LongWord; lLatest,lStart:Double;
-  lRevision:QWord; lStatus:LongInt;
-begin
-  if not HasServices(fServices) or not Assigned(fServices^.CopyRangeHistory) then
-    raise EOscDataRead.Create('Range history service unavailable');
-  lTimes:=nil; lValues:=nil; lCapacity:=Min(Length(ATimes),Length(AValues));
-  if lCapacity>0 then begin lTimes:=@ATimes[0]; lValues:=@AValues[0]; end;
-  lStatus:=fServices^.CopyRangeHistory(fServices^.Context,Id,AFromTimeSec,AToTimeSec,
-    Ord(AIncludePrevious),lTimes,lValues,lCapacity,lCount,lRevision,lStart,lLatest);
-  AcceptRead(lStatus,lCount,lCapacity,ACount);
-end;
 constructor TOscTagRegistry.Create(AServices:PRecorderVisualHostServicesV2);
 begin inherited Create; fServices:=AServices; end;
 destructor TOscTagRegistry.Destroy;

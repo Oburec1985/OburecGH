@@ -50,12 +50,14 @@ type
   IRecorderHardwareTagSettingsProvider = interface(IRecorderTagSettingsProvider)
     ['{42949D96-928D-411C-827E-15CB5D333A49}']
     function Accepts(ATag: TRecorderTag): Boolean;
+    function ForSource(const ASource: IRecorderDataSource): IRecorderTagSettingsProvider;
   end;
 
   TRecorderHardwareTagSettingsProvider = class(TInterfacedObject,
     IRecorderTagSettingsProvider, IRecorderHardwareTagSettingsProvider)
   public
     function Accepts(ATag: TRecorderTag): Boolean; virtual; abstract;
+    function ForSource(const ASource: IRecorderDataSource): IRecorderTagSettingsProvider; virtual;
     function ReadState(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
       out AState: TRecorderTagSettingsState): Boolean; virtual;
     function NormalizeDraft(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
@@ -107,6 +109,7 @@ type
   TRecorderPxiMx248TagSettingsProvider = class(
     TRecorderHardwareTagSettingsProvider)
   private
+    fSource: IRecorderDataSource;
     function ProgramSourceFrequency(ARegistry: TRecorderTagRegistry;
       ATag: TRecorderTag; AFrequencyHz: Double;
       out AErrorText: string): Boolean;
@@ -116,6 +119,8 @@ type
       ATag: TRecorderTag; AFrequencyHz: Double;
       out AErrorText: string): Boolean;
   public
+    constructor Create(const ASource: IRecorderDataSource = nil);
+    function ForSource(const ASource: IRecorderDataSource): IRecorderTagSettingsProvider; override;
     function Accepts(ATag: TRecorderTag): Boolean; override;
     function ReadState(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
       out AState: TRecorderTagSettingsState): Boolean; override;
@@ -151,6 +156,24 @@ type
 var
   GTagSettingsResolverOwner: TObject;
   GTagSettingsResolver: IRecorderTagSettingsProviderResolver;
+
+function TRecorderHardwareTagSettingsProvider.ForSource(
+  const ASource: IRecorderDataSource): IRecorderTagSettingsProvider;
+begin
+  Result := Self;
+end;
+
+constructor TRecorderPxiMx248TagSettingsProvider.Create(const ASource: IRecorderDataSource);
+begin
+  inherited Create;
+  fSource := ASource;
+end;
+
+function TRecorderPxiMx248TagSettingsProvider.ForSource(
+  const ASource: IRecorderDataSource): IRecorderTagSettingsProvider;
+begin
+  Result := TRecorderPxiMx248TagSettingsProvider.Create(ASource);
+end;
 
 function TRecorderHardwareTagSettingsProvider.ReadState(
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
@@ -443,6 +466,9 @@ var
   lResult: TRcOperationResult;
   lStore: TPxiMx248PropertyStore;
   lTransport: TRecorderPxiMx248WindowsTransport;
+  lRuntime: IPxiMx248RuntimeSampleRateSettings;
+  lDevice: IRecorderDevice;
+  lRateControl: IPxiMx248SampleRateDevice;
 begin
   Result := False;
   AErrorText := '';
@@ -450,6 +476,52 @@ begin
   if lConfigured = nil then
   begin
     AErrorText := 'MX-248 configured source was not found';
+    Exit;
+  end;
+  if fSource <> nil then
+  begin
+    if not SameText(RecorderNormalizeTagSourceId(fSource.SourceId),
+      RecorderNormalizeTagSourceId(ATag.SourceId)) then
+    begin
+      AErrorText := 'MX-248 runtime source does not match the tag';
+      Exit;
+    end;
+    if Supports(fSource, IPxiMx248RuntimeSampleRateSettings, lRuntime) then
+      lResult := lRuntime.RuntimeSetSampleRate(AFrequencyHz, lProperties)
+    else
+      lResult := TRcOperationResult.Failure(rocUnsupported,
+        'mx248.sample-rate', 'Owned runtime source does not support sample rate settings');
+  end
+  else
+  begin
+    lDevice := RecorderHardwareFindLiveDevice(ATag.SourceId);
+    if lDevice <> nil then
+    begin
+      if Supports(lDevice, IPxiMx248SampleRateDevice, lRateControl) then
+        lResult := lRateControl.SetSampleRate(AFrequencyHz, lProperties)
+      else
+        lResult := TRcOperationResult.Failure(rocUnsupported,
+          'mx248.sample-rate', 'Owned runtime device does not support sample rate settings');
+    end;
+  end;
+  if (fSource <> nil) or (lDevice <> nil) then
+  begin
+    if not lResult.IsSuccess then
+    begin
+      AErrorText := lResult.Stage + ': ' + lResult.MessageText;
+      Exit;
+    end;
+    lValues := TStringList.Create;
+    try
+      lValues.StrictDelimiter := True;
+      lValues.Delimiter := ';';
+      lValues.DelimitedText := lProperties;
+      Result := SameText(Trim(lValues.Values['sample-rate-hz']),
+        IntToStr(Round(AFrequencyHz)));
+      if not Result then AErrorText := 'MX-248 readback did not confirm the requested frequency';
+    finally
+      lValues.Free;
+    end;
     Exit;
   end;
   lItems := TStringList.Create;
@@ -810,7 +882,7 @@ begin
     lProvider := IRecorderHardwareTagSettingsProvider(fProviders[lIndex]);
     if lProvider.Accepts(ATag) then
     begin
-      AProvider := IRecorderTagSettingsProvider(fProviders[lIndex]);
+      AProvider := lProvider.ForSource(ASource);
       Exit(True);
     end;
   end;

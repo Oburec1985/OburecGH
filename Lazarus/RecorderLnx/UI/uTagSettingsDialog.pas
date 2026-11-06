@@ -277,6 +277,7 @@ type
     procedure LoadFromTags;
     /// Валидирует UI и записывает в теги только явно представленные настройки.
     procedure StoreToTags;
+    function TryStoreToTags: Boolean;
     /// Привязывает выбранный Mera-сигнал к текущему тегу и копирует его метаданные.
     procedure ApplyMeraSignalToCurrentTag(const ASourceId: string;
       ASignal: TMeraSignalInfo);
@@ -2001,8 +2002,19 @@ end;
 
 procedure TTagSettingsDialog.ApplyButtonClick(Sender: TObject);
 begin
-  StoreToTags;
-  LoadFromTags;
+  if TryStoreToTags then LoadFromTags;
+end;
+
+function TTagSettingsDialog.TryStoreToTags: Boolean;
+begin
+  Result := False;
+  try
+    StoreToTags;
+    Result := True;
+  except
+    on E: ERecorderTagError do
+      MessageDlg('Настройка канала', E.Message, mtError, [mbOK], 0);
+  end;
 end;
 
 procedure TTagSettingsDialog.SetpointColorDblClick(Sender: TObject);
@@ -2033,8 +2045,7 @@ end;
 
 procedure TTagSettingsDialog.OkButtonClick(Sender: TObject);
 begin
-  StoreToTags;
-  ModalResult := mrOk;
+  if TryStoreToTags then ModalResult := mrOk;
 end;
 
 

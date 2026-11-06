@@ -30,6 +30,7 @@ type
     fBindingError: string;
     fLastSlowCycleLogMs: QWord;
     function OpcDevice: TRecorderOpcUaDevice;
+    function RecorderTimeFromOpcTimestamp(AUtcSeconds: Double): Double;
     function BindServerNodes: Boolean;
     function FlushClientWrites: Boolean;
     procedure LogSlowCycle(AWriteMs, AReadMs: QWord);
@@ -50,7 +51,7 @@ type
 implementation
 
 uses
-  Math, uRecorderDebugLog, uRecorderHardwareLiveDevices;
+  Math, DateUtils, uRecorderDebugLog, uRecorderHardwareLiveDevices;
 
 const
   CRecorderOpcUaReconnectDelayMs = 5000;
@@ -74,6 +75,20 @@ end;
 function TRecorderOpcUaDataSource.OpcDevice: TRecorderOpcUaDevice;
 begin
   Result := TRecorderOpcUaDevice(fDevice.GetNativeObject);
+end;
+
+function TRecorderOpcUaDataSource.RecorderTimeFromOpcTimestamp(
+  AUtcSeconds: Double): Double;
+var
+  lSessionStartUtc: TDateTime;
+  lSessionStartUnix: Double;
+begin
+  Result := 0;
+  if (AUtcSeconds <= 0) or (Registry.TimeSystem = nil) then Exit;
+  lSessionStartUtc := Registry.TimeSystem.ChannelTimeToUtc(0);
+  lSessionStartUnix := (lSessionStartUtc - EncodeDate(1970, 1, 1)) *
+    SecsPerDay;
+  Result := AUtcSeconds - lSessionStartUnix;
 end;
 
 procedure TRecorderOpcUaDataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
@@ -384,13 +399,15 @@ begin
     if fNodeMessages[I] <> nil then
     begin
       if OpcDevice.ReadMessageChanged(I, lText, lTime, lQuality) then
+      begin
+        if lTime <= 0 then lTime := DateTimeToUnix(Now, False);
         fMessageRegistry.Publish(fNodeMessages[I], lText, lTime, lQuality);
+      end;
     end
     else if (fNodeTags[I] <> nil) and
       OpcDevice.ReadChanged(I, lValue, lTime, lQuality) then
-      { OPC UA SourceTimestamp is absolute Unix time. Recorder tags use the
-        project elapsed-time scale, which the registry supplies here. }
-      Registry.PublishValue(fNodeTags[I], lValue);
+      Registry.PublishValue(fNodeTags[I],
+        RecorderTimeFromOpcTimestamp(lTime), lValue);
 end;
 
 procedure TRecorderOpcUaDataSource.Stop;

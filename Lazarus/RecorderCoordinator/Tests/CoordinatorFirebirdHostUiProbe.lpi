@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General><ResourceType Value="res"/></General>
+    <BuildModes Active="Default"><Item Name="Default" Default="True"/></BuildModes>
+    <RequiredPackages>
+      <Item><PackageName Value="DateTimeCtrls"/></Item>
+      <Item><PackageName Value="LCL"/></Item>
+      <Item><PackageName Value="FCL"/></Item>
+      <Item><PackageName Value="LazUtils"/></Item>
+    </RequiredPackages>
+    <Units><Unit><Filename Value="CoordinatorFirebirdHostUiProbe.lpr"/><IsPartOfProject Value="True"/></Unit></Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target><Filename Value="/tmp/rcpanel-firebird-host-ui/CoordinatorFirebirdHostUiProbe"/></Target>
+    <SearchPaths>
+      <OtherUnitFiles Value="/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/Core;/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/Service;/mnt/win_share/OburecGH/Lazarus/RecorderCoordinator/UI;/mnt/win_share/OburecGH/Lazarus/RecorderLnx;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Algs;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Core;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Calibrations;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Calibrations/Strains;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Components/SqlTrend;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Device;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Device/MIC140;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Device/MIC140/UI;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Device/MIC140/utils;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Device/mic185;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Device/mic185/UI;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Device/MCbus;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/Device/MCbus/UI;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/SDB;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/SQLdb;/mnt/win_share/OburecGH/Lazarus/RecorderLnx/SQLdb/SqlTrend;/mnt/win_share/OburecGH/Lazarus/SharedUtils;/mnt/win_share/OburecGH/Lazarus/Tests/RecorderTests/UITestData;/mnt/win_share/OburecGH/Lazarus/third_party/fpspreadsheet"/>
+      <UnitOutputDirectory Value="/tmp/rcpanel-firebird-host-ui/units"/>
+    </SearchPaths>
+  </CompilerOptions>
+</CONFIG>

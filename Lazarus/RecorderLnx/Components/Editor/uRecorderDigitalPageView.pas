@@ -18,7 +18,7 @@ procedure UpdateRecorderDigitalPage(AGrid: TStringGrid;
 implementation
 
 uses
-  SysUtils;
+  Math, SysUtils;
 
 function FormatTagEstimate(ATag: TRecorderTag;
   AKind: TRecorderTagEstimateKind): string;
@@ -54,6 +54,18 @@ begin
     AGrid.Cells[ACol, ARow] := AValue;
 end;
 
+procedure InvalidateVisibleTagRows(AGrid: TStringGrid; ATag: TRecorderTag;
+  AFirstRow, ALastRow: Integer);
+var
+  lRow: Integer;
+begin
+  if AFirstRow < 1 then AFirstRow := 1;
+  if ALastRow >= AGrid.RowCount then ALastRow := AGrid.RowCount - 1;
+  for lRow := AFirstRow to ALastRow do
+    if AGrid.Objects[0, lRow] = ATag then
+      AGrid.InvalidateRow(lRow);
+end;
+
 procedure FillRows(AGrid: TStringGrid; ATagRegistry: TRecorderTagRegistry;
   const AAlarmEngine: IRecorderAlarmEngine; AStatic: Boolean);
 var
@@ -63,30 +75,25 @@ var
   lRow: Integer;
   lTag: TRecorderTag;
   lVisibleBottom: Integer;
-  lVisibleRow: Boolean;
+  lFirstVisibleRow: Integer;
+  lRowKind: TRecorderTagEstimateKind;
+  lAlarmText: string;
 begin
   if ATagRegistry = nil then
     Exit;
-  lRow := 1;
-  lVisibleBottom := AGrid.TopRow +
-    (AGrid.ClientHeight div AGrid.DefaultRowHeight) + 2;
-  for I := 0 to ATagRegistry.TagCount - 1 do
+  if AStatic then
   begin
-    lTag := ATagRegistry.Tags[I];
-    if not RecorderTagSourceIsVisible(ATagRegistry, lTag) then
-      Continue;
-    lFirstTagRow := True;
-    for J := tekMean to tekPeakToPeakByRmsDeviation do
+    lRow := 1;
+    for I := 0 to ATagRegistry.TagCount - 1 do
     begin
-      if not lTag.EstimateSettings.EnabledKinds[J] then
+      lTag := ATagRegistry.Tags[I];
+      if not RecorderTagSourceIsVisible(ATagRegistry, lTag) then
         Continue;
-      if lRow >= AGrid.RowCount then
-        Exit;
-      lVisibleRow := AStatic or
-        ((lRow >= AGrid.TopRow) and (lRow <= lVisibleBottom));
-
-      if AStatic then
+      lFirstTagRow := True;
+      for J := tekMean to tekPeakToPeakByRmsDeviation do
       begin
+        if not lTag.EstimateSettings.EnabledKinds[J] then Continue;
+        if lRow >= AGrid.RowCount then Exit;
         if lFirstTagRow then
         begin
           SetCell(AGrid, 0, lRow, LclText(lTag.Name));
@@ -101,23 +108,49 @@ begin
         end;
         SetCell(AGrid, 1, lRow, RecorderTagEstimateKindToShortName(J));
         SetCell(AGrid, 3, lRow, LclText(lTag.UnitName));
-      end;
-
-      if lFirstTagRow then
-      begin
-        if lVisibleRow then
+        AGrid.Objects[0, lRow] := lTag;
+        AGrid.Objects[1, lRow] := TObject(PtrInt(Ord(J) + 1));
+        if lFirstTagRow then
+        begin
           if AAlarmEngine <> nil then
             SetCell(AGrid, 5, lRow,
               LclText(AAlarmEngine.GetTagAlarmText(lTag)))
           else
             SetCell(AGrid, 5, lRow, '-');
-        lFirstTagRow := False;
-      end
-      else if AStatic then
-        SetCell(AGrid, 5, lRow, '');
-      if lVisibleRow then
+        end
+        else
+          SetCell(AGrid, 5, lRow, '');
         SetCell(AGrid, 4, lRow, FormatTagEstimate(lTag, J));
-      Inc(lRow);
+        lFirstTagRow := False;
+        Inc(lRow);
+      end;
+    end;
+    Exit;
+  end;
+
+  lFirstVisibleRow := AGrid.TopRow;
+  lVisibleBottom := lFirstVisibleRow +
+    (AGrid.ClientHeight div Max(1, AGrid.DefaultRowHeight)) + 2;
+  if lFirstVisibleRow < 1 then lFirstVisibleRow := 1;
+  if lVisibleBottom >= AGrid.RowCount then lVisibleBottom := AGrid.RowCount - 1;
+  for lRow := lFirstVisibleRow to lVisibleBottom do
+  begin
+    lTag := TRecorderTag(AGrid.Objects[0, lRow]);
+    if lTag = nil then Continue;
+    lRowKind := TRecorderTagEstimateKind(PtrInt(AGrid.Objects[1, lRow]) - 1);
+    SetCell(AGrid, 4, lRow, FormatTagEstimate(lTag, lRowKind));
+    if AGrid.Cells[0, lRow] <> '' then
+    begin
+      if AAlarmEngine <> nil then
+        lAlarmText := LclText(AAlarmEngine.GetTagAlarmText(lTag))
+      else
+        lAlarmText := '-';
+      if AGrid.Cells[5, lRow] <> lAlarmText then
+      begin
+        AGrid.Cells[5, lRow] := lAlarmText;
+        InvalidateVisibleTagRows(AGrid, lTag, lFirstVisibleRow,
+          lVisibleBottom);
+      end;
     end;
   end;
 end;
@@ -173,12 +206,7 @@ procedure UpdateRecorderDigitalPage(AGrid: TStringGrid;
 begin
   if (AGrid = nil) or (ATagRegistry = nil) then
     Exit;
-  AGrid.BeginUpdate;
-  try
-    FillRows(AGrid, ATagRegistry, AAlarmEngine, False);
-  finally
-    AGrid.EndUpdate;
-  end;
+  FillRows(AGrid, ATagRegistry, AAlarmEngine, False);
 end;
 
 end.

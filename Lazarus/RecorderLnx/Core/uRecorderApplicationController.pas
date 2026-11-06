@@ -16,7 +16,8 @@ type
     procedure ResetDisplaySessions;
     procedure StartAcquisition;
     procedure StopAcquisition;
-    procedure RunStateChanged(AOldState, ANewState: TRecorderState);
+    procedure RunStateChanged(AOldState, ANewState: TRecorderState;
+      ATransition: TRecorderStateTransition);
     procedure LifecycleMessage(const AMessage: string);
   end;
 
@@ -111,7 +112,7 @@ begin
   if (AOldState = rsRecord) and (ANewState <> rsRecord) and
     (ANewState <> rsStop) then
     fLifecycle.CloseRecordSession;
-  fLifecycle.RunStateChanged(AOldState, ANewState);
+  fLifecycle.RunStateChanged(AOldState, ANewState, lTransition);
   if lTransition <> rstNone then
     PublishTransition(rceRunTransitionAfter, lTransition);
   fLifecycle.LifecycleMessage(Format('State changed: %s -> %s',

@@ -12,10 +12,27 @@ uses
   ComCtrls, Grids, Contnrs, Graphics, ImgList, Menus, LazUTF8, LCLType,
   uRecorderTags, uRecorderDataSources, uRecorderMessages,
   uRecorderConfiguredDataSources,
-  uRecorderConfiguredSourceEditor, uRecorderOpcUaTypes, uRecorderOpcUaApi;
+  uRecorderConfiguredSourceEditor, uRecorderOpcUaTypes, uRecorderOpcUaApi,
+  uRecorderHardwareLiveDevices, uRecorderOpcUaDiscovery;
 
 type
-  TRecorderOpcUaProbeOperation = (opoTest, opoBrowse, opoRead);
+  TRecorderOpcUaProbeOperation = (opoTest, opoBrowse, opoBrowseChildren,
+    opoRead, opoDiscover);
+  TRecorderOpcUaNameOperation = (onoRemove, onoAdd);
+
+  TRecorderOpcUaNameOperationDialog = class(TForm)
+  private
+    fOperationGroup: TRadioGroup;
+    fNameText: TEdit;
+    fPreview: TLabel;
+    fOriginalName: string;
+    procedure UpdatePreview(Sender: TObject);
+  public
+    constructor CreateDialog(AOwner: TComponent; const AOriginalName,
+      AInitialText: string);
+    function Execute(out AOperation: TRecorderOpcUaNameOperation;
+      out AText: string): Boolean;
+  end;
 
   TRecorderOpcUaTreeItem = class
   public
@@ -54,6 +71,8 @@ type
   private
     fEndpoint: string;
     fErrorText: string;
+    fBrowseNodeId: string;
+    fBrowsePath: string;
     fInputNodeIds: TStringList;
     fInputTagNames: TStringList;
     fLines: TStringList;
@@ -62,6 +81,7 @@ type
     fSessionTimeoutMs: Cardinal;
     fMaxReferencesPerNode: Cardinal;
     fRequestTimeoutMs: Cardinal;
+    fBrowseTimeoutMs: Cardinal;
     fTimestampsToReturn: Cardinal;
     fUserName: string;
     fElapsedMs: QWord;
@@ -75,7 +95,9 @@ type
       ASessionTimeoutMs: Cardinal = CRecorderOpcUaDefaultSessionTimeoutMs;
       AMaxReferencesPerNode: Cardinal = CRecorderOpcUaDefaultMaxNodesPerRequest;
       ARequestTimeoutMs: Cardinal = CRecorderOpcUaDefaultRequestTimeoutMs;
-      ATimestampsToReturn: Cardinal = Ord(outServer));
+      ATimestampsToReturn: Cardinal = Ord(outServer);
+      ABrowseTimeoutMs: Cardinal = CRecorderOpcUaDefaultBrowseTimeoutMs;
+      const ABrowseNodeId: string = ''; const ABrowsePath: string = '');
     destructor Destroy; override;
     property Operation: TRecorderOpcUaProbeOperation read fOperation;
     property ElapsedMs: QWord read fElapsedMs;
@@ -89,11 +111,13 @@ type
   published
     fAuth: TComboBox;
     fBrowseButton: TButton;
+    fInteractiveBrowseButton: TButton;
     fBrowsePopup: TPopupMenu;
     fBrowseTree: TTreeView;
     fCancelButton: TButton;
     fDiagnostics: TMemo;
     fEndpoint: TEdit;
+    fDiscoveryButton: TButton;
     fInterval: TEdit;
     fSessionTimeout: TEdit;
     fMode: TComboBox;
@@ -113,9 +137,8 @@ type
     fUsedPropertiesSplitter: TSplitter;
     fUsedPropertiesGrid: TStringGrid;
     fUsedPropertiesHost: TPanel;
-    fRemoveNameSubstring: TEdit;
-    fRemoveNameSubstringButton: TButton;
-    fAddNamePrefixButton: TButton;
+    fSelectedNameEdit: TEdit;
+    fEditNamesButton: TButton;
     fAddConnectionAddressCheck: TCheckBox;
     fDetailsPages: TPageControl;
     fPropertiesTab: TTabSheet;
@@ -138,17 +161,22 @@ type
     procedure AddSelectedMenuClick(Sender: TObject);
     procedure AuthChange(Sender: TObject);
     procedure BrowseClick(Sender: TObject);
+    procedure InteractiveBrowseClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormShow(Sender: TObject);
     procedure ModeChange(Sender: TObject);
     procedure ProbeClick(Sender: TObject);
+    procedure DiscoveryClick(Sender: TObject);
     procedure ProbeFinished(Sender: TObject);
+    procedure ProtocolSettingsSelectEditor(Sender: TObject; ACol, ARow: Integer;
+      var Editor: TWinControl);
     procedure ProtocolSettingsSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure PropertiesGridEditingDone(Sender: TObject);
     procedure PropertiesGridSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
-    procedure RebuildBrowseTree;
+    procedure RebuildBrowseTree(ASelectedNodeIds: TStrings = nil);
+    procedure CaptureBrowseSelection(ANodeIds: TStrings);
     procedure SetProbeRunning(ARunning: Boolean);
     procedure SimplifiedTreeChange(Sender: TObject);
     procedure TreeSearchChange(Sender: TObject);
@@ -157,8 +185,7 @@ type
     procedure UsedPropertiesGridEditingDone(Sender: TObject);
     procedure UsedPropertiesGridSelectCell(Sender: TObject; ACol,
       ARow: Integer; var CanSelect: Boolean);
-    procedure RemoveNameSubstringClick(Sender: TObject);
-    procedure AddNamePrefixClick(Sender: TObject);
+    procedure EditNamesClick(Sender: TObject);
     procedure AddConnectionAddressChange(Sender: TObject);
     procedure UsedTreeDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure UsedTreeDragOver(Sender, Source: TObject; X, Y: Integer;
@@ -175,7 +202,11 @@ type
   private
     fProbeThread: TRecorderOpcUaProbeThread;
     fBrowseCache: TStringList;
+    fBrowseCacheEndpoint: string;
+    fInteractiveBrowse: Boolean;
+    fInteractiveParentNodeId: string;
     fRegistry: TRecorderTagRegistry;
+    fSourceId: string;
     fTreeItems: TObjectList;
     fUsedItems: TObjectList;
     fAutoBrowsePending: Boolean;
@@ -186,6 +217,7 @@ type
     fUpdatingProperties: Boolean;
     fUpdatingUsedProperties: Boolean;
     fUpdatingAddressCheck: Boolean;
+    fCommonNameSubstring: string;
     function AppendTagRow(AItem: TRecorderOpcUaTreeItem): Integer;
     procedure AddTreeItemToGrid(AItem: TRecorderOpcUaTreeItem);
     procedure AddSelectedTreeNode;
@@ -210,6 +242,8 @@ type
     procedure InitializeNodeImages;
     procedure LinkIndexedArrayItems;
     procedure LoadBrowseLines(ALines: TStrings);
+    procedure AppendBrowseLines(ALines: TStrings);
+    procedure AppendBrowseCacheLines(ALines: TStrings);
     procedure LoadConfiguredNodesAsOfflineTree;
     function FindTreeItemByNodeId(const ANodeId: string): TRecorderOpcUaTreeItem;
     procedure RebuildUsedTree;
@@ -223,11 +257,16 @@ type
     procedure RemoveSelectedUsedChannels;
     procedure ShowSelectedNodeProperties;
     procedure ShowSelectedUsedProperties;
-    procedure ApplyNameOperationToSelected(ARemove: Boolean);
+    procedure UpdateAddressCheckFromSelection;
+    function TagNameHasBrowsePath(const ANodeId,
+      ARecorderName: string): Boolean;
+    procedure ApplyNameOperationToSelected(AOperation: TRecorderOpcUaNameOperation;
+      const AText: string);
     function SelectedUsableTreeNodeCount: Integer;
     function SelectedTagCount: Integer;
     procedure ExpandConfiguredTreeNodes;
-    procedure StartProbe(AOperation: TRecorderOpcUaProbeOperation);
+    procedure StartProbe(AOperation: TRecorderOpcUaProbeOperation;
+      const ABrowseNodeId: string = ''; const ABrowsePath: string = '');
     procedure UpdateControlState;
   public
     constructor CreateEditor(AOwner: TComponent; AConfig: TRecorderOpcUaConfig;
@@ -258,12 +297,237 @@ const
   CProtocolRowMaxWrite = 6;
   CProtocolRowBrowse = 7;
   CProtocolRowMaxBrowse = 8;
-  CProtocolRowConnection = 9;
-  CProtocolRowTimeout = 10;
-  CProtocolRowSubscription = 11;
-  CProtocolRowArchive = 12;
+  CProtocolRowBrowseTimeout = 9;
+  CProtocolRowConnection = 10;
+  CProtocolRowTimeout = 11;
+  CProtocolRowSubscription = 12;
+  CProtocolRowArchive = 13;
 
 function CompactOpcUaNodeAddress(const ANodeId: string): string; forward;
+
+function WrapOpcUaPreviewName(const AName: string): string;
+var
+  lRemaining, lChunk: string;
+begin
+  Result := '';
+  lRemaining := AName;
+  while UTF8Length(lRemaining) > 62 do
+  begin
+    lChunk := UTF8Copy(lRemaining, 1, 62);
+    if Result <> '' then Result := Result + LineEnding;
+    Result := Result + lChunk;
+    Delete(lRemaining, 1, Length(lChunk));
+  end;
+  if Result <> '' then Result := Result + LineEnding;
+  Result := Result + lRemaining;
+end;
+
+function StripOuterNameDots(const AName: string): string;
+begin
+  Result := Trim(AName);
+  while (Result <> '') and (Result[1] = '.') do Delete(Result, 1, 1);
+  while (Result <> '') and (Result[Length(Result)] = '.') do
+    Delete(Result, Length(Result), 1);
+end;
+
+constructor TRecorderOpcUaNameOperationDialog.CreateDialog(AOwner: TComponent;
+  const AOriginalName, AInitialText: string);
+var
+  lLabel: TLabel;
+  lButton: TButton;
+begin
+  inherited CreateNew(AOwner, 1);
+  Caption := 'Редактирование имён тегов';
+  Position := poOwnerFormCenter;
+  BorderStyle := bsDialog;
+  Width := 536;
+  Height := 300;
+  Constraints.MinWidth := 536;
+  Constraints.MinHeight := 300;
+  fOriginalName := AOriginalName;
+
+  fOperationGroup := TRadioGroup.Create(Self);
+  fOperationGroup.Parent := Self;
+  fOperationGroup.SetBounds(12, 8, 490, 64);
+  fOperationGroup.Caption := 'Операция';
+  fOperationGroup.Columns := 2;
+  fOperationGroup.Items.Add('Удалить подстроку');
+  fOperationGroup.Items.Add('Добавить перед именем');
+  fOperationGroup.ItemIndex := 0;
+  fOperationGroup.OnClick := @UpdatePreview;
+
+  lLabel := TLabel.Create(Self);
+  lLabel.Parent := Self;
+  lLabel.SetBounds(16, 78, 150, 18);
+  lLabel.Caption := 'Подстрока';
+
+  fNameText := TEdit.Create(Self);
+  fNameText.Parent := Self;
+  fNameText.SetBounds(12, 98, 490, 26);
+  fNameText.Anchors := [akLeft, akTop, akRight];
+  fNameText.Text := AInitialText;
+  fNameText.OnChange := @UpdatePreview;
+
+  fPreview := TLabel.Create(Self);
+  fPreview.Parent := Self;
+  fPreview.SetBounds(12, 130, 490, 100);
+  fPreview.Anchors := [akLeft, akTop, akRight];
+  fPreview.AutoSize := False;
+  fPreview.WordWrap := True;
+  fPreview.ShowHint := True;
+
+  lButton := TButton.Create(Self);
+  lButton.Parent := Self;
+  lButton.SetBounds(330, 240, 80, 28);
+  lButton.Anchors := [akRight, akBottom];
+  lButton.Caption := 'Выполнить';
+  lButton.ModalResult := mrOk;
+  lButton.Default := True;
+
+  lButton := TButton.Create(Self);
+  lButton.Parent := Self;
+  lButton.SetBounds(420, 240, 80, 28);
+  lButton.Anchors := [akRight, akBottom];
+  lButton.Caption := 'Отмена';
+  lButton.ModalResult := mrCancel;
+  lButton.Cancel := True;
+  UpdatePreview(nil);
+end;
+
+procedure TRecorderOpcUaNameOperationDialog.UpdatePreview(Sender: TObject);
+var
+  lText, lResult: string;
+begin
+  lText := Trim(fNameText.Text);
+  if (Length(lText) >= 3) and
+    (Copy(lText, Length(lText) - 2, 3) = '***') then
+    Delete(lText, Length(lText) - 2, 3);
+  lResult := fOriginalName;
+  if lText <> '' then
+    if fOperationGroup.ItemIndex = 0 then
+      lResult := StripOuterNameDots(
+        StringReplace(lResult, lText, '', [rfReplaceAll]))
+    else if Copy(lResult, 1, Length(lText)) <> lText then
+      lResult := lText + lResult;
+  fPreview.Caption := WrapOpcUaPreviewName(fOriginalName) + LineEnding +
+    '>>> ' + WrapOpcUaPreviewName(lResult);
+  fPreview.Hint := fPreview.Caption;
+end;
+
+function TRecorderOpcUaNameOperationDialog.Execute(
+  out AOperation: TRecorderOpcUaNameOperation; out AText: string): Boolean;
+var
+  lText: string;
+begin
+  Result := ShowModal = mrOk;
+  if not Result then Exit;
+  AOperation := onoRemove;
+  if fOperationGroup.ItemIndex = 1 then AOperation := onoAdd;
+  lText := Trim(fNameText.Text);
+  if (Length(lText) >= 3) and
+    (Copy(lText, Length(lText) - 2, 3) = '***') then
+    Delete(lText, Length(lText) - 2, 3);
+  AText := lText;
+end;
+
+function SelectDiscoveredOpcUaEndpoint(AOwner: TComponent;
+  AEndpoints: TStrings): string;
+var
+  lDialog: TForm;
+  lPrompt: TLabel;
+  lEndpointList: TComboBox;
+  lOkButton, lCancelButton: TButton;
+  I, lSeparator: Integer;
+  lName, lEndpoint: string;
+begin
+  Result := '';
+  if (AEndpoints = nil) or (AEndpoints.Count = 0) then Exit;
+  lDialog := TForm.Create(AOwner);
+  try
+    lDialog.Caption := 'Найденные OPC UA серверы';
+    lDialog.Position := poOwnerFormCenter;
+    lDialog.BorderStyle := bsDialog;
+    lDialog.ClientWidth := 620;
+    lDialog.ClientHeight := 150;
+    lDialog.Constraints.MinWidth := 500;
+    lPrompt := TLabel.Create(lDialog);
+    lPrompt.Parent := lDialog;
+    lPrompt.Caption := 'Выберите сервер:';
+    lPrompt.SetBounds(12, 12, 200, 20);
+    lEndpointList := TComboBox.Create(lDialog);
+    lEndpointList.Parent := lDialog;
+    lEndpointList.Style := csDropDownList;
+    lEndpointList.SetBounds(12, 38, 596, 28);
+    lEndpointList.Anchors := [akLeft, akTop, akRight];
+    for I := 0 to AEndpoints.Count - 1 do
+    begin
+      lSeparator := Pos(#9, AEndpoints[I]);
+      if lSeparator > 0 then
+      begin
+        lName := Copy(AEndpoints[I], 1, lSeparator - 1);
+        lEndpoint := Copy(AEndpoints[I], lSeparator + 1, MaxInt);
+      end
+      else
+      begin
+        lName := AEndpoints[I];
+        lEndpoint := AEndpoints[I];
+      end;
+      lEndpointList.Items.Add(lName + ' — ' + lEndpoint);
+    end;
+    lEndpointList.ItemIndex := 0;
+    lOkButton := TButton.Create(lDialog);
+    lOkButton.Parent := lDialog;
+    lOkButton.Caption := 'Выбрать';
+    lOkButton.ModalResult := mrOk;
+    lOkButton.Default := True;
+    lOkButton.SetBounds(424, 102, 88, 30);
+    lOkButton.Anchors := [akRight, akBottom];
+    lCancelButton := TButton.Create(lDialog);
+    lCancelButton.Parent := lDialog;
+    lCancelButton.Caption := 'Отмена';
+    lCancelButton.ModalResult := mrCancel;
+    lCancelButton.Cancel := True;
+    lCancelButton.SetBounds(520, 102, 88, 30);
+    lCancelButton.Anchors := [akRight, akBottom];
+    if lDialog.ShowModal = mrOk then
+    begin
+      I := lEndpointList.ItemIndex;
+      if (I >= 0) and (I < AEndpoints.Count) then
+      begin
+        lSeparator := Pos(#9, AEndpoints[I]);
+        if lSeparator > 0 then
+          Result := Copy(AEndpoints[I], lSeparator + 1, MaxInt)
+        else
+          Result := AEndpoints[I];
+      end;
+    end;
+  finally
+    lDialog.Free;
+  end;
+end;
+
+function OpcUaBrowsePathToRecorderName(const ABrowsePath: string): string;
+begin
+  Result := StringReplace(Trim(ABrowsePath), '/', '.', [rfReplaceAll]);
+  while (Result <> '') and (Result[1] = '.') do
+    Delete(Result, 1, 1);
+  while (Result <> '') and (Result[Length(Result)] = '.') do
+    Delete(Result, Length(Result), 1);
+end;
+
+function OpcUaBrowsePathToRecorderPrefix(const ABrowsePath: string): string;
+var
+  lPath: string;
+  lLastSeparator: Integer;
+begin
+  lPath := Trim(ABrowsePath);
+  lLastSeparator := LastDelimiter('/', lPath);
+  if lLastSeparator > 0 then
+    SetLength(lPath, lLastSeparator - 1)
+  else
+    lPath := '';
+  Result := OpcUaBrowsePathToRecorderName(lPath);
+end;
 
 constructor TRecorderOpcUaTreeItem.Create;
 begin
@@ -390,17 +654,22 @@ constructor TRecorderOpcUaProbeThread.Create(const AEndpoint, AUserName,
   APassword: string; AOperation: TRecorderOpcUaProbeOperation;
   ANodeIds, ATagNames: TStrings; ASessionTimeoutMs,
   AMaxReferencesPerNode, ARequestTimeoutMs,
-  ATimestampsToReturn: Cardinal);
+  ATimestampsToReturn, ABrowseTimeoutMs: Cardinal;
+  const ABrowseNodeId, ABrowsePath: string);
 begin
   inherited Create(True);
   FreeOnTerminate := False;
   fEndpoint := AEndpoint;
+  fBrowseNodeId := ABrowseNodeId;
+  fBrowsePath := ABrowsePath;
   fUserName := AUserName;
   fPassword := APassword;
   fOperation := AOperation;
   fSessionTimeoutMs := ASessionTimeoutMs;
   fMaxReferencesPerNode := Max(1, AMaxReferencesPerNode);
   fRequestTimeoutMs := Max(100, ARequestTimeoutMs);
+  fBrowseTimeoutMs := Max(CRecorderOpcUaMinimumBrowseTimeoutMs,
+    ABrowseTimeoutMs);
   fTimestampsToReturn := EnsureRange(ATimestampsToReturn, 0, 3);
   fInputNodeIds := TStringList.Create;
   fInputTagNames := TStringList.Create;
@@ -431,6 +700,12 @@ begin
   fSucceeded := False;
   try
     try
+      if fOperation = opoDiscover then
+      begin
+        fSucceeded := RecorderOpcUaDiscoverMdns(fLines,
+          CRecorderOpcUaDiscoveryTimeoutMs, fErrorText);
+        Exit;
+      end;
       if not RecorderOpcUaLoad(lLoadError) then
       begin
         fErrorText := lLoadError;
@@ -438,7 +713,7 @@ begin
       end;
       lHandle := RecorderOpcUaClientCreate(fEndpoint, fUserName, fPassword,
         CRecorderOpcUaDefaultPublishingIntervalMs, fSessionTimeoutMs,
-        fRequestTimeoutMs, fTimestampsToReturn);
+        fRequestTimeoutMs, fTimestampsToReturn, fBrowseTimeoutMs);
       if lHandle = nil then
       begin
         fErrorText := 'Не удалось создать OPC UA client session';
@@ -453,6 +728,14 @@ begin
         case fOperation of
           opoBrowse:
             if not RecorderOpcUaClientBrowse(lHandle, fLines,
+              fMaxReferencesPerNode) then
+            begin
+              fErrorText := RecorderOpcUaLastError(lHandle);
+              Exit;
+            end;
+          opoBrowseChildren:
+            if not RecorderOpcUaClientBrowseChildren(lHandle,
+              fBrowseNodeId, fBrowsePath, fLines,
               fMaxReferencesPerNode) then
             begin
               fErrorText := RecorderOpcUaLastError(lHandle);
@@ -511,23 +794,36 @@ constructor TRecorderOpcUaEditorForm.CreateEditor(AOwner: TComponent;
   const ASourceId: string);
 var
   I: Integer;
-  lButtonPanel, lConfigPanel, lDiagnosticPanel, lNodePanel: TPanel;
+  lDiscardBrowseCache: Boolean;
   lNode: TRecorderOpcUaNode;
   lTag: TRecorderTag;
   lText: string;
 begin
   inherited Create(AOwner);
   fRegistry := ARegistry;
+  fSourceId := ASourceId;
   fBrowseCache := TStringList.Create;
+  fBrowseCacheEndpoint := Trim(AConfig.BrowseCacheEndpoint);
+  if fBrowseCacheEndpoint = '' then
+    fBrowseCacheEndpoint := Trim(AConfig.Endpoint);
   fBrowseCache.Assign(AConfig.BrowseCache);
+  lDiscardBrowseCache := (fBrowseCache.Count > 0) and
+    ((Trim(AConfig.BrowseCacheEndpoint) = '') or
+     not SameText(Trim(AConfig.BrowseCacheEndpoint), Trim(AConfig.Endpoint)));
+  if lDiscardBrowseCache then fBrowseCache.Clear;
   fTreeItems := TObjectList.Create(True);
   fUsedItems := TObjectList.Create(True);
+  fProtocolSettings.RowCount := CProtocolRowArchive + 1;
   fProtocolSettings.ColWidths[0] := 260;
   fProtocolSettings.ColWidths[1] := 300;
   fProtocolSettings.Cells[0, CProtocolRowReceive] := 'Приём текущих данных';
   fProtocolSettings.Cells[0, CProtocolRowMode] := 'Тип приёма';
-  fProtocolSettings.Cells[1, CProtocolRowMode] := 'Read';
-  fProtocolSettings.Cells[0, CProtocolRowInterval] := 'Период Read, мс';
+  if AConfig.PollingType = ouptSubscription then
+    fProtocolSettings.Cells[1, CProtocolRowMode] := 'Subscribe'
+  else
+    fProtocolSettings.Cells[1, CProtocolRowMode] := 'Read';
+  fProtocolSettings.Cells[0, CProtocolRowInterval] :=
+    'Период Read/публикации, мс';
   fProtocolSettings.Cells[1, CProtocolRowInterval] :=
     IntToStr(AConfig.PublishingIntervalMs);
   fProtocolSettings.Cells[0, CProtocolRowMaxRead] := 'Макс. узлов за ReadRequest';
@@ -535,11 +831,15 @@ begin
     IntToStr(AConfig.MaxNodesPerRead);
   fProtocolSettings.Cells[0, CProtocolRowTimestamp] := 'Метка времени';
   case AConfig.TimestampMode of
-    outSource: fProtocolSettings.Cells[1, CProtocolRowTimestamp] := 'Source';
-    outBoth: fProtocolSettings.Cells[1, CProtocolRowTimestamp] := 'Both';
-    outNeither: fProtocolSettings.Cells[1, CProtocolRowTimestamp] := 'Neither';
+    outSource: fProtocolSettings.Cells[1, CProtocolRowTimestamp] :=
+      'SourceTimestamp (источника)';
+    outBoth: fProtocolSettings.Cells[1, CProtocolRowTimestamp] :=
+      'Both (Source приоритет)';
+    outNeither: fProtocolSettings.Cells[1, CProtocolRowTimestamp] :=
+      'Neither (время приёма)';
   else
-    fProtocolSettings.Cells[1, CProtocolRowTimestamp] := 'Server';
+    fProtocolSettings.Cells[1, CProtocolRowTimestamp] :=
+      'ServerTimestamp (сервера)';
   end;
   fProtocolSettings.Cells[0, CProtocolRowWrite] := 'Запись значений';
   fProtocolSettings.Cells[0, CProtocolRowMaxWrite] :=
@@ -551,6 +851,10 @@ begin
     'Макс. ссылок на узел за BrowseRequest';
   fProtocolSettings.Cells[1, CProtocolRowMaxBrowse] :=
     IntToStr(AConfig.MaxNodesPerBrowse);
+  fProtocolSettings.Cells[0, CProtocolRowBrowseTimeout] :=
+    'Таймаут одного Browse/BrowseNext, с (мин. 30)';
+  fProtocolSettings.Cells[1, CProtocolRowBrowseTimeout] :=
+    IntToStr(AConfig.BrowseTimeoutMs div 1000);
   fProtocolSettings.Cells[0, CProtocolRowConnection] := 'Соединение';
   fProtocolSettings.Cells[0, CProtocolRowTimeout] :=
     'OPC UA TimeoutHint запроса, с';
@@ -558,7 +862,7 @@ begin
     IntToStr(AConfig.RequestTimeoutMs div 1000);
   fProtocolSettings.Cells[0, CProtocolRowSubscription] := 'Subscription';
   fProtocolSettings.Cells[1, CProtocolRowSubscription] :=
-    'Не поддерживается текущим клиентом';
+    'MonitoredItems + Publish при типе Subscribe';
   fProtocolSettings.Cells[0, CProtocolRowArchive] := 'Архив (HistoryRead)';
   fProtocolSettings.Cells[1, CProtocolRowArchive] :=
     'Не поддерживается текущим клиентом';
@@ -591,6 +895,7 @@ begin
   fValueGrid.Cells[9, 0] := 'Message kind';
   fValueGrid.Cells[10, 0] := 'Message color';
   fValueGrid.Cells[11, 0] := 'Recorder tag id';
+  fValueGrid.Cells[12, 0] := 'ValueRank';
   fValueGrid.ColWidths[0] := 130;
   fValueGrid.ColWidths[1] := 100;
   fValueGrid.ColWidths[2] := 120;
@@ -603,6 +908,7 @@ begin
   fValueGrid.ColWidths[9] := 0;
   fValueGrid.ColWidths[10] := 0;
   fValueGrid.ColWidths[11] := 0;
+  fValueGrid.ColWidths[12] := 0;
   fPropertiesGrid.Cells[0, 0] := 'Свойство';
   fPropertiesGrid.Cells[1, 0] := 'Значение';
   fPropertiesGrid.ColWidths[0] := 170;
@@ -633,6 +939,9 @@ begin
     if (lNode.NodeId <> '') and (Pos(lNode.NodeId, lNode.TagName) > 0) then
       lNode.TagName := StringReplace(lNode.TagName, lNode.NodeId,
         CompactOpcUaNodeAddress(lNode.NodeId), [rfReplaceAll]);
+    lNode.TagName := Trim(lNode.TagName);
+    while (lNode.TagName <> '') and (lNode.TagName[1] = '.') do
+      Delete(lNode.TagName, 1, 1);
     fValueGrid.RowCount := fValueGrid.RowCount + 1;
     fValueGrid.Cells[0, fValueGrid.RowCount - 1] := lNode.TagName;
     fValueGrid.Cells[1, fValueGrid.RowCount - 1] := '';
@@ -649,183 +958,16 @@ begin
       IntToStr(lNode.MessageColor);
     fValueGrid.Cells[11, fValueGrid.RowCount - 1] :=
       IntToStr(lNode.RecorderTagId);
+    fValueGrid.Cells[12, fValueGrid.RowCount - 1] :=
+      IntToStr(lNode.ValueRank);
   end;
   if fBrowseCache.Count > 0 then
     LoadBrowseLines(fBrowseCache)
   else
     LoadConfiguredNodesAsOfflineTree;
   RebuildUsedTree;
-  AddDiagnostic(UTF8Encode('Готово. Endpoint: ') + AConfig.Endpoint);
-  UpdateControlState;
-  Exit;
-
-  inherited CreateNew(AOwner, 1);
-  Caption := 'OPC UA client/server';
-  Position := poOwnerFormCenter;
-  BorderStyle := bsSizeable;
-  Width := 720;
-  Height := 680;
-  Constraints.MinWidth := 650;
-  Constraints.MinHeight := 600;
-  OnCloseQuery := @FormCloseQuery;
-  fTreeItems := TObjectList.Create(True);
-
-  lButtonPanel := TPanel.Create(Self);
-  lButtonPanel.Parent := Self;
-  lButtonPanel.Align := alBottom;
-  lButtonPanel.Height := 48;
-  lButtonPanel.Width := ClientWidth;
-  lButtonPanel.BevelOuter := bvNone;
-  lButtonPanel.BringToFront;
-
-  fCancelButton := TButton.Create(Self);
-  fCancelButton.Parent := lButtonPanel;
-  fCancelButton.Caption := 'Отмена';
-  fCancelButton.SetBounds(lButtonPanel.Width - 96, 10, 80, 28);
-  fCancelButton.Anchors := [akTop, akRight];
-  fCancelButton.Cancel := True;
-  fCancelButton.ModalResult := mrCancel;
-
-  fOkButton := TButton.Create(Self);
-  fOkButton.Parent := lButtonPanel;
-  fOkButton.Caption := 'OK';
-  fOkButton.SetBounds(lButtonPanel.Width - 186, 10, 80, 28);
-  fOkButton.Anchors := [akTop, akRight];
-  fOkButton.Default := True;
-  fOkButton.ModalResult := mrOk;
-
-  lDiagnosticPanel := TPanel.Create(Self);
-  lDiagnosticPanel.Parent := Self;
-  lDiagnosticPanel.Align := alBottom;
-  lDiagnosticPanel.Height := 210;
-  lDiagnosticPanel.Width := ClientWidth;
-  lDiagnosticPanel.BevelOuter := bvNone;
-  AddLabel(Self, lDiagnosticPanel, 'Диагностика', 16, 3);
-  fDiagnostics := TMemo.Create(Self);
-  fDiagnostics.Parent := lDiagnosticPanel;
-  fDiagnostics.SetBounds(16, 23, lDiagnosticPanel.Width - 32, 62);
-  fDiagnostics.Anchors := [akLeft, akTop, akRight, akBottom];
-  fDiagnostics.ReadOnly := True;
-  fDiagnostics.ScrollBars := ssAutoVertical;
-  fValueGrid := TStringGrid.Create(Self);
-  fValueGrid.Parent := lDiagnosticPanel;
-  fValueGrid.SetBounds(16, 91, lDiagnosticPanel.Width - 32, 111);
-  fValueGrid.Anchors := [akLeft, akRight, akBottom];
-  fValueGrid.ColCount := 12;
-  fValueGrid.FixedRows := 1;
-  fValueGrid.RowCount := 1;
-  fValueGrid.Cells[0, 0] := 'Тег';
-  fValueGrid.Cells[1, 0] := 'NodeId';
-  fValueGrid.Cells[2, 0] := 'Значение';
-  fValueGrid.Cells[3, 0] := 'Качество';
-  fValueGrid.Cells[4, 0] := 'Время';
-  fValueGrid.ColWidths[0] := 130;
-  fValueGrid.ColWidths[1] := 190;
-  fValueGrid.ColWidths[2] := 90;
-  fValueGrid.ColWidths[3] := 90;
-  fValueGrid.ColWidths[4] := 160;
-
-  lConfigPanel := TPanel.Create(Self);
-  lConfigPanel.Parent := Self;
-  lConfigPanel.Align := alTop;
-  lConfigPanel.Height := 260;
-  lConfigPanel.Width := ClientWidth;
-  lConfigPanel.BevelOuter := bvNone;
-  AddLabel(Self, lConfigPanel, 'Режим', 16, 18);
-  fMode := TComboBox.Create(Self);
-  fMode.Parent := lConfigPanel;
-  fMode.SetBounds(140, 14, 180, 28);
-  fMode.Style := csDropDownList;
-  fMode.Items.Add('Client');
-  fMode.Items.Add('Server');
-  fMode.ItemIndex := Ord(AConfig.Mode);
-  fMode.OnChange := @ModeChange;
-  AddLabel(Self, lConfigPanel, 'Endpoint URL', 16, 54);
-  fEndpoint := TEdit.Create(Self);
-  fEndpoint.Parent := lConfigPanel;
-  fEndpoint.SetBounds(140, 50, 540, 28);
-  fEndpoint.Anchors := [akLeft, akTop, akRight];
-  fEndpoint.Text := AConfig.Endpoint;
-  AddLabel(Self, lConfigPanel, 'Аутентификация', 16, 90);
-  fAuth := TComboBox.Create(Self);
-  fAuth.Parent := lConfigPanel;
-  fAuth.SetBounds(140, 86, 220, 28);
-  fAuth.Style := csDropDownList;
-  fAuth.Items.Add('Анонимно');
-  fAuth.Items.Add('Логин / пароль');
-  if AConfig.AuthenticationMode = ouamUserPassword then
-    fAuth.ItemIndex := 1
-  else
-    fAuth.ItemIndex := 0;
-  fAuth.OnChange := @AuthChange;
-  AddLabel(Self, lConfigPanel, 'Пользователь', 16, 126);
-  fUserName := TEdit.Create(Self);
-  fUserName.Parent := lConfigPanel;
-  fUserName.SetBounds(140, 122, 220, 28);
-  fUserName.Text := AConfig.UserName;
-  AddLabel(Self, lConfigPanel, 'ENV пароля', 16, 162);
-  fPassword := TEdit.Create(Self);
-  fPassword.Parent := lConfigPanel;
-  fPassword.SetBounds(140, 158, 220, 28);
-  fPassword.Text := AConfig.PasswordEnvironment;
-  AddLabel(Self, lConfigPanel, 'Интервал, мс', 390, 126);
-  fInterval := TEdit.Create(Self);
-  fInterval.Parent := lConfigPanel;
-  fInterval.SetBounds(500, 122, 100, 28);
-  fInterval.Text := IntToStr(AConfig.PublishingIntervalMs);
-  fProbeButton := TButton.Create(Self);
-  fProbeButton.Parent := lConfigPanel;
-  fProbeButton.Caption := 'Проверить связь';
-  fProbeButton.SetBounds(140, 205, 150, 30);
-  fProbeButton.OnClick := @ProbeClick;
-  fBrowseButton := TButton.Create(Self);
-  fBrowseButton.Parent := lConfigPanel;
-  fBrowseButton.Caption := 'Обновить дерево';
-  fBrowseButton.SetBounds(300, 205, 130, 30);
-  fBrowseButton.OnClick := @BrowseClick;
-  fReadButton := TButton.Create(Self);
-  fReadButton.Parent := lConfigPanel;
-  fReadButton.Caption := 'Прочитать значения';
-  fReadButton.SetBounds(440, 205, 160, 30);
-  fReadButton.OnClick := @ReadClick;
-
-  lNodePanel := TPanel.Create(Self);
-  lNodePanel.Parent := Self;
-  lNodePanel.Align := alClient;
-  lNodePanel.Width := ClientWidth;
-  lNodePanel.BevelOuter := bvNone;
-  AddLabel(Self, lNodePanel,
-    'Найденные узлы (двойной щелчок добавляет только канал)', 16, 5);
-  fSimplifiedTree := TCheckBox.Create(Self);
-  fSimplifiedTree.Parent := lNodePanel;
-  fSimplifiedTree.Caption := 'Упрощённая структура';
-  fSimplifiedTree.SetBounds(lNodePanel.Width - 190, 3, 174, 24);
-  fSimplifiedTree.Anchors := [akTop, akRight];
-  fSimplifiedTree.Checked := True;
-  fSimplifiedTree.OnChange := @SimplifiedTreeChange;
-  fBrowseTree := TTreeView.Create(Self);
-  fBrowseTree.Parent := lNodePanel;
-  fBrowseTree.SetBounds(16, 27, lNodePanel.Width - 32,
-    lNodePanel.Height - 142);
-  fBrowseTree.Anchors := [akLeft, akTop, akRight, akBottom];
-  fBrowseTree.ReadOnly := True;
-  fBrowseTree.OnDblClick := @BrowseTreeDblClick;
-  fBrowseTree.OnStartDrag := @BrowseTreeStartDrag;
-  AddLabel(Self, lNodePanel, 'Выбранные рабочие каналы: NodeId|имя тега',
-    16, lNodePanel.Height - 108);
-  fNodes := TMemo.Create(Self);
-  fNodes.Parent := lNodePanel;
-  fNodes.SetBounds(16, lNodePanel.Height - 88, lNodePanel.Width - 32, 80);
-  fNodes.Anchors := [akLeft, akRight, akBottom];
-  fNodes.ScrollBars := ssAutoBoth;
-  fNodes.Lines.NameValueSeparator := '|';
-  for I := 0 to AConfig.Nodes.Count - 1 do
-  begin
-    lNode := TRecorderOpcUaNode(AConfig.Nodes[I]);
-    lText := lNode.NodeId + '|' + lNode.TagName;
-    if lNode.Writable then lText := lText + '|rw';
-    fNodes.Lines.Add(lText);
-  end;
+  if lDiscardBrowseCache then
+    AddDiagnostic('Кэш дерева не подтверждён текущим Endpoint и удалён. Нажмите «Обновить дерево» для чтения текущего устройства.');
   AddDiagnostic(UTF8Encode('Готово. Endpoint: ') + AConfig.Endpoint);
   UpdateControlState;
 end;
@@ -968,10 +1110,14 @@ end;
 
 function TRecorderOpcUaEditorForm.AppendTagRow(
   AItem: TRecorderOpcUaTreeItem): Integer;
+var
+  lRecorderName: string;
 begin
   Result := fValueGrid.RowCount;
   fValueGrid.RowCount := Result + 1;
-  fValueGrid.Cells[0, Result] := AItem.TagName;
+  lRecorderName := OpcUaBrowsePathToRecorderName(AItem.BrowsePath);
+  if lRecorderName = '' then lRecorderName := AItem.TagName;
+  fValueGrid.Cells[0, Result] := lRecorderName;
   fValueGrid.Cells[1, Result] := AItem.DataTypeName;
   if AItem.ValueRank >= 0 then
     fValueGrid.Cells[1, Result] := fValueGrid.Cells[1, Result] + '[]';
@@ -987,6 +1133,7 @@ begin
   fValueGrid.Cells[9, Result] := RecorderMessageKindName(rmkInformation);
   fValueGrid.Cells[10, Result] := '-1';
   fValueGrid.Cells[11, Result] := '0';
+  fValueGrid.Cells[12, Result] := IntToStr(AItem.ValueRank);
 end;
 
 procedure TRecorderOpcUaEditorForm.BuildReadInputs(out ANodeIds,
@@ -1021,7 +1168,9 @@ begin
   fUserName.Enabled := lCredentials;
   fPassword.Enabled := lCredentials;
   fProbeButton.Enabled := lClient and (fProbeThread = nil);
+  fDiscoveryButton.Enabled := lClient and (fProbeThread = nil);
   fBrowseButton.Enabled := lClient and (fProbeThread = nil);
+  fInteractiveBrowseButton.Enabled := lClient and (fProbeThread = nil);
   fReadButton.Enabled := lClient and (fProbeThread = nil) and
     (SelectedTagCount > 0);
 end;
@@ -1040,18 +1189,30 @@ procedure TRecorderOpcUaEditorForm.SetProbeRunning(ARunning: Boolean);
 begin
   fOkButton.Enabled := not ARunning;
   fCancelButton.Enabled := not ARunning;
+  fBrowseTree.Enabled := not ARunning;
   UpdateControlState;
 end;
 
 procedure TRecorderOpcUaEditorForm.StartProbe(
-  AOperation: TRecorderOpcUaProbeOperation);
+  AOperation: TRecorderOpcUaProbeOperation;
+  const ABrowseNodeId, ABrowsePath: string);
 var
-  lRequestTimeoutSeconds, lSessionTimeoutSeconds: Integer;
+  lRequestTimeoutSeconds, lBrowseTimeoutSeconds, lSessionTimeoutSeconds: Integer;
   lTimestampsToReturn: Cardinal;
   lPassword, lUserName: string;
   lReadNodeIds, lReadTagNames: TStringList;
 begin
   if fProbeThread <> nil then Exit;
+  if AOperation = opoDiscover then
+  begin
+    AddDiagnostic('Ищу OPC UA серверы через mDNS multicast...');
+    fProbeThread := TRecorderOpcUaProbeThread.Create('', '', '', AOperation,
+      nil, nil);
+    fProbeThread.OnTerminate := @ProbeFinished;
+    SetProbeRunning(True);
+    fProbeThread.Start;
+    Exit;
+  end;
   if Trim(fEndpoint.Text) = '' then
   begin
     AddDiagnostic('Ошибка: Endpoint URL не задан.');
@@ -1072,6 +1233,8 @@ begin
   end;
   if AOperation = opoBrowse then
     AddDiagnostic(UTF8Encode('Поиск тегов: ') + Trim(fEndpoint.Text))
+  else if AOperation = opoBrowseChildren then
+    AddDiagnostic(UTF8Encode('Чтение ветки OPC UA: ') + ABrowsePath)
   else if AOperation = opoRead then
   begin
     if SelectedTagCount = 0 then
@@ -1095,12 +1258,17 @@ begin
   lRequestTimeoutSeconds := Max(1, StrToIntDef(
     fProtocolSettings.Cells[1, CProtocolRowTimeout],
     CRecorderOpcUaDefaultRequestTimeoutMs div 1000));
+  lBrowseTimeoutSeconds := Max(
+    CRecorderOpcUaMinimumBrowseTimeoutMs div 1000, StrToIntDef(
+    fProtocolSettings.Cells[1, CProtocolRowBrowseTimeout],
+    CRecorderOpcUaDefaultBrowseTimeoutMs div 1000));
+  lBrowseTimeoutSeconds := Min(86400, lBrowseTimeoutSeconds);
   if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
-    'Source') then lTimestampsToReturn := Ord(outSource)
+    'SourceTimestamp (источника)') then lTimestampsToReturn := Ord(outSource)
   else if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
-    'Both') then lTimestampsToReturn := Ord(outBoth)
+    'Both (Source приоритет)') then lTimestampsToReturn := Ord(outBoth)
   else if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
-    'Neither') then lTimestampsToReturn := Ord(outNeither)
+    'Neither (время приёма)') then lTimestampsToReturn := Ord(outNeither)
   else lTimestampsToReturn := Ord(outServer);
   try
     fProbeThread := TRecorderOpcUaProbeThread.Create(Trim(fEndpoint.Text),
@@ -1109,7 +1277,8 @@ begin
       Cardinal(Max(1, StrToIntDef(
       fProtocolSettings.Cells[1, CProtocolRowMaxBrowse],
       CRecorderOpcUaDefaultMaxNodesPerRequest))),
-      Cardinal(lRequestTimeoutSeconds) * 1000, lTimestampsToReturn);
+      Cardinal(lRequestTimeoutSeconds) * 1000, lTimestampsToReturn,
+      Cardinal(lBrowseTimeoutSeconds) * 1000, ABrowseNodeId, ABrowsePath);
   finally
     lReadTagNames.Free;
     lReadNodeIds.Free;
@@ -1124,23 +1293,124 @@ begin
   StartProbe(opoTest);
 end;
 
+procedure TRecorderOpcUaEditorForm.DiscoveryClick(Sender: TObject);
+begin
+  StartProbe(opoDiscover);
+end;
+
 procedure TRecorderOpcUaEditorForm.ProtocolSettingsSelectCell(Sender: TObject;
   ACol, ARow: Integer; var CanSelect: Boolean);
 var
   lEditable: Boolean;
 begin
-  lEditable := (ACol = 1) and (ARow in [CProtocolRowInterval,
+  lEditable := (ACol = 1) and (ARow in [CProtocolRowMode,
+    CProtocolRowInterval,
     CProtocolRowMaxRead, CProtocolRowTimestamp, CProtocolRowMaxWrite,
-    CProtocolRowMaxBrowse, CProtocolRowTimeout]);
+    CProtocolRowMaxBrowse, CProtocolRowBrowseTimeout,
+    CProtocolRowTimeout]);
   if lEditable then
     fProtocolSettings.Options := fProtocolSettings.Options + [goEditing]
   else
     fProtocolSettings.Options := fProtocolSettings.Options - [goEditing];
 end;
 
+procedure TRecorderOpcUaEditorForm.ProtocolSettingsSelectEditor(Sender: TObject;
+  ACol, ARow: Integer; var Editor: TWinControl);
+var
+  lPickList: TPickListCellEditor;
+begin
+  if (ACol <> 1) or not (ARow in [CProtocolRowMode,
+    CProtocolRowTimestamp]) then Exit;
+
+  Editor := fProtocolSettings.EditorByStyle(cbsPickList);
+  lPickList := TPickListCellEditor(Editor);
+  lPickList.Style := csDropDownList;
+  lPickList.Clear;
+  if ARow = CProtocolRowMode then
+  begin
+    lPickList.Items.Add('Read');
+    lPickList.Items.Add('Subscribe');
+  end
+  else
+  begin
+    lPickList.Items.Add('ServerTimestamp (сервера)');
+    lPickList.Items.Add('SourceTimestamp (источника)');
+    lPickList.Items.Add('Both (Source приоритет)');
+    lPickList.Items.Add('Neither (время приёма)');
+  end;
+  lPickList.ItemIndex := lPickList.Items.IndexOf(
+    fProtocolSettings.Cells[ACol, ARow]);
+end;
+
 procedure TRecorderOpcUaEditorForm.BrowseClick(Sender: TObject);
 begin
+  fInteractiveBrowse := False;
+  fInteractiveParentNodeId := '';
+  fInteractiveBrowseButton.Caption := 'Интерактивное чтение';
+  fSimplifiedTree.Enabled := True;
+  if (Trim(fEndpoint.Text) <> '') and
+    not SameText(Trim(fEndpoint.Text), fBrowseCacheEndpoint) then
+  begin
+    fBrowseCache.Clear;
+    fBrowseCacheEndpoint := Trim(fEndpoint.Text);
+    LoadBrowseLines(fBrowseCache);
+    AddDiagnostic('Адрес изменён: старый кэш OPC UA удалён перед чтением нового дерева.');
+  end;
   StartProbe(opoBrowse);
+end;
+
+procedure TRecorderOpcUaEditorForm.InteractiveBrowseClick(Sender: TObject);
+var
+  lParentNodeId, lBrowsePath: string;
+  lItem: TRecorderOpcUaTreeItem;
+begin
+  if not fInteractiveBrowse then
+  begin
+    fInteractiveBrowse := True;
+    fSimplifiedTree.Checked := False;
+    fSimplifiedTree.Enabled := False;
+    fInteractiveBrowseButton.Caption := 'Прочитать ветку';
+    if (Trim(fEndpoint.Text) <> '') and
+      not SameText(Trim(fEndpoint.Text), fBrowseCacheEndpoint) then
+    begin
+      fBrowseCache.Clear;
+      fBrowseCacheEndpoint := Trim(fEndpoint.Text);
+      AddDiagnostic('Адрес изменён: старый кэш OPC UA удалён. ' +
+        'Прочитанные ветки будут сохранены в кэш.');
+    end;
+    if fBrowseCache.Count > 0 then
+      LoadBrowseLines(fBrowseCache)
+    else
+    begin
+      fBrowseTree.Items.Clear;
+      fTreeItems.Clear;
+      RebuildBrowseTree;
+    end;
+    fInteractiveParentNodeId := CRecorderOpcUaObjectsFolderNodeId;
+    lParentNodeId := CRecorderOpcUaObjectsFolderNodeId;
+    lBrowsePath := CRecorderOpcUaObjectsFolderBrowsePath;
+    RebuildBrowseTree;
+    AddDiagnostic('Интерактивный Browse: читаю только корень Objects. ' +
+      'Выберите узел и нажмите «Прочитать ветку», чтобы загрузить его детей.');
+  end
+  else
+  begin
+    if (fBrowseTree.Selected = nil) or (fBrowseTree.Selected.Data = nil) then
+    begin
+      AddDiagnostic('Интерактивный Browse: выберите узел дерева.');
+      Exit;
+    end;
+    lItem := TRecorderOpcUaTreeItem(fBrowseTree.Selected.Data);
+    if lItem.IsProperty then
+    begin
+      AddDiagnostic('Интерактивный Browse: выбранное свойство не имеет ветки.');
+      Exit;
+    end;
+    lParentNodeId := lItem.NodeId;
+    lBrowsePath := lItem.BrowsePath;
+    fInteractiveParentNodeId := lParentNodeId;
+  end;
+  StartProbe(opoBrowseChildren, lParentNodeId, lBrowsePath);
 end;
 
 procedure TRecorderOpcUaEditorForm.ReadClick(Sender: TObject);
@@ -1386,6 +1656,10 @@ var
   end;
 begin
   if fUsedPropertiesGrid = nil then Exit;
+  fCommonNameSubstring := '';
+  fSelectedNameEdit.Text := '';
+  fSelectedNameEdit.Hint := '';
+  UpdateAddressCheckFromSelection;
   fUpdatingUsedProperties := True;
   try
     fUsedPropertiesGrid.Clean;
@@ -1432,14 +1706,12 @@ begin
           if lCommon <> '' then Break;
         end;
         if lCommon <> '' then
-          fRemoveNameSubstring.Text := lCommon + '***'
+          fCommonNameSubstring := lCommon + '***'
         else
-          fRemoveNameSubstring.Text := '***';
+          fCommonNameSubstring := '***';
       end
       else if lSelectionCount = 1 then
-        fRemoveNameSubstring.Text := lNames[0]
-      else
-        fRemoveNameSubstring.Clear;
+        fCommonNameSubstring := lNames[0];
     finally
       lNames.Free;
     end;
@@ -1449,6 +1721,8 @@ begin
     if lRow = 0 then Exit;
     lItem := FindTreeItemByNodeId(lNodeId);
     SetProperty(1, 'Имя тега Recorder', fValueGrid.Cells[0, lRow]);
+    fSelectedNameEdit.Text := fValueGrid.Cells[0, lRow];
+    fSelectedNameEdit.Hint := fSelectedNameEdit.Text;
     SetProperty(2, 'Endpoint URL', fEndpoint.Text);
     SetProperty(3, 'Строка подключения', fEndpoint.Text + ' | ' + lNodeId);
     SetProperty(4, 'NodeId', lNodeId);
@@ -1473,6 +1747,74 @@ begin
   finally
     fUpdatingUsedProperties := False;
   end;
+end;
+
+procedure TRecorderOpcUaEditorForm.UpdateAddressCheckFromSelection;
+var
+  I: Integer;
+  lAllHaveBrowsePath: Boolean;
+  lNodeIds: TStringList;
+  lRow: Integer;
+begin
+  lNodeIds := TStringList.Create;
+  try
+    lNodeIds.CaseSensitive := True;
+    lNodeIds.Sorted := True;
+    lNodeIds.Duplicates := dupIgnore;
+    for I := 0 to Integer(fUsedTree.SelectionCount) - 1 do
+      CollectUsedNodeIds(fUsedTree.Selections[I], lNodeIds);
+    if (lNodeIds.Count = 0) and (fUsedTree.Selected <> nil) then
+      CollectUsedNodeIds(fUsedTree.Selected, lNodeIds);
+
+    lAllHaveBrowsePath := lNodeIds.Count > 0;
+    for I := 0 to lNodeIds.Count - 1 do
+    begin
+      lRow := FindTagRowByNodeId(lNodeIds[I]);
+      if (lRow = 0) or not TagNameHasBrowsePath(lNodeIds[I],
+        fValueGrid.Cells[0, lRow]) then
+      begin
+        lAllHaveBrowsePath := False;
+        Break;
+      end;
+    end;
+
+    fUpdatingAddressCheck := True;
+    try
+      fAddConnectionAddressCheck.Enabled := lNodeIds.Count > 0;
+      fAddConnectionAddressCheck.Checked := lAllHaveBrowsePath;
+    finally
+      fUpdatingAddressCheck := False;
+    end;
+  finally
+    lNodeIds.Free;
+  end;
+end;
+
+function TRecorderOpcUaEditorForm.TagNameHasBrowsePath(
+  const ANodeId, ARecorderName: string): Boolean;
+var
+  lAddress, lFullAddress, lFullBrowseName, lLegacyAddress: string;
+  lItem: TRecorderOpcUaTreeItem;
+begin
+  Result := False;
+  lItem := FindTreeItemByNodeId(ANodeId);
+  lFullAddress := ANodeId;
+  lLegacyAddress := CompactOpcUaNodeAddress(ANodeId);
+  if lItem <> nil then
+  begin
+    lAddress := OpcUaBrowsePathToRecorderPrefix(lItem.BrowsePath);
+    lFullBrowseName := OpcUaBrowsePathToRecorderName(lItem.BrowsePath);
+    if lAddress <> '' then
+      Result := (Pos(lAddress + '.', ARecorderName) = 1) or
+        (Pos(lAddress + ' ', ARecorderName) = 1) or
+        (Pos(' ' + lAddress, ARecorderName) > 0);
+    if (not Result) and (lFullBrowseName <> '') then
+      Result := Pos(lFullBrowseName, ARecorderName) = 1;
+  end;
+  if (not Result) and (lFullAddress <> '') then
+    Result := Pos(lFullAddress, ARecorderName) = 1;
+  if (not Result) and (lLegacyAddress <> '') then
+    Result := Pos(lLegacyAddress, ARecorderName) = 1;
 end;
 
 procedure TRecorderOpcUaEditorForm.UsedPropertiesGridSelectCell(
@@ -1508,20 +1850,55 @@ begin
   RebuildUsedTree;
 end;
 
-procedure TRecorderOpcUaEditorForm.RemoveNameSubstringClick(Sender: TObject);
+procedure TRecorderOpcUaEditorForm.EditNamesClick(Sender: TObject);
+var
+  I, lRow: Integer;
+  lNodeIds: TStringList;
+  lFirstName, lNodeId, lInitialText, lText: string;
+  lOperation: TRecorderOpcUaNameOperation;
+  lDialog: TRecorderOpcUaNameOperationDialog;
 begin
-  ApplyNameOperationToSelected(True);
-  fUpdatingAddressCheck := True;
+  if fUsedTree.SelectionCount = 0 then Exit;
+  lFirstName := '';
+  lNodeIds := TStringList.Create;
   try
-    fAddConnectionAddressCheck.Checked := False;
+    lNodeIds.CaseSensitive := True;
+    lNodeIds.Sorted := True;
+    lNodeIds.Duplicates := dupIgnore;
+    for I := 0 to Integer(fUsedTree.SelectionCount) - 1 do
+      CollectUsedNodeIds(fUsedTree.Selections[I], lNodeIds);
+    for I := 0 to lNodeIds.Count - 1 do
+    begin
+      lNodeId := lNodeIds[I];
+      lRow := FindTagRowByNodeId(lNodeId);
+      if lRow = 0 then Continue;
+      lFirstName := fValueGrid.Cells[0, lRow];
+      Break;
+    end;
   finally
-    fUpdatingAddressCheck := False;
+    lNodeIds.Free;
   end;
-end;
-
-procedure TRecorderOpcUaEditorForm.AddNamePrefixClick(Sender: TObject);
-begin
-  ApplyNameOperationToSelected(False);
+  if lFirstName = '' then Exit;
+  lInitialText := fCommonNameSubstring;
+  if lInitialText = '' then lInitialText := '***';
+  lDialog := TRecorderOpcUaNameOperationDialog.CreateDialog(Self,
+    lFirstName, lInitialText);
+  try
+    if not lDialog.Execute(lOperation, lText) then Exit;
+  finally
+    lDialog.Free;
+  end;
+  if lText = '' then Exit;
+  ApplyNameOperationToSelected(lOperation, lText);
+  if lOperation = onoRemove then
+  begin
+    fUpdatingAddressCheck := True;
+    try
+      fAddConnectionAddressCheck.Checked := False;
+    finally
+      fUpdatingAddressCheck := False;
+    end;
+  end;
 end;
 
 function CompactOpcUaNodeAddress(const ANodeId: string): string;
@@ -1545,7 +1922,9 @@ procedure TRecorderOpcUaEditorForm.AddConnectionAddressChange(Sender: TObject);
 var
   I, lRow, lChanged: Integer;
   lNodeIds: TStringList;
-  lName, lAddress, lFullAddress, lUpdatedName: string;
+  lName, lAddress, lFullBrowseName, lLegacyAddress, lFullAddress,
+    lUpdatedName: string;
+  lTreeItem: TRecorderOpcUaTreeItem;
 begin
   if fUpdatingAddressCheck then Exit;
   lNodeIds := TStringList.Create;
@@ -1562,27 +1941,66 @@ begin
       if lRow = 0 then Continue;
       lName := fValueGrid.Cells[0, lRow];
       lFullAddress := lNodeIds[I];
-      lAddress := CompactOpcUaNodeAddress(lFullAddress);
+      lLegacyAddress := CompactOpcUaNodeAddress(lFullAddress);
+      lTreeItem := FindTreeItemByNodeId(lFullAddress);
+      if lTreeItem <> nil then
+      begin
+        lFullBrowseName := OpcUaBrowsePathToRecorderName(
+          lTreeItem.BrowsePath);
+        lAddress := OpcUaBrowsePathToRecorderPrefix(lTreeItem.BrowsePath)
+      end
+      else
+      begin
+        lFullBrowseName := '';
+        lAddress := '';
+      end;
       if fAddConnectionAddressCheck.Checked then
       begin
-        if Pos(lFullAddress, lName) > 0 then
-          lName := StringReplace(lName, lFullAddress, lAddress, [rfReplaceAll])
-        else if Pos(lAddress, lName) > 0 then
-          Continue
-        else if lName <> '' then
-          lName := lName + ' ' + lAddress
-        else
-          lName := lAddress;
+        if lAddress = '' then Continue;
+        { Remove an address stored by older versions before prefixing the
+          BrowsePath-based name. }
+        lName := StringReplace(lName, lFullAddress, '', [rfReplaceAll]);
+        if lLegacyAddress <> lFullAddress then
+          lName := StringReplace(lName, lLegacyAddress, '', [rfReplaceAll]);
+        if lFullBrowseName <> '' then
+          lName := StringReplace(lName, lFullBrowseName, '',
+            [rfReplaceAll]);
+        lName := Trim(lName);
+        while (lName <> '') and (lName[1] = '.') do Delete(lName, 1, 1);
+        while (lName <> '') and (lName[Length(lName)] = '.') do
+          Delete(lName, Length(lName), 1);
+        if Copy(lName, 1, Length(lAddress)) <> lAddress then
+        begin
+          if lName <> '' then lName := lAddress + '.' + lName
+          else lName := lAddress;
+        end;
+        if lName = fValueGrid.Cells[0, lRow] then Continue;
         fValueGrid.Cells[0, lRow] := lName;
       end
       else
       begin
-        lUpdatedName := StringReplace(lName, lAddress, '', [rfReplaceAll]);
-        if lFullAddress <> lAddress then
-          lUpdatedName := StringReplace(lUpdatedName, lFullAddress, '',
+        lUpdatedName := lName;
+        if lAddress <> '' then
+          lUpdatedName := StringReplace(lUpdatedName, lAddress, '',
             [rfReplaceAll]);
+        if lFullBrowseName <> '' then
+          lUpdatedName := StringReplace(lUpdatedName, lFullBrowseName, '',
+            [rfReplaceAll]);
+        lUpdatedName := StringReplace(lUpdatedName, lFullAddress, '',
+          [rfReplaceAll]);
+        if lLegacyAddress <> lFullAddress then
+          lUpdatedName := StringReplace(lUpdatedName, lLegacyAddress, '',
+            [rfReplaceAll]);
+        lUpdatedName := Trim(lUpdatedName);
+        while (lUpdatedName <> '') and (lUpdatedName[1] = '.') do
+          Delete(lUpdatedName, 1, 1);
+        while (lUpdatedName <> '') and
+          (lUpdatedName[Length(lUpdatedName)] = '.') do
+          Delete(lUpdatedName, Length(lUpdatedName), 1);
         if lUpdatedName = lName then Continue;
-        fValueGrid.Cells[0, lRow] := Trim(lUpdatedName);
+        if (lUpdatedName = '') and (lTreeItem <> nil) then
+          lUpdatedName := lTreeItem.TagName;
+        fValueGrid.Cells[0, lRow] := lUpdatedName;
       end;
       Inc(lChanged);
     end;
@@ -1591,30 +2009,20 @@ begin
   end;
   RebuildUsedTree;
   if fAddConnectionAddressCheck.Checked then
-    AddDiagnostic(Format('Адрес добавлен в имена тегов: %d', [lChanged]))
+    AddDiagnostic(Format('Browse path добавлен в имена тегов: %d', [lChanged]))
   else
-    AddDiagnostic(Format('Адрес удалён из имён тегов: %d', [lChanged]));
+    AddDiagnostic(Format('Browse path удалён из имён тегов: %d', [lChanged]));
 end;
 
 procedure TRecorderOpcUaEditorForm.ApplyNameOperationToSelected(
-  ARemove: Boolean);
+  AOperation: TRecorderOpcUaNameOperation; const AText: string);
 var
   I, lRow, lChanged: Integer;
   lNodeIds: TStringList;
-  lReplacement, lNeedle, lName: string;
+  lName, lUpdatedName: string;
 begin
   if fUsedTree.SelectionCount = 0 then Exit;
-  lReplacement := Trim(fRemoveNameSubstring.Text);
-  lNeedle := lReplacement;
-  if lNeedle = '' then Exit;
-  if (Length(lNeedle) >= 3) and
-    (Copy(lNeedle, Length(lNeedle) - 2, 3) = '***') then
-  begin
-    Delete(lNeedle, Length(lNeedle) - 2, 3);
-    if not ARemove then
-      Delete(lReplacement, Length(lReplacement) - 2, 3);
-  end;
-  if lNeedle = '' then Exit;
+  if Trim(AText) = '' then Exit;
   lNodeIds := TStringList.Create;
   try
     lNodeIds.CaseSensitive := True;
@@ -1628,20 +2036,27 @@ begin
       lRow := FindTagRowByNodeId(lNodeIds[I]);
       if lRow = 0 then Continue;
       lName := fValueGrid.Cells[0, lRow];
-      if Pos(lNeedle, lName) = 0 then Continue;
-      if ARemove then
-        fValueGrid.Cells[0, lRow] := StringReplace(lName, lNeedle, '',
-          [rfReplaceAll])
+      if AOperation = onoRemove then
+        lUpdatedName := StripOuterNameDots(
+          StringReplace(lName, AText, '', [rfReplaceAll]))
+      else if Copy(lName, 1, Length(AText)) <> AText then
+        lUpdatedName := AText + lName
       else
-        fValueGrid.Cells[0, lRow] := StringReplace(lName, lNeedle,
-          lReplacement, [rfReplaceAll]);
+        lUpdatedName := lName;
+      if lUpdatedName = lName then Continue;
+      fValueGrid.Cells[0, lRow] := lUpdatedName;
       Inc(lChanged);
     end;
   finally
     lNodeIds.Free;
   end;
   RebuildUsedTree;
-  AddDiagnostic(Format('Изменено имён Recorder: %d', [lChanged]));
+  if AOperation = onoRemove then
+    AddDiagnostic(Format('Удалена подстрока в именах Recorder: %d',
+      [lChanged]))
+  else
+    AddDiagnostic(Format('Добавлен префикс к именам Recorder: %d',
+      [lChanged]));
 end;
 
 procedure TRecorderOpcUaEditorForm.RemoveSelectedUsedChannels;
@@ -1847,6 +2262,7 @@ end;
 procedure TRecorderOpcUaEditorForm.BuildSelectedUsableTreeItems(AItems: TList);
 var
   I: Integer;
+  lNode: TTreeNode;
   lNodeIds: TStringList;
 begin
   if AItems = nil then Exit;
@@ -1856,8 +2272,12 @@ begin
     lNodeIds.CaseSensitive := True;
     lNodeIds.Sorted := True;
     lNodeIds.Duplicates := dupIgnore;
-    for I := 0 to Integer(fBrowseTree.SelectionCount) - 1 do
-      CollectUsableTreeItems(fBrowseTree.Selections[I], AItems, lNodeIds);
+    for I := 0 to fBrowseTree.Items.Count - 1 do
+    begin
+      lNode := fBrowseTree.Items[I];
+      if lNode.Selected then
+        CollectUsableTreeItems(lNode, AItems, lNodeIds);
+    end;
   finally
     lNodeIds.Free;
   end;
@@ -1927,10 +2347,14 @@ end;
 function TRecorderOpcUaEditorForm.SelectionContainsUsableItem: Boolean;
 var
   I: Integer;
+  lNode: TTreeNode;
 begin
   Result := False;
-  for I := 0 to Integer(fBrowseTree.SelectionCount) - 1 do
-    if TreeNodeContainsUsableItem(fBrowseTree.Selections[I]) then Exit(True);
+  for I := 0 to fBrowseTree.Items.Count - 1 do
+  begin
+    lNode := fBrowseTree.Items[I];
+    if lNode.Selected and TreeNodeContainsUsableItem(lNode) then Exit(True);
+  end;
 end;
 
 procedure TRecorderOpcUaEditorForm.BrowseTreeDblClick(Sender: TObject);
@@ -2120,28 +2544,113 @@ procedure TRecorderOpcUaEditorForm.LoadBrowseLines(ALines: TStrings);
 var
   I: Integer;
   lFields: TStringList;
+  lSelectedNodeIds: TStringList;
 begin
-  fTreeItems.Clear;
-  if ALines = nil then Exit;
+  lSelectedNodeIds := TStringList.Create;
   lFields := TStringList.Create;
   try
+    CaptureBrowseSelection(lSelectedNodeIds);
+    fBrowseTree.Items.BeginUpdate;
+    try
+      fBrowseTree.Items.Clear;
+    finally
+      fBrowseTree.Items.EndUpdate;
+    end;
+    fTreeItems.Clear;
+    lFields.Delimiter := #9;
+    lFields.StrictDelimiter := True;
+    if ALines <> nil then
+      for I := 0 to ALines.Count - 1 do
+      begin
+        lFields.DelimitedText := ALines[I];
+        if lFields.Count >= 6 then
+          fTreeItems.Add(CreateTreeItem(lFields));
+      end;
+    LinkIndexedArrayItems;
+    RebuildBrowseTree(lSelectedNodeIds);
+  finally
+    lFields.Free;
+    lSelectedNodeIds.Free;
+  end;
+  RebuildUsedTree;
+  if (ALines <> nil) and (ALines.Count > 0) then
+    AddDiagnostic(Format('Загружено сохранённое дерево OPC UA: %d узлов. ' +
+      'Для повторного чтения нажмите «Обновить дерево».', [ALines.Count]));
+end;
+
+procedure TRecorderOpcUaEditorForm.AppendBrowseLines(ALines: TStrings);
+var
+  I: Integer;
+  lFields: TStringList;
+  lKnownNodeIds: TStringList;
+  lAdded: Integer;
+  lItem: TRecorderOpcUaTreeItem;
+begin
+  if ALines = nil then Exit;
+  lFields := TStringList.Create;
+  lKnownNodeIds := TStringList.Create;
+  lAdded := 0;
+  try
+    lKnownNodeIds.CaseSensitive := True;
+    lKnownNodeIds.Sorted := True;
+    lKnownNodeIds.Duplicates := dupIgnore;
+    for I := 0 to fTreeItems.Count - 1 do
+      lKnownNodeIds.Add(TRecorderOpcUaTreeItem(fTreeItems[I]).NodeId);
     lFields.Delimiter := #9;
     lFields.StrictDelimiter := True;
     for I := 0 to ALines.Count - 1 do
     begin
       lFields.DelimitedText := ALines[I];
-      if lFields.Count >= 6 then
-        fTreeItems.Add(CreateTreeItem(lFields));
+      if lFields.Count < 6 then Continue;
+      if lKnownNodeIds.IndexOf(lFields[0]) >= 0 then Continue;
+      lItem := CreateTreeItem(lFields);
+      fTreeItems.Add(lItem);
+      lKnownNodeIds.Add(lItem.NodeId);
+      Inc(lAdded);
     end;
   finally
+    lKnownNodeIds.Free;
     lFields.Free;
   end;
   LinkIndexedArrayItems;
   RebuildBrowseTree;
-  RebuildUsedTree;
-  if ALines.Count > 0 then
-    AddDiagnostic(Format('Загружено сохранённое дерево OPC UA: %d узлов. ' +
-      'Для повторного чтения нажмите «Обновить дерево».', [ALines.Count]));
+  AddDiagnostic(Format('Интерактивный Browse: добавлено узлов %d; всего в сессии %d.',
+    [lAdded, fTreeItems.Count]));
+end;
+
+procedure TRecorderOpcUaEditorForm.AppendBrowseCacheLines(ALines: TStrings);
+var
+  I, J, lTabPos: Integer;
+  lNodeId: string;
+  lNewFields: TStringList;
+  lFound: Boolean;
+begin
+  if ALines = nil then Exit;
+  lNewFields := TStringList.Create;
+  try
+    lNewFields.Delimiter := #9;
+    lNewFields.StrictDelimiter := True;
+    for I := 0 to ALines.Count - 1 do
+    begin
+      lNewFields.DelimitedText := ALines[I];
+      if lNewFields.Count < 6 then Continue;
+      lNodeId := lNewFields[0];
+      lFound := False;
+      for J := 0 to fBrowseCache.Count - 1 do
+      begin
+        lTabPos := Pos(#9, fBrowseCache[J]);
+        if lTabPos = 0 then Continue;
+        if Copy(fBrowseCache[J], 1, lTabPos - 1) <> lNodeId then Continue;
+        fBrowseCache[J] := ALines[I];
+        lFound := True;
+        Break;
+      end;
+      if not lFound then fBrowseCache.Add(ALines[I]);
+    end;
+    fBrowseCacheEndpoint := Trim(fEndpoint.Text);
+  finally
+    lNewFields.Free;
+  end;
 end;
 
 function OfflineNodeName(const ANodeId, ARecorderName: string): string;
@@ -2160,25 +2669,33 @@ var
   I: Integer;
   lAccess: string;
   lItem: TRecorderOpcUaTreeItem;
+  lSelectedNodeIds: TStringList;
 begin
-  fTreeItems.Clear;
-  for I := 1 to fValueGrid.RowCount - 1 do
-  begin
-    if Trim(fValueGrid.Cells[3, I]) = '' then Continue;
-    lItem := TRecorderOpcUaTreeItem.Create;
-    lItem.NodeId := fValueGrid.Cells[3, I];
-    lItem.TagName := OfflineNodeName(lItem.NodeId, fValueGrid.Cells[0, I]);
-    lItem.BrowsePath := 'Сохранённые используемые каналы/' + lItem.TagName;
-    lItem.DataTypeNodeId := fValueGrid.Cells[7, I];
-    lItem.DataTypeName := lItem.DataTypeNodeId;
-    if lItem.DataTypeName = '' then lItem.DataTypeName := 'Неизвестный';
-    lAccess := fValueGrid.Cells[2, I];
-    lItem.Readable := Pos('Чтение', lAccess) > 0;
-    lItem.Writable := Pos('запись', UTF8LowerCase(lAccess)) > 0;
-    lItem.NodeClass := 2;
-    fTreeItems.Add(lItem);
+  lSelectedNodeIds := TStringList.Create;
+  try
+    CaptureBrowseSelection(lSelectedNodeIds);
+    fBrowseTree.Items.Clear;
+    fTreeItems.Clear;
+    for I := 1 to fValueGrid.RowCount - 1 do
+    begin
+      if Trim(fValueGrid.Cells[3, I]) = '' then Continue;
+      lItem := TRecorderOpcUaTreeItem.Create;
+      lItem.NodeId := fValueGrid.Cells[3, I];
+      lItem.TagName := OfflineNodeName(lItem.NodeId, fValueGrid.Cells[0, I]);
+      lItem.BrowsePath := 'Сохранённые используемые каналы/' + lItem.TagName;
+      lItem.DataTypeNodeId := fValueGrid.Cells[7, I];
+      lItem.DataTypeName := lItem.DataTypeNodeId;
+      if lItem.DataTypeName = '' then lItem.DataTypeName := 'Неизвестный';
+      lAccess := fValueGrid.Cells[2, I];
+      lItem.Readable := Pos('Чтение', lAccess) > 0;
+      lItem.Writable := Pos('запись', UTF8LowerCase(lAccess)) > 0;
+      lItem.NodeClass := 2;
+      fTreeItems.Add(lItem);
+    end;
+    RebuildBrowseTree(lSelectedNodeIds);
+  finally
+    lSelectedNodeIds.Free;
   end;
-  RebuildBrowseTree;
   if fTreeItems.Count > 0 then
     AddDiagnostic(Format('Полный Browse-кэш отсутствует. Восстановлены ' +
       '%d используемых каналов из конфигурации. Для полного дерева ' +
@@ -2471,20 +2988,45 @@ begin
       TRecorderOpcUaEditorForm(ATree.Owner).fTreeSearch.Text);
 end;
 
-procedure TRecorderOpcUaEditorForm.RebuildBrowseTree;
+procedure TRecorderOpcUaEditorForm.CaptureBrowseSelection(ANodeIds: TStrings);
+var
+  I: Integer;
+  lNode: TTreeNode;
+  lItem: TRecorderOpcUaTreeItem;
+begin
+  if (ANodeIds = nil) or (fBrowseTree = nil) then Exit;
+  for I := 0 to fBrowseTree.Items.Count - 1 do
+  begin
+    lNode := fBrowseTree.Items[I];
+    if (lNode = nil) or not lNode.Selected or (lNode.Data = nil) then Continue;
+    lItem := TRecorderOpcUaTreeItem(lNode.Data);
+    if (lItem <> nil) and (lItem.NodeId <> '') and
+      (ANodeIds.IndexOf(lItem.NodeId) < 0) then
+      ANodeIds.Add(lItem.NodeId);
+  end;
+end;
+
+procedure TRecorderOpcUaEditorForm.RebuildBrowseTree(
+  ASelectedNodeIds: TStrings);
 var
   I: Integer;
   lItem: TRecorderOpcUaTreeItem;
   lSelectedNodeIds: TStringList;
+  lOwnSelectionList: Boolean;
 begin
-  lSelectedNodeIds := TStringList.Create;
+  lOwnSelectionList := ASelectedNodeIds = nil;
+  if lOwnSelectionList then
+  begin
+    lSelectedNodeIds := TStringList.Create;
+    ASelectedNodeIds := lSelectedNodeIds;
+  end
+  else
+    lSelectedNodeIds := nil;
   try
-    lSelectedNodeIds.CaseSensitive := True;
-    for I := 0 to Integer(fBrowseTree.SelectionCount) - 1 do
-      if (fBrowseTree.Selections[I] <> nil) and
-        (fBrowseTree.Selections[I].Data <> nil) then
-        lSelectedNodeIds.Add(
-          TRecorderOpcUaTreeItem(fBrowseTree.Selections[I].Data).NodeId);
+    if lOwnSelectionList then
+    begin
+      CaptureBrowseSelection(ASelectedNodeIds);
+    end;
     fBrowseTree.Items.BeginUpdate;
     try
       fBrowseTree.Items.Clear;
@@ -2520,11 +3062,11 @@ begin
     begin
       lItem := TRecorderOpcUaTreeItem(fTreeItems[I]);
       if (lItem.TreeNode <> nil) and
-        (lSelectedNodeIds.IndexOf(lItem.NodeId) >= 0) then
+        (ASelectedNodeIds.IndexOf(lItem.NodeId) >= 0) then
         lItem.TreeNode.Selected := True;
     end;
   finally
-    lSelectedNodeIds.Free;
+    if lOwnSelectionList then lSelectedNodeIds.Free;
   end;
 end;
 
@@ -2580,6 +3122,7 @@ begin
         if lItem.ValueRank >= 0 then
           fValueGrid.Cells[1, J] := fValueGrid.Cells[1, J] + '[]';
         fValueGrid.Cells[7, J] := lItem.DataTypeNodeId;
+        fValueGrid.Cells[12, J] := IntToStr(lItem.ValueRank);
         lNode := lItem.TreeNode;
         while lNode <> nil do
         begin
@@ -2606,59 +3149,100 @@ var
   I, J, lRow: Integer;
   lFields: TStringList;
   lItem: TRecorderOpcUaTreeItem;
+  lEndpoint: string;
 begin
   if fProbeThread = nil then Exit;
   if fProbeThread.Succeeded then
   begin
-    if fProbeThread.Operation = opoBrowse then
+    if fProbeThread.Operation = opoDiscover then
     begin
-      fBrowseCache.Assign(fProbeThread.Lines);
-      LoadBrowseLines(fBrowseCache);
-      AddDiagnostic(Format('Найдено узлов: %d; выберите рабочие двойным щелчком; %d мс.',
+      AddDiagnostic(Format('Найдено OPC UA серверов: %d; %d мс.',
         [fProbeThread.Lines.Count, fProbeThread.ElapsedMs]));
-    end
-    else if fProbeThread.Operation = opoRead then
-    begin
-      lFields := TStringList.Create;
-      try
-        lFields.Delimiter := #9;
-        lFields.StrictDelimiter := True;
-        for I := 0 to fProbeThread.Lines.Count - 1 do
-        begin
-          lFields.DelimitedText := fProbeThread.Lines[I];
-          if lFields.Count < 5 then Continue;
-          lRow := 0;
-          for J := 1 to fValueGrid.RowCount - 1 do
-            if fValueGrid.Cells[3, J] = lFields[1] then
-            begin
-              lRow := J;
-              Break;
-            end;
-          if lRow = 0 then Continue;
-          fValueGrid.Cells[4, lRow] := lFields[2];
-          fValueGrid.Cells[5, lRow] := lFields[3];
-          fValueGrid.Cells[6, lRow] := lFields[4];
-          lItem := FindTreeItemByNodeId(lFields[1]);
-          if lItem <> nil then
-          begin
-            lItem.ValueText := lFields[2];
-            lItem.ValueTimestamp := lFields[4];
-          end;
-        end;
-      finally
-        lFields.Free;
+      lEndpoint := SelectDiscoveredOpcUaEndpoint(Self, fProbeThread.Lines);
+      if lEndpoint <> '' then
+      begin
+        fEndpoint.Text := lEndpoint;
+        AddDiagnostic('Выбран Endpoint: ' + lEndpoint);
       end;
-      AddDiagnostic(Format('Прочитано значений: %d; %d мс.',
-        [fProbeThread.Lines.Count, fProbeThread.ElapsedMs]));
-      ShowSelectedNodeProperties;
     end
     else
-      AddDiagnostic(Format('Соединение установлено; %d мс.',
-        [fProbeThread.ElapsedMs]));
+    begin
+      RecorderHardwareClearSourceOffline(RecorderOpcUaSourceId(
+        Trim(fEndpoint.Text), oumClient));
+      if fSourceId <> '' then
+        RecorderHardwareClearSourceOffline(fSourceId);
+      if fProbeThread.Operation = opoBrowse then
+      begin
+        fBrowseCache.Assign(fProbeThread.Lines);
+        fBrowseCacheEndpoint := Trim(fEndpoint.Text);
+        LoadBrowseLines(fBrowseCache);
+        AddDiagnostic(Format('Browse завершён: Endpoint %s; узлов %d; %d мс.',
+          [fBrowseCacheEndpoint, fProbeThread.Lines.Count,
+           fProbeThread.ElapsedMs]));
+      end
+      else if fProbeThread.Operation = opoBrowseChildren then
+      begin
+        AppendBrowseCacheLines(fProbeThread.Lines);
+        AppendBrowseLines(fProbeThread.Lines);
+        lItem := FindTreeItemByNodeId(fInteractiveParentNodeId);
+        if (lItem <> nil) and (lItem.TreeNode <> nil) then
+          lItem.TreeNode.Selected := True;
+        AddDiagnostic(Format('Ветка прочитана: %s; детей %d; %d мс.',
+          [fInteractiveParentNodeId, fProbeThread.Lines.Count,
+           fProbeThread.ElapsedMs]));
+      end
+      else if fProbeThread.Operation = opoRead then
+      begin
+        lFields := TStringList.Create;
+        try
+          lFields.Delimiter := #9;
+          lFields.StrictDelimiter := True;
+          for I := 0 to fProbeThread.Lines.Count - 1 do
+          begin
+            lFields.DelimitedText := fProbeThread.Lines[I];
+            if lFields.Count < 5 then Continue;
+            lRow := 0;
+            for J := 1 to fValueGrid.RowCount - 1 do
+              if fValueGrid.Cells[3, J] = lFields[1] then
+              begin
+                lRow := J;
+                Break;
+              end;
+            if lRow = 0 then Continue;
+            fValueGrid.Cells[4, lRow] := lFields[2];
+            fValueGrid.Cells[5, lRow] := lFields[3];
+            fValueGrid.Cells[6, lRow] := lFields[4];
+            lItem := FindTreeItemByNodeId(lFields[1]);
+            if lItem <> nil then
+            begin
+              lItem.ValueText := lFields[2];
+              lItem.ValueTimestamp := lFields[4];
+            end;
+          end;
+        finally
+          lFields.Free;
+        end;
+        AddDiagnostic(Format('Прочитано значений: %d; %d мс.',
+          [fProbeThread.Lines.Count, fProbeThread.ElapsedMs]));
+        ShowSelectedNodeProperties;
+      end
+      else
+        AddDiagnostic(Format('Соединение установлено; %d мс.',
+          [fProbeThread.ElapsedMs]));
+    end;
   end
   else
   begin
-    if fProbeThread.ErrorText = '' then
+    if fProbeThread.Operation = opoDiscover then
+      AddDiagnostic(UTF8Encode('Поиск OPC UA: ') + fProbeThread.ErrorText)
+    else if fProbeThread.Operation = opoBrowse then
+      AddDiagnostic(Format('Browse не выполнен: Endpoint %s; кэш этого адреса содержит %d узлов; %s',
+        [Trim(fProbeThread.fEndpoint), fBrowseCache.Count,
+         fProbeThread.ErrorText]))
+    else if fProbeThread.Operation = opoBrowseChildren then
+      AddDiagnostic(Format('Чтение ветки не выполнено: %s; %s',
+        [fInteractiveParentNodeId, fProbeThread.ErrorText]))
+    else if fProbeThread.ErrorText = '' then
       AddDiagnostic('Ошибка: операция OPC UA завершилась без диагностики')
     else
       AddDiagnostic(UTF8Encode('Ошибка: ') + fProbeThread.ErrorText);
@@ -2725,31 +3309,42 @@ begin
     CRecorderOpcUaDefaultMaxNodesPerRequest);
   AConfig.MaxNodesPerBrowse := Cardinal(Max(1, lValue));
   lValue := StrToIntDef(
+    fProtocolSettings.Cells[1, CProtocolRowBrowseTimeout],
+    CRecorderOpcUaDefaultBrowseTimeoutMs div 1000);
+  lValue := EnsureRange(lValue,
+    Integer(CRecorderOpcUaMinimumBrowseTimeoutMs div 1000), 86400);
+  AConfig.BrowseTimeoutMs := Cardinal(lValue) * 1000;
+  lValue := StrToIntDef(
     fProtocolSettings.Cells[1, CProtocolRowTimeout],
     CRecorderOpcUaDefaultRequestTimeoutMs div 1000);
   AConfig.RequestTimeoutMs := Cardinal(Max(1, lValue)) * 1000;
   if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
-    'Source') then
+    'SourceTimestamp (источника)') then
     AConfig.TimestampMode := outSource
   else if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
-    'Both') then
+    'Both (Source приоритет)') then
     AConfig.TimestampMode := outBoth
   else if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowTimestamp]),
-    'Neither') then
+    'Neither (время приёма)') then
     AConfig.TimestampMode := outNeither
   else
     AConfig.TimestampMode := outServer;
-  AConfig.PollingType := ouptRead;
+  if SameText(Trim(fProtocolSettings.Cells[1, CProtocolRowMode]),
+    'Subscribe') then
+    AConfig.PollingType := ouptSubscription
+  else
+    AConfig.PollingType := ouptRead;
   AConfig.ArchiveEnabled := False;
   AConfig.SimplifiedTree := fSimplifiedTree.Checked;
   AConfig.BrowseCache.Assign(fBrowseCache);
+  AConfig.BrowseCacheEndpoint := fBrowseCacheEndpoint;
   AConfig.Nodes.Clear;
   for I := 1 to fValueGrid.RowCount - 1 do
   begin
     if Trim(fValueGrid.Cells[3, I]) = '' then Continue;
     lNode := AConfig.AddNode(Trim(fValueGrid.Cells[3, I]),
       Trim(fValueGrid.Cells[0, I]), False, True,
-      Trim(fValueGrid.Cells[7, I]));
+      Trim(fValueGrid.Cells[7, I]), StrToIntDef(fValueGrid.Cells[12, I], -1));
     lNode.Readable := not SameText(fValueGrid.Cells[2, I], 'Только запись');
     lNode.Writable := SameText(fValueGrid.Cells[2, I], 'Чтение и запись') or
       SameText(fValueGrid.Cells[2, I], 'Только запись');

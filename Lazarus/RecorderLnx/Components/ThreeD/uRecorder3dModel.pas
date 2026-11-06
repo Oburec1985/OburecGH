@@ -40,6 +40,7 @@ type
     Visualization: TRecorderPointVisualization;
     PointNumber: Integer;
     MarkerSizePixels: Double;
+    IntensityLogScale: Boolean;
     IntensitySource: TRecorderIntensitySource;
     BandRms,GradientEnabled:Boolean;
     BandTolerancePercent:Double;
@@ -72,6 +73,7 @@ type
     Visualization: TRecorderPointVisualization;
     PointNumber: Integer;
     MarkerSizePixels: Double;
+    IntensityLogScale: Boolean;
     IntensitySource: TRecorderIntensitySource;
     BandRms,GradientEnabled:Boolean;
     BandTolerancePercent:Double;
@@ -712,6 +714,7 @@ begin
     TargetFrf.Visualization:=SourceFrf.Visualization;
     TargetFrf.PointNumber:=SourceFrf.PointNumber;
     TargetFrf.MarkerSizePixels:=SourceFrf.MarkerSizePixels;
+    TargetFrf.IntensityLogScale:=SourceFrf.IntensityLogScale;
     TargetFrf.IntensitySource:=SourceFrf.IntensitySource;
     TargetFrf.BandRms:=SourceFrf.BandRms;
     TargetFrf.BandTolerancePercent:=SourceFrf.BandTolerancePercent;
@@ -1278,6 +1281,7 @@ begin
       Binding.Visualization := ASpecs[I].Visualization;
       Binding.PointNumber := ASpecs[I].PointNumber;
       Binding.MarkerSizePixels := ASpecs[I].MarkerSizePixels;
+      Binding.IntensityLogScale := ASpecs[I].IntensityLogScale;
       Binding.IntensitySource := ASpecs[I].IntensitySource;
       Binding.BandRms := ASpecs[I].BandRms;
       Binding.BandTolerancePercent := ASpecs[I].BandTolerancePercent;

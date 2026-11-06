@@ -35,6 +35,12 @@ type
     MissingRows: Integer;
   end;
 
+  TRecorderTableChannelGroup = record
+    Name: string;
+    GroupPath: string;
+  end;
+  TRecorderTableChannelGroups = array of TRecorderTableChannelGroup;
+
 procedure RecorderTagTableExchangeResultInit(
   out AResult: TRecorderTagTableExchangeResult);
 procedure RecorderTagTableExchangeResultDone(
@@ -52,11 +58,13 @@ procedure ReadRecorderSqlSelectionFromTable(ARegistry: TRecorderTagRegistry;
 procedure ReadRecorderSqlSignalNamesFromTable(const AFileName: string;
   ASelectedNames, APresentNames: TStrings;
   out AResult: TRecorderSqlSelectionTableResult);
+procedure ReadRecorderChannelGroupsFromTable(const AFileName: string;
+  out AItems: TRecorderTableChannelGroups);
 
 implementation
 
 uses
-  Math, StrUtils,
+  Math, StrUtils, LazFileUtils,
   fpspreadsheet, fpstypes, fpsopendocument, fpscsv, xlsxooxml,
   uRecorderSdbStore, uRecorderSdbTypes;
 
@@ -1250,6 +1258,52 @@ begin
     end;
   finally
     lTagLookup.Free;
+    lBook.Free;
+  end;
+end;
+
+procedure ReadRecorderChannelGroupsFromTable(const AFileName: string;
+  out AItems: TRecorderTableChannelGroups);
+var
+  lBook: TsWorkbook;
+  lSheet: TsWorksheet;
+  lMap: TTagTableColumnMap;
+  lRow, lLast: Cardinal;
+  lName, lGroup, lSqlText: string;
+  lCount: Integer;
+  lSqlEnabled: Boolean;
+begin
+  SetLength(AItems, 0);
+  lBook := TsWorkbook.Create;
+  try
+    { ODS/XLSX readers in the bundled fpspreadsheet can unpack a file by name,
+      but deliberately do not implement ReadFromStream. }
+    lBook.ReadFromFile(AFileName, TableFormatByFileName(AFileName));
+    if lBook.GetWorksheetCount = 0 then
+      raise ERecorderTagError.Create('Таблица не содержит листов');
+    lSheet := lBook.GetWorksheetByIndex(0);
+    BuildColumnMap(lSheet, False, lMap);
+    if lMap[CColName] < 0 then
+      raise ERecorderTagError.Create('Не найдена колонка имени канала');
+    if lMap[CColSqlRecord] < 0 then
+      raise ERecorderTagError.Create('Не найдена колонка SQLdb/Запись SQL');
+    if lMap[CColGroupPath] < 0 then
+      raise ERecorderTagError.Create('Не найдена колонка группы');
+    lLast := lSheet.GetLastRowIndex(True);
+    for lRow := 1 to lLast do
+    begin
+      lName := Trim(ReadMappedCell(lSheet, lMap, CColName, lRow));
+      lGroup := Trim(ReadMappedCell(lSheet, lMap, CColGroupPath, lRow));
+      lSqlText := ReadMappedCell(lSheet, lMap, CColSqlRecord, lRow);
+      if not (TryParseBoolValue(lSqlText, lSqlEnabled) and lSqlEnabled) then
+        Continue;
+      if (lName = '') or (lGroup = '') then Continue;
+      lCount := Length(AItems);
+      SetLength(AItems, lCount + 1);
+      AItems[lCount].Name := lName;
+      AItems[lCount].GroupPath := lGroup;
+    end;
+  finally
     lBook.Free;
   end;
 end;

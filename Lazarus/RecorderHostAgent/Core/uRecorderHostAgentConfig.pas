@@ -12,6 +12,7 @@ type
     RecorderPath: string;
     AllowShutdown: Boolean;
     ApiToken: string;
+    BackupMeraRoot: string;
     constructor Create;
     procedure Load(const AFileName: string);
     procedure Save(const AFileName: string);
@@ -29,6 +30,7 @@ begin
     {$ifdef windows}'RecorderLnx.exe'{$else}'RecorderLnx'{$endif};
   AllowShutdown := False;
   ApiToken := '';
+  BackupMeraRoot := '/srv/recorderlnx/MeraFiles';
 end;
 
 procedure TRecorderHostAgentConfig.Load(const AFileName: string);
@@ -49,6 +51,7 @@ begin
         {$ifdef windows}'RecorderLnx.exe'{$else}'RecorderLnx'{$endif};
     AllowShutdown := lIni.ReadBool('agent', 'allow_shutdown', AllowShutdown);
     ApiToken := lIni.ReadString('agent', 'api_token', ApiToken);
+    BackupMeraRoot := lIni.ReadString('agent', 'backup_mera_root', BackupMeraRoot);
   finally
     lIni.Free;
   end;
@@ -64,6 +67,7 @@ begin
     lIni.WriteString('agent', 'recorder_path', RecorderPath);
     lIni.WriteBool('agent', 'allow_shutdown', AllowShutdown);
     lIni.WriteString('agent', 'api_token', ApiToken);
+    lIni.WriteString('agent', 'backup_mera_root', BackupMeraRoot);
     lIni.UpdateFile;
   finally
     lIni.Free;

@@ -12,7 +12,7 @@ function ExecuteLegacySetup(const Section: string; Args: TStrings;
 
 implementation
 
-uses SysUtils, Process, fpjson
+uses SysUtils, Process, fpjson, uLinuxSetupManagerShareConfig
   {$IFDEF UNIX}, BaseUnix{$ENDIF};
 
 const
@@ -22,19 +22,25 @@ const
   CWolService = '/etc/systemd/system/recorderlnx-wol.service';
   CSmbSettings = '/etc/recorderlnx/smb-server.conf';
 
-function PublishedUsers: string;
+function PublishedUsers(out AUser, AError: string): Boolean;
 var lSettings: TStringList;
 begin
-  Result := '@sambashare';
+  Result := True;
+  AUser := '';
+  AError := '';
   if not FileExists(CSmbSettings) then Exit;
   lSettings := TStringList.Create;
   try
     try
       lSettings.LoadFromFile(CSmbSettings);
       if Trim(lSettings.Values['User']) <> '' then
-        Result := Trim(lSettings.Values['User']);
+        AUser := Trim(lSettings.Values['User']);
     except
-      Result := '@sambashare';
+      on E: Exception do
+      begin
+        Result := False;
+        AError := 'Не удалось прочитать настройки пользователя Samba: ' + E.Message;
+      end;
     end;
   finally
     lSettings.Free;
@@ -535,37 +541,22 @@ begin
 end;
 
 function ManagedShareList(out Output: string): Integer;
-var Lines: TStringList; Items: TJSONArray; Item: TJSONObject;
-    I, J, First, Last: Integer; Name: string; Writable: Boolean;
+var lRaw, lFstab: TStringList; lItems: TJSONArray; lEffective: string;
 begin
   Result := 1;
-  Lines := TStringList.Create;
-  Items := TJSONArray.Create;
+  // testparm resolves includes and inherited defaults; marker comments determine
+  // ownership/editing policy only, never visibility of an existing Samba share.
+  if not Run('/usr/bin/testparm', ['-s'], lEffective) then
+  begin Output := 'Не удалось прочитать конфигурацию Samba: ' + Trim(lEffective); Exit; end;
+  lRaw := TStringList.Create;
+  lFstab := TStringList.Create;
   try
-    Lines.LoadFromFile('/etc/samba/smb.conf');
-    for I := 0 to Lines.Count - 1 do
-    begin
-      if Pos('# RECORDERLNX-SHARE-', Trim(Lines[I])) <> 1 then Continue;
-      Name := Trim(Lines[I]);
-      Name := Copy(Name, Length('# RECORDERLNX-SHARE-') + 1, MaxInt);
-      if Copy(Name, Length(Name) - 5, 6) <> '-BEGIN' then Continue;
-      SetLength(Name, Length(Name) - 6);
-      if not SafeToken(Name) or
-         not ManagedShareRange(Lines, Name, First, Last) then Continue;
-      Item := TJSONObject.Create;
-      Item.Add('name', Name);
-      Item.Add('path', ShareSource(Name));
-      Item.Add('mount', '/srv/recorderlnx/' + Name);
-      Writable := False;
-      for J := First to Last do
-        if Pos('read only =', LowerCase(Trim(Lines[J]))) = 1 then
-          Writable := SameText(Trim(Copy(Lines[J], Pos('=', Lines[J]) + 1, MaxInt)), 'no');
-      Item.Add('writable', Writable);
-      Items.Add(Item);
-    end;
-    Output := Items.AsJSON;
+    lRaw.LoadFromFile('/etc/samba/smb.conf');
+    lFstab.LoadFromFile('/etc/fstab');
+    lItems := SambaShareList(lEffective, lRaw.Text, lFstab.Text);
+    try Output := lItems.AsJSON; finally lItems.Free; end;
     Result := 0;
-  finally Items.Free; Lines.Free; end;
+  finally lFstab.Free; lRaw.Free; end;
 end;
 
 function SameDirectory(const Left, Right: string): Boolean;
@@ -602,6 +593,76 @@ begin
     try Lines.SaveToFile(Path); Result := True;
     except end;
   finally Lines.Free; end;
+end;
+
+function ChangeStaticPublishedShare(const Name, Path, Users: string;
+  Writable, DeleteShare: Boolean; out Output: string): Integer;
+var lRaw: TStringList; lItems: TJSONArray; lItem: TJSONObject;
+  lEffective, lOld, lNew, lSource, lUsers, lTemp, lError: string;
+  lIndex: Integer; lFound: Boolean;
+begin
+  Result := 1;
+  if not SambaShareNameValid(Name) then
+  begin Output := 'Недопустимое сетевое имя.'; Exit; end;
+  for lIndex := 1 to Length(Users) do
+    if Ord(Users[lIndex]) < 32 then
+    begin Output := 'Имя пользователя содержит управляющий символ.'; Exit; end;
+  lSource := '';
+  if not DeleteShare and not ValidPublishedSource(Path, lSource, Output) then Exit;
+  if not Run('/usr/bin/testparm', ['-s'], lEffective) then
+  begin Output := 'Не удалось прочитать конфигурацию Samba: ' + lEffective; Exit; end;
+  lRaw := TStringList.Create;
+  try
+    lRaw.LoadFromFile('/etc/samba/smb.conf');
+    lOld := lRaw.Text;
+    lItems := SambaShareList(lEffective, lOld, '');
+    try
+      lFound := False;
+      lUsers := Users;
+      for lIndex := 0 to lItems.Count - 1 do
+      begin
+        lItem := TJSONObject(lItems.Items[lIndex]);
+        if not SameText(lItem.Get('name', ''), Name) then Continue;
+        if lItem.Get('managed', False) or not lItem.Get('editable', False) then
+        begin Output := 'Ресурс нельзя изменить как обычную секцию основного smb.conf.'; Exit; end;
+        if lUsers = '' then lUsers := lItem.Get('users', '');
+        lFound := True;
+        Break;
+      end;
+      if not lFound then
+      begin Output := 'Опубликованный ресурс не найден: ' + Name; Exit; end;
+    finally lItems.Free; end;
+    if not EditSambaShare(lOld, Name, lSource, lUsers, Writable,
+      DeleteShare, lNew, Output) then Exit;
+    lTemp := GetTempFileName('/tmp', 'smb');
+    try
+      lRaw.Text := lNew;
+      lRaw.SaveToFile(lTemp);
+      if not NeedRun('/usr/bin/testparm', ['-s', lTemp], Output) then Exit;
+    finally DeleteFile(lTemp); end;
+    // Ordinary publications use their direct path. Never touch fstab/bind mounts
+    // or filesystem contents while editing/removing their Samba section.
+    if not SaveSystemFile('/etc/samba/smb.conf', lNew, Output) then
+    begin
+      lError := Output;
+      if not RestoreConfigFile('/etc/samba/smb.conf', lOld) then
+        lError := lError + '; не удалось восстановить smb.conf';
+      Output := lError;
+      Exit;
+    end;
+    if not Run('systemctl', ['reload', 'smbd'], Output) then
+    begin
+      lError := 'Не удалось перечитать Samba: ' + Output;
+      if not RestoreConfigFile('/etc/samba/smb.conf', lOld) then
+        lError := lError + '; не удалось восстановить smb.conf';
+      Run('systemctl', ['reload', 'smbd'], Output);
+      Output := lError;
+      Exit;
+    end;
+  finally lRaw.Free; end;
+  if DeleteShare then Output := 'Публикация ' + Name + ' удалена; файлы сохранены.'
+  else Output := 'Публикация ' + Name + ' обновлена.';
+  Result := 0;
 end;
 
 function ApplyPublishedChange(const Root, OldSource, NewSource,
@@ -795,7 +856,7 @@ end;
 
 function PublishFolder(const Args: TStrings; out Output: string): Integer;
 var Source, ShareName, Root, Marker, Fstab, Smb, TestFile, Current,
-    OldSource, ShareUsers, PublishUser: string;
+    OldSource, ShareUsers, PublishUser, OldSmb, ErrorText: string;
     Lines: TStringList; I, First, Last: Integer; Writable: Boolean;
 
   function ExistingUsers(const AFirst, ALast: Integer): string;
@@ -831,6 +892,27 @@ var Source, ShareName, Root, Marker, Fstab, Smb, TestFile, Current,
   begin
     Result := Run('/usr/bin/pdbedit', ['-L', '-u', AUser], lText) and
       (Pos(LowerCase(AUser) + ':', LowerCase(lText)) > 0);
+  end;
+
+  function ResolveDefaultUser(out AUser, AError: string): Boolean;
+  var lText: string;
+  begin
+    Result := False;
+    if not PublishedUsers(AUser, AError) then Exit;
+    if AUser = '' then AUser := 'user';
+    if not Run('getent', ['passwd', AUser], lText) then
+    begin
+      AError := 'Локальный пользователь для публикации не найден: ' + AUser +
+        '. Настройте пользователя Samba в утилите.';
+      Exit;
+    end;
+    if not SambaUserExists(AUser) then
+    begin
+      AError := 'Пользователь Samba для публикации не настроен: ' + AUser +
+        '. Настройте пользователя Samba в утилите.';
+      Exit;
+    end;
+    Result := True;
   end;
 
   function EnsureAclTool(out AError: string): Boolean;
@@ -901,18 +983,83 @@ begin
     ShareUsers := ExistingUsers(First, Last);
     if Args.Count < 4 then Writable := ExistingWritable(First, Last);
     for I := 0 to Lines.Count - 1 do
-      if (Trim(Lines[I]) = '[' + ShareName + ']') and
+      if not SameText(ShareName, 'MeraFiles') and
+         (Trim(Lines[I]) = '[' + ShareName + ']') and
          ((I <= First) or (I >= Last) or (First < 0)) then
       begin Output := 'Имя занято чужой секцией Samba: ' + ShareName; Exit; end;
   finally Lines.Free; end;
   Root := '/srv/recorderlnx/' + ShareName;
   OldSource := ShareSource(ShareName);
+  { MeraFiles was historically the bind mount holding RecorderLnx settings.
+    Change only Samba's path; preserve the mount and its fstab entry. }
+  if SameText(ShareName, 'MeraFiles') then
+  begin
+    Lines := TStringList.Create;
+    try
+      Lines.LoadFromFile('/etc/samba/smb.conf');
+      OldSmb := Lines.Text;
+      if ManagedShareRange(Lines, ShareName, First, Last) then
+        for I := Last downto First do Lines.Delete(I);
+      for I := 0 to Lines.Count - 1 do
+        if SameText(Trim(Lines[I]), '[MeraFiles]') then
+        begin
+          if Args.Count < 4 then
+          begin
+            Last := I + 1;
+            while (Last < Lines.Count) and
+              ((Trim(Lines[Last]) = '') or (Trim(Lines[Last])[1] <> '[')) do
+              Inc(Last);
+            Writable := ExistingWritable(I + 1, Last - 1);
+          end;
+          Result := ChangeStaticPublishedShare(ShareName, Source,
+            PublishUser, Writable, False, Output);
+          Exit;
+        end;
+      if PublishUser <> '' then ShareUsers := PublishUser;
+      if ShareUsers = '' then
+      begin
+        if not ResolveDefaultUser(PublishUser, Output) then Exit;
+        ShareUsers := PublishUser;
+      end;
+      Lines.Add('');
+      Lines.Add('[MeraFiles]');
+      Lines.Add('   path = ' + Source);
+      Lines.Add('   browseable = yes');
+      if Writable then Lines.Add('   read only = no')
+      else Lines.Add('   read only = yes');
+      Lines.Add('   guest ok = no');
+      Lines.Add('   valid users = ' + ShareUsers);
+      TestFile := GetTempFileName('/tmp', 'smb');
+      try
+        Lines.SaveToFile(TestFile);
+        if not NeedRun('testparm', ['-s', TestFile], Output) then Exit;
+      finally DeleteFile(TestFile); end;
+      if (PublishUser <> '') and not GrantAccess(PublishUser, Source, Writable, Output) then Exit;
+      if not SaveSystemFile('/etc/samba/smb.conf', Lines.Text, Output) then Exit;
+      if not Run('systemctl', ['reload', 'smbd'], Output) then
+      begin
+        ErrorText := Output;
+        RestoreConfigFile('/etc/samba/smb.conf', OldSmb);
+        Run('systemctl', ['reload', 'smbd'], Output);
+        Output := 'Не удалось перечитать Samba: ' + ErrorText;
+        Exit;
+      end;
+      Output := 'Опубликован ресурс MeraFiles; системная точка монтирования сохранена.';
+      Result := 0;
+      Exit;
+    finally Lines.Free; end;
+  end;
   if (OldSource <> '') and (First < 0) then
   begin Output := 'Запись /etc/fstab занята без управляемой секции Samba.'; Exit; end;
   if (OldSource = '') and (First >= 0) then
   begin Output := 'Управляемая секция Samba не имеет записи /etc/fstab.'; Exit; end;
   if Mounted(Root) and (OldSource = '') then
   begin Output := 'Каталог публикации уже занят другим монтированием: ' + Root; Exit; end;
+  if (PublishUser = '') and (ShareUsers = '') then
+  begin
+    if not ResolveDefaultUser(PublishUser, Output) then Exit;
+    ShareUsers := PublishUser;
+  end;
   if not ForceDirectories(Root) then
   begin Output := 'Не удалось создать каталог публикации.'; Exit; end;
   if not NeedRun('readlink', ['-f', '--', Root], Current) then Exit;
@@ -953,7 +1100,6 @@ begin
     else Lines.Add('   read only = yes');
     Lines.Add('   guest ok = no');
     if PublishUser <> '' then ShareUsers := PublishUser;
-    if ShareUsers = '' then ShareUsers := PublishedUsers;
     Lines.Add('   valid users = ' + ShareUsers);
     Lines.Add(Fstab);
     TestFile := GetTempFileName('/tmp', 'smb');
@@ -976,14 +1122,16 @@ var Smb, Fstab: TStringList; First, Last, I: Integer;
     Root, Marker, TestFile, OldSource: string;
 begin
   Result := 1;
-  if not SafeToken(Name) then
+  if not SambaShareNameValid(Name) then
   begin Output := 'Недопустимое сетевое имя.'; Exit; end;
   Smb := TStringList.Create;
   Fstab := TStringList.Create;
   try
     Smb.LoadFromFile('/etc/samba/smb.conf');
     if not ManagedShareRange(Smb, Name, First, Last) then
-    begin Output := 'Управляемая публикация не найдена: ' + Name; Exit; end;
+      Exit(ChangeStaticPublishedShare(Name, '', '', False, True, Output));
+    if not SafeToken(Name) then
+    begin Output := 'Недопустимое имя управляемой публикации.'; Exit; end;
     OldSource := ShareSource(Name);
     if OldSource = '' then
     begin Output := 'Не найдена управляемая запись /etc/fstab: ' + Name; Exit; end;
@@ -1016,14 +1164,25 @@ begin
   if (Args.Count in [3, 4, 5]) and (Args[0] = 'update') then
   begin
     Name := Args[1];
-    if not SafeToken(Name) or (ShareSource(Name) = '') then
+    if not SambaShareNameValid(Name) then
     begin Output := 'Управляемая публикация не найдена: ' + Name; Exit(1); end;
     Smb := TStringList.Create;
     try
       Smb.LoadFromFile('/etc/samba/smb.conf');
       if not ManagedShareRange(Smb, Name, First, Last) then
-      begin Output := 'Управляемая секция Samba не найдена: ' + Name; Exit(1); end;
+      begin
+        if Args.Count <> 5 then
+        begin Output := 'Укажите пользователя и режим ro или rw.'; Exit(1); end;
+        if not SameText(Args[4], 'ro') and not SameText(Args[4], 'rw') then
+        begin Output := 'Режим публикации должен быть ro или rw.'; Exit(1); end;
+        Exit(ChangeStaticPublishedShare(Name, Args[2], Args[3],
+          SameText(Args[4], 'rw'), False, Output));
+      end;
     finally Smb.Free; end;
+    if not SafeToken(Name) then
+    begin Output := 'Недопустимое имя управляемой публикации.'; Exit(1); end;
+    if ShareSource(Name) = '' then
+    begin Output := 'Управляемая публикация не имеет записи fstab: ' + Name; Exit(1); end;
     Params := TStringList.Create;
     try
       Params.Add(Args[2]);

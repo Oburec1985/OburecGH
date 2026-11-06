@@ -24,7 +24,8 @@ uses
 
 type
   TRecorderPxiMx248DataSource = class(TRecorderDataSourceBase,
-    IRecorderZeroBalanceSupport, IPxiMx248RuntimeSettings)
+    IRecorderZeroBalanceSupport, IPxiMx248RuntimeSettings,
+    IPxiMx248RuntimeSampleRateSettings)
   private
     fDevice: IRecorderDevice;
     fEnabled: array[0..7] of Boolean;
@@ -54,6 +55,7 @@ type
       AMessages: TStrings): Boolean;
     function RuntimeReadLiveProperties(out AProperties: string):
       TRcOperationResult;
+    function RuntimeSetSampleRate(AHz: Double; out AReadback: string): TRcOperationResult;
     function RuntimeApplyLive(const AProperties: string; ARtsiClock,
       ARtsiSync, ATriggerMode, ATriggerSource, ATriggerLevel: Integer;
       out AReadback: string): TRcOperationResult;
@@ -66,6 +68,23 @@ implementation
 uses
   Variants, uRecorderDebugLog, uRecorderPxiMx248Addressing,
   uRecorderHardwareLiveDevices;
+
+function TRecorderPxiMx248DataSource.RuntimeSetSampleRate(AHz: Double;
+  out AReadback: string): TRcOperationResult;
+var
+  lControl: IPxiMx248SampleRateDevice;
+begin
+  AReadback := '';
+  if State = dssRunning then
+    Exit(TRcOperationResult.Failure(rocInvalidState,
+      'mx248.runtime.sample-rate', 'Stop acquisition before changing sample rate'));
+  if not Supports(fDevice, IPxiMx248SampleRateDevice, lControl) then
+    Exit(TRcOperationResult.Failure(rocUnsupported,
+      'mx248.runtime.sample-rate', 'Runtime device does not support sample rate settings'));
+  if fDevice.State = rdsDisconnected then PrepareHardware;
+  Result := lControl.SetSampleRate(AHz, AReadback);
+  if Result.IsSuccess then PrepareRuntimeBuffers;
+end;
 
 function TRecorderPxiMx248DataSource.RuntimeReadLiveProperties(
   out AProperties: string): TRcOperationResult;

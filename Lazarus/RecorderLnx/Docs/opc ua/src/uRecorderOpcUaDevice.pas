@@ -12,7 +12,7 @@ uses
 type
   { Protocol/session layer. It owns the Pascal protocol handle and knows nothing about
     Recorder tags or the data-source worker. }
-  TRecorderOpcUaDevice = class(TRecorderDevice)
+  TRecorderOpcUaDevice = class(TRcDevice)
   private
     fConfig: TRecorderOpcUaConfig;
     fHandle: TRecorderOpcUaHandle;
@@ -124,11 +124,13 @@ begin
       fHandle := RecorderOpcUaClientCreate(fConfig.Endpoint, fConfig.UserName,
         GetEnvironmentVariable(fConfig.PasswordEnvironment),
         fConfig.PublishingIntervalMs, fConfig.SessionTimeoutMs,
-        fConfig.RequestTimeoutMs, Ord(fConfig.TimestampMode))
+        fConfig.RequestTimeoutMs, Ord(fConfig.TimestampMode),
+        fConfig.BrowseTimeoutMs)
     else
       fHandle := RecorderOpcUaClientCreate(fConfig.Endpoint, '', '',
         fConfig.PublishingIntervalMs, fConfig.SessionTimeoutMs,
-        fConfig.RequestTimeoutMs, Ord(fConfig.TimestampMode));
+        fConfig.RequestTimeoutMs, Ord(fConfig.TimestampMode),
+        fConfig.BrowseTimeoutMs);
   if fHandle = nil then
   begin
     Fail('connect', 'cannot create OPC UA session');
@@ -192,7 +194,12 @@ begin
   if fConfig.Mode = oumServer then
     lOk := RecorderOpcUaServerStart(fHandle)
   else
+  begin
     lOk := RecorderOpcUaClientConnect(fHandle);
+    if lOk and (fConfig.PollingType = ouptSubscription) then
+      lOk := RecorderOpcUaClientStartSubscription(fHandle,
+        fConfig.PublishingIntervalMs);
+  end;
   if not lOk then
   begin
     Fail('start', RecorderOpcUaLastError(fHandle));

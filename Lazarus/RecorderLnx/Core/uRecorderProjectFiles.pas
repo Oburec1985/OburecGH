@@ -7,9 +7,9 @@ unit uRecorderProjectFiles;
     Текстовый пакет конфигурации проекта RecorderLnx. Как в оригинальном
     Recorder, визуальная часть формуляров хранится отдельно от основной
     конфигурации каналов/аппаратных настроек. Формат намеренно простой:
-      <base>.config.json - теги, расчетные оценки, уставки, источники;
-      <base>.gui.ini     - страницы формуляров и компоненты мнемосхем;
-      <base>.run-control.ini сохраняется существующей моделью запуска.
+      config.json - теги, расчетные оценки, уставки, источники;
+      gui.ini - страницы формуляров и компоненты мнемосхем;
+      run-control.ini - параметры запуска и останова испытания.
 
   Ограничение границы компонентов:
     Общие поля страницы/компонента хранятся хостом. Для plugin-компонентов
@@ -43,9 +43,9 @@ type
     
     BaseName           - базовое имя файлов проекта.
     DirectoryName      - рабочий каталог проекта.
-    MainConfigFileName - путь к основному файлу конфигурации (.config.json).
-    GuiFileName        - путь к конфигурации GUI-модели (.gui.ini).
-    RunControlFileName - путь к настройкам запуска (.run-control.ini). }
+    MainConfigFileName - путь к config.json.
+    GuiFileName        - путь к gui.ini.
+    RunControlFileName - путь к run-control.ini. }
   TRecorderProjectFileSet = record
     BaseName: string;
     DirectoryName: string;
@@ -211,10 +211,10 @@ var
 begin
   lDir := IncludeTrailingPathDelimiter(ADirectoryName);
   Result.DirectoryName := lDir;
-  Result.BaseName := ABaseName;
-  Result.MainConfigFileName := lDir + ABaseName + '.config.json';
-  Result.GuiFileName := lDir + ABaseName + '.gui.ini';
-  Result.RunControlFileName := lDir + ABaseName + '.run-control.ini';
+  Result.BaseName := ExtractFileName(ExcludeTrailingPathDelimiter(lDir));
+  Result.MainConfigFileName := lDir + 'config.json';
+  Result.GuiFileName := lDir + 'gui.ini';
+  Result.RunControlFileName := lDir + 'run-control.ini';
 end;
 
 function EstimateKindToConfigName(AKind: TRecorderTagEstimateKind): string;
@@ -959,7 +959,10 @@ begin
   try
     lRoot.Add('format', 'RecorderLnx.ProjectConfig');
     lRoot.Add('version', 1);
-    lRoot.Add('networkBindAddress', RecorderNetworkBindAddress);
+    { Keep legacy data only until the workstation setting is persisted. }
+    if RecorderNetworkHasLegacyBindAddress and
+      not RecorderNetworkHasPersistedBindAddress then
+      lRoot.Add('networkBindAddress', RecorderNetworkConfiguredBindAddress);
     for J := 0 to g_ProjectConfigExtensionCount - 1 do
       if Assigned(g_ProjectConfigExtensions[J].BeforeSaveProc) then
         g_ProjectConfigExtensions[J].BeforeSaveProc(lRoot, ATags);
@@ -1106,7 +1109,8 @@ begin
       raise ERecorderTagError.Create('Project config root must be a JSON object');
 
     lRoot := TJSONObject(lData);
-    SetRecorderNetworkBindAddress(lRoot.Get('networkBindAddress', ''));
+    RecorderLoadNetworkBindAddress(lRoot.Get('networkBindAddress', ''),
+      lRoot.Find('networkBindAddress') <> nil);
     lTags := FindArray(lRoot, 'tags');
     if lTags = nil then
       Exit;
@@ -1611,6 +1615,7 @@ begin
             lIni.WriteInteger(lSection,Format('Frf%dVisualization',[K]),Ord(TRecorder3dComponent(lComponent).FrfBindings[K].Visualization));
             lIni.WriteInteger(lSection,Format('Frf%dPointNumber',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].PointNumber);
             lIni.WriteFloat(lSection,Format('Frf%dMarkerSizePixels',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].MarkerSizePixels);
+            lIni.WriteBool(lSection,Format('Frf%dIntensityLogScale',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].IntensityLogScale);
             lIni.WriteInteger(lSection,Format('Frf%dIntensitySource',[K]),Ord(TRecorder3dComponent(lComponent).FrfBindings[K].IntensitySource));
             lIni.WriteInt64(lSection,Format('Frf%dColor',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].Color);
             lIni.WriteBool(lSection,Format('Frf%dBandRms',[K]),TRecorder3dComponent(lComponent).FrfBindings[K].BandRms);
@@ -1848,6 +1853,24 @@ begin
             TRecorderDacComponent(lComponent).MirrorTagId);
           lIni.WriteString(lSection, 'DacMirrorTagName',
             TRecorderDacComponent(lComponent).MirrorTagName);
+          lIni.WriteInt64(lSection, 'DacFeedbackTagId',
+            TRecorderDacComponent(lComponent).FeedbackTagId);
+          lIni.WriteString(lSection, 'DacFeedbackTagName',
+            TRecorderDacComponent(lComponent).FeedbackTagName);
+          lIni.WriteBool(lSection, 'DacSynchronizeByFeedback',
+            TRecorderDacComponent(lComponent).SynchronizeByFeedback);
+          lIni.WriteBool(lSection, 'DacStartStreamOnPreview',
+            TRecorderDacComponent(lComponent).StartStreamOnPreview);
+          lIni.WriteInteger(lSection, 'DacPhaseCalibrationMode',
+            Ord(TRecorderDacComponent(lComponent).PhaseCalibrationMode));
+          lIni.WriteFloat(lSection, 'DacFeedbackThreshold',
+            TRecorderDacComponent(lComponent).FeedbackThreshold);
+          lIni.WriteFloat(lSection, 'DacFeedbackTimeoutSec',
+            TRecorderDacComponent(lComponent).FeedbackTimeoutSec);
+          lIni.WriteFloat(lSection, 'DacFeedbackEdgeIntervalSec',
+            TRecorderDacComponent(lComponent).FeedbackEdgeIntervalSec);
+          lIni.WriteFloat(lSection, 'DacFeedbackCalibrationDurationSec',
+            TRecorderDacComponent(lComponent).FeedbackCalibrationDurationSec);
           lIni.WriteFloat(lSection, 'DacSampleRateHz',
             TRecorderDacComponent(lComponent).SampleRateHz);
           lIni.WriteInteger(lSection, 'DacFramesPerBlock',
@@ -2642,6 +2665,7 @@ begin
               EnvelopeZ:=lIni.ReadFloat(lSection,Format('Frf%dEnvelopeZ',[K]),1);
               PointNumber:=lIni.ReadInteger(lSection,Format('Frf%dPointNumber',[K]),1);
               MarkerSizePixels:=EnsureRange(lIni.ReadFloat(lSection,Format('Frf%dMarkerSizePixels',[K]),10),0.1,1000);
+              IntensityLogScale:=lIni.ReadBool(lSection,Format('Frf%dIntensityLogScale',[K]),False);
               IntensitySource:=TRecorderIntensitySource(EnsureRange(lIni.ReadInteger(lSection,Format('Frf%dIntensitySource',[K]),0),0,Ord(High(TRecorderIntensitySource))));
             end;
           end;
@@ -2908,6 +2932,30 @@ begin
               lIni.ReadInt64(lSection, 'DacMirrorTagId', 0);
             TRecorderDacComponent(lComponent).MirrorTagName :=
               lIni.ReadString(lSection, 'DacMirrorTagName', '');
+            TRecorderDacComponent(lComponent).FeedbackTagId :=
+              lIni.ReadInt64(lSection, 'DacFeedbackTagId', 0);
+            TRecorderDacComponent(lComponent).FeedbackTagName :=
+              lIni.ReadString(lSection, 'DacFeedbackTagName', '');
+            TRecorderDacComponent(lComponent).SynchronizeByFeedback :=
+              lIni.ReadBool(lSection, 'DacSynchronizeByFeedback', False);
+            TRecorderDacComponent(lComponent).StartStreamOnPreview :=
+              lIni.ReadBool(lSection, 'DacStartStreamOnPreview', True);
+            if lIni.ValueExists(lSection, 'DacPhaseCalibrationMode') then
+              TRecorderDacComponent(lComponent).PhaseCalibrationMode :=
+                TRecorderDacPhaseCalibrationMode(EnsureRange(lIni.ReadInteger(
+                  lSection, 'DacPhaseCalibrationMode', 0), 0, 2))
+            else if TRecorderDacComponent(lComponent).StartStreamOnPreview then
+              TRecorderDacComponent(lComponent).PhaseCalibrationMode := rdpcmMeasurementStart
+            else
+              TRecorderDacComponent(lComponent).PhaseCalibrationMode := rdpcmPlay;
+            TRecorderDacComponent(lComponent).FeedbackThreshold :=
+              lIni.ReadFloat(lSection, 'DacFeedbackThreshold', 0.01);
+            TRecorderDacComponent(lComponent).FeedbackTimeoutSec :=
+              lIni.ReadFloat(lSection, 'DacFeedbackTimeoutSec', 10);
+            TRecorderDacComponent(lComponent).FeedbackEdgeIntervalSec :=
+              lIni.ReadFloat(lSection, 'DacFeedbackEdgeIntervalSec', 2);
+            TRecorderDacComponent(lComponent).FeedbackCalibrationDurationSec :=
+              lIni.ReadFloat(lSection, 'DacFeedbackCalibrationDurationSec', 5);
             TRecorderDacComponent(lComponent).SampleRateHz := Max(1.0,
               lIni.ReadFloat(lSection, 'DacSampleRateHz', 1000));
             TRecorderDacComponent(lComponent).FramesPerBlock := Max(1,

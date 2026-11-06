@@ -24,6 +24,8 @@ type
   TCoordinatorConfig = class
   private
     fFileName: string;
+    fSqlAppConfigFile: string;
+    fBootstrapDefaultSql: string;
     fStorages: TFPList;
     fHosts: TStringList;
     procedure ClearStorages;
@@ -34,8 +36,12 @@ type
     CreateRecordingEvents: Boolean;
     StartAllOnAnyRecording: Boolean;
     SqlDbConfigFile: string;
+    FirebirdHost: string;
     HostAgentPort: Word;
     HostAgentToken: string;
+    CoordinatorId: string;
+    CoordinatorToken: string;
+    ControlIdentityPersistent: Boolean;
     SdbPrimaryHostId: string;
     SdbShareName: string;
     constructor Create(const AFileName: string);
@@ -61,11 +67,16 @@ function IsAbsoluteConfigPath(const AFileName: string): Boolean;
 implementation
 
 uses
-  uCoordinatorHostStore;
+  uCoordinatorHostStore, uRecorderMeraPaths, uRecorderMachineStorage
+  {$IFDEF UNIX}, BaseUnix{$ENDIF}
+  {$IFDEF WINDOWS}, Windows{$ENDIF};
 
 const
   LINUX_RECORDER_SQL_CONFIG =
     '/var/opt/mera/RecorderLnx/config/projects/default/sql-db.ini';
+
+var
+  gBootstrapDefaultSql: string;
 
 function IsAbsoluteConfigPath(const AFileName: string): Boolean;
 begin
@@ -87,6 +98,145 @@ begin
     Result := Copy(AFileName, lPosition, MaxInt);
 end;
 
+procedure InitializeSharedRecorderPaths(const ACoordinatorIni: string);
+var
+  lPathFile, lRoot: string;
+  lIni: TIniFile;
+begin
+  { The installed tools are siblings. Prefer an explicit local paths file or
+    MERA_FILES; otherwise use RecorderLnx's existing paths configuration,
+    instead of maintaining a second copy for the panel. }
+  if (SysUtils.GetEnvironmentVariable('MERA_FILES') <> '') or
+    FileExists(IncludeTrailingPathDelimiter(ExtractFilePath(ACoordinatorIni)) +
+      'RecorderLnx.paths.ini') then Exit;
+  lPathFile := ExpandFileName(IncludeTrailingPathDelimiter(
+    ExtractFilePath(ACoordinatorIni)) + '..' + DirectorySeparator +
+    'RecorderLnx' + DirectorySeparator + 'RecorderLnx.paths.ini');
+  if not FileExists(lPathFile) then Exit;
+  lIni := TIniFile.Create(lPathFile);
+  try
+    lRoot := Trim(lIni.ReadString('Paths', 'MeraFiles', ''));
+  finally
+    lIni.Free;
+  end;
+  if lRoot = '' then Exit;
+  if not IsAbsoluteConfigPath(lRoot) then
+    lRoot := ExpandFileName(IncludeTrailingPathDelimiter(
+      ExtractFileDir(lPathFile)) + lRoot);
+  if DirectoryExists(lRoot) then SetRecorderMeraFilesPath(lRoot);
+end;
+
+function StrictConfigFileExists(const AFileName: string): Boolean;
+{$IFDEF UNIX}
+var
+  lStat: Stat;
+  lError: Integer;
+begin
+  if fpStat(PChar(AFileName), lStat) = 0 then
+  begin
+    if not FPS_ISREG(lStat.st_mode) then
+      raise Exception.Create('Not a regular configuration file: ' + AFileName);
+    Exit(True);
+  end;
+  lError := fpGetErrNo;
+  if lError = ESysENOENT then Exit(False);
+  raise Exception.CreateFmt('Cannot inspect configuration %s: %d', [AFileName, lError]);
+end;
+{$ELSE}
+var
+  lAttributes, lError: DWORD;
+begin
+  lAttributes := GetFileAttributesW(PWideChar(UTF8Decode(AFileName)));
+  if lAttributes <> INVALID_FILE_ATTRIBUTES then
+  begin
+    if (lAttributes and FILE_ATTRIBUTE_DIRECTORY) <> 0 then
+      raise Exception.Create('Not a regular configuration file: ' + AFileName);
+    Exit(True);
+  end;
+  lError := GetLastError;
+  if (lError = ERROR_FILE_NOT_FOUND) or (lError = ERROR_PATH_NOT_FOUND) then Exit(False);
+  raise Exception.CreateFmt('Cannot inspect configuration %s: %d', [AFileName, lError]);
+end;
+{$ENDIF}
+
+function ProjectSqlForAppConfig(const AFileName: string): string;
+var
+  lIni: TIniFile;
+  lProjectDir, lCandidate: string;
+begin
+  Result := '';
+  if not SameText(ExtractFileName(AFileName), 'app.ini') or
+    not FileExists(AFileName) then Exit;
+  lIni := TIniFile.Create(AFileName);
+  try
+    { Never reinterpret an explicit SQL project file merely named app.ini. }
+    if lIni.SectionExists('SQLdb') then Exit;
+    lProjectDir := Trim(lIni.ReadString('Application',
+      'DefaultProjectConfigDir', ''));
+  finally
+    lIni.Free;
+  end;
+  if lProjectDir = '' then
+    lProjectDir := 'config' + DirectorySeparator + 'projects' +
+      DirectorySeparator + 'default';
+  if not IsAbsoluteConfigPath(lProjectDir) then
+    lProjectDir := IncludeTrailingPathDelimiter(ExtractFileDir(AFileName)) +
+      lProjectDir;
+  lCandidate := ExpandFileName(IncludeTrailingPathDelimiter(lProjectDir) +
+    'sql-db.ini');
+  { If the project file does not exist yet, still return its intended name.
+    Never fall through to app.ini as a writable project configuration. }
+  Result := lCandidate;
+end;
+
+procedure ApplyLegacyMachineMeraPath(const AAppFile, ADefaultSql: string);
+var
+  lIni: TIniFile;
+  lStream: TFileStream;
+  lProjectDir, lLegacyFile, lPath: string;
+begin
+  { Until RecorderLnx has migrated its machine setting, its selected project
+    supplies the old [Mera] FilesPath. Read it without creating any files. }
+  lProjectDir := ExtractFileDir(ADefaultSql);
+  if StrictConfigFileExists(AAppFile) then
+  begin
+    lStream := TFileStream.Create(AAppFile, fmOpenRead or fmShareDenyNone);
+    try
+      lIni := TIniFile.Create(lStream);
+      try
+        lPath := Trim(lIni.ReadString('Application', 'DefaultProjectConfigDir', ''));
+      finally
+        lIni.Free;
+      end;
+    finally
+      lStream.Free;
+    end;
+    if lPath <> '' then
+    begin
+      if IsAbsoluteConfigPath(lPath) then lProjectDir := lPath
+      else lProjectDir := ExpandFileName(IncludeTrailingPathDelimiter(
+        ExtractFileDir(AAppFile)) + lPath);
+    end;
+  end;
+  lLegacyFile := IncludeTrailingPathDelimiter(lProjectDir) + 'default.run-control.ini';
+  if not StrictConfigFileExists(lLegacyFile) then
+    lLegacyFile := IncludeTrailingPathDelimiter(lProjectDir) + 'run-control.ini';
+  if not StrictConfigFileExists(lLegacyFile) then Exit;
+  lStream := TFileStream.Create(lLegacyFile, fmOpenRead or fmShareDenyNone);
+  try
+    lIni := TIniFile.Create(lStream);
+    try
+      if not lIni.ValueExists('Mera', 'FilesPath') then Exit;
+      lPath := lIni.ReadString('Mera', 'FilesPath', '');
+    finally
+      lIni.Free;
+    end;
+  finally
+    lStream.Free;
+  end;
+  SetRecorderMeraFilesPath(lPath);
+end;
+
 function StorageKindFromName(const AValue: string): TStorageKind;
 begin
   if SameText(AValue, 'smb') then Exit(skSmb);
@@ -105,9 +255,25 @@ begin
 end;
 
 constructor TCoordinatorConfig.Create(const AFileName: string);
+var
+  lId: TGUID;
 begin
   inherited Create;
   fFileName := AFileName;
+  InitializeSharedRecorderPaths(AFileName);
+  { Cache the installation's bootstrap locations before applying the
+    machine's independent runtime Mera Files directory. }
+  if gBootstrapDefaultSql = '' then
+    gBootstrapDefaultSql := RecorderProjectSqlConfigFileName(
+      RecorderDefaultProjectConfigDir);
+  fBootstrapDefaultSql := gBootstrapDefaultSql;
+  RecorderAppConfigFileName;
+  if TryLoadExistingRecorderMachineStorage then
+    SetRecorderMeraFilesPath(RecorderMachineMeraPath)
+  else
+    ApplyLegacyMachineMeraPath(RecorderAppConfigFileName, fBootstrapDefaultSql);
+  CreateGUID(lId);
+  CoordinatorId := GUIDToString(lId);
   fStorages := TFPList.Create;
   fHosts := TStringList.Create;
   fHosts.NameValueSeparator := '=';
@@ -140,6 +306,7 @@ end;
 procedure TCoordinatorConfig.ClearStorages;
 var lIndex: Integer;
 begin
+  if fStorages = nil then Exit;
   for lIndex := 0 to fStorages.Count - 1 do TObject(fStorages[lIndex]).Free;
   fStorages.Clear;
 end;
@@ -168,15 +335,29 @@ var
   lAgentPort, lCount, lIndex: Integer;
   lStorage: TStorageConfig;
   lSection, lCandidate, lStoredSqlConfig: string;
-  lSqlConfigChanged: Boolean;
+  lSqlConfigChanged, lProjectFromApp: Boolean;
 begin
   ClearStorages;
   fHosts.Clear;
+  fSqlAppConfigFile := '';
   if not FileExists(fFileName) then
   begin
     lStorage := AddStorage;
     lStorage.Name := 'Локальный архив';
     lStorage.RootPath := IncludeTrailingPathDelimiter(ExtractFilePath(fFileName)) + 'archive';
+    lIni := TIniFile.Create(fFileName);
+    try
+      try
+        lIni.WriteString('coordinator', 'instance_id', CoordinatorId);
+        ControlIdentityPersistent := True;
+      except
+        { A read-only installation must still be able to start. The GUI
+          reports that the generated session identity could not be saved. }
+        ControlIdentityPersistent := False;
+      end;
+    finally
+      lIni.Free;
+    end;
     Exit;
   end;
   BeginCoordinatorConfigAccess;
@@ -187,12 +368,29 @@ begin
     EventWindowSec := lIni.ReadInteger('service', 'event_window_sec', EventWindowSec);
     CreateRecordingEvents := lIni.ReadBool('events', 'create_recording_events',
       CreateRecordingEvents);
+    FirebirdHost := Trim(lIni.ReadString('events', 'firebird_host', FirebirdHost));
     StartAllOnAnyRecording := lIni.ReadBool('commands',
       'start_all_on_any_recording', StartAllOnAnyRecording);
     lAgentPort := lIni.ReadInteger('host_agent', 'port', HostAgentPort);
     if (lAgentPort >= 1) and (lAgentPort <= High(Word)) then
       HostAgentPort := lAgentPort;
     HostAgentToken := lIni.ReadString('host_agent', 'token', HostAgentToken);
+    lCandidate := Trim(lIni.ReadString('coordinator', 'instance_id', ''));
+    if lCandidate <> '' then
+    begin
+      CoordinatorId := lCandidate;
+      ControlIdentityPersistent := True;
+    end;
+    CoordinatorToken := lIni.ReadString('coordinator', 'auth_token', '');
+    if lCandidate = '' then
+    begin
+      try
+        lIni.WriteString('coordinator', 'instance_id', CoordinatorId);
+        ControlIdentityPersistent := True;
+      except
+        ControlIdentityPersistent := False;
+      end;
+    end;
     SdbPrimaryHostId := lIni.ReadString('sdb_sync', 'primary_host_id',
       SdbPrimaryHostId);
     SdbShareName := Trim(lIni.ReadString('sdb_sync', 'share_name',
@@ -205,7 +403,26 @@ begin
       (not IsAbsoluteConfigPath(SqlDbConfigFile)) then
       SqlDbConfigFile := ExpandFileName(IncludeTrailingPathDelimiter(
         ExtractFilePath(fFileName)) + SqlDbConfigFile);
-    lSqlConfigChanged := SqlDbConfigFile <> lStoredSqlConfig;
+    { Older releases saved their automatically selected default-project SQL
+      file as though it were a fixed user choice. Only that exact default is
+      migrated; arbitrary explicit project paths remain untouched. }
+    if SameFileName(ExpandFileName(SqlDbConfigFile),
+       ExpandFileName(fBootstrapDefaultSql)) and
+       FileExists(RecorderAppConfigFileName) and
+       (ProjectSqlForAppConfig(RecorderAppConfigFileName) <> '') then
+      SqlDbConfigFile := RecorderAppConfigFileName;
+    lCandidate := ProjectSqlForAppConfig(SqlDbConfigFile);
+    lProjectFromApp := lCandidate <> '';
+    if lProjectFromApp then
+    begin
+      { Persist the app pointer, not a copied project path. Switching the
+        default project must be reflected on the next panel start. }
+      fSqlAppConfigFile := SqlDbConfigFile;
+      SqlDbConfigFile := lCandidate;
+      lSqlConfigChanged := fSqlAppConfigFile <> lStoredSqlConfig;
+    end
+    else
+      lSqlConfigChanged := SqlDbConfigFile <> lStoredSqlConfig;
     if SameFileName(SqlDbConfigFile, fFileName) and
       (not lIni.SectionExists('SQLdb')) then
     begin
@@ -227,9 +444,9 @@ begin
     { A legacy malformed or moved config must not permanently disable event
       creation. Prefer an existing adjacent config, then the installed Linux
       RecorderLnx config, then the development-tree config. }
-    if (not FileExists(SqlDbConfigFile)) or
+    if (not lProjectFromApp) and ((not FileExists(SqlDbConfigFile)) or
       (SameFileName(SqlDbConfigFile, fFileName) and
-       (not lIni.SectionExists('SQLdb'))) then
+       (not lIni.SectionExists('SQLdb')))) then
     begin
       lCandidate := IncludeTrailingPathDelimiter(ExtractFilePath(fFileName)) +
         'sql-db.ini';
@@ -247,11 +464,15 @@ begin
         if FileExists(lCandidate) then SqlDbConfigFile := lCandidate;
       end;
     end;
-    lSqlConfigChanged := lSqlConfigChanged or
-      (SqlDbConfigFile <> lStoredSqlConfig);
+    if not lProjectFromApp then
+      lSqlConfigChanged := lSqlConfigChanged or
+        (SqlDbConfigFile <> lStoredSqlConfig);
     if lSqlConfigChanged then
     begin
-      lIni.WriteString('events', 'sql_db_config', SqlDbConfigFile);
+      if lProjectFromApp then
+        lIni.WriteString('events', 'sql_db_config', fSqlAppConfigFile)
+      else
+        lIni.WriteString('events', 'sql_db_config', SqlDbConfigFile);
       lIni.UpdateFile;
     end;
     lCount := lIni.ReadInteger('hosts', 'count', 0);
@@ -293,9 +514,15 @@ begin
       StartAllOnAnyRecording);
     lIni.WriteInteger('host_agent', 'port', HostAgentPort);
     lIni.WriteString('host_agent', 'token', HostAgentToken);
+    lIni.WriteString('events', 'firebird_host', FirebirdHost);
+    lIni.WriteString('coordinator', 'instance_id', CoordinatorId);
+    lIni.WriteString('coordinator', 'auth_token', CoordinatorToken);
     lIni.WriteString('sdb_sync', 'primary_host_id', SdbPrimaryHostId);
     lIni.WriteString('sdb_sync', 'share_name', SdbShareName);
-    lIni.WriteString('events', 'sql_db_config', SqlDbConfigFile);
+    if fSqlAppConfigFile <> '' then
+      lIni.WriteString('events', 'sql_db_config', fSqlAppConfigFile)
+    else
+      lIni.WriteString('events', 'sql_db_config', SqlDbConfigFile);
     lIni.WriteInteger('storages', 'count', StorageCount);
     for lIndex := 0 to StorageCount - 1 do
     begin
@@ -399,7 +626,7 @@ begin
     lTestFile := IncludeTrailingPathDelimiter(AStorage.RootPath) + '.recorder-coordinator-test.tmp';
     lStream := TFileStream.Create(lTestFile, fmCreate);
     lStream.Free;
-    DeleteFile(lTestFile);
+    SysUtils.DeleteFile(lTestFile);
     AMessage := 'Чтение и запись доступны: ' + AStorage.RootPath;
     Result := True;
   except

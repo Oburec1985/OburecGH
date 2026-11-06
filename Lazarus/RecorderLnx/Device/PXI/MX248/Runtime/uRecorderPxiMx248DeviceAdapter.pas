@@ -26,7 +26,8 @@ uses
 
 type
   TRcPxiMx248DeviceAdapter = class(TRcDevice,
-    IPxiMx248MaintenanceDevice, IPxiMx248LiveControlDevice)
+    IPxiMx248MaintenanceDevice, IPxiMx248LiveControlDevice,
+    IPxiMx248SampleRateDevice)
   private
     fBlock: TRcAcquisitionBlock;
     fBlockTransport: IPxiMx248BlockTransport;
@@ -65,6 +66,7 @@ type
     function TestLink(out AErrorText: string): Boolean; override;
     function ZeroBalance(AChannelMask: Cardinal; out AValues: string): TRcOperationResult;
     function ReadLiveProperties(out AProperties: string): TRcOperationResult;
+    function SetSampleRate(AHz: Double; out AReadback: string): TRcOperationResult;
     function ApplyLive(const AProperties: string; ARtsiClock, ARtsiSync,
       ATriggerMode, ATriggerSource, ATriggerLevel: Integer;
       out AReadback: string): TRcOperationResult;
@@ -74,6 +76,20 @@ implementation
 
 uses
   uRecorderPxiMx248Addressing;
+
+function TRcPxiMx248DeviceAdapter.SetSampleRate(AHz: Double;
+  out AReadback: string): TRcOperationResult;
+var
+  lFormat: TFormatSettings;
+begin
+  lFormat := DefaultFormatSettings;
+  lFormat.DecimalSeparator := '.';
+  lFormat.ThousandSeparator := #0;
+  { SetProperties merges this one field into the existing acquisition packet.
+    Preserve the owned session's PXI clock, synchronization and trigger state. }
+  Result := ApplyLive('sample-rate-hz=' + FloatToStr(AHz, lFormat),
+    fRtsiClock, fRtsiSync, fTriggerMode, fTriggerSource, fTriggerLevel, AReadback);
+end;
 
 function TRcPxiMx248DeviceAdapter.ReadLiveProperties(
   out AProperties: string): TRcOperationResult;

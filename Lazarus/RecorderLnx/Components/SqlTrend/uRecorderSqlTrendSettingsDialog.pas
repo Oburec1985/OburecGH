@@ -8,7 +8,8 @@ interface
 uses
   Classes, SysUtils, DateUtils, Forms, Controls, StdCtrls, ExtCtrls, Dialogs,
   Graphics, Math, DateTimePicker, EditBtn,
-  uRecorderFormModel, uRecorderSqlTrendModel, uRecorderTags;
+  uRecorderFormModel, uRecorderSqlTrendModel, uRecorderTags,
+  uRecorderSqlDbTypes;
 
 type
   TRecorderSqlTrendSettingsDialog = class(TForm)
@@ -25,6 +26,7 @@ type
     btnAddDisplay: TButton;
     btnAutoAxes: TButton;
     btnAutoDisplays: TButton;
+    btnImportAutoDisplays: TButton;
     btnDeleteDisplay: TButton;
     cbDisplay: TComboBox;
     cbLineAxis: TComboBox;
@@ -86,6 +88,7 @@ type
     procedure btnAddDisplayClick({%H-}Sender: TObject);
     procedure btnAutoAxesClick({%H-}Sender: TObject);
     procedure btnAutoDisplaysClick({%H-}Sender: TObject);
+    procedure btnImportAutoDisplaysClick({%H-}Sender: TObject);
     procedure btnDeleteDisplayClick({%H-}Sender: TObject);
     procedure DisplayChange({%H-}Sender: TObject);
     procedure DisplayNameExit({%H-}Sender: TObject);
@@ -101,6 +104,10 @@ type
     fDbPointCount: Int64;
     fFromDateEdit: TDateEdit;
     fToDateEdit: TDateEdit;
+    fBottomPanel: TPanel;
+    procedure FormResize(Sender: TObject);
+    procedure ConfigureLayout;
+    procedure LayoutDialog;
     procedure FillAxes;
     procedure FillDisplays;
     procedure FillLines;
@@ -130,11 +137,16 @@ type
       const ATagName: string): TRecorderTrendLine;
     function FindAxisByName(ADisplay: TRecorderSqlTrendDisplay;
       const AName: string): Integer;
+    function FindDbSignalName(const AName: string): string;
     function TagAutoDisplayGroup(ATag: TRecorderTag): string;
     function AxisNameForTag(ATag: TRecorderTag): string;
     function EnsureAxisForTag(ADisplay: TRecorderSqlTrendDisplay;
       ATag: TRecorderTag): Integer;
     procedure AssignDisplayAxesByUnits(ADisplay: TRecorderSqlTrendDisplay);
+    function SignalCacheIdentity(AConfig: TRecorderSqlDbConfig): string;
+    procedure LoadCachedSignals;
+    procedure SaveCachedSignals(AConfig: TRecorderSqlDbConfig;
+      ANames: TStrings);
   public
     constructor CreateDialog(AOwner: TComponent;
       AComponent: TRecorderSqlTrendComponent;
@@ -151,11 +163,12 @@ implementation
 {$R *.lfm}
 
 uses
-  uRecorderSqlDbTypes, uRecorderSqlDbRepository, uOglChartColors;
+  IniFiles, uRecorderSqlDbRepository, uOglChartColors, uRecorderTagTableExchange;
 
 const
   CSqlTrendMainGroup = 'Основные каналы';
   CSqlTrendDefaultAxis = 'Y';
+  CSqlTrendSignalCacheSection = 'SqlTrendSignalCache';
 
 function ShowRecorderSqlTrendSettingsDialog(AOwner: TComponent;
   AComponent: TRecorderSqlTrendComponent;
@@ -172,6 +185,7 @@ constructor TRecorderSqlTrendSettingsDialog.CreateDialog(AOwner: TComponent;
   AComponent: TRecorderSqlTrendComponent; ATagRegistry: TRecorderTagRegistry);
 begin
   inherited Create(AOwner);
+  ConfigureLayout;
   fComponent := AComponent;
   fTagRegistry := ATagRegistry;
   fDraft := TRecorderSqlTrendComponent.Create;
@@ -204,12 +218,161 @@ begin
   FillAxes;
   FillLines;
   FillDisplays;
+  LoadCachedSignals;
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.ConfigureLayout;
+begin
+  AutoScroll := False;
+  Constraints.MinHeight := 680;
+
+  fBottomPanel := TPanel.Create(Self);
+  fBottomPanel.Parent := Self;
+  fBottomPanel.Align := alBottom;
+  fBottomPanel.Height := 214;
+  fBottomPanel.BevelOuter := bvNone;
+
+  gbTime.Parent := fBottomPanel;
+  btnOk.Parent := fBottomPanel;
+  btnCancel.Parent := fBottomPanel;
+
+  gbLines.Anchors := [akTop, akLeft, akRight, akBottom];
+  gbAxes.Anchors := [akLeft, akRight, akBottom];
+  btnImportAutoDisplays.Width := Max(190,
+    Canvas.TextWidth(btnImportAutoDisplays.Caption) + 32);
+  btnImportAutoDisplays.Left := btnAutoAxes.Left + btnAutoAxes.Width -
+    btnImportAutoDisplays.Width;
+
+  OnResize := @FormResize;
+  LayoutDialog;
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.FormResize(Sender: TObject);
+begin
+  LayoutDialog;
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.LayoutDialog;
+const
+  COuterMargin = 8;
+  CSectionGap = 8;
+  CAxesHeight = 130;
+  CTimeHeight = 168;
+  CButtonHeight = 30;
+var
+  lAxesTop: Integer;
+begin
+  if fBottomPanel = nil then Exit;
+
+  gbTime.SetBounds(COuterMargin, 0,
+    Max(1, fBottomPanel.ClientWidth - 2 * COuterMargin), CTimeHeight);
+  btnCancel.SetBounds(fBottomPanel.ClientWidth - COuterMargin -
+    btnCancel.Width, CTimeHeight + CSectionGap, btnCancel.Width,
+    CButtonHeight);
+  btnOk.SetBounds(btnCancel.Left - CSectionGap - btnOk.Width,
+    btnCancel.Top, btnOk.Width, CButtonHeight);
+
+  lAxesTop := fBottomPanel.Top - CSectionGap - CAxesHeight;
+  gbAxes.SetBounds(COuterMargin, lAxesTop,
+    Max(1, ClientWidth - 2 * COuterMargin), CAxesHeight);
+  gbLines.SetBounds(COuterMargin, gbLines.Top,
+    Max(1, ClientWidth - 2 * COuterMargin),
+    Max(1, lAxesTop - CSectionGap - gbLines.Top));
 end;
 
 destructor TRecorderSqlTrendSettingsDialog.Destroy;
 begin
   fDraft.Free;
   inherited Destroy;
+end;
+
+function TRecorderSqlTrendSettingsDialog.SignalCacheIdentity(
+  AConfig: TRecorderSqlDbConfig): string;
+var
+  lHost: string;
+begin
+  lHost := Trim(AConfig.Host);
+  if lHost = '' then
+    lHost := 'local';
+  Result := Format('%s|%s|%d|%s', [
+    RecorderSqlDbBackendToString(AConfig.Backend), lHost, AConfig.Port,
+    AConfig.DatabaseFileName]);
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.LoadCachedSignals;
+var
+  I, lCount: Integer;
+  lConfig: TRecorderSqlDbConfig;
+  lIni: TIniFile;
+  lName: string;
+begin
+  lbDbSignals.Clear;
+  if (Trim(fDraft.ConfigFileName) = '') or
+    (not FileExists(fDraft.ConfigFileName)) then
+    Exit;
+  try
+    lConfig := TRecorderSqlDbConfig.Create;
+    try
+      lConfig.LoadFromFile(fDraft.ConfigFileName);
+      lIni := TIniFile.Create(fDraft.ConfigFileName);
+      try
+        if lIni.ReadString(CSqlTrendSignalCacheSection, 'Connection', '') <>
+          SignalCacheIdentity(lConfig) then
+          Exit;
+        lCount := EnsureRange(lIni.ReadInteger(CSqlTrendSignalCacheSection,
+          'Count', 0), 0, 100000);
+        for I := 0 to lCount - 1 do
+        begin
+          lName := lIni.ReadString(CSqlTrendSignalCacheSection,
+            'Signal' + IntToStr(I), '');
+          if lName <> '' then
+            lbDbSignals.Items.Add(lName);
+        end;
+      finally
+        lIni.Free;
+      end;
+    finally
+      lConfig.Free;
+    end;
+    if lbDbSignals.Count > 0 then
+      lblDbRange.Caption := Format(
+        'Каналы загружены из кэша: %d. Диапазон БД не считывался.',
+        [lbDbSignals.Count]);
+  except
+    on E: Exception do
+    begin
+      lbDbSignals.Clear;
+      lblDbRange.Caption := 'Кэш каналов не загружен: ' + E.Message;
+    end;
+  end;
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.SaveCachedSignals(
+  AConfig: TRecorderSqlDbConfig; ANames: TStrings);
+var
+  I: Integer;
+  lDirectory: string;
+  lIni: TIniFile;
+begin
+  if Trim(fDraft.ConfigFileName) = '' then
+    Exit;
+  lDirectory := ExtractFileDir(ExpandFileName(fDraft.ConfigFileName));
+  if (lDirectory <> '') and (not ForceDirectories(lDirectory)) then
+    raise ERecorderSqlDbError.CreateFmt(
+      'Не удалось создать каталог кэша SQL-тренда: %s', [lDirectory]);
+  lIni := TIniFile.Create(fDraft.ConfigFileName);
+  try
+    lIni.EraseSection(CSqlTrendSignalCacheSection);
+    lIni.WriteString(CSqlTrendSignalCacheSection, 'Connection',
+      SignalCacheIdentity(AConfig));
+    lIni.WriteInteger(CSqlTrendSignalCacheSection, 'Count', ANames.Count);
+    for I := 0 to ANames.Count - 1 do
+      lIni.WriteString(CSqlTrendSignalCacheSection, 'Signal' + IntToStr(I),
+        ANames[I]);
+    lIni.UpdateFile;
+  finally
+    lIni.Free;
+  end;
 end;
 
 function TRecorderSqlTrendSettingsDialog.CurrentDisplay: TRecorderSqlTrendDisplay;
@@ -259,6 +422,17 @@ begin
     if SameText(ADisplay.Axes[Result].Name, AName) then
       Exit;
   Result := -1;
+end;
+
+function TRecorderSqlTrendSettingsDialog.FindDbSignalName(
+  const AName: string): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 0 to lbDbSignals.Items.Count - 1 do
+    if SameText(lbDbSignals.Items[I], AName) then
+      Exit(lbDbSignals.Items[I]);
 end;
 
 function TRecorderSqlTrendSettingsDialog.TagAutoDisplayGroup(
@@ -699,23 +873,39 @@ var
   C: TRecorderSqlDbConfig;
   R: TRecorderSqlDbRepository;
   lInfos: TRecorderSqlDbSignalInfos;
+  lNames: TStringList;
 begin
-  lbDbSignals.Clear;
+  lNames := TStringList.Create;
   try
-    C := TRecorderSqlDbConfig.Create;
     try
-      C.LoadFromFile(fDraft.ConfigFileName);
-      R := TRecorderSqlDbRepository.Create(C);
+      C := TRecorderSqlDbConfig.Create;
       try
-        R.ListSignalInfos(lInfos, False);
-        for I := 0 to High(lInfos) do
-          lbDbSignals.Items.Add(lInfos[I].Name);
-        fDbPointCount := 0;
-        lblDbRange.Caption := 'Каналы прочитаны. Диапазон БД не считался.';
-        btnUseDbRange.Enabled := False;
-      finally R.Free; end;
-    finally C.Free; end;
-  except on E: Exception do MessageDlg('SQL БД', E.Message, mtError, [mbOK], 0); end;
+        C.LoadFromFile(fDraft.ConfigFileName);
+        R := TRecorderSqlDbRepository.Create(C);
+        try
+          R.ListSignalInfos(lInfos, False);
+          for I := 0 to High(lInfos) do
+            lNames.Add(lInfos[I].Name);
+        finally
+          R.Free;
+        end;
+        SaveCachedSignals(C, lNames);
+      finally
+        C.Free;
+      end;
+      lbDbSignals.Items.Assign(lNames);
+      fDbPointCount := 0;
+      lblDbRange.Caption := Format(
+        'Каналы прочитаны и сохранены в кэш: %d. Диапазон БД не считывался.',
+        [lbDbSignals.Count]);
+      btnUseDbRange.Enabled := False;
+    except
+      on E: Exception do
+        MessageDlg('SQL БД', E.Message, mtError, [mbOK], 0);
+    end;
+  finally
+    lNames.Free;
+  end;
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.btnDeleteDbIntervalClick(Sender: TObject);
@@ -854,6 +1044,60 @@ begin
   MessageDlg('SQL-тренд',
     Format('Создано отображений: %d. Добавлено линий: %d.',
       [lCreatedDisplays, lCreatedLines]), mtInformation, [mbOK], 0);
+end;
+
+procedure TRecorderSqlTrendSettingsDialog.btnImportAutoDisplaysClick(Sender: TObject);
+var
+  D: TOpenDialog;
+  Items: TRecorderTableChannelGroups;
+  I, Added, Created, Missing: Integer;
+  lName, GroupPath, PaletteName: string;
+  Display: TRecorderSqlTrendDisplay;
+  Line: TRecorderTrendLine;
+  PaletteColor: LongInt;
+begin
+  D := TOpenDialog.Create(Self);
+  try
+    D.Title := 'Импорт авто отображений';
+    D.Filter := 'Таблицы (*.xlsx;*.ods;*.csv)|*.xlsx;*.ods;*.csv';
+    D.Options := D.Options + [ofFileMustExist];
+    if not D.Execute then Exit;
+    try
+      ReadRecorderChannelGroupsFromTable(D.FileName, Items);
+    except
+      on E: Exception do begin MessageDlg('Импорт', E.Message, mtError, [mbOK], 0); Exit; end;
+    end;
+  finally
+    D.Free;
+  end;
+  if lbDbSignals.Items.Count = 0 then
+  begin
+    MessageDlg('Импорт', 'Сначала прочитайте каналы из БД.', mtWarning, [mbOK], 0);
+    Exit;
+  end;
+  StoreAxis; StoreLine; DisplayNameExit(nil);
+  Added := 0; Created := 0; Missing := 0;
+  for I := 0 to High(Items) do
+  begin
+    lName := FindDbSignalName(Items[I].Name);
+    if lName = '' then begin Inc(Missing); Continue; end;
+    GroupPath := Trim(StringReplace(Items[I].GroupPath, '/', '\', [rfReplaceAll]));
+    while Pos('\\', GroupPath) > 0 do GroupPath := StringReplace(GroupPath, '\\', '\', [rfReplaceAll]);
+    while (Length(GroupPath) > 0) and (GroupPath[1] = '\') do Delete(GroupPath, 1, 1);
+    while (Length(GroupPath) > 0) and (GroupPath[Length(GroupPath)] = '\') do Delete(GroupPath, Length(GroupPath), 1);
+    if (GroupPath = '') or SameText(GroupPath, CSqlTrendMainGroup) then Continue;
+    Display := FindDisplayByName(DisplayNameForGroupPath(GroupPath));
+    if Display = nil then begin Display := fDraft.AddDisplay(DisplayNameForGroupPath(GroupPath)); Inc(Created); end;
+    if FindLineByTagName(Display, lName) <> nil then Continue;
+    Line := Display.AddLine; Line.TagName := lName; Line.Name := lName;
+    OglChartLineAppearance(Display.LineCount - 1, PaletteName, PaletteColor);
+    Line.AxisIndex := EnsureAxisForTag(Display, nil);
+    Line.Color := PaletteColor; Line.Visible := True; Line.Width := 1;
+    Inc(Added);
+  end;
+  FillDisplays; FillAxes; FillLines;
+  MessageDlg('Импорт', Format('Создано отображений: %d. Добавлено линий: %d. Не найдено в БД: %d.',
+    [Created, Added, Missing]), mtInformation, [mbOK], 0);
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.btnAutoAxesClick(Sender: TObject);

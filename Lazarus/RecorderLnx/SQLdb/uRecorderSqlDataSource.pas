@@ -42,6 +42,7 @@ type
   end;
 
 function RecorderSqlSourceConfig(ARegistry: TRecorderTagRegistry): string;
+function RecorderTagIsSqlMirror(ATag: TRecorderTag): Boolean;
 procedure RecorderSqlSourceAddBinding(AArray: TJSONArray; const ASignalName,
   ATagName, AUnitName: string);
 
@@ -70,6 +71,13 @@ begin
   Result := '';
   lSource := RecorderConfiguredDataSourcesFind(ARegistry, CRecorderSqlSourceId);
   if lSource <> nil then Result := lSource.SpecificConfigText;
+end;
+
+function RecorderTagIsSqlMirror(ATag: TRecorderTag): Boolean;
+begin
+  Result := (ATag <> nil) and
+    (SameText(ATag.SourceId, CRecorderSqlSourceId) or
+     SameText(ATag.ModuleType, CRecorderSqlSourceModuleType));
 end;
 
 constructor TRecorderSqlDataSource.Create(const AConfigFileName,

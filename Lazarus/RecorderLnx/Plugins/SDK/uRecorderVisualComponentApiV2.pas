@@ -1,20 +1,20 @@
 unit uRecorderVisualComponentApiV2;
 
-{ Generic visual-component ABI v2.
-  This unit is additive: it does not alter the legacy Recorder plugin ABI.
-  Only C-layout records, fixed ANSI byte arrays, integer scalars, opaque
-  pointers, pointer/size buffers and cdecl callbacks may cross the boundary.
-  Record fields are append-only within ABI major version 2. A consumer must
-  check Size before reading a field that may not exist in an older prefix. }
+{ Общий контракт ABI v2 визуальных компонентов для хоста и плагинов.
+  Модуль дополняет старый ABI плагинов Recorder, не изменяя его. Через границу
+  допускаются записи с размещением C, байтовые массивы AnsiChar фиксированной
+  длины, целые числа, непрозрачные указатели, пары буфер/размер и функции cdecl.
+  В пределах основной версии ABI 2 поля записей только добавляются в конец;
+  перед чтением нового поля получатель проверяет Size доступной части записи. }
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$codepage UTF8}
 {$PACKRECORDS C}
 
 interface
 
 const
   REC_VISUAL_ABI_V2_MAJOR = 2;
-  REC_VISUAL_ABI_V2_MINOR = 7;
+  REC_VISUAL_ABI_V2_MINOR = 8;
   REC_VISUAL_STATE_INI_SECTION_V1 = 'recorder.ini.section-v1';
   REC_VISUAL_STATE_UNKNOWN_ENVELOPE_V1 = 'recorder.unknown-envelope-v1';
 
@@ -28,8 +28,8 @@ const
   REC_VISUAL_MAX_DESCRIPTORS = 1024;
   REC_VISUAL_MAX_STATE_BYTES = 16 * 1024 * 1024;
 
-  { Generic ViewDispatch lifecycle messages. They carry no component-specific
-    meaning and are delivered on the UI thread. }
+  { Общие события жизненного цикла ViewDispatch без привязки к компоненту;
+    доставляются в потоке интерфейса. }
   REC_VISUAL_DISPATCH_START = 1;
   REC_VISUAL_DISPATCH_STOP = 2;
   REC_VISUAL_DISPATCH_DATA_UPDATED = 3;
@@ -38,10 +38,11 @@ const
   REC_VISUAL_DISPATCH_DETACH_VIEW = 6;
   REC_VISUAL_DISPATCH_RESIZE_VIEW = 7;
   REC_VISUAL_DISPATCH_VIEW_MODE = 8;
-  { Cold notification: metadata/settings/units may have changed. Re-enumerate
-    and prepare buffers here, never during DATA_UPDATED. No selection reset. }
+  { Редкое уведомление об изменении метаданных, настроек или единиц: здесь
+    перечитать каталоги и подготовить буферы, не сбрасывая выбор. Не делать
+    это при DATA_UPDATED. }
   REC_VISUAL_DISPATCH_CATALOG_CHANGED = 9;
-  { Cold per-view display context. Older plugins return NOT_HANDLED. }
+  { Редкое изменение контекста представления; старые плагины вернут NOT_HANDLED. }
   REC_VISUAL_DISPATCH_VIEW_CONTEXT = 10;
 
   REC_VISUAL_TYPE_ID_CAPACITY = 128;
@@ -57,7 +58,7 @@ const
   REC_VISUAL_TAG_FLAG_AUTO_RANGE = QWord(1) shl 2;
   REC_VISUAL_TAG_FLAG_SOURCE_VISIBLE = QWord(1) shl 3;
 
-  { Stable numeric estimate kinds; these are protocol values, not Pascal enums. }
+  { Постоянные числовые коды видов оценки в протоколе, не перечисление Pascal. }
   REC_VISUAL_ESTIMATE_MEAN = 0;
   REC_VISUAL_ESTIMATE_RMS = 1;
   REC_VISUAL_ESTIMATE_RMS_DEVIATION = 2;
@@ -92,9 +93,18 @@ type
     DisplayWindowSeconds: Double;
   end;
 
-  { For ABI 2.1, AHostContext points to a borrowed
-    TRecorderVisualHostServicesV2 table. ABI 2.0 plugins may still ignore it.
-    Payloads passed to edit/view carry their own size/version headers. }
+  { Контекст START для плагинов общего фреймворка: 0 — просмотр, 1 — запись.
+    Доступен только на время синхронного ViewDispatch; старые получатели
+    могут игнорировать входные данные. Заголовок проверяется перед чтением. }
+  PRecorderVisualRunContextV2 = ^TRecorderVisualRunContextV2;
+  TRecorderVisualRunContextV2 = record
+    Header: TRecorderVisualAbiHeaderV2;
+    Recording: LongWord;
+  end;
+
+  { В ABI 2.1 AHostContext указывает на предоставленную хостом таблицу
+    TRecorderVisualHostServicesV2. Плагины ABI 2.0 могут её игнорировать.
+    Данные edit/view содержат собственные заголовки размера и версии. }
   TRecorderVisualCreateInstanceV2 = function(AHostContext: Pointer;
     AConfigData: Pointer; AConfigSize: SizeUInt;
     out AInstance: Pointer): LongInt; cdecl;
@@ -112,9 +122,9 @@ type
     AOutput: Pointer; AOutputCapacity: SizeUInt;
     out AOutputSize: SizeUInt): LongInt; cdecl;
 
-  { Borrowed UTF8 JSON object of the complete INI section, all values strings.
-    The host transports bytes only. Only the plugin interprets legacy keys.
-    Import failure leaves the instance unchanged; success is followed by Save. }
+  { Предоставленный вызывающим кодом JSON в UTF-8 со всей секцией INI; все
+    значения строковые. Хост передаёт байты, старые ключи разбирает плагин.
+    При ошибке импорта экземпляр не меняется; при успехе вызывается Save. }
   PRecorderVisualImportRequestV2 = ^TRecorderVisualImportRequestV2;
   TRecorderVisualImportRequestV2 = record
     Header: TRecorderVisualAbiHeaderV2;
@@ -125,7 +135,7 @@ type
   end;
   TRecorderVisualImportStateV2 = function(AInstance: Pointer;
     ARequest: PRecorderVisualImportRequestV2; ARequestSize: SizeUInt): LongInt; cdecl;
-  { Aliases are discovery metadata, never additional owned factories. }
+  { Псевдонимы служат для поиска типа и не создают дополнительные фабрики. }
   TRecorderVisualEnumerateAliasesV2 = function(AIndex: LongWord;
     ABuffer: PAnsiChar; ACapacity: SizeUInt): LongInt; cdecl;
 
@@ -176,10 +186,10 @@ type
     Name, BaseUnitName, QuantityId: array[0..63] of AnsiChar;
   end;
   PRecorderVisualUnitInfoV2 = ^TRecorderVisualUnitInfoV2;
-  { Range endpoints are inclusive. IncludePrevious is 0/1 and includes at
-    most one predecessor of FromTimeSec. Revision and LatestTimeSec describe
-    the same locked buffer as the copied samples. ACount reports required
-    capacity; BUFFER_TOO_SMALL writes no caller array data. }
+  { Границы диапазона включаются. IncludePrevious = 0/1 добавляет не более
+    одного отсчёта перед FromTimeSec. Revision и LatestTimeSec соответствуют
+    тому же заблокированному буферу, что и копируемые отсчёты. ACount сообщает
+    требуемую ёмкость; при BUFFER_TOO_SMALL массивы вызывающего не меняются. }
   TRecorderVisualCopyRangeHistoryV2 = function(AContext: Pointer;
     ATagId: QWord; AFromTimeSec, AToTimeSec: Double;
     AIncludePrevious: LongWord; ATimes, AValues: PDouble;
@@ -199,17 +209,17 @@ type
   TRecorderVisualConversionFactorV2 = function(AContext: Pointer;
     AFromUnit, AToUnit: PAnsiChar; out AFactor: Double): LongInt; cdecl;
 
-  { Borrowed host services. The host keeps this table alive until after all
-    plugin instances and callbacks are destroyed. All callbacks are serialized
-    on the UI thread. History arrays are caller-owned and never retained. }
+  { Таблица сервисов принадлежит хосту и существует до уничтожения всех
+    экземпляров плагина и их callback. Вызовы выполняются последовательно
+    в UI-потоке. Массивы истории принадлежат вызывающему и не сохраняются. }
   PRecorderVisualHostServicesV2 = ^TRecorderVisualHostServicesV2;
   TRecorderVisualHostServicesV2 = record
     Header: TRecorderVisualAbiHeaderV2;
     Context: Pointer;
     EnumerateTags: TRecorderVisualEnumerateTagsV2;
     CopyLatestHistory: TRecorderVisualCopyLatestHistoryV2;
-    { ABI 2.3 append-only generic read services. Consumers check Header.Size
-      before accessing each callback; all POD strings use UTF-8. }
+    { Общие функции чтения, добавленные в ABI 2.3. Перед обращением к каждой
+      проверяется Header.Size; строки в простых структурах имеют кодировку UTF-8. }
     CopyRangeHistory: TRecorderVisualCopyRangeHistoryV2;
     GetSignalInfo: TRecorderVisualGetSignalInfoV2;
     GetSelectedTagId: TRecorderVisualGetSelectedTagIdV2;
@@ -219,9 +229,9 @@ type
     ConversionFactor: TRecorderVisualConversionFactorV2;
   end;
 
-  { Generic palette-creation context delivered through
-    REC_VISUAL_DISPATCH_CONFIGURE. Names, bounds and opaque component state
-    remain in their normal host/plugin ownership domains. }
+  { Общий контекст создания из палитры передаётся через
+    REC_VISUAL_DISPATCH_CONFIGURE. Имена, размеры и непрозрачное состояние
+    компонента остаются во владении соответствующего хоста или плагина. }
   PRecorderVisualCreateContextV2 = ^TRecorderVisualCreateContextV2;
   TRecorderVisualCreateContextV2 = record
     Header: TRecorderVisualAbiHeaderV2;
@@ -230,10 +240,10 @@ type
     DefaultTagId: QWord;
   end;
 
-  { The plugin owns its modal editor and draft. Only a native owner handle
-    crosses the boundary. Backend must be supported by the plugin. On OK the
-    host saves opaque state; on CANCELLED/error it restores the prior snapshot.
-    OwnerWindow is borrowed only for the synchronous Edit call. }
+  { Модальный редактор и черновик принадлежат плагину. Через границу передаётся
+    только дескриптор окна владельца; backend должен поддерживаться плагином.
+    При OK хост сохраняет состояние, при CANCELLED/ошибке восстанавливает
+    прежний снимок. OwnerWindow предоставляется только на время вызова Edit. }
   PRecorderVisualEditRequestV2 = ^TRecorderVisualEditRequestV2;
   TRecorderVisualEditRequestV2 = record
     Header: TRecorderVisualAbiHeaderV2;
@@ -242,13 +252,13 @@ type
     OwnerWindow: PtrUInt;
   end;
 
-  { A plugin-owned native child view is attached to this borrowed native
-    parent. Width/Height are parent-client pixels, Dpi describes their scale.
-    NativeBackend identifies the actual C/widgetset native handle kind, not
-    an LCL object. Unsupported backends return NOT_HANDLED. The plugin owns
-    child controls and destroys/detaches them synchronously on DETACH_VIEW.
-    In non-interactive mode pointer gestures belong to the host form editor.
-    Every view must detach before its native parent or instance is destroyed. }
+  { Дочернее представление плагина прикрепляется к предоставленному нативному
+    родителю. Width/Height заданы в пикселях его клиентской области, Dpi —
+    масштаб. NativeBackend определяет вид нативного дескриптора, не объект LCL.
+    Для неподдерживаемого backend возвращается NOT_HANDLED. Плагин владеет
+    дочерними элементами и синхронно удаляет/отсоединяет их при DETACH_VIEW.
+    В неинтерактивном режиме жесты указателя обрабатывает редактор форм хоста.
+    Представление необходимо отсоединить до уничтожения родителя или экземпляра. }
   PRecorderVisualSurfaceV2 = ^TRecorderVisualSurfaceV2;
   TRecorderVisualSurfaceV2 = record
     Header: TRecorderVisualAbiHeaderV2;
@@ -262,7 +272,7 @@ type
     Reserved: LongWord;
   end;
 
-  { Optional status-bearing destruction: no exception crosses C ABI. }
+  { Необязательное уничтожение с кодом результата; исключения не проходят ABI. }
   TRecorderVisualTryDestroyInstanceV2 = function(AInstance: Pointer): LongInt; cdecl;
   PRecorderVisualComponentDescriptorV2 = ^TRecorderVisualComponentDescriptorV2;
   TRecorderVisualComponentDescriptorV2 = record
@@ -287,8 +297,8 @@ type
     ADescriptor: PRecorderVisualComponentDescriptorV2;
     ADescriptorCapacity: SizeUInt): LongInt; cdecl;
 
-{ Overflow-safe append-only ABI guard. A field is present iff its complete
-  byte range lies inside the size advertised by the peer. }
+{ Проверяет наличие поля в расширяемой записи без переполнения: поле должно
+  целиком находиться в размере, объявленном другой стороной ABI. }
 function RecorderVisualFieldPresentV2(ARecordSize, AFieldOffset,
   AFieldSize: SizeUInt): Boolean;
 

@@ -4,6 +4,7 @@ program LinuxSetupManagerCli;
 {$codepage UTF8}
 
 uses
+  {$IFDEF UNIX}cwstring,{$ENDIF}
   uLinuxSetupManagerCli, uLinuxSetupManagerEmbedded;
 
 begin

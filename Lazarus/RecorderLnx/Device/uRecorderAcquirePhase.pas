@@ -33,17 +33,13 @@ type
     function NormalizedUpdatePeriodMs: Cardinal;
   public
     constructor Create(APollFrequencyHz: Double; AUpdatePeriodMs: Cardinal);
-    {
-      Единственный интервал прореживания в режиме опроса (кратность периода блока).
-    }
+    // Единственный интервал прореживания в режиме опроса (кратность периода блока).
     function AcquirePacingMs: Cardinal; virtual;
-    { Ожидание, когда опрос ещё не запущен или прибор остановлен. }
+    // Ожидание, когда опрос ещё не запущен или прибор остановлен.
     function IdleWaitMs: Cardinal; virtual;
     function ReadTimeoutMs: Cardinal; virtual;
-    {
-      Ожидание в потоке разбора, когда буфер пуст (проверка остановки потока).
-      Не использовать как второй pacing в потоке чтения.
-    }
+    // Ожидание в потоке разбора, когда буфер пуст (проверка остановки потока).
+    //  Не использовать как второй pacing в потоке чтения.
     function PublishBlockWaitMs: Cardinal; virtual;
   end;
 

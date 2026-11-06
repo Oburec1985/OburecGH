@@ -1,16 +1,16 @@
 object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
   Left = 0
-  Height = 410
+  Height = 442
   Top = 0
   Width = 720
   Caption = 'Отображение FRF'
-  ClientHeight = 410
+  ClientHeight = 442
   ClientWidth = 720
-  Constraints.MinHeight = 410
+  Constraints.MinHeight = 442
   Constraints.MinWidth = 720
-  Position = poOwnerFormCenter
   FormStyle = fsStayOnTop
   KeyPreview = True
+  Position = poOwnerFormCenter
   OnClose = FormClose
   OnKeyDown = FormKeyDown
   object lblTarget: TLabel
@@ -129,7 +129,7 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
   end
   object colorDisplay: TColorBox
     Left = 344
-    Height = 24
+    Height = 22
     Top = 144
     Width = 180
     Style = [cbStandardColors, cbExtendedColors, cbCustomColor]
@@ -177,15 +177,15 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
   object lblScale: TLabel
     Left = 12
     Height = 15
-    Top = 374
-    Width = 428
-    Caption = 'Заданный размер соответствует 50% размаха каналов на выбранной частоте.'
+    Top = 406
+    Width = 515
+    Caption = 'Лог-радиус: минимум и максимум измеренных точек на выбранной частоте.'
   end
   object chkGradient: TCheckBox
     Left = 16
     Height = 19
-    Top = 278
-    Width = 287
+    Top = 310
+    Width = 341
     Caption = 'Градиент вершин: синий → зелёный → жёлтый → красный'
     TabOrder = 9
     OnClick = EditorChange
@@ -230,7 +230,7 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
   object btnOk: TButton
     Left = 606
     Height = 30
-    Top = 332
+    Top = 364
     Width = 86
     Anchors = [akRight, akBottom]
     Caption = 'Закрыть'
@@ -240,7 +240,7 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
   object chkCreateColorModifier: TCheckBox
     Left = 16
     Height = 19
-    Top = 254
+    Top = 286
     Width = 172
     Caption = 'Создать модификатор Color'
     TabOrder = 13
@@ -257,9 +257,9 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
   end
   object chkResultValues: TCheckBox
     Left = 156
-    Top = 84
-    Width = 180
     Height = 19
+    Top = 84
+    Width = 139
     Caption = 'Отображать значения'
     TabOrder = 17
     OnClick = ResultValuesChange
@@ -267,15 +267,15 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
   object lblEnvelope: TLabel
     Left = 12
     Height = 15
-    Top = 308
-    Width = 370
+    Top = 340
+    Width = 301
     Caption = 'Сферическая оболочка, радиус в единицах геометрии'
   end
   object chkEnvelopeX: TCheckBox
     Left = 12
     Height = 19
-    Top = 336
-    Width = 180
+    Top = 368
+    Width = 130
     Caption = 'Включить оболочку'
     TabOrder = 15
     OnClick = EditorChange
@@ -283,10 +283,22 @@ object RecorderImpactGeometryBindingDialog: TRecorderImpactGeometryBindingDialog
   object edEnvelopeX: TEdit
     Left = 200
     Height = 23
-    Top = 332
+    Top = 364
     Width = 120
     TabOrder = 16
     Text = '1'
     OnChange = EditorChange
+  end
+  object chkLogRadius: TCheckBox
+    Left = 533
+    Height = 19
+    Hint = 'Границы логарифмической шкалы определяются автоматически по измеренным точкам на выбранной частоте.'
+    Top = 248
+    Width = 163
+    Caption = 'Логарифмический радиус'
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 18
+    OnClick = EditorChange
   end
 end

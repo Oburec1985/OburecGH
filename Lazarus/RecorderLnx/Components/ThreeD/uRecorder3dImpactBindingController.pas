@@ -250,6 +250,7 @@ begin
     Specs[I].Visualization := ABindings[I].Visualization;
     Specs[I].PointNumber := ABindings[I].PointNumber;
     Specs[I].MarkerSizePixels := ABindings[I].MarkerSizePixels;
+    Specs[I].IntensityLogScale := ABindings[I].IntensityLogScale;
     Specs[I].IntensitySource := ABindings[I].IntensitySource;
     Specs[I].BandRms := ABindings[I].BandRms;
     Specs[I].BandTolerancePercent := ABindings[I].BandTolerancePercent;

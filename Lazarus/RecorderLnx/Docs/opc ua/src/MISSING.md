@@ -40,9 +40,11 @@ OPC-файлов и их копий сверены.
    являются заглушками.
 2. **Защищённые endpoint.** Реализована только SecurityPolicy `None`. Нет
    сертификатов, Sign, SignAndEncrypt, trust store и выбора MessageSecurityMode.
-3. **Subscription.** Нет CreateSubscription, MonitoredItem и Publish. Клиент
-   выполняет синхронные пакетные ReadRequest на периоде источника; редактор
-   честно показывает Subscription как неподдерживаемый режим.
+3. **Subscription limitations.** CreateSubscription, MonitoredItems и Publish
+   поддерживают скалярные, массивные и сложные Variant values. Пользовательские
+   ExtensionObject сохраняются как непрозрачное тело с type NodeId и encoding;
+   декодирование полей по схеме, republish/recovery после потери сессии и
+   долговременное восстановление подписок пока не поддерживаются.
 4. **Альтернативные пути узлов.** Browse теперь дочитывает ContinuationPoint
    через BrowseNext и сохраняет Object/Method, но visited-set по NodeId
    показывает узел только по первому найденному иерархическому пути.
@@ -54,13 +56,14 @@ OPC-файлов и их копий сверены.
 
 ## Типы данных и атрибуты
 
-- рабочие Read/Write поддерживают только скалярные Boolean и числа
-  SByte..Double;
-- массивы и Matrix целиком не публикуются как один рабочий тег; реальные
+- запись поддерживает только скалярные Boolean и числа SByte..Double;
+- массивы и Matrix не сворачиваются в числовой тег, а целиком публикуются как
+  JSON-сообщения с элементами и dimensions; реальные
   индексные дочерние узлы сервера публикуются отдельно, а одномерные Variant-
   массивы без таких узлов редактор показывает fallback-строками при Browse;
-  String, DateTime, ByteString, Enumeration и структуры также пока не
-  публикуются как рабочие значения;
+- скалярные String, DateTime, ByteString, Enumeration и другие built-in values
+  публикуются в сообщениях; ExtensionObject сохраняет оригинальное тело, но не
+  декодирует пользовательские поля без схемы;
 - не читаются `ArrayDimensions`, `Description` и
   `MinimumSamplingInterval`;
 - custom DataType/subtype, отличный от прямого built-in NodeId `i=1..11`, не
@@ -110,17 +113,18 @@ OPC-файлов и их копий сверены.
 
 1. Подтвердить Boolean write/readback на доступном PLC210 и сохранить дамп.
 2. Добавить protocol tests для WriteRequest и очереди команд.
-3. Реализовать UA-TCP chunk assembly и отображение альтернативных Browse-путей.
-4. Убрать временные массивы из горячего цикла batch Read, затем перейти на Subscription.
-5. Добавить secure channel renewal и защищённые политики.
-6. Реализовать серверный backend либо скрыть режим Server из рабочего UI до
+3. Добавить UA-TCP chunk assembly и отображение альтернативных Browse-путей.
+4. Добавить secure channel renewal и защищённые политики.
+5. Реализовать серверный backend либо скрыть режим Server из рабочего UI до
    его готовности.
 # Ограничения строковых сообщений
 
 - Нет истории, подтверждения/квитирования и правил авто-классификации сообщений.
 - Тип и цвет сохраняются в конфигурации, но отдельный удобный редактор этих
   полей ещё не выведен в диалог.
-- Не поддержаны массивы `String`, `ByteString` и vendor-specific кодировки.
+- Поля пользовательских структур не разбираются без схемы DataType; бинарный
+  payload ExtensionObject сохраняется Base64. Vendor-specific кодировки тела
+  должны оставаться совместимы с OPC UA ExtensionObject encoding.
 - Строковые переменные доступны только в OPC UA client-mode; встроенный
   server-mode пока числовой.
 - Для транспортного слоя остаётся отдельная оптимизация: переиспользование

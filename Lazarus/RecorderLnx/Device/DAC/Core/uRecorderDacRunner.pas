@@ -30,6 +30,7 @@ type
     fMirrorWake: TEvent;
     fMirrorPublisher: TRecorderDacMirrorPublisher;
     procedure StoreResult(const AResult: TRecorderDacResult);
+    procedure FinishPublisher;
   protected
     procedure Execute; override;
   public
@@ -42,6 +43,8 @@ type
   end;
 
 implementation
+
+uses SysUtils, uRecorderDebugLog;
 
 constructor TRecorderDacRunner.Create(ASession: TRecorderDacSession;
   const AConfig: TRecorderDacConfig);
@@ -63,16 +66,19 @@ begin
     RequestStop;
     WaitFor;
   end;
-  if fMirrorPublisher <> nil then
-  begin
-    fMirrorPublisher.Terminate;
-    fMirrorWake.SetEvent;
-    fMirrorPublisher.WaitFor;
-    fMirrorPublisher.Free;
-  end;
+  FinishPublisher;
   fMirrorWake.Free;
   DoneCriticalSection(fResultLock);
   inherited Destroy;
+end;
+
+procedure TRecorderDacRunner.FinishPublisher;
+begin
+  if fMirrorPublisher = nil then Exit;
+  fMirrorPublisher.Terminate;
+  fMirrorWake.SetEvent;
+  fMirrorPublisher.WaitFor;
+  FreeAndNil(fMirrorPublisher);
 end;
 
 procedure TRecorderDacRunner.StoreResult(const AResult: TRecorderDacResult);
@@ -100,6 +106,7 @@ begin
     Exit;
   fMirrorPublisher := TRecorderDacMirrorPublisher.Create(fSession, fMirrorWake);
   fMirrorPublisher.Start;
+  try
   if not fSession.Start(lResult) then
   begin
     StoreResult(lResult);
@@ -118,7 +125,27 @@ begin
     fMirrorWake.SetEvent;
   end;
   if fSession.State = rdsRunning then fSession.Stop(lResult);
+  { A finite marker may be delivered by the ADC after output has completed.
+    Keep the publisher alive until lock/timeout, even on a hidden component. }
+  fMirrorWake.SetEvent;
+  while not Terminated and fSession.MirrorPending do
+    fMirrorWake.WaitFor(50);
+  if Terminated and fSession.MirrorPending then fSession.CancelMirror;
+  finally
+    FinishPublisher;
+  end;
+  { The final drain can fail too. Decide the result only after the publisher
+    has joined, preserving the original driver failure when one exists. }
+  if not lFailed and (fSession.MirrorResult.Error <> rdeNone) then
+  begin
+    lFailure := fSession.MirrorResult;
+    lFailed := True;
+  end;
   if not lFailed then StoreResult(lResult) else StoreResult(lFailure);
+  RecorderDebugLog(Format('[DAC run] submitted=%d mirrored=%d underruns=%d dropped_mirror=%d result=%s',
+    [fSession.Counters.SubmittedFrames, fSession.Counters.MirroredFrames,
+    fSession.Counters.Underruns, fSession.Counters.DroppedMirrorBlocks,
+    LastResult.Text]));
 end;
 
 procedure TRecorderDacRunner.StartRun;
@@ -163,8 +190,9 @@ var
 begin
   while not Terminated do
   begin
-    fWake.WaitFor(1000);
+    fWake.WaitFor(50);
     while fSession.FlushMirror(lResult) do ;
+    fSession.MaintainMirror;
   end;
   while fSession.FlushMirror(lResult) do ;
 end;

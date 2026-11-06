@@ -1,13 +1,13 @@
 object RecorderDacSettingsDialog: TRecorderDacSettingsDialog
   Left = 300
-  Height = 590
+  Height = 800
   Top = 180
   Width = 720
   BorderIcons = [biSystemMenu]
   Caption = 'Настройка ЦАП'
-  ClientHeight = 590
+  ClientHeight = 800
   ClientWidth = 720
-  Constraints.MinHeight = 560
+  Constraints.MinHeight = 800
   Constraints.MinWidth = 680
   OnShow = FormShow
   Position = poScreenCenter
@@ -206,7 +206,7 @@ object RecorderDacSettingsDialog: TRecorderDacSettingsDialog
     Height = 146
     Top = 378
     Width = 696
-    Anchors = [akTop, akLeft, akRight, akBottom]
+    Anchors = [akTop, akLeft, akRight]
     Caption = 'Зеркало фактического буфера ЦАП в тег'
     TabOrder = 3
     object cbMirror: TCheckBox
@@ -248,26 +248,115 @@ object RecorderDacSettingsDialog: TRecorderDacSettingsDialog
       TabOrder = 3
     end
   end
+  object gbCalibration: TGroupBox
+    Left = 12
+    Top = 532
+    Width = 696
+    Height = 210
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Caption = 'Обратная связь и параметры калибровки'
+    TabOrder = 4
+    object edFeedbackTag: TEdit
+      Left = 12
+      Top = 24
+      Width = 502
+      Height = 25
+      Anchors = [akTop, akLeft, akRight]
+      ReadOnly = True
+      TextHint = 'Канал, на который подключён аналоговый выход ЦАП'
+      TabOrder = 0
+    end
+    object btnFeedbackTag: TButton
+      Left = 524
+      Top = 24
+      Width = 160
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = 'Обратная связь...'
+      OnClick = SelectFeedbackTag
+      TabOrder = 1
+    end
+    object cbFeedbackSync: TCheckBox
+      Left = 12
+      Top = 56
+      Width = 672
+      Height = 23
+      Caption = 'Калибровать время и частоту зеркала по обратной связи'
+      OnClick = FeedbackSyncClick
+      TabOrder = 2
+    end
+    object rgPhaseCalibrationMode: TRadioGroup
+      Left = 12
+      Top = 82
+      Width = 672
+      Height = 60
+      Anchors = [akTop, akLeft, akRight]
+      Caption = 'Калибровка фазы ЦАП'
+      Columns = 3
+      ItemIndex = 0
+      Items.Strings = (
+        'При старте измерения'
+        'По кнопке Play'
+        'По кнопке'
+      )
+      Hint = 'По кнопке Play: калибровка перед каждым пуском. По кнопке: только явная команда «Калибровка фазы».'
+      ShowHint = True
+      TabOrder = 3
+    end
+    object lblFeedbackTimeout: TLabel
+      Left = 12
+      Top = 154
+      Caption = 'Ожидание, с'
+    end
+    object edFeedbackTimeout: TFloatSpinEdit
+      Left = 112
+      Top = 150
+      Width = 100
+      Height = 25
+      DecimalPlaces = 2
+      MinValue = 0.1
+      MaxValue = 60
+      Value = 10
+      TabOrder = 4
+    end
+    object lblFeedbackCalibrationDuration: TLabel
+      Left = 250
+      Top = 154
+      Caption = 'Время калибровочного сигнала, с'
+    end
+    object edFeedbackCalibrationDuration: TFloatSpinEdit
+      Left = 480
+      Top = 150
+      Width = 130
+      Height = 25
+      DecimalPlaces = 3
+      Increment = 0.1
+      MinValue = 0.6
+      MaxValue = 30
+      Value = 5
+      TabOrder = 5
+    end
+  end
   object btnOk: TButton
     Left = 536
     Height = 30
-    Top = 544
+    Top = 758
     Width = 82
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
     OnClick = OkClick
-    TabOrder = 4
+    TabOrder = 5
   end
   object btnCancel: TButton
     Left = 626
     Height = 30
-    Top = 544
+    Top = 758
     Width = 82
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Отмена'
     ModalResult = 2
-    TabOrder = 5
+    TabOrder = 6
   end
 end

@@ -25,6 +25,7 @@ type
     edSize: TEdit;
     edBandTolerance: TEdit;
     chkIntensityOnly: TCheckBox;
+    chkLogRadius: TCheckBox;
     chkGradient: TCheckBox;
     colorDisplay: TColorBox;
     btnOk: TButton;
@@ -147,6 +148,7 @@ begin
   chkCreateColorModifier.Checked := fModel.CreateColorModifier;
   chkShowAnchors.Checked := fModel.ShowAnchorMarkers;
   chkResultValues.Checked := fModel.ResultValuesVisible;
+  chkLogRadius.Checked := fModel.IntensityLogScale;
   LoadObjects;
 end;
 
@@ -280,6 +282,7 @@ begin
   if cbVisualization.ItemIndex>=0 then
     fModel.MarkerVisualization:=TRecorderPointVisualization(cbVisualization.ItemIndex);
   fModel.MarkerSizePixels := StrToFloatDef(edSize.Text, 10);
+  fModel.IntensityLogScale := chkLogRadius.Checked;
   fModel.MarkerGradientEnabled := chkGradient.Checked;
   fModel.CreateColorModifier := chkCreateColorModifier.Checked;
   fModel.ShowAnchorMarkers := chkShowAnchors.Checked;

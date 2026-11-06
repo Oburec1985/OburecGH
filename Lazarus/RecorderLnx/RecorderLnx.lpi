@@ -844,6 +844,10 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="Device/DAC/Audio/uRecorderAudioDacSelection.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="Device/DAC/Null/uRecorderNullDacBackend.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -1082,6 +1086,10 @@
         <ComponentName Value="RecorderArithmeticAlgorithmFrame"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="Core/uRecorderCoordinatorOwnership.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
   </ProjectOptions>

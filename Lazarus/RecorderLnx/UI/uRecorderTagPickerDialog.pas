@@ -11,7 +11,8 @@ uses
 
 function ShowRecorderTagPickerDialog(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const AInitialTagName: string;
-  AVectorOnly: Boolean; out ASelectedTag: TRecorderTag): Boolean;
+  AVectorOnly: Boolean; out ASelectedTag: TRecorderTag;
+  AHardwareOnly: Boolean = False): Boolean;
 function RecorderTagCanProvideBlocks(ATag: TRecorderTag): Boolean;
 
 implementation
@@ -30,25 +31,28 @@ type
   private
     fRegistry: TRecorderTagRegistry;
     fVectorOnly: Boolean;
+    fHardwareOnly: Boolean;
+    fSelectedTagId: TRecorderTagId;
     fInitialTagName: string;
     fSearchEdit: TEdit;
     fTagList: TListBox;
     fOkButton: TButton;
     procedure SearchChanged(Sender: TObject);
     procedure TagListDblClick(Sender: TObject);
+    procedure TagListClick(Sender: TObject);
     procedure RebuildList;
     function TagMatchesFilter(ATag: TRecorderTag;
       const AFilter: string): Boolean;
   public
     constructor CreatePicker(AOwner: TComponent;
       ARegistry: TRecorderTagRegistry; const AInitialTagName: string;
-      AVectorOnly: Boolean);
+      AVectorOnly, AHardwareOnly: Boolean);
     function SelectedTag: TRecorderTag;
   end;
 
 constructor TRecorderTagPickerDialog.CreatePicker(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const AInitialTagName: string;
-  AVectorOnly: Boolean);
+  AVectorOnly, AHardwareOnly: Boolean);
 var
   lTopPanel, lBottomPanel: TPanel;
   lLabel: TLabel;
@@ -57,8 +61,10 @@ begin
   inherited CreateNew(AOwner);
   fRegistry := ARegistry;
   fVectorOnly := AVectorOnly;
+  fHardwareOnly := AHardwareOnly;
   fInitialTagName := AInitialTagName;
   Caption := 'Выбор исходного тега';
+  if fHardwareOnly then Caption := 'Выбор аппаратного тега обратной связи';
   Position := poScreenCenter;
   SetBounds(0, 0, 560, 520);
   Constraints.MinWidth := 420;
@@ -117,6 +123,7 @@ begin
   fTagList.BorderSpacing.Bottom := 6;
   fTagList.IntegralHeight := False;
   fTagList.OnDblClick := @TagListDblClick;
+  fTagList.OnClick := @TagListClick;
 
   RebuildList;
 end;
@@ -128,6 +135,7 @@ var
 begin
   Result := False;
   if ATag = nil then Exit;
+  if fHardwareOnly and ATag.IsVirtual then Exit;
   if fVectorOnly and not RecorderTagCanProvideBlocks(ATag) then Exit;
   if AFilter = '' then Exit(True);
   lText := UTF8LowerCase(ATag.Name + ' ' + ATag.Address + ' ' +
@@ -141,6 +149,14 @@ var
   lFilter: string;
   lTag: TRecorderTag;
 begin
+  lTag := SelectedTag;
+  if lTag <> nil then fSelectedTagId := lTag.Id;
+  if (fSelectedTagId = 0) and (fRegistry <> nil) and
+    (fInitialTagName <> '') then
+  begin
+    lTag := fRegistry.FindByName(fInitialTagName);
+    if lTag <> nil then fSelectedTagId := lTag.Id;
+  end;
   lFilter := UTF8LowerCase(Trim(fSearchEdit.Text));
   lSelectedIndex := -1;
   fTagList.Items.BeginUpdate;
@@ -152,12 +168,12 @@ begin
       lTag := fRegistry.Tags[I];
       if not TagMatchesFilter(lTag, lFilter) then Continue;
       fTagList.Items.AddObject(lTag.Name, lTag);
-      if SameText(lTag.Name, fInitialTagName) then
+      if lTag.Id = fSelectedTagId then
         lSelectedIndex := fTagList.Items.Count - 1;
     end;
     if lSelectedIndex >= 0 then
       fTagList.ItemIndex := lSelectedIndex
-    else if fTagList.Items.Count > 0 then
+    else if (fSelectedTagId = 0) and (fTagList.Items.Count > 0) then
       fTagList.ItemIndex := 0;
     fOkButton.Enabled := fTagList.ItemIndex >= 0;
   finally
@@ -175,6 +191,15 @@ begin
   if SelectedTag <> nil then ModalResult := mrOk;
 end;
 
+procedure TRecorderTagPickerDialog.TagListClick(Sender: TObject);
+var
+  lTag: TRecorderTag;
+begin
+  lTag := SelectedTag;
+  fOkButton.Enabled := lTag <> nil;
+  if lTag <> nil then fSelectedTagId := lTag.Id;
+end;
+
 function TRecorderTagPickerDialog.SelectedTag: TRecorderTag;
 begin
   Result := nil;
@@ -185,14 +210,15 @@ end;
 
 function ShowRecorderTagPickerDialog(AOwner: TComponent;
   ARegistry: TRecorderTagRegistry; const AInitialTagName: string;
-  AVectorOnly: Boolean; out ASelectedTag: TRecorderTag): Boolean;
+  AVectorOnly: Boolean; out ASelectedTag: TRecorderTag;
+  AHardwareOnly: Boolean): Boolean;
 var
   lDialog: TRecorderTagPickerDialog;
 begin
   Result := False;
   ASelectedTag := nil;
   lDialog := TRecorderTagPickerDialog.CreatePicker(AOwner, ARegistry,
-    AInitialTagName, AVectorOnly);
+    AInitialTagName, AVectorOnly, AHardwareOnly);
   try
     if lDialog.ShowModal <> mrOk then Exit;
     ASelectedTag := lDialog.SelectedTag;

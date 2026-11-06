@@ -4,8 +4,10 @@ library StatefulVisualProbePlugin;
 {$PACKRECORDS C}
 
 uses
-  Interfaces, Forms, Classes, SysUtils, Math, uRecorderVisualComponentApiV2,
-  uProbeNativeView;
+  Interfaces, Forms, Classes, SysUtils, Math, SyncObjs, uRecorderVisualComponentApiV2,
+  uProbeNativeView
+  {$IFDEF PLUGIN_NEW_LIFECYCLE}, uRecorderPluginApi,
+  uRecorderPluginClass, uRecorderPluginComponentManager{$ENDIF};
 
 type
   TProbeState = record
@@ -34,6 +36,26 @@ const
   CEmptyTypeId = 'test.empty-state-visual';
 
 var gFailedInstances:TList; gVoidDestroyCount:LongWord;
+  gBorrowedVisualServices:PRecorderVisualHostServicesV2;
+{$IFDEF PLUGIN_NEW_LIFECYCLE}
+type
+  TProbeFactory = class(cRecBasicFactory)
+    function GetDescriptor(ADescriptor:PRecorderVisualComponentDescriptorV2;
+      ACapacity:SizeUInt):LongInt; override;
+    function Notify(AKind:LongWord; AData:Pointer):LongInt; override;
+    function doRecorderInit:LongInt; override;
+    function doClose:LongInt; override;
+  end;
+  TProbeWorker = class(TThread)
+    Wake: TEvent;
+    procedure Execute; override;
+    constructor Create;
+    destructor Destroy; override;
+  end;
+var gInstances:TList; gPlugin:TExtRecorderPack; gFactory:TProbeFactory;
+  gBorrowedHostApi:PRecorderPluginHostApi;
+  gProbeWorker:TProbeWorker; gCloseCount,gPluginDestroyCount,gWorkerStopCount:LongWord;
+{$ENDIF}
 
 function CreateInstance(AHostContext: Pointer; AConfigData: Pointer;
   AConfigSize: SizeUInt; out AInstance: Pointer): LongInt; cdecl;
@@ -65,6 +87,7 @@ begin
   if AHostContext<>nil then
   begin
     lServices:=PRecorderVisualHostServicesV2(AHostContext);
+    gBorrowedVisualServices:=lServices;
     if (lServices^.Header.Size<SizeOf(TRecorderVisualHostServicesV2)) or
       (lServices^.Header.AbiMajor<>REC_VISUAL_ABI_V2_MAJOR) or
       (lServices^.Header.AbiMinor<1) or (lServices^.Context=nil) or
@@ -242,11 +265,19 @@ begin
     Inc(lState^.ServiceChecks);
   end;
   AInstance := lState;
+  {$IFDEF PLUGIN_NEW_LIFECYCLE}
+  gInstances.Add(AInstance);
+  gFactory.RegisterInstance(AInstance);
+  {$ENDIF}
   Result := REC_VISUAL_OK;
 end;
 
 procedure DestroyInstance(AInstance: Pointer); cdecl;
 begin
+  {$IFDEF PLUGIN_NEW_LIFECYCLE}
+  if gInstances <> nil then gInstances.Remove(AInstance);
+  if gFactory <> nil then gFactory.UnregisterInstance(AInstance);
+  {$ENDIF}
   Inc(gVoidDestroyCount);
   CloseProbeNativeViews(AInstance);
   if AInstance <> nil then
@@ -287,6 +318,40 @@ begin
     for I:=0 to gFailedInstances.Count-1 do DestroyInstance(gFailedInstances[I]);
     FreeAndNil(gFailedInstances);
   end;
+  Result:=REC_VISUAL_OK;
+end;
+
+{ Вызывается только тестовым дочерним процессом; проверяет таблицы, оставленные
+  живому экземпляру после отказа TryDestroyInstance. 0 — до завершения хоста,
+  1 — после завершения; callback должен отказать, не обращаясь к старому хосту. }
+function ProbeBorrowedServices(AAfterShutdown:LongInt):LongInt; cdecl;
+var lInfo:TRecorderVisualTagInfoV2; lStatus:LongInt;
+  {$IFDEF PLUGIN_NEW_LIFECYCLE} lTag:TRecorderPluginTagInfo; lOk:LongBool; {$ENDIF}
+begin
+  Result:=-101;
+  if (gBorrowedVisualServices=nil) or
+    (gBorrowedVisualServices^.Header.Size<SizeOf(TRecorderVisualHostServicesV2)) or
+    not Assigned(gBorrowedVisualServices^.EnumerateTags) then Exit;
+  Result:=-102;
+  lInfo:=Default(TRecorderVisualTagInfoV2);
+  lInfo.Header.Size:=SizeOf(lInfo); lInfo.Header.AbiMajor:=REC_VISUAL_ABI_V2_MAJOR;
+  lStatus:=gBorrowedVisualServices^.EnumerateTags(gBorrowedVisualServices^.Context,0,@lInfo);
+  if AAfterShutdown=0 then begin
+    if lStatus<>REC_VISUAL_OK then Exit;
+  end else if (lStatus<>REC_VISUAL_ERROR) and
+    (lStatus<>REC_VISUAL_NOT_FOUND) then begin
+    Result:=-200-lStatus; Exit;
+  end;
+  {$IFDEF PLUGIN_NEW_LIFECYCLE}
+  Result:=-103;
+  if (gBorrowedHostApi=nil) or (gBorrowedHostApi^.Size<SizeOf(TRecorderPluginHostApi)) or
+    not Assigned(gBorrowedHostApi^.GetTagInfo) then Exit;
+  Result:=-104;
+  lTag:=Default(TRecorderPluginTagInfo); lTag.Size:=SizeOf(lTag);
+  lOk:=gBorrowedHostApi^.GetTagInfo(gBorrowedHostApi^.HostContext,0,@lTag);
+  if (AAfterShutdown=0) and not lOk then Exit;
+  if (AAfterShutdown<>0) and lOk then Exit;
+  {$ENDIF}
   Result:=REC_VISUAL_OK;
 end;
 
@@ -400,6 +465,7 @@ begin
         PProbeState(AInstance)^.ConfiguredContext :=
           PRecorderVisualCreateContextV2(AInput)^;
       end;
+    REC_VISUAL_DISPATCH_CATALOG_CHANGED: Inc(PProbeState(AInstance)^.SurfaceReserved);
     REC_VISUAL_DISPATCH_START: Inc(PProbeState(AInstance)^.StartCount);
     REC_VISUAL_DISPATCH_STOP: Inc(PProbeState(AInstance)^.StopCount);
     REC_VISUAL_DISPATCH_DATA_UPDATED: Inc(PProbeState(AInstance)^.UpdateCount);
@@ -530,11 +596,177 @@ begin
   Result := REC_VISUAL_OK;
 end;
 
+{$IFDEF PLUGIN_NEW_LIFECYCLE}
+constructor TProbeWorker.Create;
+begin
+  inherited Create(True); FreeOnTerminate:=False;
+  Wake:=TEvent.Create(nil,True,False,''); Start;
+end;
+
+destructor TProbeWorker.Destroy;
+begin Wake.Free; inherited Destroy; end;
+
+procedure TProbeWorker.Execute;
+begin Wake.WaitFor(INFINITE); end;
+
+function TProbeFactory.doClose:LongInt;
+begin
+  Inc(gCloseCount);
+  if (GetEnvironmentVariable('RECORDER_CLOSE_PROBE')<>'') and
+    (gCloseCount=1) then Exit(REC_VISUAL_ERROR);
+  if gProbeWorker<>nil then begin
+    gProbeWorker.Wake.SetEvent; gProbeWorker.WaitFor;
+    FreeAndNil(gProbeWorker); Inc(gWorkerStopCount);
+  end;
+  Result:=REC_VISUAL_OK;
+end;
+
+function TProbeFactory.GetDescriptor(ADescriptor:PRecorderVisualComponentDescriptorV2;
+  ACapacity:SizeUInt):LongInt;
+begin
+  Result:=REC_VISUAL_NOT_HANDLED;
+end;
+
+function TProbeFactory.Notify(AKind:LongWord; AData:Pointer):LongInt;
+var I:Integer; lCode:LongWord;
+begin
+  lCode:=0;
+  case AKind of
+    PN_RCSTART:begin
+      if PtrUInt(AData)>1 then Exit(REC_VISUAL_ERROR);
+      lCode:=1+PtrUInt(AData);
+    end;
+    PN_RCSTOP:begin
+      if AData<>nil then Exit(REC_VISUAL_ERROR);
+      lCode:=3;
+    end;
+  end;
+  if lCode<>0 then
+    for I:=0 to gInstances.Count-1 do
+      PProbeState(gInstances[I])^.ErrorReserved:=
+        (PProbeState(gInstances[I])^.ErrorReserved shl 4) or lCode;
+  Result:=inherited Notify(AKind,AData);
+end;
+
+function TProbeFactory.doRecorderInit:LongInt;
+var I:Integer;
+begin
+  Result:=REC_VISUAL_ERROR;
+  for I:=0 to gInstances.Count-1 do begin
+    if PProbeState(gInstances[I])^.SurfaceReserved=0 then Exit;
+    PProbeState(gInstances[I])^.SurfaceReserved:=
+      PProbeState(gInstances[I])^.SurfaceReserved or $80000000;
+  end;
+  Result:=REC_VISUAL_OK;
+end;
+
+procedure RegisterProbeFactories(AManager:cCompMng);
+var lDescriptor:TRecorderVisualComponentDescriptorV2;
+begin
+  gFactory:=TProbeFactory.Create;
+  try
+    lDescriptor:=Default(TRecorderVisualComponentDescriptorV2);
+    lDescriptor.ViewDispatch:=@ViewDispatch;
+    gFactory.SetDescriptor(lDescriptor);
+    AManager.Add(gFactory);
+  except
+    FreeAndNil(gFactory);
+    raise;
+  end;
+end;
+
+function CreatePluginClass:Pointer; cdecl;
+begin
+  Result:=nil;
+  if gPlugin<>nil then Exit;
+  gInstances:=TList.Create;
+  try
+    gPlugin:=TExtRecorderPack.Create(@RegisterProbeFactories);
+    Result:=Pointer(gPlugin);
+  except
+    FreeAndNil(gInstances);
+  end;
+end;
+
+function PluginCreate(AInstance:Pointer; AHostApi:PRecorderPluginHostApi):LongBool; cdecl;
+begin
+  Result:=(AInstance=Pointer(gPlugin)) and (AInstance<>nil);
+  if Result then begin
+    gBorrowedHostApi:=AHostApi;
+    Result:=gPlugin.Initialize(AHostApi);
+    if Result and (GetEnvironmentVariable('RECORDER_CLOSE_PROBE')<>'') then begin
+      gProbeWorker:=TProbeWorker.Create;
+      if GetEnvironmentVariable('RECORDER_CLOSE_PROBE')='initfail' then Result:=False;
+    end;
+  end;
+end;
+
+function PluginNotify(AInstance:Pointer; AEvent:LongInt; AData:Pointer):LongBool; cdecl;
+begin
+  Result:=False;
+  if (AInstance=nil) or (AInstance<>Pointer(gPlugin)) then Exit;
+  Result:=gPlugin.Notify(AEvent,AData)>=0;
+end;
+
+function PluginClose(AInstance:Pointer):LongBool; cdecl;
+begin
+  Result:=False;
+  if (AInstance=nil) or (AInstance<>Pointer(gPlugin)) then Exit;
+  try gPlugin.Close; Result:=True; except Result:=False; end;
+end;
+
+function DestroyPluginClass(AInstance:Pointer):LongInt; cdecl;
+begin
+  Result:=-1;
+  if (AInstance=nil) or (AInstance<>Pointer(gPlugin)) or gPlugin.HasInstances then Exit;
+  Inc(gPluginDestroyCount);
+  FreeAndNil(gPlugin); gFactory:=nil;
+  FreeAndNil(gInstances); Result:=0;
+end;
+
+function RecorderVisualUsesPluginNotifications:LongBool; cdecl;
+begin Result:=True; end;
+
+function ProbeCloseCount:LongWord; cdecl;
+begin Result:=gCloseCount; end;
+function ProbePluginDestroyCount:LongWord; cdecl;
+begin Result:=gPluginDestroyCount; end;
+function ProbeWorkerStopCount:LongWord; cdecl;
+begin Result:=gWorkerStopCount; end;
+function ProbeWorkerRunning:LongWord; cdecl;
+begin Result:=Ord(gProbeWorker<>nil); end;
+
+function ProbeFinalizePinnedPlugin:LongInt; cdecl;
+begin
+  Result:=REC_VISUAL_ERROR;
+  if (gPlugin=nil) or gPlugin.HasInstances then Exit;
+  if not PluginClose(Pointer(gPlugin)) then Exit;
+  if DestroyPluginClass(Pointer(gPlugin))<>0 then Exit;
+  Result:=REC_VISUAL_OK;
+end;
+
+{ Для теста gateway: синхронно вызывает сервис журнала на потоке вызывающего. }
+function ProbeLogService:LongInt; cdecl;
+begin
+  Result:=REC_VISUAL_ERROR;
+  if (gBorrowedHostApi=nil) or not Assigned(gBorrowedHostApi^.LogMessage) then Exit;
+  gBorrowedHostApi^.LogMessage(gBorrowedHostApi^.HostContext,'blocking probe');
+  Result:=REC_VISUAL_OK;
+end;
+{$ENDIF}
+
 exports
+  {$IFDEF PLUGIN_NEW_LIFECYCLE}
+  CreatePluginClass, PluginCreate, PluginNotify, PluginClose,
+  DestroyPluginClass, RecorderVisualUsesPluginNotifications, ProbeFinalizePinnedPlugin,
+  ProbeCloseCount, ProbePluginDestroyCount, ProbeWorkerStopCount, ProbeWorkerRunning,
+  ProbeLogService,
+  {$ENDIF}
   RecorderVisualGetDescriptorV2 name 'RecorderVisualGetDescriptorV2',
   ProbeNativeViewCount name 'ProbeNativeViewCount',
   ProbeFailedDestroyCount name 'ProbeFailedDestroyCount',
   ProbeVoidDestroyCount name 'ProbeVoidDestroyCount',
+  ProbeBorrowedServices name 'ProbeBorrowedServices',
   ProbeCleanupFailedDestroy name 'ProbeCleanupFailedDestroy';
 
 begin

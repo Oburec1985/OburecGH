@@ -1,18 +1,20 @@
 unit uRecorderPluginApi;
 
-{ Plugin ABI boundary — mandatory rules:
-  * This is a flat, versioned C ABI. Preserve existing record prefixes and append
-    optional fields only; check Size before reading every appended field.
-  * Only fixed-layout scalar/POD records, pointers to caller-owned buffers, and
-    cdecl callbacks cross the module boundary. Never expose LCL controls,
-    TOglChart/TCanvas, Pascal interfaces/classes, managed strings, or dynamic
-    arrays across it.
-  * Oscillogram-named registration records are transitional compatibility API.
-    New component features must use generic contracts, not add host callbacks
-    whose names or semantics identify a concrete component.
+{ Общий контракт старого API плагинов Recorder для хоста и библиотек плагинов.
+  Обязательные правила границы ABI:
+  * Это плоский версионированный C ABI: существующие начальные поля записей
+    сохраняются, новые необязательные поля добавляются в конец. Перед чтением
+    каждого добавленного поля проверяется Size.
+  * Через границу передаются только простые записи фиксированной структуры,
+    указатели на буферы вызывающего кода и функции cdecl. Нельзя передавать
+    элементы LCL, TOglChart/TCanvas, интерфейсы и классы Pascal, управляемые
+    строки или динамические массивы.
+  * Записи регистрации осциллограммы оставлены для переходной совместимости.
+    Новые компоненты должны использовать общие контракты без привязки
+    функций хоста к конкретному компоненту.
 }
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$codepage UTF8}
 
 interface
 
@@ -40,8 +42,8 @@ const
   RC_PLUGIN_CAP_INTERACTIVE_CHART = QWord(1) shl 10;
 
 type
-  { Original Recorder PLUGININFO prefix and its current four-part version.
-    Do not pack: the C++ ABI pads the 503-byte text prefix to a Word boundary. }
+  { Начальная часть PLUGININFO исходного Recorder и версия из четырёх чисел.
+    Не упаковывать: ABI C++ выравнивает текстовую часть в 503 байта до Word. }
   TRecorderPluginInfo = record
     Name: array[0..100] of AnsiChar;
     Describe: array[0..200] of AnsiChar;
@@ -56,9 +58,9 @@ type
   TRecorderPluginGetType = function: LongInt; cdecl;
   TRecorderPluginGetDescription = function: PAnsiChar; cdecl;
 
-  { Legacy oscillogram callback prefix: the current bridge still uses a
-    host-owned visual model, which is transitional. New API additions must
-    make component-specific state plugin-owned without changing this prefix. }
+  { Начальные поля старого API осциллограммы: переходный мост пока использует
+    модель хоста. Новое состояние компонента должно принадлежать плагину;
+    существующие начальные поля менять нельзя. }
   PRecorderPluginOscillogramFrame = ^TRecorderPluginOscillogramFrame;
   TRecorderPluginOscillogramFrame = record
     Size: LongInt;

@@ -13,6 +13,13 @@ uses
 type
   TRecorderDacComponentView = class(TFrame, IVForm)
     btnRefresh, btnSave: TButton;
+    btnFeedbackTag, btnCalibrate: TButton;
+    cbFeedbackSync: TCheckBox;
+    edFeedbackTag: TEdit;
+    gbCalibration: TGroupBox;
+    lblCalibration, lblOutputStatus, lblCalibrationClock: TLabel;
+    lblRateFactor: TLabel;
+    edRateFactor: TFloatSpinEdit;
     btnPlay: TPanel;
     edPulseInterval: TFloatSpinEdit;
     edPulsePeriods, edPulseCount: TSpinEdit;
@@ -29,8 +36,12 @@ type
       lblStartFreq, lblState, lblSweepTime: TLabel;
     pcPrograms: TPageControl;
     pnlTop: TPanel;
-    tsAccurate, tsSin, tsSweep, tsTag, tsPulse: TTabSheet;
+    tsAccurate, tsSin, tsSweep, tsTag, tsPulse, tsConstant: TTabSheet;
     procedure SelectInputTag(Sender: TObject);
+    procedure SelectFeedbackTag(Sender: TObject);
+    procedure CalibrateClick(Sender: TObject);
+    procedure FeedbackSyncClick(Sender: TObject);
+    procedure RateFactorChange(Sender: TObject);
     procedure BackendChange(Sender: TObject);
     procedure MirrorClick(Sender: TObject);
     procedure PlayClick(Sender: TObject);
@@ -44,7 +55,7 @@ type
     fRegistry: TRecorderTagRegistry;
     fEndpoints: TRecorderDacEndpoints;
     fLoading: Boolean;
-    fApplyPending: Boolean;
+    fCalibrationRunning: Boolean;
     procedure ApplyModel;
     procedure FillDevices;
     function SelectedEndpointIndex: Integer;
@@ -116,8 +127,15 @@ begin
     for I := 0 to High(fEndpoints) do
       cbBackend.Items.Add(fEndpoints[I].DisplayName);
     lSelected := SelectedEndpointIndex;
-    if (lSelected < 0) and (Length(fEndpoints) > 0) then lSelected := 0;
     cbBackend.ItemIndex := lSelected;
+    if lSelected < 0 then
+    begin
+      cbBackend.TextHint := 'Выберите устройство';
+      lblOutputStatus.Caption := 'Выбранный ЦАП недоступен. Нажмите Refresh и выберите устройство.';
+      lblOutputStatus.Hint := lblOutputStatus.Caption;
+    end
+    else
+      cbBackend.TextHint := '';
     if (Length(fEndpoints) = 0) and (lResult.Error <> rdeNone) then
       lblState.Caption := lResult.Text;
   finally
@@ -131,6 +149,7 @@ begin
   try
     FillDevices;
     case fComponent.SourceMode of
+      rdsmConstant: pcPrograms.ActivePage := tsConstant;
       rdsmPulse: pcPrograms.ActivePage := tsPulse;
       rdsmTag: pcPrograms.ActivePage := tsTag;
       rdsmAccurateSine: pcPrograms.ActivePage := tsAccurate;
@@ -138,6 +157,7 @@ begin
     else pcPrograms.ActivePage := tsSin;
     end;
     edFrequency.Value := fComponent.FrequencyHz;
+    UpdateModeView;
     edAmplitude.Value := fComponent.Amplitude;
     edStartFreq.Value := fComponent.SweepStartHz;
     edEndFreq.Value := fComponent.SweepEndHz;
@@ -148,6 +168,8 @@ begin
     edPulseInterval.Value := fComponent.PulseIntervalSec;
     edPulsePeriods.Value := fComponent.PulsePeriods;
     edPulseCount.Value := fComponent.PulseCount;
+    edFeedbackTag.Text := fComponent.FeedbackTagName;
+    cbFeedbackSync.Checked := fComponent.SynchronizeByFeedback;
     UpdateModeView;
   finally
     fLoading := False;
@@ -171,6 +193,7 @@ begin
     2: fComponent.SourceMode := rdsmSweepSine;
     3: fComponent.SourceMode := rdsmTag;
     4: fComponent.SourceMode := rdsmPulse;
+    5: fComponent.SourceMode := rdsmConstant;
   else fComponent.SourceMode := rdsmSine;
   end;
   fComponent.FrequencyHz := edFrequency.Value;
@@ -182,6 +205,7 @@ begin
   fComponent.SweepEndHz := edEndFreq.Value;
   fComponent.SweepTimeSec := edSweepTime.Value;
   fComponent.MirrorEnabled := cbMirror.Checked;
+  fComponent.SynchronizeByFeedback := cbFeedbackSync.Checked;
   fComponent.MirrorTagName := Trim(edMirrorTag.Text);
   lTag := nil;
   if (fRegistry <> nil) and (fComponent.MirrorTagName <> '') then
@@ -192,11 +216,32 @@ end;
 
 procedure TRecorderDacComponentView.UpdateModeView;
 var
-  lSweep, lTagMode, lPulse: Boolean;
+  lSweep, lTagMode, lPulse, lConstant, lWasLoading: Boolean;
 begin
   lSweep := pcPrograms.ActivePage = tsSweep;
   lTagMode := pcPrograms.ActivePage = tsTag;
   lPulse := pcPrograms.ActivePage = tsPulse;
+  lConstant := pcPrograms.ActivePage = tsConstant;
+  lWasLoading := fLoading;
+  fLoading := True;
+  try
+    edAmplitude.MinValue := -1E9;
+    edAmplitude.MaxValue := 1E9;
+    if lConstant and (fComponent <> nil) then
+    begin
+      lblAmplitude.Caption := 'Уровень';
+      edAmplitude.MaxValue := fComponent.MaximumValue;
+      edAmplitude.MinValue := fComponent.MinimumValue;
+    end
+    else
+    begin
+      lblAmplitude.Caption := 'Amplitude';
+      edAmplitude.MaxValue := 1000000;
+      edAmplitude.MinValue := 0;
+    end;
+  finally
+    fLoading := lWasLoading;
+  end;
   lblPulseInterval.Visible := lPulse;
   edPulseInterval.Visible := lPulse;
   lblPulsePeriods.Visible := lPulse;
@@ -216,8 +261,8 @@ begin
   btnInputTag.Visible := lTagMode;
   lblAmplitude.Visible := not lTagMode;
   edAmplitude.Visible := not lTagMode;
-  lblFrequency.Visible := not (lSweep or lTagMode);
-  edFrequency.Visible := not (lSweep or lTagMode);
+  lblFrequency.Visible := not (lSweep or lTagMode or lConstant);
+  edFrequency.Visible := not (lSweep or lTagMode or lConstant);
   lblStartFreq.Visible := lSweep;
   edStartFreq.Visible := lSweep;
   lblEndFreq.Visible := lSweep;
@@ -230,43 +275,72 @@ end;
 procedure TRecorderDacComponentView.SelectInputTag(Sender: TObject);
 var
   lTag: TRecorderTag;
-  lRunning: Boolean;
 begin
   if (fComponent = nil) or (fRegistry = nil) then Exit;
   if not ShowRecorderTagPickerDialog(Self, fRegistry,
     fComponent.InputTagName, True, lTag) then Exit;
-  lRunning := False;
-  if fRuntime <> nil then
-    lRunning := fRuntime.Snapshot.State = rdsRunning;
   fComponent.InputTagId := lTag.Id;
   fComponent.InputTagName := lTag.Name;
   edInputTag.Text := lTag.Name;
   ApplyModel;
-  if (fRuntime <> nil) and (lRunning or fApplyPending) then
-  begin
-    fApplyPending := True;
-    fRuntime.StopOutput;
-    fRuntime.StartOutput;
-  end;
+  if fRuntime <> nil then fRuntime.ApplyOutputSettings;
+end;
+
+procedure TRecorderDacComponentView.SelectFeedbackTag(Sender: TObject);
+var
+  lTag: TRecorderTag;
+begin
+  if fCalibrationRunning or (fComponent = nil) or (fRegistry = nil) then Exit;
+  if not ShowRecorderTagPickerDialog(Self, fRegistry,
+    fComponent.FeedbackTagName, True, lTag, True) then Exit;
+  fComponent.FeedbackTagId := lTag.Id;
+  fComponent.FeedbackTagName := lTag.Name;
+  edFeedbackTag.Text := lTag.Name;
+  if fRuntime <> nil then fRuntime.ApplyOutputSettings;
+end;
+
+procedure TRecorderDacComponentView.CalibrateClick(Sender: TObject);
+begin
+  if (fRuntime = nil) or fCalibrationRunning then Exit;
+  ApplyModel;
+  fRuntime.StartCalibration;
+  RenderSnapshot(fRuntime.Snapshot);
+end;
+
+procedure TRecorderDacComponentView.FeedbackSyncClick(Sender: TObject);
+begin
+  if fLoading or fCalibrationRunning or (fComponent = nil) then Exit;
+  { A new synchronization mode is armed by the configured stream-start event,
+    not by editing a checkbox while output is active. }
+  fComponent.SynchronizeByFeedback := cbFeedbackSync.Checked;
+  if fRuntime <> nil then fRuntime.ApplyOutputSettings;
+end;
+
+procedure TRecorderDacComponentView.RateFactorChange(Sender: TObject);
+var
+  lResult: TRecorderDacResult;
+begin
+  if fLoading or (fRuntime = nil) then Exit;
+  fRuntime.SetRateFactor(edRateFactor.Value, lResult);
+  RenderSnapshot(fRuntime.Snapshot);
 end;
 
 procedure TRecorderDacComponentView.PlayClick(Sender: TObject);
+var
+  lSnapshot: TRecorderDacRuntimeSnapshot;
 begin
   if fRuntime = nil then Exit;
-  if (fRuntime.Snapshot.State = rdsRunning) or fApplyPending then
+  lSnapshot := fRuntime.Snapshot;
+  if lSnapshot.OutputPlaying then
   begin
-    fApplyPending := False;
     fRuntime.StopOutput;
-    btnPlay.Caption := 'Play';
-    btnPlay.Color := clBtnFace;
   end
   else
   begin
     ApplyModel;
     fRuntime.StartOutput;
-    btnPlay.Caption := 'Stop';
-    btnPlay.Color := clYellow;
   end;
+  RenderSnapshot(fRuntime.Snapshot);
 end;
 
 procedure TRecorderDacComponentView.RefreshClick(Sender: TObject);
@@ -277,26 +351,13 @@ begin ParametersChange(Sender); end;
 procedure TRecorderDacComponentView.ParametersChange(Sender: TObject);
 var
   lRevision: LongInt;
-  lRunning: Boolean;
 begin
-  if fLoading or (fComponent = nil) then Exit;
+  if fLoading or fCalibrationRunning or (fComponent = nil) then Exit;
   lRevision := fComponent.Revision;
-  lRunning := False;
-  if fRuntime <> nil then
-    lRunning := fRuntime.Snapshot.State = rdsRunning;
   ApplyModel;
   if lRevision = fComponent.Revision then Exit;
   UpdateModeView;
-  { A finite series is armed by Play; editing its settings does not retrigger it. }
-  if fComponent.SourceMode = rdsmPulse then Exit;
-  if lRunning or fApplyPending then
-  begin
-    { Stop is asynchronous. StartOutput queues the restart until the worker
-      finishes; rapid edits therefore configure the latest model revision. }
-    fApplyPending := True;
-    fRuntime.StopOutput;
-    fRuntime.StartOutput;
-  end;
+  if fRuntime <> nil then fRuntime.ApplyOutputSettings;
 end;
 
 procedure TRecorderDacComponentView.ProgramChange(Sender: TObject);
@@ -307,7 +368,7 @@ begin
 end;
 procedure TRecorderDacComponentView.MirrorClick(Sender: TObject);
 begin
-  if fLoading or (fComponent = nil) then Exit;
+  if fLoading or fCalibrationRunning or (fComponent = nil) then Exit;
   ApplyModel;
   if cbMirror.Checked then
   begin
@@ -320,13 +381,7 @@ begin
     end;
   end;
   UpdateModeView;
-  if fRuntime <> nil then
-    if fRuntime.Snapshot.State = rdsRunning then
-    begin
-      fApplyPending := True;
-      fRuntime.StopOutput;
-      fRuntime.StartOutput;
-    end;
+  if fRuntime <> nil then fRuntime.ApplyOutputSettings;
 end;
 procedure TRecorderDacComponentView.BackendChange(Sender: TObject);
 begin
@@ -338,14 +393,82 @@ end;
 
 procedure TRecorderDacComponentView.RenderSnapshot(
   const ASnapshot: TRecorderDacRuntimeSnapshot);
+var
+  lWasLoading: Boolean;
 begin
+  fCalibrationRunning := ASnapshot.CalibrationRunning;
+  gbSignal.Enabled := not fCalibrationRunning;
+  pcPrograms.Enabled := not fCalibrationRunning;
+  cbBackend.Enabled := not fCalibrationRunning;
+  btnRefresh.Enabled := not fCalibrationRunning;
+  btnSave.Enabled := not fCalibrationRunning;
+  cbFeedbackSync.Enabled := not fCalibrationRunning;
+  btnFeedbackTag.Enabled := not fCalibrationRunning;
+  btnCalibrate.Enabled := not fCalibrationRunning and
+    (ASnapshot.State <> rdsStopping);
+  lblCalibration.Caption := ASnapshot.CalibrationStateText;
+  if ASnapshot.CalibrationValid then
+    lblCalibrationClock.Caption := Format('Fs: %.3f Гц',
+      [ASnapshot.CalibrationSampleRateHz])
+  else
+    lblCalibrationClock.Caption := 'Fs: —';
+  lWasLoading := fLoading;
+  fLoading := True;
+  try
+    if not ASnapshot.CalibrationRatePending then
+      if ASnapshot.CalibrationValid then edRateFactor.Value := ASnapshot.CalibrationRateFactor
+      else edRateFactor.Value := 1;
+  finally
+    fLoading := lWasLoading;
+  end;
+  edRateFactor.Enabled := ASnapshot.CalibrationValid and
+    not ASnapshot.CalibrationRunning and (ASnapshot.State <> rdsStopping) and
+    (fComponent <> nil) and (fComponent.SourceMode <> rdsmConstant);
+  lblCalibrationClock.Hint := 'Fs — рассчитанная частота зеркала; k = Fs_eff / Fs_nominal';
+  if ASnapshot.CalibrationValid then
+    lblCalibrationClock.Hint := lblCalibrationClock.Hint + LineEnding +
+      Format('Корреляция формы: ρ1 = %.4f; ρ2 = %.4f',
+        [ASnapshot.CalibrationCorrelationFirst, ASnapshot.CalibrationCorrelationSecond]);
+  if ASnapshot.CalibrationValid then
+    lblCalibration.Caption := Format('Смещение: %.3f мс; Fs: %.6f Гц; дрейф: %.3f ppm.',
+      [ASnapshot.CalibrationDelaySec * 1000, ASnapshot.CalibrationSampleRateHz,
+       ASnapshot.CalibrationDriftPpm]) + LineEnding + lblCalibration.Caption
+  else if ASnapshot.CalibrationDetectedEdges > 0 then
+    lblCalibration.Caption := Format('Сопоставлено колоколов: %d/2. ',
+      [ASnapshot.CalibrationDetectedEdges]) + lblCalibration.Caption;
+  if lblCalibration.Caption = '' then
+    lblCalibration.Caption := 'Выберите вход обратной связи. Калибровка по корреляции формы двух колоколов.';
+  if fComponent <> nil then
+  begin
+    case fComponent.PhaseCalibrationMode of
+      rdpcmMeasurementStart: cbFeedbackSync.Hint := 'Калибровка при старте измерения; Play включает рабочий сигнал.';
+      rdpcmPlay: cbFeedbackSync.Hint := Format('Каждый Play: калибровка %.3g с, затем рабочий сигнал.',
+        [fComponent.FeedbackCalibrationDurationSec]);
+      rdpcmButton: cbFeedbackSync.Hint := 'Калибровка только по кнопке «Калибровка фазы».';
+    end;
+  end;
   lblState.Caption := DacStateText(ASnapshot.State);
   if ASnapshot.LastResult.Error <> rdeNone then
     lblState.Caption := lblState.Caption + ': ' + ASnapshot.LastResult.Text;
+  lblOutputStatus.Caption := '';
+  if ASnapshot.LastResult.Error <> rdeNone then
+    lblOutputStatus.Caption := ASnapshot.LastResult.Text
+  else if fCalibrationRunning then
+    lblOutputStatus.Caption := 'Калибровка…';
+  if (lblOutputStatus.Caption = '') and ASnapshot.CalibrationValid then
+    lblOutputStatus.Caption := Format('Корреляция формы: ρ1 = %.4f; ρ2 = %.4f',
+      [ASnapshot.CalibrationCorrelationFirst, ASnapshot.CalibrationCorrelationSecond]);
+  if ASnapshot.CalibrationManualRate then
+    lblOutputStatus.Caption := 'k задан вручную. ' + lblOutputStatus.Caption;
+  if ASnapshot.CalibrationRatePending then
+    lblOutputStatus.Caption := 'Применяется k… ' + lblOutputStatus.Caption;
+  if (lblOutputStatus.Caption = '') and (cbBackend.ItemIndex < 0) then
+    lblOutputStatus.Caption := 'Выбранный ЦАП недоступен. Нажмите Refresh и выберите устройство.';
+  lblOutputStatus.Hint := lblOutputStatus.Caption;
   lblState.Visible := ASnapshot.LastResult.Error <> rdeNone;
   btnPlay.Hint := lblState.Caption;
   btnPlay.ShowHint := True;
-  if ASnapshot.State in [rdsRunning, rdsStopping] then
+  if ASnapshot.OutputPlaying or (ASnapshot.State = rdsStopping) then
   begin
     btnPlay.Caption := 'Stop';
     btnPlay.Color := clYellow;
@@ -359,12 +482,14 @@ end;
 
 procedure TRecorderDacComponentView.RefreshControl(ATagRegistry: TRecorderTagRegistry;
   ADisplaySeconds: Double);
+var
+  lSnapshot: TRecorderDacRuntimeSnapshot;
 begin
   fRegistry := ATagRegistry;
   if fRuntime <> nil then
   begin
-    RenderSnapshot(fRuntime.Snapshot);
-    if fRuntime.Snapshot.State = rdsRunning then fApplyPending := False;
+    lSnapshot := fRuntime.Snapshot;
+    RenderSnapshot(lSnapshot);
   end;
 end;
 

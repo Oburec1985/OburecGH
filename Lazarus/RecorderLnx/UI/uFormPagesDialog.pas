@@ -185,7 +185,7 @@ begin
   lAddMnemonic.Parent := Self;
   lAddMnemonic.Left := 10;
   lAddMnemonic.Top := 310;
-  lAddMnemonic.Width := 142;
+  lAddMnemonic.Width := 184;
   lAddMnemonic.Height := 24;
   lAddMnemonic.Caption := 'Add mnemonic';
   lAddMnemonic.OnClick := @AddMnemonicClick;
@@ -231,7 +231,7 @@ begin
 
   fDetachButton := TButton.Create(Self);
   fDetachButton.Parent := Self;
-  fDetachButton.Left := 162;
+  fDetachButton.Left := 204;
   fDetachButton.Top := 310;
   fDetachButton.Width := 142;
   fDetachButton.Height := 24;

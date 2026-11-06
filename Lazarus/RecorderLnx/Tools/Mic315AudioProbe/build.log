@@ -1,0 +1,30 @@
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) Project needs building: SrcFile outdated Project
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315AudioProbe\lib\x86_64-win64\Mic315AudioProbe.exe"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315AudioProbe\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-MObjFPC"
+Info: (lazarus) Param[1]="-Scghi"
+Info: (lazarus) Param[2]="-O1"
+Info: (lazarus) Param[3]="-gw3"
+Info: (lazarus) Param[4]="-gl"
+Info: (lazarus) Param[5]="-l"
+Info: (lazarus) Param[6]="-vewnhibq"
+Info: (lazarus) Param[7]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315AudioProbe\"
+Info: (lazarus) Param[8]="-FED:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315AudioProbe\lib\x86_64-win64\"
+Info: (lazarus) Param[9]="-oD:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315AudioProbe\lib\x86_64-win64\Mic315AudioProbe.exe"
+Info: (lazarus) Param[10]="Mic315AudioProbe.lpr"
+Info: (lazarus) Param[11]="-B"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling Mic315AudioProbe.lpr
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315AudioProbe\Mic315AudioProbe.lpr(248,19) Hint: (5057) Local variable "lCaps" does not seem to be initialized
+(9015) Linking D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315AudioProbe\lib\x86_64-win64\Mic315AudioProbe.exe
+(1008) 308 lines compiled, 0.1 sec, 209104 bytes code, 9748 bytes data
+(1022) 3 hint(s) issued
+Info: (lazarus) [TCompiler.Compile] end

@@ -10,16 +10,29 @@ interface
 
 uses
   Classes, SysUtils, uRecorderFormModel, uRecorderTags, uRecorderDacTypes,
-  uRecorderDacContracts;
+  uRecorderDacContracts, uRecorderBlockClock;
 
 type
+  TRecorderDacPhaseCalibrationMode = (rdpcmMeasurementStart, rdpcmPlay,
+    rdpcmButton);
+
   TRecorderDacSourceMode = (rdsmTag, rdsmSine, rdsmAccurateSine,
-    rdsmSweepSine, rdsmPulse);
+    rdsmSweepSine, rdsmPulse, rdsmConstant);
 
   TRecorderDacRuntimeSnapshot = record
     State: TRecorderDacState;
     Counters: TRecorderDacCounters;
     LastResult: TRecorderDacResult;
+    CalibrationStateText: string;
+    CalibrationDelaySec, CalibrationEdgeSec, CalibrationStartSec: Double;
+    CalibrationSampleRateHz, CalibrationDriftPpm, CalibrationSecondEdgeSec: Double;
+    CalibrationRateFactor: Double;
+    CalibrationCorrelationFirst, CalibrationCorrelationSecond: Double;
+    CalibrationManualRate: Boolean;
+    CalibrationRatePending: Boolean;
+    CalibrationDetectedEdges: Integer;
+    CalibrationValid, CalibrationRunning: Boolean;
+    OutputPlaying: Boolean;
   end;
 
   IRecorderDacComponentRuntime = interface
@@ -27,6 +40,11 @@ type
     function Component: TRecorderVisualComponent;
     procedure SetTagRegistry(ARegistry: TRecorderTagRegistry);
     procedure StartOutput;
+    procedure ApplyOutputSettings;
+    function SetRateFactor(AFactor: Double; out AResult: TRecorderDacResult): Boolean;
+    procedure StartCalibration;
+    procedure EnterPreview;
+    procedure LeavePreview;
     procedure StopOutput;
     function Snapshot: TRecorderDacRuntimeSnapshot;
   end;
@@ -42,6 +60,13 @@ type
     fMirrorEnabled: Boolean;
     fMirrorTagId: TRecorderTagId;
     fMirrorTagName: string;
+    fFeedbackTagId: TRecorderTagId;
+    fFeedbackTagName: string;
+    fSynchronizeByFeedback: Boolean;
+    fStartStreamOnPreview: Boolean;
+    fPhaseCalibrationMode: TRecorderDacPhaseCalibrationMode;
+    fFeedbackThreshold, fFeedbackTimeoutSec, fFeedbackEdgeIntervalSec: Double;
+    fFeedbackCalibrationDurationSec: Double;
     fSampleRateHz: Double;
     fFramesPerBlock: Integer;
     fMinimumValue: Double;
@@ -72,6 +97,15 @@ type
     procedure SetMirrorEnabled(AValue: Boolean);
     procedure SetMirrorTagId(AValue: TRecorderTagId);
     procedure SetMirrorTagName(const AValue: string);
+    procedure SetFeedbackTagId(AValue: TRecorderTagId);
+    procedure SetFeedbackTagName(const AValue: string);
+    procedure SetSynchronizeByFeedback(AValue: Boolean);
+    procedure SetStartStreamOnPreview(AValue: Boolean);
+    procedure SetPhaseCalibrationMode(AValue: TRecorderDacPhaseCalibrationMode);
+    procedure SetFeedbackThreshold(AValue: Double);
+    procedure SetFeedbackTimeoutSec(AValue: Double);
+    procedure SetFeedbackEdgeIntervalSec(AValue: Double);
+    procedure SetFeedbackCalibrationDurationSec(AValue: Double);
     procedure SetSafeValue(AValue: Double);
     procedure SetSampleRateHz(AValue: Double);
     procedure SetSourceMode(AValue: TRecorderDacSourceMode);
@@ -102,6 +136,20 @@ type
     property MirrorEnabled: Boolean read fMirrorEnabled write SetMirrorEnabled;
     property MirrorTagId: TRecorderTagId read fMirrorTagId write SetMirrorTagId;
     property MirrorTagName: string read fMirrorTagName write SetMirrorTagName;
+    property FeedbackTagId: TRecorderTagId read fFeedbackTagId write SetFeedbackTagId;
+    property FeedbackTagName: string read fFeedbackTagName write SetFeedbackTagName;
+    property SynchronizeByFeedback: Boolean read fSynchronizeByFeedback
+      write SetSynchronizeByFeedback;
+    property StartStreamOnPreview: Boolean read fStartStreamOnPreview
+      write SetStartStreamOnPreview;
+    property PhaseCalibrationMode: TRecorderDacPhaseCalibrationMode
+      read fPhaseCalibrationMode write SetPhaseCalibrationMode;
+    property FeedbackThreshold: Double read fFeedbackThreshold write SetFeedbackThreshold;
+    property FeedbackTimeoutSec: Double read fFeedbackTimeoutSec write SetFeedbackTimeoutSec;
+    property FeedbackEdgeIntervalSec: Double read fFeedbackEdgeIntervalSec
+      write SetFeedbackEdgeIntervalSec;
+    property FeedbackCalibrationDurationSec: Double read fFeedbackCalibrationDurationSec
+      write SetFeedbackCalibrationDurationSec;
     property SampleRateHz: Double read fSampleRateHz write SetSampleRateHz;
     property FramesPerBlock: Integer read fFramesPerBlock write SetFramesPerBlock;
     property MinimumValue: Double read fMinimumValue write SetMinimumValue;
@@ -120,6 +168,7 @@ type
   private
     fRuntimes: TInterfaceList;
     fBackendRegistry: TObject;
+    fAcquiring: Boolean;
   protected
     procedure ExcludeComponent(AComponent: TRecorderVisualComponent); override;
     procedure ConfigureNewComponent(AComponent: TRecorderVisualComponent;
@@ -132,6 +181,8 @@ type
     procedure SetTagRegistry(ARegistry: TRecorderTagRegistry);
     procedure DoStart; override;
     procedure DoStop; override;
+    procedure EnterPreview;
+    procedure LeavePreview;
     function RuntimeFor(AComponent: TRecorderVisualComponent):
       IRecorderDacComponentRuntime;
     function RuntimeSnapshot(AComponent: TRecorderVisualComponent):
@@ -177,6 +228,12 @@ begin
   fPulseIntervalSec := 1;
   fPulsePeriods := 10;
   fPulseCount := 5;
+  fFeedbackThreshold := 0.01;
+  fFeedbackTimeoutSec := 10;
+  fFeedbackEdgeIntervalSec := 2;
+  fFeedbackCalibrationDurationSec := 5;
+  fStartStreamOnPreview := True;
+  fPhaseCalibrationMode := rdpcmMeasurementStart;
 end;
 
 procedure TRecorderDacComponent.SetPulseIntervalSec(AValue: Double);
@@ -209,6 +266,30 @@ procedure TRecorderDacComponent.SetMirrorTagId(AValue: TRecorderTagId);
 begin if fMirrorTagId = AValue then Exit; fMirrorTagId := AValue; Changed; end;
 procedure TRecorderDacComponent.SetMirrorTagName(const AValue: string);
 begin if fMirrorTagName = AValue then Exit; fMirrorTagName := AValue; Changed; end;
+procedure TRecorderDacComponent.SetFeedbackTagId(AValue: TRecorderTagId);
+begin if fFeedbackTagId = AValue then Exit; fFeedbackTagId := AValue; Changed; end;
+procedure TRecorderDacComponent.SetFeedbackTagName(const AValue: string);
+begin if fFeedbackTagName = AValue then Exit; fFeedbackTagName := AValue; Changed; end;
+procedure TRecorderDacComponent.SetSynchronizeByFeedback(AValue: Boolean);
+begin if fSynchronizeByFeedback = AValue then Exit; fSynchronizeByFeedback := AValue; Changed; end;
+procedure TRecorderDacComponent.SetStartStreamOnPreview(AValue: Boolean);
+begin if fStartStreamOnPreview = AValue then Exit; fStartStreamOnPreview := AValue; Changed; end;
+
+procedure TRecorderDacComponent.SetPhaseCalibrationMode(
+  AValue: TRecorderDacPhaseCalibrationMode);
+begin
+  if fPhaseCalibrationMode = AValue then Exit;
+  fPhaseCalibrationMode := AValue;
+  Changed;
+end;
+procedure TRecorderDacComponent.SetFeedbackThreshold(AValue: Double);
+begin if fFeedbackThreshold = AValue then Exit; fFeedbackThreshold := AValue; Changed; end;
+procedure TRecorderDacComponent.SetFeedbackTimeoutSec(AValue: Double);
+begin if fFeedbackTimeoutSec = AValue then Exit; fFeedbackTimeoutSec := AValue; Changed; end;
+procedure TRecorderDacComponent.SetFeedbackEdgeIntervalSec(AValue: Double);
+begin if fFeedbackEdgeIntervalSec = AValue then Exit; fFeedbackEdgeIntervalSec := AValue; Changed; end;
+procedure TRecorderDacComponent.SetFeedbackCalibrationDurationSec(AValue: Double);
+begin if fFeedbackCalibrationDurationSec = AValue then Exit; fFeedbackCalibrationDurationSec := AValue; Changed; end;
 procedure TRecorderDacComponent.SetSampleRateHz(AValue: Double);
 begin if fSampleRateHz = AValue then Exit; fSampleRateHz := AValue; Changed; end;
 procedure TRecorderDacComponent.SetFramesPerBlock(AValue: Integer);
@@ -247,6 +328,15 @@ begin
   MirrorEnabled := ASource.MirrorEnabled;
   MirrorTagId := ASource.MirrorTagId;
   MirrorTagName := ASource.MirrorTagName;
+  FeedbackTagId := ASource.FeedbackTagId;
+  FeedbackTagName := ASource.FeedbackTagName;
+  SynchronizeByFeedback := ASource.SynchronizeByFeedback;
+  StartStreamOnPreview := ASource.StartStreamOnPreview;
+  PhaseCalibrationMode := ASource.PhaseCalibrationMode;
+  FeedbackThreshold := ASource.FeedbackThreshold;
+  FeedbackTimeoutSec := ASource.FeedbackTimeoutSec;
+  FeedbackEdgeIntervalSec := ASource.FeedbackEdgeIntervalSec;
+  FeedbackCalibrationDurationSec := ASource.FeedbackCalibrationDurationSec;
   SampleRateHz := ASource.SampleRateHz;
   FramesPerBlock := ASource.FramesPerBlock;
   MinimumValue := ASource.MinimumValue;
@@ -292,7 +382,10 @@ begin
     Result.PollFrequencyHz := SampleRateHz;
     Result.SignalBuffer.ConfigureBlockRing(FramesPerBlock, 8);
   end;
-  Result.PollFrequencyHz := SampleRateHz;
+  { An existing mirror may already expose its measured DAC clock. Nominal
+    device settings must not erase that metadata merely by reopening a view. }
+  if Result.PollFrequencyHz <= 0 then Result.PollFrequencyHz := SampleRateHz;
+  Result.BlockTimeDomain := btRecorderMonotonic;
   if not Result.IsVector then
     Result.SignalBuffer.ConfigureBlockRing(FramesPerBlock, 8);
   MirrorTagId := Result.Id;
@@ -304,7 +397,7 @@ var
   lRegistry: TRecorderDacBackendRegistry;
 begin
   inherited Create(TRecorderDacComponent.TypeId, 'DAC output',
-    TRecorderDacComponent, 458, 330, False);
+    TRecorderDacComponent, 458, 560, False);
   ConfigurePalette('ЦАП', 'Добавить управление ЦАП', 'digital-indicator',
     70, rppGroup, CRecorderPaletteGroupSignals);
   fRuntimes := TInterfaceList.Create;
@@ -316,7 +409,7 @@ end;
 
 destructor TRecorderDacComponentFactory.Destroy;
 begin
-  DoStop;
+  LeavePreview;
   while ChildCount > 0 do ReleaseComponent(Children[0]);
   fRuntimes.Free;
   TObject(fBackendRegistry).Free;
@@ -332,6 +425,7 @@ begin
     lRuntime := TRecorderDacRuntime.Create(TRecorderDacComponent(Result),
       TRecorderDacBackendRegistry(fBackendRegistry));
     fRuntimes.Add(lRuntime);
+    if fAcquiring then lRuntime.EnterPreview;
   except
     inherited ReleaseComponent(Result);
     raise;
@@ -366,7 +460,7 @@ begin
     lRuntime := fRuntimes[I] as IRecorderDacComponentRuntime;
     if lRuntime.Component = AComponent then
     begin
-      lRuntime.StopOutput;
+      lRuntime.LeavePreview;
       fRuntimes.Delete(I);
       Break;
     end;
@@ -392,19 +486,33 @@ begin
 end;
 
 procedure TRecorderDacComponentFactory.DoStart;
-var
-  I: Integer;
 begin
-  for I := 0 to fRuntimes.Count - 1 do
-    (fRuntimes[I] as IRecorderDacComponentRuntime).StartOutput;
+  { Record -> Preview transitions must not reopen or retime a running stream. }
 end;
 
 procedure TRecorderDacComponentFactory.DoStop;
+begin
+  { Recording has its own lifecycle. LeavePreview owns acquisition teardown. }
+end;
+
+procedure TRecorderDacComponentFactory.EnterPreview;
 var
   I: Integer;
 begin
+  if fAcquiring then Exit;
+  fAcquiring := True;
   for I := 0 to fRuntimes.Count - 1 do
-    (fRuntimes[I] as IRecorderDacComponentRuntime).StopOutput;
+    (fRuntimes[I] as IRecorderDacComponentRuntime).EnterPreview;
+end;
+
+procedure TRecorderDacComponentFactory.LeavePreview;
+var
+  I: Integer;
+begin
+  if not fAcquiring then Exit;
+  fAcquiring := False;
+  for I := 0 to fRuntimes.Count - 1 do
+    (fRuntimes[I] as IRecorderDacComponentRuntime).LeavePreview;
 end;
 
 function TRecorderDacComponentFactory.RuntimeSnapshot(
@@ -412,6 +520,7 @@ function TRecorderDacComponentFactory.RuntimeSnapshot(
 var
   lRuntime: IRecorderDacComponentRuntime;
 begin
+  Result := Default(TRecorderDacRuntimeSnapshot);
   Result.Counters := Default(TRecorderDacCounters);
   Result.State := rdsClosed;
   Result.LastResult := RecorderDacOk;

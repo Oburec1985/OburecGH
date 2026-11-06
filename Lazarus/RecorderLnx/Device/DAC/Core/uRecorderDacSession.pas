@@ -20,6 +20,12 @@ type
     fProvider: IRecorderDacSampleProvider;
     fMirror: IRecorderDacMirror;
     fTimedMirror: IRecorderDacTimedMirror;
+    fMirrorMaintenance: IRecorderDacMirrorMaintenance;
+    fRateProvider: IRecorderDacPlaybackRateControl;
+    fRateMirror: IRecorderDacRateControlledMirror;
+    fRatePending, fRateApplying: Boolean;
+    fRequestedRateFactor: Double;
+    fQueuedRateCommands: Integer;
     fClockMap: TRecorderDeviceTimeMap;
     fRunFrames: QWord;
     fConfig: TRecorderDacConfig;
@@ -27,10 +33,15 @@ type
     fLastFrame: array of Double;
     fCounters: TRecorderDacCounters;
     fConfigured: Boolean;
+    fRequireCompleteMirror: Boolean;
+    fMirrorFailure: TRecorderDacResult;
     fMirrorQueue: array of Double;
     fMirrorFlushBuffer: array of Double;
-    fMirrorCounts: array[0..3] of Integer;
-    fMirrorTimes: array[0..3] of TRecorderBlockTime;
+    fMirrorCounts: array[0..63] of Integer;
+    fMirrorTimes: array[0..63] of TRecorderBlockTime;
+    fMirrorRateFactors: array[0..63] of Double;
+    fMirrorRatePivots: array[0..63] of QWord;
+    fMirrorSlots: Integer;
     fMirrorRead: Integer;
     fMirrorWrite: Integer;
     fMirrorCount: Integer;
@@ -38,17 +49,25 @@ type
     procedure ClampBlock(AFrameCount: Integer);
     procedure FillUnderrunBlock(out AFrameCount: Integer);
     procedure RememberLastFrame(AFrameCount: Integer);
-    function EnqueueMirror(const ATime: TRecorderBlockTime): Boolean;
+    function EnqueueMirror(const ATime: TRecorderBlockTime;
+      ARateFactor: Double; APivotFrame: QWord): Boolean;
   public
     constructor Create(const ABackend: IRecorderDacBackend;
       const AProvider: IRecorderDacSampleProvider;
-      const AMirror: IRecorderDacMirror = nil);
+      const AMirror: IRecorderDacMirror = nil;
+      ARequireCompleteMirror: Boolean = False);
     destructor Destroy; override;
     function Configure(const AConfig: TRecorderDacConfig;
       out AResult: TRecorderDacResult): Boolean;
     function Start(out AResult: TRecorderDacResult): Boolean;
     function Pump(out AResult: TRecorderDacResult): Boolean;
+    function RequestRateFactor(AFactor: Double; out AResult: TRecorderDacResult): Boolean;
+    function RateFactorPending: Boolean;
     function FlushMirror(out AResult: TRecorderDacResult): Boolean;
+    procedure MaintainMirror;
+    function MirrorPending: Boolean;
+    function MirrorResult: TRecorderDacResult;
+    procedure CancelMirror;
     function Stop(out AResult: TRecorderDacResult): Boolean;
     procedure Abort;
     function Disconnect(out AResult: TRecorderDacResult): Boolean;
@@ -59,13 +78,16 @@ type
 implementation
 
 constructor TRecorderDacSession.Create(const ABackend: IRecorderDacBackend;
-  const AProvider: IRecorderDacSampleProvider; const AMirror: IRecorderDacMirror);
+  const AProvider: IRecorderDacSampleProvider; const AMirror: IRecorderDacMirror;
+  ARequireCompleteMirror: Boolean);
 begin
   inherited Create;
   InitCriticalSection(fMirrorLock);
   fBackend := ABackend;
   fProvider := AProvider;
   fMirror := AMirror;
+  fRequireCompleteMirror := ARequireCompleteMirror;
+  fMirrorFailure := RecorderDacOk;
 end;
 
 destructor TRecorderDacSession.Destroy;
@@ -110,12 +132,19 @@ begin
   if not fProvider.Configure(fConfig, AResult) then Exit;
   if (fMirror <> nil) and not fMirror.Configure(fConfig, AResult) then Exit;
   Supports(fMirror, IRecorderDacTimedMirror, fTimedMirror);
+  Supports(fMirror, IRecorderDacMirrorMaintenance, fMirrorMaintenance);
+  Supports(fMirror, IRecorderDacRateControlledMirror, fRateMirror);
+  Supports(fProvider, IRecorderDacPlaybackRateControl, fRateProvider);
   if not fBackend.Configure(fConfig, AResult) then Exit;
   SetLength(fBuffer, AConfig.FramesPerBlock * AConfig.ChannelCount);
   SetLength(fLastFrame, AConfig.ChannelCount);
   if fMirror <> nil then
   begin
-    SetLength(fMirrorQueue, 4 * AConfig.FramesPerBlock * AConfig.ChannelCount);
+    fMirrorSlots := 4;
+    { Small audio blocks can be queued in a burst before native Write blocks.
+      Calibrated output must preserve that burst, not silently drop history. }
+    if fRequireCompleteMirror then fMirrorSlots := Length(fMirrorCounts);
+    SetLength(fMirrorQueue, fMirrorSlots * AConfig.FramesPerBlock * AConfig.ChannelCount);
     SetLength(fMirrorFlushBuffer, AConfig.FramesPerBlock * AConfig.ChannelCount);
   end
   else
@@ -131,7 +160,8 @@ begin
   Result := True;
 end;
 
-function TRecorderDacSession.EnqueueMirror(const ATime: TRecorderBlockTime): Boolean;
+function TRecorderDacSession.EnqueueMirror(const ATime: TRecorderBlockTime;
+  ARateFactor: Double; APivotFrame: QWord): Boolean;
 var
   lOffset: Integer;
   lSampleCount: Integer;
@@ -139,13 +169,16 @@ begin
   if fMirror = nil then Exit(False);
   EnterCriticalSection(fMirrorLock);
   try
-    if fMirrorCount = Length(fMirrorCounts) then Exit(False);
+    if fMirrorCount = fMirrorSlots then Exit(False);
     lSampleCount := ATime.SampleCount * fConfig.ChannelCount;
     lOffset := fMirrorWrite * fConfig.FramesPerBlock * fConfig.ChannelCount;
     Move(fBuffer[0], fMirrorQueue[lOffset], lSampleCount * SizeOf(Double));
     fMirrorCounts[fMirrorWrite] := ATime.SampleCount;
     fMirrorTimes[fMirrorWrite] := ATime;
-    fMirrorWrite := (fMirrorWrite + 1) mod Length(fMirrorCounts);
+    fMirrorRateFactors[fMirrorWrite] := ARateFactor;
+    fMirrorRatePivots[fMirrorWrite] := APivotFrame;
+    if ARateFactor > 0 then Inc(fQueuedRateCommands);
+    fMirrorWrite := (fMirrorWrite + 1) mod fMirrorSlots;
     Inc(fMirrorCount);
     Result := True;
   finally
@@ -170,6 +203,18 @@ begin
     Exit(False);
   end;
   fProvider.Reset;
+  EnterCriticalSection(fMirrorLock);
+  try
+    fMirrorFailure := RecorderDacOk;
+    fMirrorRead := 0;
+    fMirrorWrite := 0;
+    fMirrorCount := 0;
+    fRatePending := False;
+    fRateApplying := False;
+    fQueuedRateCommands := 0;
+  finally
+    LeaveCriticalSection(fMirrorLock);
+  end;
   if fMirror <> nil then fMirror.Reset;
   lBefore := RecorderClockSeconds;
   Result := fBackend.Start(AResult);
@@ -221,12 +266,58 @@ begin
     fLastFrame[I] := fBuffer[lOffset + I];
 end;
 
+function TRecorderDacSession.RequestRateFactor(AFactor: Double;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := False;
+  if (fBackend.State <> rdsRunning) or not fRequireCompleteMirror or
+    (fRateProvider = nil) or (fRateMirror = nil) then
+  begin
+    AResult := RecorderDacFailed(rdeInvalidState, rdsgConfigure,
+      'DAC stream does not support synchronized manual clock correction');
+    Exit;
+  end;
+  if not fRateMirror.CanSetRateFactor(AFactor, AResult) then Exit;
+  if not fRateProvider.CanSetPlaybackSampleRate(fConfig.SampleRateHz * AFactor, AResult) then Exit;
+  EnterCriticalSection(fMirrorLock);
+  try
+    fRequestedRateFactor := AFactor;
+    fRatePending := True;
+  finally
+    LeaveCriticalSection(fMirrorLock);
+  end;
+  AResult := RecorderDacOk;
+  Result := True;
+end;
+
+function TRecorderDacSession.RateFactorPending: Boolean;
+begin
+  EnterCriticalSection(fMirrorLock);
+  try
+    Result := fRatePending or fRateApplying or (fQueuedRateCommands > 0);
+  finally
+    LeaveCriticalSection(fMirrorLock);
+  end;
+end;
+
 function TRecorderDacSession.Pump(out AResult: TRecorderDacResult): Boolean;
 var
   lFrameCount: Integer;
   lProviderResult: TRecorderDacResult;
   lTime: TRecorderBlockTime;
+  lRateFactor: Double;
+  lPivotFrame: QWord;
 begin
+  if fRequireCompleteMirror then
+  begin
+    EnterCriticalSection(fMirrorLock);
+    try
+      AResult := fMirrorFailure;
+    finally
+      LeaveCriticalSection(fMirrorLock);
+    end;
+    if AResult.Error <> rdeNone then Exit(False);
+  end;
   if fBackend.State <> rdsRunning then
   begin
     AResult := RecorderDacFailed(rdeInvalidState, rdsgWrite,
@@ -234,6 +325,22 @@ begin
     Exit(False);
   end;
   Inc(fCounters.RequestedFrames, fConfig.FramesPerBlock);
+  lRateFactor := 0;
+  lPivotFrame := fRunFrames;
+  EnterCriticalSection(fMirrorLock);
+  try
+    if fRatePending then
+    begin
+      lRateFactor := fRequestedRateFactor;
+      fRatePending := False;
+      fRateApplying := True;
+    end;
+  finally
+    LeaveCriticalSection(fMirrorLock);
+  end;
+  if (lRateFactor > 0) and
+    not fRateProvider.SetPlaybackSampleRate(fConfig.SampleRateHz * lRateFactor, AResult) then
+    Exit(False);
   if not fProvider.FillBlock(@fBuffer[0], fConfig.FramesPerBlock,
     lFrameCount, lProviderResult) then
   begin
@@ -269,8 +376,22 @@ begin
   if not fBackend.SubmitBlock(@fBuffer[0], lFrameCount, AResult) then Exit(False);
   Inc(fRunFrames, lFrameCount);
   Inc(fCounters.SubmittedFrames, lFrameCount);
-  if (fMirror <> nil) and not EnqueueMirror(lTime) then
+  if (fMirror <> nil) and not EnqueueMirror(lTime, lRateFactor, lPivotFrame) then
+  begin
     Inc(fCounters.DroppedMirrorBlocks);
+    if fRequireCompleteMirror then
+    begin
+      AResult := RecorderDacFailed(rdeBufferTooSmall, rdsgWrite,
+        'Calibrated DAC mirror queue overflow; output stopped');
+      Exit(False);
+    end;
+  end;
+  EnterCriticalSection(fMirrorLock);
+  try
+    fRateApplying := False;
+  finally
+    LeaveCriticalSection(fMirrorLock);
+  end;
   Result := True;
 end;
 
@@ -280,6 +401,8 @@ var
   lFrameCount: Integer;
   lOffset: Integer;
   lTime: TRecorderBlockTime;
+  lRateFactor: Double;
+  lPivotFrame: QWord;
 begin
   if fMirror = nil then
   begin
@@ -295,24 +418,92 @@ begin
     end;
     lFrameCount := fMirrorCounts[fMirrorRead];
     lTime := fMirrorTimes[fMirrorRead];
+    lRateFactor := fMirrorRateFactors[fMirrorRead];
+    lPivotFrame := fMirrorRatePivots[fMirrorRead];
     lOffset := fMirrorRead * fConfig.FramesPerBlock * fConfig.ChannelCount;
     Move(fMirrorQueue[lOffset], fMirrorFlushBuffer[0],
       lFrameCount * fConfig.ChannelCount * SizeOf(Double));
-    fMirrorRead := (fMirrorRead + 1) mod Length(fMirrorCounts);
+    fMirrorRead := (fMirrorRead + 1) mod fMirrorSlots;
     Dec(fMirrorCount);
   finally
     LeaveCriticalSection(fMirrorLock);
+  end;
+  Result := True;
+  if lRateFactor > 0 then
+    Result := fRateMirror.SetRateFactorAtFrame(lRateFactor, lPivotFrame, AResult);
+  if not Result then
+  begin
+    EnterCriticalSection(fMirrorLock);
+    try
+      fMirrorFailure := AResult;
+      Dec(fQueuedRateCommands);
+    finally
+      LeaveCriticalSection(fMirrorLock);
+    end;
+    Exit;
   end;
   if fTimedMirror <> nil then
     Result := fTimedMirror.WriteTimedBlock(@fMirrorFlushBuffer[0], lTime, AResult)
   else
     Result := fMirror.WriteBlock(@fMirrorFlushBuffer[0], lFrameCount, AResult);
   if Result then Inc(fCounters.MirroredFrames, lFrameCount);
+  if lRateFactor > 0 then
+  begin
+    EnterCriticalSection(fMirrorLock);
+    try
+      Dec(fQueuedRateCommands);
+    finally
+      LeaveCriticalSection(fMirrorLock);
+    end;
+  end;
+  if not Result and fRequireCompleteMirror and (AResult.Error <> rdeNone) then
+  begin
+    EnterCriticalSection(fMirrorLock);
+    try
+      fMirrorFailure := AResult;
+    finally
+      LeaveCriticalSection(fMirrorLock);
+    end;
+  end;
 end;
 
 function TRecorderDacSession.Stop(out AResult: TRecorderDacResult): Boolean;
 begin
   Result := fBackend.Stop(AResult);
+end;
+
+procedure TRecorderDacSession.MaintainMirror;
+var
+  lResult: TRecorderDacResult;
+begin
+  if fMirrorMaintenance = nil then Exit;
+  if fMirrorMaintenance.Poll(lResult) then Exit;
+  EnterCriticalSection(fMirrorLock);
+  try
+    fMirrorFailure := lResult;
+  finally
+    LeaveCriticalSection(fMirrorLock);
+  end;
+end;
+
+function TRecorderDacSession.MirrorPending: Boolean;
+begin
+  Result := (fMirrorMaintenance <> nil) and fMirrorMaintenance.Pending;
+end;
+
+function TRecorderDacSession.MirrorResult: TRecorderDacResult;
+begin
+  EnterCriticalSection(fMirrorLock);
+  try
+    Result := fMirrorFailure;
+  finally
+    LeaveCriticalSection(fMirrorLock);
+  end;
+end;
+
+procedure TRecorderDacSession.CancelMirror;
+begin
+  if fMirrorMaintenance <> nil then fMirrorMaintenance.Cancel;
 end;
 
 procedure TRecorderDacSession.Abort;

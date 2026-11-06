@@ -15,7 +15,33 @@ const
   CRecorderOpcUaDefaultPublishingIntervalMs = 100;
   CRecorderOpcUaDefaultSessionTimeoutMs = 15000;
   CRecorderOpcUaDefaultRequestTimeoutMs = 10000;
+  CRecorderOpcUaMinimumBrowseTimeoutMs = 30000;
+  CRecorderOpcUaDefaultBrowseTimeoutMs = 180000;
   CRecorderOpcUaDefaultMaxNodesPerRequest = 100;
+  CRecorderOpcUaMdnsGroupIPv4 = '224.0.0.251';
+  CRecorderOpcUaMdnsPort = 5353;
+  CRecorderOpcUaMdnsServiceName = '_opcua-tcp._tcp.local';
+  CRecorderOpcUaDiscoveryTimeoutMs = 2500;
+  CRecorderOpcUaDnsTypeA = 1;
+  CRecorderOpcUaDnsTypePtr = 12;
+  CRecorderOpcUaDnsTypeTxt = 16;
+  CRecorderOpcUaDnsTypeSrv = 33;
+  CRecorderOpcUaDnsClassIn = 1;
+  CRecorderOpcUaIpProtocol = 0;
+  {$ifdef windows}
+  { Winsock2 IP_ADD_MEMBERSHIP from ws2ipdef.h (FPC's old winsock2.pp
+    declares the legacy Winsock 1 value, which fails on modern UDP sockets). }
+  CRecorderOpcUaIpAddMembership = 12;
+  {$else}
+  {$ifdef linux}
+  CRecorderOpcUaIpAddMembership = 35;
+  {$else}
+  CRecorderOpcUaIpAddMembership = 12;
+  {$endif}
+  {$endif}
+  { OPC UA standard Objects folder (namespace 0, numeric NodeId 85). }
+  CRecorderOpcUaObjectsFolderNodeId = 'i=85';
+  CRecorderOpcUaObjectsFolderBrowsePath = 'Objects';
 
 type
   TRecorderOpcUaMode = (oumClient, oumServer);
@@ -30,6 +56,7 @@ type
     TagName: string;
     RecorderTagId: Int64;
     DataTypeNodeId: string;
+    ValueRank: Integer;
     Readable: Boolean;
     Writable: Boolean;
     Role: TRecorderOpcUaNodeRole;
@@ -45,11 +72,13 @@ type
     Mode: TRecorderOpcUaMode;
     AuthenticationMode: TRecorderOpcUaAuthenticationMode;
     Endpoint: string;
+    BrowseCacheEndpoint: string;
     UserName: string;
     PasswordEnvironment: string;
     PublishingIntervalMs: Cardinal;
     SessionTimeoutMs: Cardinal;
     RequestTimeoutMs: Cardinal;
+    BrowseTimeoutMs: Cardinal;
     MaxNodesPerRead: Cardinal;
     MaxNodesPerWrite: Cardinal;
     MaxNodesPerBrowse: Cardinal;
@@ -65,7 +94,8 @@ type
     destructor Destroy; override;
     function AddNode(const ANodeId, ATagName: string;
       AWritable: Boolean = False; AReadable: Boolean = True;
-      const ADataTypeNodeId: string = ''): TRecorderOpcUaNode;
+      const ADataTypeNodeId: string = ''; AValueRank: Integer = -1):
+      TRecorderOpcUaNode;
     function ToJson: string;
     function LoadJson(const AText: string; out AError: string): Boolean;
     property Nodes: TObjectList read fNodes;
@@ -87,9 +117,11 @@ begin
   Mode := oumClient;
   AuthenticationMode := ouamAnonymous;
   Endpoint := CRecorderOpcUaDefaultEndpoint;
+  BrowseCacheEndpoint := Endpoint;
   PublishingIntervalMs := CRecorderOpcUaDefaultPublishingIntervalMs;
   SessionTimeoutMs := CRecorderOpcUaDefaultSessionTimeoutMs;
   RequestTimeoutMs := CRecorderOpcUaDefaultRequestTimeoutMs;
+  BrowseTimeoutMs := CRecorderOpcUaDefaultBrowseTimeoutMs;
   MaxNodesPerRead := CRecorderOpcUaDefaultMaxNodesPerRequest;
   MaxNodesPerWrite := CRecorderOpcUaDefaultMaxNodesPerRequest;
   MaxNodesPerBrowse := CRecorderOpcUaDefaultMaxNodesPerRequest;
@@ -112,13 +144,14 @@ end;
 
 function TRecorderOpcUaConfig.AddNode(const ANodeId, ATagName: string;
   AWritable: Boolean; AReadable: Boolean;
-  const ADataTypeNodeId: string): TRecorderOpcUaNode;
+  const ADataTypeNodeId: string; AValueRank: Integer): TRecorderOpcUaNode;
 begin
   Result := TRecorderOpcUaNode.Create;
   Result.NodeId := Trim(ANodeId);
   Result.TagName := Trim(ATagName);
   Result.RecorderTagId := 0;
   Result.DataTypeNodeId := Trim(ADataTypeNodeId);
+  Result.ValueRank := AValueRank;
   Result.Readable := AReadable;
   Result.Writable := AWritable;
   Result.Role := ounrAuto;
@@ -141,6 +174,7 @@ begin
     else
       lRoot.Add('mode', 'client');
     lRoot.Add('endpoint', Endpoint);
+    lRoot.Add('browseCacheEndpoint', BrowseCacheEndpoint);
     if AuthenticationMode = ouamUserPassword then
       lRoot.Add('authentication', 'userPassword')
     else
@@ -150,6 +184,7 @@ begin
     lRoot.Add('publishingIntervalMs', Integer(PublishingIntervalMs));
     lRoot.Add('sessionTimeoutMs', Integer(SessionTimeoutMs));
     lRoot.Add('requestTimeoutMs', Integer(RequestTimeoutMs));
+    lRoot.Add('browseTimeoutMs', Integer(BrowseTimeoutMs));
     lRoot.Add('maxNodesPerRead', Integer(MaxNodesPerRead));
     lRoot.Add('maxNodesPerWrite', Integer(MaxNodesPerWrite));
     lRoot.Add('maxNodesPerBrowse', Integer(MaxNodesPerBrowse));
@@ -184,6 +219,7 @@ begin
       lObject.Add('tagName', lNode.TagName);
       lObject.Add('recorderTagId', lNode.RecorderTagId);
       lObject.Add('dataTypeNodeId', lNode.DataTypeNodeId);
+      lObject.Add('valueRank', lNode.ValueRank);
       lObject.Add('readable', lNode.Readable);
       lObject.Add('writable', lNode.Writable);
       case lNode.Role of
@@ -228,6 +264,10 @@ begin
       else
         Mode := oumClient;
       Endpoint := Trim(lRoot.Get('endpoint', CRecorderOpcUaDefaultEndpoint));
+      { Older snapshots did not store their source endpoint. Treat their
+        Browse cache as untrusted; the editor will discard it rather than
+        showing a tree that may belong to another device. }
+      BrowseCacheEndpoint := Trim(lRoot.Get('browseCacheEndpoint', ''));
       UserName := lRoot.Get('userName', '');
       PasswordEnvironment := lRoot.Get('passwordEnv', '');
       if SameText(lRoot.Get('authentication', ''), 'userPassword') or
@@ -247,6 +287,11 @@ begin
       RequestTimeoutMs := Cardinal(lRoot.Get('requestTimeoutMs',
         CRecorderOpcUaDefaultRequestTimeoutMs));
       if RequestTimeoutMs < 100 then RequestTimeoutMs := 100;
+      BrowseTimeoutMs := Cardinal(lRoot.Get('browseTimeoutMs',
+        CRecorderOpcUaDefaultBrowseTimeoutMs));
+      if BrowseTimeoutMs < CRecorderOpcUaMinimumBrowseTimeoutMs then
+        BrowseTimeoutMs := CRecorderOpcUaMinimumBrowseTimeoutMs;
+      if BrowseTimeoutMs > 86400000 then BrowseTimeoutMs := 86400000;
       MaxNodesPerRead := Cardinal(lRoot.Get('maxNodesPerRead',
         CRecorderOpcUaDefaultMaxNodesPerRequest));
       MaxNodesPerWrite := Cardinal(lRoot.Get('maxNodesPerWrite',
@@ -287,7 +332,7 @@ begin
             begin
               AddNode(lItem.Get('nodeId', ''), lItem.Get('tagName', ''),
                 lItem.Get('writable', False), lItem.Get('readable', True),
-                lItem.Get('dataTypeNodeId', ''));
+                lItem.Get('dataTypeNodeId', ''), lItem.Get('valueRank', -1));
               TRecorderOpcUaNode(fNodes[fNodes.Count - 1]).RecorderTagId :=
                 lItem.Get('recorderTagId', Int64(0));
               if SameText(lItem.Get('role', 'auto'), 'tag') then
@@ -332,15 +377,30 @@ begin
 end;
 
 function RecorderOpcUaNodeIsMessage(ANode: TRecorderOpcUaNode): Boolean;
+var
+  lTypeId, lNamespace: string;
+  lPos, lId: Integer;
 begin
   if ANode = nil then Exit(False);
-  case ANode.Role of
-    ounrMessage: Result := True;
-    ounrTag: Result := False;
-  else
-    Result := SameText(ANode.DataTypeNodeId, 'i=12') or
-      SameText(ANode.DataTypeNodeId, 'ns=0;i=12');
+  if ANode.Role = ounrMessage then Exit(True);
+  { Arrays and non-numeric built-in/custom values have no lossless scalar
+    RecorderTag representation; route them through the string message model. }
+  if ANode.ValueRank <> -1 then Exit(True);
+  lTypeId := Trim(ANode.DataTypeNodeId);
+  if lTypeId = '' then Exit(False);
+  lNamespace := '';
+  if Pos('ns=', LowerCase(lTypeId)) = 1 then
+  begin
+    lPos := Pos(';', lTypeId);
+    if lPos = 0 then Exit(True);
+    lNamespace := Copy(lTypeId, 1, lPos - 1);
+    Delete(lTypeId, 1, lPos);
   end;
+  if lNamespace <> '' then
+    if not SameText(lNamespace, 'ns=0') then Exit(True);
+  if Pos('i=', LowerCase(lTypeId)) <> 1 then Exit(True);
+  lId := StrToIntDef(Copy(lTypeId, 3, MaxInt), -1);
+  Result := (lId < 1) or (lId > 11);
 end;
 
 end.

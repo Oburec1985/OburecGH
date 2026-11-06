@@ -437,6 +437,7 @@ EOF
 if [ -r /etc/profile.d/recorderlnx-sqldb.sh ]; then
   . /etc/profile.d/recorderlnx-sqldb.sh
 fi
+export LD_LIBRARY_PATH="/opt/mera/RecorderLnx/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 exec /opt/mera/RecorderCoordinator/RecorderCoordinator "$@"
 EOF
   chmod 0755 /usr/bin/rcpanel

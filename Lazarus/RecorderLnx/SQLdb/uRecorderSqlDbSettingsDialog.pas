@@ -18,6 +18,9 @@ type
     btnCancel: TButton;
     btnOk: TButton;
     btnDeleteDbSignals: TButton;
+    btnAllowedDbSignals: TButton;
+    btnEnableAllDbSignals: TButton;
+    btnToggleSelectedDbSignals: TButton;
     btnReadDbSignals: TButton;
     btnSweepDb: TButton;
     btnStartFirebird: TButton;
@@ -73,6 +76,9 @@ type
     seQueue: TSpinEdit;
     procedure btnBrowseClick(Sender: TObject);
     procedure btnDeleteDbSignalsClick(Sender: TObject);
+    procedure btnAllowedDbSignalsClick(Sender: TObject);
+    procedure btnEnableAllDbSignalsClick(Sender: TObject);
+    procedure btnToggleSelectedDbSignalsClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure btnReadDbSignalsClick(Sender: TObject);
     procedure btnSweepDbClick(Sender: TObject);
@@ -86,6 +92,8 @@ type
     procedure btnAssignEstimateClick(Sender: TObject);
     procedure btnToggleAlarmEventClick(Sender: TObject);
     procedure cbBackendChange(Sender: TObject);
+    procedure edRootChange(Sender: TObject);
+    procedure edHostChange(Sender: TObject);
     procedure edDbSignalSearchChange(Sender: TObject);
     procedure edSignalSearchChange(Sender: TObject);
   private
@@ -101,6 +109,12 @@ type
     fDbSignalsTab: TTabSheet;
     fOnSignalsDeleted: TRecorderSqlDbSignalsDeletedEvent;
     fRegistry: TRecorderTagRegistry;
+    fLocalDatabaseDraft: string;
+    fRemoteDatabaseDraft: string;
+    fRemoteDatabaseDrafts: TStringList;
+    fDatabaseHost: string;
+    fDatabaseModeLocal: Boolean;
+    fLoadingDatabaseControls: Boolean;
     procedure BuildChannelPages;
     procedure LayoutDbChannelControls;
     procedure LayoutWriteSignalControls;
@@ -143,9 +157,12 @@ uses
   uRecorderSqlDbFirebirdTools, uRecorderSqlDbProjectManager,
   uRecorderSqlDbRuntime,
   uRecorderTagTableExchange, uRecorderSqlSelectionImportDialog,
-  fpjson, jsonparser, uRecorderConfiguredDataSources, uRecorderSqlDataSource;
+  uRecorderSqlAllowedSignalsDialog, fpjson, jsonparser, fphttpclient,
+  uRecorderConfiguredDataSources, uRecorderSqlDataSource;
 
 {$R *.lfm}
+
+function TryDiscoverServerDatabase(const AHost: string; out APath, AError: string): Boolean; forward;
 
 constructor TRecorderSqlDbSettingsDialog.Create(AOwner: TComponent);
 begin
@@ -162,6 +179,7 @@ begin
   fSqlSourceSignals.Sorted := True;
   fSqlSourceSignals.Duplicates := dupIgnore;
   fAlarmSignals := TStringList.Create;
+  fRemoteDatabaseDrafts := TStringList.Create;
   fAlarmSignals.CaseSensitive := False;
   fAlarmSignals.Sorted := True;
   fAlarmSignals.Duplicates := dupIgnore;
@@ -335,7 +353,7 @@ end;
 
 procedure TRecorderSqlDbSettingsDialog.LayoutDbChannelControls;
 var
-  lButtonTop: Integer;
+  lButtonTop, lButtonWidth: Integer;
 begin
   if gbDbChannels = nil then Exit;
 
@@ -344,18 +362,140 @@ begin
     Max(120, gbDbChannels.ClientWidth - 82), edDbSignalSearch.Height);
   edDbSignalSearch.Anchors := [akTop, akLeft, akRight];
 
-  lButtonTop := Max(56, gbDbChannels.ClientHeight - 40);
-  btnReadDbSignals.SetBounds(12, lButtonTop, 150, btnReadDbSignals.Height);
-  btnDeleteDbSignals.SetBounds(170, lButtonTop, 150,
+  lButtonTop := Max(90, gbDbChannels.ClientHeight - 108);
+  lButtonWidth := Max(120, (gbDbChannels.ClientWidth - 36) div 2);
+  btnReadDbSignals.SetBounds(12, lButtonTop, lButtonWidth,
+    btnReadDbSignals.Height);
+  btnDeleteDbSignals.SetBounds(20 + lButtonWidth, lButtonTop, lButtonWidth,
     btnDeleteDbSignals.Height);
-  btnSweepDb.SetBounds(328, lButtonTop, 150, btnSweepDb.Height);
+  btnEnableAllDbSignals.SetBounds(12, lButtonTop + 34, lButtonWidth,
+    btnEnableAllDbSignals.Height);
+  btnToggleSelectedDbSignals.SetBounds(20 + lButtonWidth, lButtonTop + 34,
+    lButtonWidth, btnToggleSelectedDbSignals.Height);
+  btnAllowedDbSignals.SetBounds(12, lButtonTop + 68, lButtonWidth,
+    btnAllowedDbSignals.Height);
+  btnSweepDb.SetBounds(20 + lButtonWidth, lButtonTop + 68, lButtonWidth,
+    btnSweepDb.Height);
   btnReadDbSignals.Anchors := [akLeft, akBottom];
   btnDeleteDbSignals.Anchors := [akLeft, akBottom];
   btnSweepDb.Anchors := [akLeft, akBottom];
+  btnAllowedDbSignals.Anchors := [akLeft, akBottom];
+  btnEnableAllDbSignals.Anchors := [akLeft, akBottom];
+  btnToggleSelectedDbSignals.Anchors := [akLeft, akBottom];
 
   lvDbSignals.SetBounds(12, 52, Max(120, gbDbChannels.ClientWidth - 24),
     Max(80, lButtonTop - 62));
   lvDbSignals.Anchors := [akTop, akLeft, akRight, akBottom];
+end;
+
+procedure TRecorderSqlDbSettingsDialog.btnEnableAllDbSignalsClick(
+  Sender: TObject);
+var
+  I: Integer;
+begin
+  SyncVisibleDbSignalChecks;
+  for I := 0 to High(fDbSignals) do
+    if (Trim(fDbSignals[I].Name) <> '') and
+      (fSqlSourceSignals.IndexOf(fDbSignals[I].Name) < 0) then
+      fSqlSourceSignals.Add(fDbSignals[I].Name);
+  ApplyDbSignalFilter;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.btnToggleSelectedDbSignalsClick(
+  Sender: TObject);
+var
+  I, lIndex: Integer;
+  lEnable: Boolean;
+  lName: string;
+begin
+  SyncVisibleDbSignalChecks;
+  lEnable := False;
+  for I := 0 to lvDbSignals.Items.Count - 1 do
+    if lvDbSignals.Items[I].Selected and
+      (fSqlSourceSignals.IndexOf(lvDbSignals.Items[I].Caption) < 0) then
+    begin
+      lEnable := True;
+      Break;
+    end;
+
+  for I := 0 to lvDbSignals.Items.Count - 1 do
+    if lvDbSignals.Items[I].Selected then
+    begin
+      { Caption is the canonical database signal name and remains stable when
+        the filtered list is rebuilt. }
+      lName := lvDbSignals.Items[I].Caption;
+      lIndex := fSqlSourceSignals.IndexOf(lName);
+      if lEnable then
+      begin
+        if lIndex < 0 then fSqlSourceSignals.Add(lName);
+      end
+      else if lIndex >= 0 then
+        fSqlSourceSignals.Delete(lIndex);
+    end;
+  ApplyDbSignalFilter;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.btnAllowedDbSignalsClick(
+  Sender: TObject);
+var
+  lAllowed, lDeleteNames: TStringList;
+  lIndex: Integer;
+  lRepository: TRecorderSqlDbRepository;
+  lSignalsDeleted, lValuesDeleted: Int64;
+begin
+  if Length(fDbSignals) = 0 then
+    btnReadDbSignalsClick(nil);
+  if Length(fDbSignals) = 0 then Exit;
+  lAllowed := TStringList.Create;
+  lDeleteNames := TStringList.Create;
+  try
+    lAllowed.CaseSensitive := False;
+    lAllowed.Sorted := True;
+    lAllowed.Duplicates := dupIgnore;
+    lDeleteNames.CaseSensitive := False;
+    lDeleteNames.Sorted := True;
+    lDeleteNames.Duplicates := dupIgnore;
+    if fConfig.AllowedSignalSelectionConfigured then
+      lAllowed.Assign(fConfig.AllowedSignalNames)
+    else
+      lAllowed.Assign(fCheckedSignals);
+    if not EditRecorderSqlAllowedSignals(Self, fDbSignals, lAllowed) then Exit;
+
+    fConfig.AllowedSignalNames.Assign(lAllowed);
+    fConfig.AllowedSignalSelectionConfigured := True;
+    fCheckedSignals.Clear;
+    for lIndex := 0 to fAllSignals.Count - 1 do
+      if lAllowed.IndexOf(fAllSignals[lIndex]) >= 0 then
+        fCheckedSignals.Add(fAllSignals[lIndex]);
+    ApplySignalFilter;
+
+    for lIndex := 0 to High(fDbSignals) do
+      if lAllowed.IndexOf(fDbSignals[lIndex].Name) < 0 then
+        lDeleteNames.Add(fDbSignals[lIndex].Name);
+    if (lDeleteNames.Count > 0) and
+      (MessageDlg('SQL БД', Format(
+        'В БД найдено неразрешённых каналов: %d. Удалить их сейчас один раз?',
+        [lDeleteNames.Count]), mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+    begin
+      StoreControls;
+      fConfig.SaveToFile(fFileName);
+      lRepository := TRecorderSqlDbRepository.Create(fConfig);
+      try
+        lRepository.DeleteSignalsByName(lDeleteNames, lSignalsDeleted,
+          lValuesDeleted);
+      finally
+        lRepository.Free;
+      end;
+      if Assigned(fOnSignalsDeleted) then fOnSignalsDeleted(lDeleteNames);
+      MessageDlg('SQL БД', Format(
+        'Удалено каналов: %d. Удалено точек: %d.',
+        [lSignalsDeleted, lValuesDeleted]), mtInformation, [mbOK], 0);
+      btnReadDbSignalsClick(nil);
+    end;
+  finally
+    lDeleteNames.Free;
+    lAllowed.Free;
+  end;
 end;
 
 procedure TRecorderSqlDbSettingsDialog.DbChannelsResize(Sender: TObject);
@@ -370,6 +510,7 @@ end;
 
 destructor TRecorderSqlDbSettingsDialog.Destroy;
 begin
+  fRemoteDatabaseDrafts.Free;
   fAlarmSignals.Free;
   fSqlSourceSignals.Free;
   fCheckedSignals.Free;
@@ -395,17 +536,37 @@ end;
 procedure TRecorderSqlDbSettingsDialog.LoadControls;
 var
   I: Integer;
+  lTag: TRecorderTag;
   lData: TJSONData;
   lSourceConfig: string;
+  lRemoteConfig: TRecorderSqlDbConfig;
 begin
+  fLoadingDatabaseControls := True;
   cbEnabled.Checked := fConfig.Enabled;
   cbBackend.ItemIndex := Ord(fConfig.Backend);
   if Trim(fConfig.RootDirectory) <> '' then
     edRoot.Text := fConfig.RootDirectory
   else
     edRoot.Text := RecorderSqlDbDefaultRootDirectory;
+  fLocalDatabaseDraft := fConfig.LocalDatabase;
+  fRemoteDatabaseDraft := fConfig.RemoteDatabase;
+  fRemoteDatabaseDrafts.Clear;
+  lRemoteConfig := TRecorderSqlDbConfig.Create;
+  try
+    lRemoteConfig.Assign(fConfig);
+    lRemoteConfig.Host := fConfig.RemoteDatabaseHost;
+    fRemoteDatabaseDrafts.Values[LowerCase(Trim(fConfig.RemoteDatabaseHost))] :=
+      lRemoteConfig.RemoteDatabase;
+  finally
+    lRemoteConfig.Free;
+  end;
+  fDatabaseHost := LowerCase(Trim(fConfig.Host));
+  fDatabaseModeLocal := (fConfig.Backend = rsbSQLite) or
+    RecorderSqlDbHostIsLocal(fConfig.Host);
   edDatabase.Text := fConfig.Database;
   edHost.Text := fConfig.Host;
+  edRoot.OnChange := @edRootChange;
+  edHost.OnChange := @edHostChange;
   sePort.Value := fConfig.Port;
   edUser.Text := fConfig.UserName;
   edPassword.Text := fConfig.StoredPassword;
@@ -446,14 +607,18 @@ begin
   if fRegistry <> nil then
     for I := 0 to fRegistry.TagCount - 1 do
     begin
-      fAllSignals.AddObject(fRegistry.Tags[I].Name, fRegistry.Tags[I]);
+      lTag := fRegistry.Tags[I];
+      if RecorderTagIsSqlMirror(lTag) then
+      begin
+        fSqlSourceSignals.Add(lTag.Address);
+        Continue;
+      end;
+      fAllSignals.AddObject(lTag.Name, lTag);
       if not fConfig.SignalSelectionConfigured or
-         (fConfig.SignalNames.IndexOf(fRegistry.Tags[I].Name) >= 0) then
-        fCheckedSignals.Add(fRegistry.Tags[I].Name);
-      if fConfig.AlarmEventEnabled(fRegistry.Tags[I].Name) then
-        fAlarmSignals.Add(fRegistry.Tags[I].Name);
-      if SameText(fRegistry.Tags[I].SourceId, CRecorderSqlSourceId) then
-        fSqlSourceSignals.Add(fRegistry.Tags[I].Address);
+         (fConfig.SignalNames.IndexOf(lTag.Name) >= 0) then
+        fCheckedSignals.Add(lTag.Name);
+      if fConfig.AlarmEventEnabled(lTag.Name) then
+        fAlarmSignals.Add(lTag.Name);
     end;
   { The configured source is authoritative.  SQL tags can still be referenced
     by forms after a channel is unchecked, so deriving the selection from all
@@ -480,6 +645,7 @@ begin
   end;
   ApplySignalFilter;
   ApplyDbSignalFilter;
+  fLoadingDatabaseControls := False;
   UpdateControls;
 end;
 
@@ -636,10 +802,16 @@ begin
   fConfig.Enabled := cbEnabled.Checked;
   if cbBackend.ItemIndex >= 0 then
     fConfig.Backend := TRecorderSqlDbBackend(cbBackend.ItemIndex);
-  if Trim(edHost.Text) = '' then
+  if (fConfig.Backend = rsbSQLite) or RecorderSqlDbHostIsLocal(edHost.Text) then
     fConfig.RootDirectory := Trim(edRoot.Text);
-  fConfig.Database := Trim(edDatabase.Text);
   fConfig.Host := Trim(edHost.Text);
+  if fDatabaseModeLocal then
+    fLocalDatabaseDraft := Trim(edDatabase.Text)
+  else
+    fRemoteDatabaseDraft := Trim(edDatabase.Text);
+  fConfig.LocalDatabase := fLocalDatabaseDraft;
+  if not fDatabaseModeLocal then
+    fConfig.RemoteDatabase := fRemoteDatabaseDraft;
   fConfig.Port := sePort.Value;
   if fConfig.Backend = rsbFirebird then
     fConfig.UserName := CRecorderFirebirdDefaultUserName
@@ -674,11 +846,34 @@ end;
 
 procedure TRecorderSqlDbSettingsDialog.UpdateControls;
 var
-  lFirebird, lRemote: Boolean;
+  lFirebird, lRemote, lLocal: Boolean;
+  lHost: string;
 begin
+  if fLoadingDatabaseControls then Exit;
   lFirebird := cbBackend.ItemIndex = Ord(rsbFirebird);
   lRemote := (cbBackend.ItemIndex <> Ord(rsbSQLite)) and
-    (Trim(edHost.Text) <> '');
+    not RecorderSqlDbHostIsLocal(edHost.Text);
+  lLocal := not lRemote;
+  lHost := LowerCase(Trim(edHost.Text));
+  if (lLocal <> fDatabaseModeLocal) or
+    (lRemote and (lHost <> fDatabaseHost)) then
+  begin
+    if fDatabaseModeLocal then
+      fLocalDatabaseDraft := edDatabase.Text
+    else
+    begin
+      fRemoteDatabaseDraft := edDatabase.Text;
+      fRemoteDatabaseDrafts.Values[fDatabaseHost] := fRemoteDatabaseDraft;
+    end;
+    fDatabaseModeLocal := lLocal;
+    if lLocal then edDatabase.Text := fLocalDatabaseDraft
+    else
+    begin
+      fRemoteDatabaseDraft := fRemoteDatabaseDrafts.Values[lHost];
+      edDatabase.Text := fRemoteDatabaseDraft;
+    end;
+  end;
+  fDatabaseHost := lHost;
   edHost.Enabled := cbBackend.ItemIndex <> Ord(rsbSQLite);
   sePort.Enabled := edHost.Enabled;
   edUser.Enabled := edHost.Enabled;
@@ -697,21 +892,22 @@ begin
   lblUser.Visible := not lFirebird;
   edUser.Visible := not lFirebird;
   if lRemote then
-  begin
-    lblDatabase.Caption := 'Сетевой путь к БД';
-    if ExtractFilePath(Trim(edDatabase.Text)) = '' then
-      edDatabase.Text := CRecorderFirebirdDefaultDatabase;
-  end
+    lblDatabase.Caption := 'Путь БД на сервере'
   else
-    lblDatabase.Caption := 'Файл / имя базы';
+    lblDatabase.Caption := 'Путь локальной БД';
   btnTestFirebird.Enabled := lFirebird;
   btnStartFirebird.Enabled := lFirebird and
-    RecorderSqlDbFirebirdHostIsLocal(edHost.Text);
+    RecorderSqlDbHostIsLocal(edHost.Text);
   btnSweepDb.Enabled := lFirebird;
   if edHost.Enabled then
     lblHost.Caption := 'Хост БД (пусто = локально)'
   else
     lblHost.Caption := 'Хост БД';
+end;
+
+procedure TRecorderSqlDbSettingsDialog.edHostChange(Sender: TObject);
+begin
+  UpdateControls;
 end;
 
 function TRecorderSqlDbSettingsDialog.TryOpenCurrentDatabase(
@@ -859,9 +1055,11 @@ end;
 
 procedure TRecorderSqlDbSettingsDialog.cbBackendChange(Sender: TObject);
 begin
+  UpdateControls;
   if cbBackend.ItemIndex = Ord(rsbFirebird) then
   begin
-    if edDatabase.Text = CRecorderSqlDbDefaultFileName then
+    if fDatabaseModeLocal and
+      (edDatabase.Text = CRecorderSqlDbDefaultFileName) then
       edDatabase.Text := CRecorderFirebirdDefaultFileName;
     if sePort.Value = 0 then sePort.Value := 3050;
   end;
@@ -871,8 +1069,27 @@ end;
 procedure TRecorderSqlDbSettingsDialog.btnTestFirebirdClick(Sender: TObject);
 var
   lPort: Word;
-  lDetails, lMessage: string;
+  lDetails, lMessage, lPath: string;
 begin
+  if (cbBackend.ItemIndex = Ord(rsbFirebird)) and
+     (not RecorderSqlDbHostIsLocal(Trim(edHost.Text))) and
+     (Trim(edDatabase.Text) = '') then
+  begin
+    if not TryDiscoverServerDatabase(Trim(edHost.Text), lPath, lMessage) then
+    begin
+      MessageDlg('Firebird', 'Не удалось получить путь базы с сервера: ' + lMessage,
+        mtWarning, [mbOK], 0);
+      Exit;
+    end;
+    edDatabase.Text := lPath;
+    if TryOpenCurrentDatabase(lMessage) then
+      MessageDlg('Firebird', 'Путь базы: ' + lPath + LineEnding + lMessage,
+        mtInformation, [mbOK], 0)
+    else
+      MessageDlg('Firebird', 'Путь базы: ' + lPath + LineEnding + lMessage,
+        mtError, [mbOK], 0);
+    Exit;
+  end;
   lPort := sePort.Value;
   if lPort = 0 then
     lPort := 3050;
@@ -932,6 +1149,26 @@ begin
     MessageDlg('Firebird', lMessage + LineEnding + LineEnding +
       RecorderSqlDbDescribeLocalFirebird(lPort),
       mtWarning, [mbOK], 0);
+end;
+
+procedure TRecorderSqlDbSettingsDialog.edRootChange(Sender: TObject);
+var
+  lRoot, lName: string;
+  lIndex: Integer;
+begin
+  if fLoadingDatabaseControls or not fDatabaseModeLocal then Exit;
+  lRoot := Trim(edRoot.Text);
+  if lRoot = '' then Exit;
+  lName := StringReplace(Trim(edDatabase.Text), '\', '/', [rfReplaceAll]);
+  lIndex := LastDelimiter('/', lName);
+  if lIndex > 0 then Delete(lName, 1, lIndex);
+  if lName = '' then Exit;
+  if (lRoot[Length(lRoot)] = '/') or (lRoot[Length(lRoot)] = '\') then
+    edDatabase.Text := lRoot + lName
+  else if Pos('\', lRoot) > 0 then
+    edDatabase.Text := lRoot + '\' + lName
+  else
+    edDatabase.Text := lRoot + '/' + lName;
 end;
 
 procedure TRecorderSqlDbSettingsDialog.btnBrowseClick(Sender: TObject);
@@ -1042,7 +1279,8 @@ begin
       lDbResult);
     SyncVisibleSignalChecks;
     for I := 0 to lSelected.Count - 1 do
-      if fCheckedSignals.IndexOf(lSelected[I]) < 0 then
+      if (fAllSignals.IndexOf(lSelected[I]) >= 0) and
+         (fCheckedSignals.IndexOf(lSelected[I]) < 0) then
         fCheckedSignals.Add(lSelected[I]);
     if lDisableUnmarked then
       for I := 0 to lPresent.Count - 1 do
@@ -1116,13 +1354,23 @@ begin
 end;
 
 procedure TRecorderSqlDbSettingsDialog.btnSelectAllClick(Sender: TObject);
-var I: Integer;
+var I, lIndex: Integer; lSelect: Boolean;
 begin
+  lSelect := False;
+  for I := 0 to lvSignals.Items.Count - 1 do
+    if not lvSignals.Items[I].Checked then
+    begin
+      lSelect := True;
+      Break;
+    end;
   for I := 0 to lvSignals.Items.Count - 1 do
   begin
-    lvSignals.Items[I].Checked := True;
-    if fCheckedSignals.IndexOf(lvSignals.Items[I].Caption) < 0 then
-      fCheckedSignals.Add(lvSignals.Items[I].Caption);
+    lvSignals.Items[I].Checked := lSelect;
+    lIndex := fCheckedSignals.IndexOf(lvSignals.Items[I].Caption);
+    if lSelect and (lIndex < 0) then
+      fCheckedSignals.Add(lvSignals.Items[I].Caption)
+    else if (not lSelect) and (lIndex >= 0) then
+      fCheckedSignals.Delete(lIndex);
   end;
 end;
 
@@ -1260,11 +1508,75 @@ begin
   end;
 end;
 
-procedure TRecorderSqlDbSettingsDialog.btnOkClick(Sender: TObject);
+function TryDiscoverServerDatabase(const AHost: string; out APath, AError: string): Boolean;
+var
+  C: TFPHTTPClient;
+  Data: TJSONData;
+  I: Integer;
 begin
-  StoreControls;
-  fConfig.SaveToFile(fFileName);
-  ModalResult := mrOk;
+  Result := False;
+  APath := '';
+  AError := '';
+  for I := 1 to Length(AHost) do
+    if not (AHost[I] in ['a'..'z', 'A'..'Z', '0'..'9', '.', '-']) then
+    begin AError := 'Некорректный адрес сервера.'; Exit; end;
+  C := TFPHTTPClient.Create(nil);
+  try
+    C.ConnectTimeout := 2000;
+    C.IOTimeout := 2000;
+    try
+      Data := GetJSON(C.Get('http://' + AHost + ':8766/api/v1/status'));
+      try
+        if Data is TJSONObject then
+          APath := Trim(TJSONObject(Data).Get('sql_local_database', ''));
+      finally
+        Data.Free;
+      end;
+      Result := APath <> '';
+      if not Result then AError := 'Сервер не сообщил путь своей базы.';
+    except
+      on E: Exception do AError := E.Message;
+    end;
+  finally
+    C.Free;
+  end;
+end;
+
+procedure TRecorderSqlDbSettingsDialog.btnOkClick(Sender: TObject);
+var
+  lPath, lError: string;
+begin
+  if (cbBackend.ItemIndex = Ord(rsbFirebird)) and
+    (not RecorderSqlDbHostIsLocal(Trim(edHost.Text))) and
+    (Trim(edDatabase.Text) = '') then
+  begin
+    if TryDiscoverServerDatabase(Trim(edHost.Text), lPath, lError) then
+    begin
+      edDatabase.Text := lPath;
+      if not TryOpenCurrentDatabase(lError) then
+      begin
+        MessageDlg('SQL БД', 'Путь получен: ' + lPath + LineEnding +
+          'Не удалось подключиться к базе: ' + lError, mtError, [mbOK], 0);
+        Exit;
+      end;
+    end
+    else begin
+    MessageDlg('SQL БД', 'Не удалось получить путь базы с сервера: ' + lError + LineEnding +
+      'Укажите путь к файлу базы на выбранном сервере. ' +
+      'Это путь на сервере, например /mnt/sda1/base/firebird/recorderlnx.fdb. ' +
+      'Если путь неизвестен, задайте сервер через RCPanel, когда сервер и RecorderLnx доступны.',
+      mtWarning, [mbOK], 0);
+    edDatabase.SetFocus;
+    Exit;
+    end;
+  end;
+  try
+    StoreControls;
+    fConfig.SaveToFile(fFileName);
+    ModalResult := mrOk;
+  except
+    on E: Exception do MessageDlg('SQL БД', E.Message, mtError, [mbOK], 0);
+  end;
 end;
 
 function ShowRecorderSqlDbSettings(AOwner: TComponent;

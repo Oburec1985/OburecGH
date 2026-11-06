@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Package verified Linux artifacts; freshness checks cover production inputs only."""
 import argparse
 import gzip
 import hashlib
@@ -21,6 +22,43 @@ PLUGIN_FILES = (
     "libsampleinfoplugin.so",
 )
 
+# Package defaults are intentionally independent of any workstation app.ini:
+# the latter can contain operator settings, server addresses and secrets.
+APP_INI_TEMPLATE = """[Application]
+DefaultProjectConfigDir=config/projects/default
+
+[SQLdbConnection]
+Backend=firebird
+"""
+
+
+def mera_root_resolver_script():
+    """Resolve [Paths] MeraFiles without evaluating the INI as shell code."""
+    return r'''recorder_mera_root() {
+  paths_file="$1"
+  program_dir="$2"
+  fallback="$3"
+  value=""
+  if [ -r "$paths_file" ]; then
+    value=$(awk '
+      /^[[:space:]]*\[/ {
+        section=tolower($0); gsub(/[[:space:]\r]/,"",section); next
+      }
+      section=="[paths]" && /^[[:space:]]*[Mm][Ee][Rr][Aa][Ff][Ii][Ll][Ee][Ss][[:space:]]*=/ {
+        sub(/^[^=]*=/, ""); sub(/\r$/, "");
+        sub(/^[[:space:]]*/, ""); sub(/[[:space:]]*$/, "");
+        print; exit
+      }
+    ' "$paths_file")
+  fi
+  case "$value" in
+    ""|[A-Za-z]:*|\\\\*) printf '%s\n' "$fallback" ;;
+    /*) printf '%s\n' "$value" ;;
+    *) printf '%s/%s\n' "$program_dir" "$value" ;;
+  esac
+}
+'''
+
 
 def sha256_bytes(data):
     return hashlib.sha256(data).hexdigest().upper()
@@ -31,28 +69,30 @@ def newest_source(repo_root):
         repo_root / "Lazarus" / "RecorderLnx",
         repo_root / "Lazarus" / "SharedUtils",
     ]
-    suffixes = {".pas", ".pp", ".inc", ".lfm", ".lpr"}
-    excluded = {"lib", "tools", "_buildverify", "backup", "cach", "errors", "tmp", ".git"}
-    newest = None
-    for source_root in roots:
-        for path in source_root.rglob("*"):
-            if not path.is_file() or path.suffix.lower() not in suffixes:
-                continue
-            if any(part.lower() in excluded for part in path.parts):
-                continue
-            if newest is None or path.stat().st_mtime > newest.stat().st_mtime:
-                newest = path
-    return newest
+    candidates = (newest_tree_source(root, {"tools"}) for root in roots)
+    return max((path for path in candidates if path is not None),
+               key=lambda path: path.stat().st_mtime, default=None)
 
 
-def newest_tree_source(source_root):
-    suffixes = {".pas", ".pp", ".inc", ".lfm", ".lpr"}
-    excluded = {"lib", "_buildverify", "backup", "tmp", ".git"}
+def newest_tree_source(source_root, extra_excluded=()):
+    suffixes = {".pas", ".pp", ".inc", ".lfm", ".lpr", ".lpi", ".lpk", ".rc"}
+    excluded = {"lib", "backup", "cach", "errors", "tmp", ".git",
+                "tests", "test"} | set(extra_excluded)
     newest = None
     for path in source_root.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in suffixes:
             continue
-        if any(part.lower() in excluded for part in path.parts):
+        # Restrict filtering to this tree: a checkout may itself live under tmp.
+        # Verification builds and SDK test plugins are not shipped production inputs.
+        directories = path.relative_to(source_root).parts[:-1]
+        if any(part.lower() in excluded or part.lower().startswith("_buildverify")
+               for part in directories):
+            continue
+        # Ad-hoc GUI probes often live beside the real main project and are
+        # not inputs to RecorderLnx.lpi. Keep the real lpr/lpi in the check.
+        if (source_root.name.lower() == "recorderlnx" and not directories and
+                path.suffix.lower() in {".lpr", ".lpi"} and
+                path.stem.lower() != "recorderlnx"):
             continue
         if newest is None or path.stat().st_mtime > newest.stat().st_mtime:
             newest = path
@@ -176,6 +216,63 @@ def add_tree(tar, source_dir, target_dir):
             add_file(tar, source_file, target_file)
 
 
+def add_default_project_tree(tar, source_dir, target_dir):
+    """Package one complete template using the current project file names.
+
+    In a legacy template run-control.ini is a different historical file;
+    default.run-control.ini is the project control file and takes precedence.
+    Select one complete naming family, never assemble a mixed partial project.
+    """
+    source_dir = Path(source_dir)
+    if not source_dir.exists() or (source_dir.is_dir() and not any(source_dir.iterdir())):
+        # A fresh checkout need not carry an operator's machine project.
+        # Supply an empty valid project rather than packaging local devices,
+        # bind addresses, credentials, or measurement paths.
+        defaults = {
+            "config.json": '{"format":"RecorderLnx.ProjectConfig","version":1,"tags":[],"dataSources":[]}\n',
+            "gui.ini": "[Project]\nPageCount=1\n\n[Page.0]\nId=Page1\nName=Page1\nTitle=Page 1\n",
+            "run-control.ini": "[Start]\nCondition=Manual\n\n[Stop]\nCondition=Manual\n",
+        }
+        for name, content in defaults.items():
+            add_bytes(tar, unix_path(target_dir, name), content)
+        return
+    canonical = ("config.json", "gui.ini", "run-control.ini")
+    legacy = ("default.config.json", "default.gui.ini", "default.run-control.ini")
+    selected = canonical if (source_dir / canonical[0]).is_file() else legacy
+    missing = [name for name in selected if not (source_dir / name).is_file()]
+    if missing:
+        raise FileNotFoundError("Incomplete default project template: " + ", ".join(missing))
+    excluded = set(canonical + legacy)
+    for root, dirs, files in os.walk(source_dir):
+        root_path = Path(root)
+        rel_root = root_path.relative_to(source_dir)
+        target_root = target_dir.strip("/") if rel_root.as_posix() == "." else unix_path(target_dir, rel_root.as_posix())
+        if rel_root.as_posix() != ".":
+            add_dir(tar, target_root)
+        for file_name in sorted(files):
+            if rel_root.as_posix() == "." and file_name in excluded:
+                continue
+            add_file(tar, root_path / file_name, unix_path(target_root, file_name))
+    for source_name, target_name in zip(selected, canonical):
+        add_file(tar, source_dir / source_name, unix_path(target_dir, target_name))
+
+
+def default_project_seed_script():
+    return '''# Existing projects, including incomplete or legacy projects, are never
+# overlaid with files from the package. The application handles migration.
+project_dir="$config_root/projects/default"
+package_project="${package_project:-/usr/share/recorderlnx/config/projects/default}"
+project_seeded=0
+if [ -z "$(find "$project_dir" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+  cp -a "$package_project/." "$project_dir/"
+  project_seeded=1
+  log "default project copied"
+else
+  log "existing default project preserved"
+fi
+'''
+
+
 def add_symlink(tar, name, target):
     info = tarfile.TarInfo(name)
     info.type = tarfile.SYMTYPE
@@ -215,6 +312,19 @@ def ar_member(name, data, mode=0o100644):
 def install_check_script():
     script = """#!/bin/sh
 status=0
+
+@MERA_ROOT_RESOLVER@
+fallback_root="${RECORDER_MERA_ROOT:-}"
+if [ -z "$fallback_root" ] && [ "$(id -u)" -ne 0 ]; then
+  user_home=$(getent passwd "$(id -un)" | awk -F: 'NR==1 {print $6}')
+  case "$user_home" in /*) fallback_root="${user_home%/}/Mera Files" ;; esac
+fi
+if [ -z "$fallback_root" ]; then fallback_root='__RECORDER_HOME_REQUIRED__'; fi
+mera_files_root=$(recorder_mera_root /opt/mera/RecorderLnx/RecorderLnx.paths.ini /opt/mera/RecorderLnx "$fallback_root")
+if [ "$mera_files_root" = '__RECORDER_HOME_REQUIRED__' ]; then
+  echo 'MISS cannot determine desktop user home for Mera Files'
+  exit 1
+fi
 
 check_path() {
   path="$1"
@@ -266,8 +376,19 @@ check_path /usr/share/applications/recorderlnx-linux-setup-manager.desktop
 check_path /usr/share/icons/hicolor/256x256/apps/recorderlnx.png
 check_path /usr/bin/recorderlnx
 check_path /usr/bin/recorderlnx-linux-setup
-check_path @MERA_FILES_ROOT@/RecorderLnx/app.ini
-check_path @MERA_FILES_ROOT@/RecorderLnx/config/projects/default/default.config.json
+check_path "$mera_files_root/RecorderLnx/app.ini"
+if [ -f "$mera_files_root/RecorderLnx/config/projects/default/config.json" ]; then
+  check_path "$mera_files_root/RecorderLnx/config/projects/default/config.json"
+  check_path "$mera_files_root/RecorderLnx/config/projects/default/gui.ini"
+  check_path "$mera_files_root/RecorderLnx/config/projects/default/run-control.ini"
+elif [ -f "$mera_files_root/RecorderLnx/config/projects/default/default.config.json" ]; then
+  check_path "$mera_files_root/RecorderLnx/config/projects/default/default.config.json"
+  check_path "$mera_files_root/RecorderLnx/config/projects/default/default.gui.ini"
+  check_path "$mera_files_root/RecorderLnx/config/projects/default/default.run-control.ini"
+else
+  echo "MISS default project config.json (or legacy default.config.json)"
+  status=1
+fi
 if { command -v ldconfig >/dev/null 2>&1 && ldconfig -p 2>/dev/null ||
      [ -x /sbin/ldconfig ] && /sbin/ldconfig -p 2>/dev/null; } |
    grep -q 'libfbclient[.]so'; then
@@ -277,15 +398,16 @@ else
   status=1
 fi
 check_path /var/opt/mera/SQLdb
-check_writable_dir @MERA_FILES_ROOT@
-check_writable_dir @MERA_FILES_ROOT@/RecorderLnx/config
-check_writable_dir @MERA_FILES_ROOT@/Calibr
-check_writable_dir @MERA_FILES_ROOT@/Resources
-check_writable_dir @MERA_FILES_ROOT@/SDB
+check_writable_dir "$mera_files_root"
+check_writable_dir "$mera_files_root/RecorderLnx"
+check_writable_dir "$mera_files_root/RecorderLnx/config"
+check_writable_dir "$mera_files_root/Calibr"
+check_writable_dir "$mera_files_root/Resources"
+check_writable_dir "$mera_files_root/SDB"
 
 exit "$status"
 """
-    return script.replace("@MERA_FILES_ROOT@", MERA_FILES_ROOT)
+    return script.replace("@MERA_ROOT_RESOLVER@", mera_root_resolver_script()).replace("@MERA_FILES_ROOT@", MERA_FILES_ROOT)
 
 
 def make_control_tar(version, architecture, installed_size_kb):
@@ -413,9 +535,64 @@ install_desktop_shortcuts() {
   done
 }
 
-mera_files_root=@MERA_FILES_ROOT@
+@MERA_ROOT_RESOLVER@
+paths_file=/opt/mera/RecorderLnx/RecorderLnx.paths.ini
+paths_backup=/var/lib/recorderlnx/RecorderLnx.paths.ini.pre-upgrade
+if [ ! -f "$paths_file" ] && [ -f "$paths_backup" ]; then
+  mkdir -p "$(dirname "$paths_file")"
+  cp -p "$paths_backup" "$paths_file"
+fi
+if [ -f "$paths_file" ]; then
+  rm -f "$paths_backup"
+  paths_new=0
+else
+  mkdir -p "$(dirname "$paths_file")"
+  paths_new=1
+fi
+mera_files_root=$(recorder_mera_root "$paths_file" /opt/mera/RecorderLnx '__RECORDER_HOME_REQUIRED__')
+if [ "$mera_files_root" = '__RECORDER_HOME_REQUIRED__' ]; then
+  runtime_user="${SUDO_USER:-}"
+  runtime_uid=$(id -u "$runtime_user" 2>/dev/null || true)
+  if [ -z "$runtime_user" ] || [ -z "$runtime_uid" ] || [ "$runtime_uid" -lt 1000 ] || [ "$runtime_uid" -ge 65534 ]; then
+    runtime_user=""
+    runtime_candidates=$(getent passwd | awk -F: '$3 >= 1000 && $3 < 65534 && $6 ~ "^/home/" && $7 !~ /(nologin|false)$/ {print $1}')
+    if [ "$(printf '%s\n' "$runtime_candidates" | sed '/^$/d' | wc -l)" -eq 1 ]; then
+      runtime_user="$runtime_candidates"
+    fi
+  fi
+  runtime_home=$(getent passwd "$runtime_user" 2>/dev/null | awk -F: 'NR==1 {print $6}')
+  case "$runtime_home" in
+    /root|/root/*) runtime_home="" ;;
+    /*) if [ -z "$runtime_user" ] || [ ! -d "$runtime_home" ]; then runtime_home=""; fi ;;
+    *) runtime_home="" ;;
+  esac
+  if [ -z "$runtime_home" ]; then
+    log "Cannot select a unique desktop user for Mera Files; install with SUDO_USER set to that user."
+    exit 1
+  fi
+  home_mera_root="${runtime_home%/}/Mera Files"
+  mera_files_root="$home_mera_root"
+  if [ "$paths_new" = 1 ]; then
+    printf '[Paths]\nMeraFiles=%s\nConfig=%s/RecorderLnx/config\nPlugins=plugins\nBios=bios\nSysCom=syscom\n' \
+      "$home_mera_root" "$home_mera_root" > "$paths_file"
+  fi
+fi
 recorder_data_root="$mera_files_root/RecorderLnx"
 config_root="$recorder_data_root/config"
+mera_files_new=0
+recorder_data_new=0; config_new=0; projects_new=0; project_new=0; app_ini_new=0
+coordinator_ini_new=0
+calibr_new=0; resources_new=0; sdb_new=0
+[ -d "$mera_files_root" ] || mera_files_new=1
+[ -d "$recorder_data_root" ] || recorder_data_new=1
+[ -d "$config_root" ] || config_new=1
+[ -d "$config_root/projects" ] || projects_new=1
+[ -d "$config_root/projects/default" ] || project_new=1
+[ -f "$recorder_data_root/app.ini" ] || app_ini_new=1
+[ -f "$recorder_data_root/coordinator-client.ini" ] || coordinator_ini_new=1
+[ -d "$mera_files_root/Calibr" ] || calibr_new=1
+[ -d "$mera_files_root/Resources" ] || resources_new=1
+[ -d "$mera_files_root/SDB" ] || sdb_new=1
 mkdir -p "$config_root/projects/default"
 mkdir -p /var/opt/mera/SQLdb
 mkdir -p "$mera_files_root/Calibr" "$mera_files_root/Resources" "$mera_files_root/SDB"
@@ -446,16 +623,20 @@ if [ ! -f "$recorder_data_root/app.ini" ]; then
     log "app.ini copied"
   fi
 fi
+# Preserve the coordinator endpoint when upgrading from the former data root.
+if [ ! -e "$recorder_data_root/coordinator-client.ini" ] && \
+    [ -f /var/opt/mera/RecorderLnx/coordinator-client.ini ]; then
+  cp /var/opt/mera/RecorderLnx/coordinator-client.ini \
+    "$recorder_data_root/coordinator-client.ini"
+  log "coordinator-client.ini migrated from /var/opt/mera"
+fi
 if ! grep -q '^\\[SQLdbConnection\\]$' "$recorder_data_root/app.ini"; then
   printf '\n' >> "$recorder_data_root/app.ini"
   sed -n '/^\\[SQLdbConnection\\]$/,$p' /usr/share/recorderlnx/config/app.ini \
     >> "$recorder_data_root/app.ini"
   log "SQLdbConnection added to app.ini"
 fi
-if [ ! -f "$config_root/projects/default/default.config.json" ]; then
-  cp -a /usr/share/recorderlnx/config/projects/default/. "$config_root/projects/default/"
-  log "default project copied"
-fi
+@DEFAULT_PROJECT_SEED@
 chmod 755 /opt/mera/RecorderLnx/RecorderLnx
 chmod 755 /opt/mera/RecorderLnx/RecorderHostAgent
 chmod 0644 /opt/mera/RecorderLnx/plugins/libluacalcplugin.so
@@ -480,7 +661,7 @@ if command -v systemctl >/dev/null 2>&1; then
 fi
 log "RecorderHostAgent registered in XDG Autostart; it starts at graphical login"
 configure_host_agent_firewall
-runtime_user="${SUDO_USER:-}"
+runtime_user="${runtime_user:-${SUDO_USER:-}}"
 if [ -z "$runtime_user" ] || [ "$runtime_user" = root ]; then
   runtime_user=$(stat -c '%U' "$config_root" 2>/dev/null || true)
 fi
@@ -495,17 +676,39 @@ if [ -z "$runtime_user" ] || [ "$runtime_user" = root ]; then
 fi
 if [ -n "$runtime_user" ] && [ "$runtime_user" != root ] && id "$runtime_user" >/dev/null 2>&1; then
   runtime_group=$(id -gn "$runtime_user")
+  if [ "$mera_files_new" = 1 ]; then
+    chown "$runtime_user:$runtime_group" "$mera_files_root"
+  fi
+  # Runtime state INIs live beside app.ini, not only in config/.  The desktop
+  # user must be able to create them and atomically replace existing files.
+  if [ "$recorder_data_new" = 1 ]; then
+    chown "$runtime_user:$runtime_group" "$recorder_data_root"
+    chmod 0700 "$recorder_data_root"
+  fi
   # app.ini is the system-level Recorder configuration and is written by the
   # GUI when settings are saved.  Keep it beside the project tree, but give
   # the actual desktop user ownership just like the project configuration.
-  chown "$runtime_user:$runtime_group" "$recorder_data_root/app.ini"
-  chmod 0660 "$recorder_data_root/app.ini"
-  chown -R "$runtime_user:$runtime_group" "$config_root" \
-    "$mera_files_root/Calibr" "$mera_files_root/Resources" "$mera_files_root/SDB"
-  find "$config_root" "$mera_files_root/Calibr" "$mera_files_root/Resources" \
-    "$mera_files_root/SDB" -type d -exec chmod 0700 {} +
-  find "$config_root" "$mera_files_root/Calibr" "$mera_files_root/Resources" \
-    "$mera_files_root/SDB" -type f -exec chmod 0600 {} +
+  if [ "$app_ini_new" = 1 ]; then
+    chown "$runtime_user:$runtime_group" "$recorder_data_root/app.ini"
+    chmod 0660 "$recorder_data_root/app.ini"
+  fi
+  if [ "$coordinator_ini_new" = 1 ] && [ -f "$recorder_data_root/coordinator-client.ini" ]; then
+    chown "$runtime_user:$runtime_group" "$recorder_data_root/coordinator-client.ini"
+    chmod 0600 "$recorder_data_root/coordinator-client.ini"
+  fi
+  if [ "$config_new" = 1 ]; then
+    chown -R "$runtime_user:$runtime_group" "$config_root"
+  elif [ "$projects_new" = 1 ]; then
+    chown -R "$runtime_user:$runtime_group" "$config_root/projects"
+  elif [ "$project_new" = 1 ]; then
+    chown -R "$runtime_user:$runtime_group" "$config_root/projects/default"
+  elif [ "$project_seeded" = 1 ]; then
+    find "$config_root/projects/default" -mindepth 1 -exec chown -h "$runtime_user:$runtime_group" {} +
+  fi
+  for path_flag in Calibr:$calibr_new Resources:$resources_new SDB:$sdb_new; do
+    name=${path_flag%%:*}; is_new=${path_flag#*:}
+    if [ "$is_new" = 1 ]; then chown -R "$runtime_user:$runtime_group" "$mera_files_root/$name"; fi
+  done
   configure_host_agent_shutdown "$runtime_user" || true
 else
   log "runtime user is unknown; writable config permissions were not broadened"
@@ -517,11 +720,22 @@ install_desktop_shortcuts
 if command -v update-desktop-database >/dev/null 2>&1; then
   update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
 fi
-/usr/bin/recorderlnx-install-check >> "$LOG" 2>&1 || true
+RECORDER_MERA_ROOT="$mera_files_root" /usr/bin/recorderlnx-install-check >> "$LOG" 2>&1 || true
 log "RecorderLnx postinst finished"
 exit 0
 """
     postinst = postinst.replace("@MERA_FILES_ROOT@", MERA_FILES_ROOT)
+    postinst = postinst.replace("@MERA_ROOT_RESOLVER@", mera_root_resolver_script())
+    postinst = postinst.replace("@DEFAULT_PROJECT_SEED@", default_project_seed_script())
+    preinst = """#!/bin/sh
+set -e
+if [ "${1:-}" = upgrade ] && [ -f /opt/mera/RecorderLnx/RecorderLnx.paths.ini ]; then
+  mkdir -p /var/lib/recorderlnx
+  cp -p /opt/mera/RecorderLnx/RecorderLnx.paths.ini /var/lib/recorderlnx/RecorderLnx.paths.ini.pre-upgrade.tmp
+  mv -f /var/lib/recorderlnx/RecorderLnx.paths.ini.pre-upgrade.tmp /var/lib/recorderlnx/RecorderLnx.paths.ini.pre-upgrade
+fi
+exit 0
+"""
     prerm = """#!/bin/sh
 set -e
 
@@ -565,6 +779,7 @@ exit 0
 
     def build(tar):
         add_bytes(tar, "control", control)
+        add_bytes(tar, "preinst", preinst, 0o755)
         add_bytes(tar, "postinst", postinst, 0o755)
         add_bytes(tar, "prerm", prerm, 0o755)
         add_bytes(tar, "postrm", postrm, 0o755)
@@ -589,17 +804,9 @@ def make_data_tar(repo_root):
     mera_winpos_helper = project_root / "Scripts" / "linux" / "recorderlnx-associate-mera-winpos"
     file_association_helper = project_root / "Scripts" / "linux" / "recorderlnx-associate-file"
     current_screen_helper = project_root / "Scripts" / "linux" / "recorderlnx-current-screen-rdp"
-    app_ini = project_root / "config" / "app.ini"
     default_project = project_root / "config" / "projects" / "default"
     bios_file = project_root / "Device" / "MCbus" / "resources" / "devices" / "mc201" / "mc_201a.bio"
     app_icon = project_root / "resources" / "app" / "RecorderLnx.png"
-    paths_ini = f"""[Paths]
-MeraFiles={MERA_FILES_ROOT}
-Config={RECORDER_CONFIG_ROOT}
-Plugins=plugins
-Bios=bios
-SysCom=syscom
-"""
     ntp_server_service = """[Unit]
 Description=RecorderLnx private NTP server
 After=network-online.target systemd-timesyncd.service
@@ -720,6 +927,8 @@ WantedBy=timers.target
             "usr/bin",
             "usr/local",
             "usr/local/sbin",
+            "usr/local/libexec",
+            "usr/local/libexec/recorderlnx",
             "usr/share",
             "usr/share/applications",
             "usr/share/icons",
@@ -747,6 +956,12 @@ WantedBy=timers.target
             "var/opt/mera/SDB",
         ]:
             add_dir(tar, directory)
+        backup_sources = Path(__file__).resolve().parent
+        add_file(tar, backup_sources / "recorder_backup_exports.py",
+                 "usr/local/libexec/recorderlnx/recorder_backup_exports.py", 0o755)
+        for unit in ("recorder-backup-exports.service", "recorder-backup-exports.path",
+                     "recorder-backup-exports.timer"):
+            add_file(tar, backup_sources / unit, "usr/lib/systemd/system/" + unit)
         add_file(tar, linux_lib / APP_NAME, "opt/mera/RecorderLnx/RecorderLnx", 0o755)
         add_file(tar, agent_exe, "opt/mera/RecorderLnx/RecorderHostAgent", 0o755)
         add_file(tar, linux_setup_exe, "opt/mera/RecorderLnx/LinuxSetupManager", 0o755)
@@ -792,7 +1007,6 @@ X-KDE-autostart-after=panel
         add_tree(tar, linux_lib / "res", "opt/mera/RecorderLnx/res")
         if bios_file.exists():
             add_file(tar, bios_file, "opt/mera/RecorderLnx/bios/devices/mc201/mc_201a.bio")
-        add_bytes(tar, "opt/mera/RecorderLnx/RecorderLnx.paths.ini", paths_ini)
         add_bytes(tar, "usr/share/applications/recorderlnx.desktop", desktop)
         add_bytes(tar, "usr/share/applications/recorderlnx-linux-setup-manager.desktop",
                   linux_setup_desktop)
@@ -811,8 +1025,8 @@ exec /opt/mera/RecorderLnx/LinuxSetupManagerCli "$@"
         add_bytes(tar, "usr/bin/recorderlnx-linux-setup", linux_setup_cli_launcher, 0o755)
         add_bytes(tar, "usr/bin/recorderlnx-install-check",
           install_check_script(), 0o755)
-        add_file(tar, app_ini, "usr/share/recorderlnx/config/app.ini")
-        add_tree(tar, default_project, "usr/share/recorderlnx/config/projects/default")
+        add_bytes(tar, "usr/share/recorderlnx/config/app.ini", APP_INI_TEMPLATE)
+        add_default_project_tree(tar, default_project, "usr/share/recorderlnx/config/projects/default")
 
     return gzip_tar(build)
 

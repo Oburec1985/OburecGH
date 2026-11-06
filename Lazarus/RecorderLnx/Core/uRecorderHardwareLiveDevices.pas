@@ -167,6 +167,9 @@ begin
   RecorderHardwareEnsureRegistry;
   RecorderHardwareUnregisterLiveDevice(AOwner);
   RecorderHardwareClearSourceOffline(ASourceId);
+  { A live, successfully started session is stronger evidence than an earlier
+    connectivity probe. Do not keep its transient warning after recovery. }
+  RecorderHardwareClearSourceWarning(ASourceId);
   lEntry := TRecorderHardwareLiveEntry.Create;
   lEntry.SourceId := Trim(ASourceId);
   lEntry.Device := ADevice;

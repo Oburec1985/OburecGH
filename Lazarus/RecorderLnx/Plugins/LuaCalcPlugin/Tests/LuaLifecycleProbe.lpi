@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General><Flags><MainUnitHasTitleStatement Value="False"/></Flags></General>
+    <BuildModes><Item Name="Default" Default="True"/></BuildModes>
+    <Units><Unit><Filename Value="LuaLifecycleProbe.lpr"/><IsPartOfProject Value="True"/></Unit></Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target><Filename Value="lib/$(TargetCPU)-$(TargetOS)/LuaLifecycleProbe"/></Target>
+    <SearchPaths><OtherUnitFiles Value="../../SDK"/><UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/units"/></SearchPaths>
+  </CompilerOptions>
+</CONFIG>

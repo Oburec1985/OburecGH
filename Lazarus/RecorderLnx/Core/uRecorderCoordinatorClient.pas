@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, uRecorderCoordinatorProtocol,
-  uRecorderLanDiscovery;
+  uRecorderLanDiscovery, uRecorderCoordinatorOwnership;
 
 type
   TRecorderCoordinatorClientState = (rccsDisabled, rccsConnecting,
@@ -20,6 +20,7 @@ type
     BaseUrl: string;
     InstanceId: string;
     DisplayName: string;
+    UseComputerName: Boolean;
     AuthToken: string;
     HeartbeatMs: Integer;
     RequestTimeoutMs: Integer;
@@ -37,6 +38,7 @@ type
     Code: TRecorderCoordinatorResultCode;
     Text: string;
     PayloadJson: string;
+    OwnershipGeneration: QWord;
   end;
 
   TRecorderCoordinatorEvent = class
@@ -44,6 +46,7 @@ type
     EventType: string;
     CorrelationId: string;
     PayloadJson: string;
+    CoordinatorId: string;
   end;
 
   TRecorderCoordinatorClientThread = class;
@@ -63,6 +66,10 @@ type
     fLastError: string;
     fOutboxFileName: string;
     fDiscovery: TRecorderLanDiscovery;
+    fOwnership: TRecorderCoordinatorOwnership;
+    fCommandOrigins: TStringList;
+    fRecordingOrigins: TStringList;
+    procedure ClearPendingCommands;
     procedure LoadEventOutbox;
     procedure SaveEventOutboxLocked(AList: TList);
     function TakeResult: TRecorderCoordinatorResult;
@@ -74,6 +81,8 @@ type
     procedure Start;
     procedure Stop;
     procedure UpdateSnapshot(const AStateJson, ARecordingJson: string);
+    procedure GetWorkstationName(out AName: string; out AUseComputerName: Boolean);
+    procedure SetWorkstationName(const AName: string; AUseComputerName: Boolean);
     function PopCommand: TRecorderCoordinatorCommand;
     procedure CompleteCommand(ACommand: TRecorderCoordinatorCommand;
       ACode: TRecorderCoordinatorResultCode; const AText,
@@ -93,7 +102,10 @@ type
     fLastHeartbeat: QWord;
     fSentSnapshotGeneration: QWord;
     fBackoffMs: Integer;
-    function ServerReachable: Boolean;
+    procedure ProcessControlRequests;
+    procedure ReleaseOwnership;
+    function OwnershipJson: string;
+    function ServerReachable(const AExpectedCoordinatorId: string = ''): Boolean;
     function PostJson(const APath, AJson: string; out AResponse: string): Boolean;
     function HttpGetJson(const APath: string; out AResponse: string): Boolean;
     function SnapshotChanged: Boolean;
@@ -110,11 +122,28 @@ type
     procedure Wake;
   end;
 
+function RecorderComputerName: string;
+
 implementation
 
 uses
   IniFiles, fphttpclient, fpjson, jsonparser, opensslsockets, URIParser,
-  ssockets, uRecorderNetworkBinding, uSharedFileLogger;
+  ssockets, uRecorderNetworkBinding, uSharedFileLogger
+  {$ifdef unix}, BaseUnix{$endif};
+
+function RecorderComputerName: string;
+{$ifdef unix}
+var
+  lInfo: utsname;
+{$endif}
+begin
+  {$ifdef unix}
+  if fpUname(lInfo) = 0 then
+    Exit(StrPas(@lInfo.nodename[0]));
+  {$endif}
+  Result := GetEnvironmentVariable('COMPUTERNAME');
+  if Result = '' then Result := GetEnvironmentVariable('HOSTNAME');
+end;
 
 function JsonQuote(const AValue: string): string;
 var
@@ -133,8 +162,7 @@ var
   lMacAddresses: TStringList;
   lHostName, lPlatform: string;
 begin
-  lHostName := GetEnvironmentVariable('COMPUTERNAME');
-  if lHostName = '' then lHostName := GetEnvironmentVariable('HOSTNAME');
+  lHostName := RecorderComputerName;
 {$ifdef windows}
   lPlatform := 'windows';
 {$else}
@@ -156,10 +184,10 @@ constructor TRecorderCoordinatorClientConfig.Create;
 begin
   inherited Create;
   Enabled := True;
-  BaseUrl := 'http://127.0.0.1:8765';
+  BaseUrl := '';
   InstanceId := RecorderCoordinatorNewId;
-  DisplayName := GetEnvironmentVariable('COMPUTERNAME');
-  if DisplayName = '' then DisplayName := GetEnvironmentVariable('HOSTNAME');
+  DisplayName := RecorderComputerName;
+  UseComputerName := True;
   HeartbeatMs := 3000;
   RequestTimeoutMs := 5000;
   AllowRemoteControl := True;
@@ -179,9 +207,16 @@ begin
   lIni := TIniFile.Create(AFileName);
   try
     Enabled := lIni.ReadBool('Coordinator', 'Enabled', Enabled);
-    BaseUrl := lIni.ReadString('Coordinator', 'BaseUrl', BaseUrl);
+    { An endpoint is a runtime lease, never a workstation preference. }
+    BaseUrl := '';
     InstanceId := lIni.ReadString('Coordinator', 'InstanceId', InstanceId);
+    if Trim(InstanceId) = '' then InstanceId := RecorderCoordinatorNewId;
+    if lIni.ReadString('Coordinator', 'InstanceId', '') <> InstanceId then
+      lIni.WriteString('Coordinator', 'InstanceId', InstanceId);
+    lIni.DeleteKey('Coordinator', 'BaseUrl');
     DisplayName := lIni.ReadString('Coordinator', 'DisplayName', DisplayName);
+    UseComputerName := lIni.ReadBool('Coordinator', 'UseComputerName', True);
+    if UseComputerName then DisplayName := RecorderComputerName;
     AuthToken := lIni.ReadString('Coordinator', 'AuthToken', '');
     HeartbeatMs := lIni.ReadInteger('Coordinator', 'HeartbeatMs', HeartbeatMs);
     RequestTimeoutMs := lIni.ReadInteger('Coordinator', 'RequestTimeoutMs', RequestTimeoutMs);
@@ -201,9 +236,10 @@ begin
   lIni := TIniFile.Create(AFileName);
   try
     lIni.WriteBool('Coordinator', 'Enabled', Enabled);
-    lIni.WriteString('Coordinator', 'BaseUrl', BaseUrl);
+    lIni.DeleteKey('Coordinator', 'BaseUrl');
     lIni.WriteString('Coordinator', 'InstanceId', InstanceId);
     lIni.WriteString('Coordinator', 'DisplayName', DisplayName);
+    lIni.WriteBool('Coordinator', 'UseComputerName', UseComputerName);
     lIni.WriteString('Coordinator', 'AuthToken', AuthToken);
     lIni.WriteInteger('Coordinator', 'HeartbeatMs', HeartbeatMs);
     lIni.WriteInteger('Coordinator', 'RequestTimeoutMs', RequestTimeoutMs);
@@ -214,33 +250,94 @@ begin
   end;
 end;
 
+procedure TRecorderCoordinatorClient.GetWorkstationName(out AName: string;
+  out AUseComputerName: Boolean);
+begin
+  fSnapshotLock.Acquire;
+  try
+    AName := fConfig.DisplayName;
+    AUseComputerName := fConfig.UseComputerName;
+  finally
+    fSnapshotLock.Release;
+  end;
+  if AUseComputerName then AName := RecorderComputerName;
+end;
+
+procedure TRecorderCoordinatorClient.SetWorkstationName(const AName: string;
+  AUseComputerName: Boolean);
+var
+  lName: string;
+  lIni: TIniFile;
+begin
+  if AUseComputerName then lName := RecorderComputerName
+  else lName := Trim(AName);
+  if (lName = '') or (Length(lName) > 255) or
+    (Pos(#0, lName) > 0) or (Pos(#10, lName) > 0) or (Pos(#13, lName) > 0) then
+    raise Exception.Create('Invalid workstation name');
+  lIni := TIniFile.Create(fConfig.FileName);
+  try
+    lIni.CacheUpdates := True;
+    lIni.WriteString('Coordinator', 'DisplayName', lName);
+    lIni.WriteBool('Coordinator', 'UseComputerName', AUseComputerName);
+    lIni.UpdateFile;
+  finally
+    lIni.Free;
+  end;
+  fSnapshotLock.Acquire;
+  try
+    fConfig.DisplayName := lName;
+    fConfig.UseComputerName := AUseComputerName;
+  finally
+    fSnapshotLock.Release;
+  end;
+  if fDiscovery <> nil then fDiscovery.SetDisplayName(lName);
+end;
+
 constructor TRecorderCoordinatorClient.Create(
   AConfig: TRecorderCoordinatorClientConfig);
 var
-  lMacAddresses: TStringList;
+  lMacAddresses, lLocalAddresses: TStringList;
+  I: Integer;
+  lAddress: string;
 begin
   inherited Create;
   fConfig := AConfig;
+  fOwnership := TRecorderCoordinatorOwnership.Create;
+  fCommandOrigins := TStringList.Create;
+  fRecordingOrigins := TStringList.Create;
+  fSnapshotLock := TCriticalSection.Create;
   fCommands := TThreadList.Create;
   fResults := TThreadList.Create;
   fEvents := TThreadList.Create;
   if (fConfig <> nil) and (fConfig.FileName <> '') then
     fOutboxFileName := ChangeFileExt(fConfig.FileName, '.events.json');
   LoadEventOutbox;
-  fSnapshotLock := TCriticalSection.Create;
   fStateJson := '{}';
   fRecordingJson := '{}';
   fState := rccsDisabled;
   if fConfig <> nil then
   begin
     lMacAddresses := TStringList.Create;
+    lLocalAddresses := TStringList.Create;
     try
       RecorderEnumerateLocalMacAddresses(lMacAddresses);
+      RecorderEnumerateLocalIPv4(lLocalAddresses);
+      for I := lLocalAddresses.Count - 1 downto 0 do
+      begin
+        lAddress := RecorderNetworkAddressFromDisplay(lLocalAddresses[I]);
+        if (lAddress = '') or (Pos('127.', lAddress) = 1) or
+          (Pos('169.254.', lAddress) = 1) then
+          lLocalAddresses.Delete(I)
+        else
+          lLocalAddresses[I] := lAddress;
+      end;
       fDiscovery := TRecorderLanDiscovery.Create(rdrRecorder,
         fConfig.InstanceId, fConfig.DisplayName, 0,
-        lMacAddresses.CommaText);
+        lMacAddresses.CommaText, lLocalAddresses.CommaText);
+      fDiscovery.SetControlToken(fConfig.AuthToken);
     finally
       lMacAddresses.Free;
+      lLocalAddresses.Free;
     end;
   end;
 end;
@@ -279,10 +376,17 @@ begin
         begin
           lItem := TJSONArray(lData).Items[I];
           if not (lItem is TJSONObject) then Continue;
+          if TJSONObject(lItem).Get('internal_kind', '') = 'recording_origin' then
+          begin
+            fRecordingOrigins.Add(TJSONObject(lItem).Get('correlation_id', '') +
+              '=' + TJSONObject(lItem).Get('coordinator_id', ''));
+            Continue;
+          end;
           lEvent := TRecorderCoordinatorEvent.Create;
           lEvent.EventType := TJSONObject(lItem).Get('event_type', '');
           lEvent.CorrelationId := TJSONObject(lItem).Get('correlation_id', '');
           lEvent.PayloadJson := TJSONObject(lItem).Get('payload_json', '{}');
+          lEvent.CoordinatorId := TJSONObject(lItem).Get('coordinator_id', '');
           if lEvent.EventType <> '' then lList.Add(lEvent) else lEvent.Free;
         end;
       finally
@@ -310,6 +414,19 @@ begin
   lBackup := fOutboxFileName + '.bak';
   lArray := TJSONArray.Create;
   try
+    fSnapshotLock.Acquire;
+    try
+      for I := 0 to fRecordingOrigins.Count - 1 do
+      begin
+        lItem := TJSONObject.Create;
+        lItem.Add('internal_kind', 'recording_origin');
+        lItem.Add('correlation_id', fRecordingOrigins.Names[I]);
+        lItem.Add('coordinator_id', fRecordingOrigins.ValueFromIndex[I]);
+        lArray.Add(lItem);
+      end;
+    finally
+      fSnapshotLock.Release;
+    end;
     for I := 0 to AList.Count - 1 do
     begin
       lEvent := TRecorderCoordinatorEvent(AList[I]);
@@ -317,6 +434,7 @@ begin
       lItem.Add('event_type', lEvent.EventType);
       lItem.Add('correlation_id', lEvent.CorrelationId);
       lItem.Add('payload_json', lEvent.PayloadJson);
+      lItem.Add('coordinator_id', lEvent.CoordinatorId);
       lArray.Add(lItem);
     end;
     lStream := TStringStream.Create(lArray.AsJSON);
@@ -350,6 +468,22 @@ begin
   Result := (fConfig <> nil) and fConfig.AllowRemoteConfig;
 end;
 
+procedure TRecorderCoordinatorClient.ClearPendingCommands;
+var
+  lList: TList;
+begin
+  lList := fCommands.LockList;
+  try
+    while lList.Count > 0 do
+    begin
+      TObject(lList[0]).Free;
+      lList.Delete(0);
+    end;
+  finally
+    fCommands.UnlockList;
+  end;
+end;
+
 destructor TRecorderCoordinatorClient.Destroy;
 var
   lList: TList;
@@ -366,6 +500,9 @@ begin
   try while lList.Count > 0 do begin TObject(lList[0]).Free; lList.Delete(0); end;
   finally fEvents.UnlockList; end;
   fSnapshotLock.Free;
+  fOwnership.Free;
+  fCommandOrigins.Free;
+  fRecordingOrigins.Free;
   fResults.Free;
   fEvents.Free;
   fCommands.Free;
@@ -383,6 +520,28 @@ begin
   lEvent.EventType := AEventType;
   lEvent.CorrelationId := ACorrelationId;
   lEvent.PayloadJson := APayloadJson;
+  fSnapshotLock.Acquire;
+  try
+    if (ACorrelationId <> '') and
+      (fRecordingOrigins.IndexOfName(ACorrelationId) >= 0) then
+      lEvent.CoordinatorId := fRecordingOrigins.Values[ACorrelationId]
+    else if (ACorrelationId <> '') and
+      (fCommandOrigins.IndexOfName(ACorrelationId) >= 0) then
+      lEvent.CoordinatorId := fCommandOrigins.Values[ACorrelationId]
+    else lEvent.CoordinatorId := fOwnership.CoordinatorId;
+    { A recording outlives its start command and may span a takeover. Pin its
+      origin independently of the bounded command history, including restart. }
+    if (AEventType = 'recording.started') and (ACorrelationId <> '') then
+    begin
+      fRecordingOrigins.Clear;
+      fRecordingOrigins.Add(ACorrelationId + '=' + lEvent.CoordinatorId);
+    end
+    else if (AEventType = 'recording.completed') and
+      (fRecordingOrigins.IndexOfName(ACorrelationId) >= 0) then
+      fRecordingOrigins.Delete(fRecordingOrigins.IndexOfName(ACorrelationId));
+  finally
+    fSnapshotLock.Release;
+  end;
   lList := fEvents.LockList;
   try
     lList.Add(lEvent);
@@ -419,6 +578,15 @@ begin
   fThread.Wake;
   fThread.WaitFor;
   FreeAndNil(fThread);
+  fSnapshotLock.Acquire;
+  try
+    fOwnership.Clear;
+    fConfig.BaseUrl := '';
+  finally
+    fSnapshotLock.Release;
+  end;
+  ClearPendingCommands;
+  if fDiscovery <> nil then fDiscovery.SetControlOwner('', '');
   fState := rccsDisabled;
 end;
 
@@ -452,10 +620,18 @@ begin
   Result := nil;
   lList := fCommands.LockList;
   try
-    if lList.Count > 0 then
+    while lList.Count > 0 do
     begin
       Result := TRecorderCoordinatorCommand(lList[0]);
       lList.Delete(0);
+      fSnapshotLock.Acquire;
+      try
+        if (fOwnership.CoordinatorId <> '') and
+          (Result.OwnershipGeneration = fOwnership.Generation) then Exit;
+      finally
+        fSnapshotLock.Release;
+      end;
+      FreeAndNil(Result);
     end;
   finally
     fCommands.UnlockList;
@@ -475,6 +651,7 @@ begin
   lResult.Code := ACode;
   lResult.Text := AText;
   lResult.PayloadJson := APayloadJson;
+  lResult.OwnershipGeneration := ACommand.OwnershipGeneration;
   fResults.Add(lResult);
   ACommand.Free;
   if fThread <> nil then fThread.Wake;
@@ -528,7 +705,8 @@ begin
   end;
 end;
 
-function TRecorderCoordinatorClientThread.ServerReachable: Boolean;
+function TRecorderCoordinatorClientThread.ServerReachable(
+  const AExpectedCoordinatorId: string): Boolean;
 var
   lBuffer: array[0..4095] of Byte;
   lError: string;
@@ -538,9 +716,10 @@ var
   lStatusEnd, lStatusSpace: SizeInt;
   lStatusLine: RawByteString;
   lPort: Word;
-  lDiscoveredUrl: string;
   lStream: TSocketStream;
   lUri: TURI;
+  lJson: TJSONData;
+  lBodyStart: SizeInt;
 begin
   Result := False;
   lStream := nil;
@@ -567,8 +746,10 @@ begin
   if Result then
   begin
     lRequest := 'GET /api/v1/status HTTP/1.1'#13#10 +
-      'Host: ' + lUri.Host + ':' + IntToStr(lPort) + #13#10 +
-      'Connection: close'#13#10#13#10;
+      'Host: ' + lUri.Host + ':' + IntToStr(lPort) + #13#10;
+    if fOwner.fConfig.AuthToken <> '' then
+      lRequest := lRequest + 'Authorization: Bearer ' + fOwner.fConfig.AuthToken + #13#10;
+    lRequest := lRequest + 'Connection: close'#13#10#13#10;
     try
       lStream.WriteBuffer(lRequest[1], Length(lRequest));
       lResponse := '';
@@ -592,6 +773,20 @@ begin
         (lStatusLine[lStatusSpace + 1] = '2');
       if not Result then
         lError := 'Coordinator preflight failed: ' + string(lStatusLine);
+      if Result and (AExpectedCoordinatorId <> '') then
+      begin
+        lBodyStart := Pos(#13#10#13#10, lResponse);
+        if lBodyStart = 0 then
+          raise Exception.Create('Coordinator identity response is missing');
+        lJson := GetJSON(Copy(lResponse, lBodyStart + 4, MaxInt));
+        try
+          Result := (lJson is TJSONObject) and
+            (TJSONObject(lJson).Get('coordinator_instance_id', '') = AExpectedCoordinatorId);
+          if not Result then lError := 'Coordinator identity does not match claim';
+        finally
+          lJson.Free;
+        end;
+      end;
     except
       on E: Exception do
       begin
@@ -604,19 +799,105 @@ begin
   if not Result then
   begin
     fOwner.fLastError := lError;
-    { Do not replace a healthy explicit endpoint. Discovery is consumed only
-      after the configured endpoint has actually failed its HTTP preflight. }
-    if (fOwner.fDiscovery <> nil) and
-       fOwner.fDiscovery.TakeCoordinatorUrl(lDiscoveredUrl) and
-       (lDiscoveredUrl <> fOwner.fConfig.BaseUrl) then
-    begin
-      fOwner.fConfig.BaseUrl := lDiscoveredUrl;
-      fOwner.fLastError := '';
-      SharedLogger.Info('Coordinator endpoint selected by discovery: ' +
-        lDiscoveredUrl);
-      Result := ServerReachable;
-    end;
   end;
+end;
+
+procedure TRecorderCoordinatorClientThread.ReleaseOwnership;
+begin
+  fOwner.fSnapshotLock.Acquire;
+  try
+    fOwner.fOwnership.Clear;
+    fOwner.fConfig.BaseUrl := '';
+  finally
+    fOwner.fSnapshotLock.Release;
+  end;
+  fOwner.ClearPendingCommands;
+  fOwner.fDiscovery.SetControlOwner('', '');
+  fOwner.fState := rccsConnecting;
+  fSentSnapshotGeneration := 0;
+  fLastHeartbeat := 0;
+end;
+
+procedure TRecorderCoordinatorClientThread.ProcessControlRequests;
+var
+  lRequest: TRecorderCoordinatorControlRequest;
+  lOldUrl: string;
+  lOldGeneration: QWord;
+  lAllowed: Boolean;
+  lList: TList;
+  lIndex: Integer;
+begin
+  while fOwner.fDiscovery.TakeControlRequest(lRequest) do
+  begin
+    if lRequest.Release then
+    begin
+      if (fOwner.fOwnership.CoordinatorId = lRequest.CoordinatorId) and
+        (fOwner.fOwnership.ClaimId = lRequest.ClaimId) then
+        ReleaseOwnership;
+      Continue;
+    end;
+    fOwner.fSnapshotLock.Acquire;
+    try
+      lAllowed := fOwner.fOwnership.CanClaim(lRequest.CoordinatorId,
+        lRequest.ClaimId, lRequest.Force);
+      lOldUrl := fOwner.fConfig.BaseUrl;
+      lOldGeneration := fOwner.fOwnership.Generation;
+    finally
+      fOwner.fSnapshotLock.Release;
+    end;
+    if not lAllowed then
+    begin
+      fOwner.fDiscovery.RequestSearch;
+      Continue;
+    end;
+    { Validate the requested peer before abandoning the current owner. UDP
+      announces alone never transfer a Recorder or execute a command. }
+    fOwner.fConfig.BaseUrl := lRequest.CoordinatorUrl;
+    if not ServerReachable(lRequest.CoordinatorId) then
+    begin
+      fOwner.fConfig.BaseUrl := lOldUrl;
+      Continue;
+    end;
+    fOwner.fSnapshotLock.Acquire;
+    try
+      fOwner.fOwnership.Accept(lRequest.CoordinatorId, lRequest.ClaimId,
+        lRequest.CoordinatorUrl, GetTickCount64);
+      for lIndex := 0 to fOwner.fRecordingOrigins.Count - 1 do
+        if fOwner.fRecordingOrigins.ValueFromIndex[lIndex] = '' then
+          fOwner.fRecordingOrigins.ValueFromIndex[lIndex] := lRequest.CoordinatorId;
+    finally
+      fOwner.fSnapshotLock.Release;
+    end;
+    if lOldGeneration <> fOwner.fOwnership.Generation then
+      fOwner.ClearPendingCommands;
+    { Events created while autonomous have no former controller. Bind them
+      once; previously addressed durable events stay with their origin. }
+    lList := fOwner.fEvents.LockList;
+    try
+      for lIndex := 0 to lList.Count - 1 do
+        if TRecorderCoordinatorEvent(lList[lIndex]).CoordinatorId = '' then
+          TRecorderCoordinatorEvent(lList[lIndex]).CoordinatorId := lRequest.CoordinatorId;
+      try
+        fOwner.SaveEventOutboxLocked(lList);
+      except
+        on E: Exception do SharedLogger.Error('Coordinator event owner outbox: ' + E.Message);
+      end;
+    finally
+      fOwner.fEvents.UnlockList;
+    end;
+    fOwner.fDiscovery.SetControlOwner(lRequest.CoordinatorId, lRequest.ClaimId);
+    fOwner.fLastError := '';
+    fOwner.fState := rccsConnecting;
+    fSentSnapshotGeneration := 0;
+    fLastHeartbeat := 0;
+    SharedLogger.Info('Coordinator control claimed by ' + lRequest.CoordinatorId);
+  end;
+end;
+
+function TRecorderCoordinatorClientThread.OwnershipJson: string;
+begin
+  Result := '"coordinator_instance_id":' + JsonQuote(fOwner.fOwnership.CoordinatorId) +
+    ',"coordinator_claim_id":' + JsonQuote(fOwner.fOwnership.ClaimId);
 end;
 
 function TRecorderCoordinatorClientThread.PostJson(const APath, AJson: string;
@@ -643,7 +924,10 @@ begin
     AResponse := lResponse.DataString;
     Result := lClient.ResponseStatusCode div 100 = 2;
     if Result then
+    begin
+      fOwner.fOwnership.LastSuccess := GetTickCount64;
       fOwner.fLastError := ''
+    end
     else
       fOwner.fLastError := Format('Coordinator HTTP %d: %s',
         [lClient.ResponseStatusCode, Trim(AResponse)]);
@@ -674,7 +958,10 @@ begin
       AResponse := lClient.Get(fOwner.fConfig.BaseUrl + APath);
       Result := lClient.ResponseStatusCode div 100 = 2;
       if Result then
+      begin
+        fOwner.fOwnership.LastSuccess := GetTickCount64;
         fOwner.fLastError := ''
+      end
       else
         fOwner.fLastError := Format('Coordinator HTTP %d: %s',
           [lClient.ResponseStatusCode, Trim(AResponse)]);
@@ -688,11 +975,13 @@ end;
 
 procedure TRecorderCoordinatorClientThread.SendHello;
 var
-  lPayload, lResponse: string;
+  lPayload, lResponse, lName: string;
+  lUseComputerName: Boolean;
 begin
-  lPayload := Format('{"display_name":%s,"protocol_version":%d,%s}',
-    [JsonQuote(fOwner.fConfig.DisplayName),
-     CRecorderCoordinatorProtocolVersion, RecorderHostInfoJson]);
+  fOwner.GetWorkstationName(lName, lUseComputerName);
+  lPayload := Format('{"display_name":%s,"protocol_version":%d,%s,%s}',
+    [JsonQuote(lName),
+     CRecorderCoordinatorProtocolVersion, RecorderHostInfoJson, OwnershipJson]);
   PostJson('/api/v1/clients/hello', RecorderCoordinatorEnvelope('client.hello',
     RecorderCoordinatorNewId, fOwner.fConfig.InstanceId, '', '', lPayload),
     lResponse);
@@ -706,7 +995,7 @@ begin
   fOwner.fSnapshotLock.Acquire;
   try
     lPayload := '{"state":' + fOwner.fStateJson + ',"recording":' +
-      fOwner.fRecordingJson + ',' + RecorderHostInfoJson + '}';
+      fOwner.fRecordingJson + ',' + RecorderHostInfoJson + ',' + OwnershipJson + '}';
     lSnapshotGeneration := fOwner.fSnapshotGeneration;
   finally
     fOwner.fSnapshotLock.Release;
@@ -729,6 +1018,11 @@ begin
   repeat
     lResult := fOwner.TakeResult;
     if lResult = nil then Exit;
+    if lResult.OwnershipGeneration <> fOwner.fOwnership.Generation then
+    begin
+      lResult.Free;
+      Continue;
+    end;
     lRequeued := False;
     try
       lPayload := Format('{"command_id":%s,"code":%s,"text":%s,"result":%s}',
@@ -755,12 +1049,18 @@ var
   lList: TList;
   lEvent: TRecorderCoordinatorEvent;
   lResponse: string;
+  lIndex: Integer;
 begin
   lEvent := nil;
   lList := fOwner.fEvents.LockList;
   try
-    if lList.Count > 0 then
-      lEvent := TRecorderCoordinatorEvent(lList[0]);
+    for lIndex := 0 to lList.Count - 1 do
+      if TRecorderCoordinatorEvent(lList[lIndex]).CoordinatorId =
+        fOwner.fOwnership.CoordinatorId then
+      begin
+        lEvent := TRecorderCoordinatorEvent(lList[lIndex]);
+        Break;
+      end;
   finally
     fOwner.fEvents.UnlockList;
   end;
@@ -771,12 +1071,13 @@ begin
   begin
     lList := fOwner.fEvents.LockList;
     try
-      if (lList.Count > 0) and (TObject(lList[0]) = lEvent) then
+      lIndex := lList.IndexOf(lEvent);
+      if lIndex >= 0 then
       begin
         SharedLogger.Info(Format(
           'Coordinator lifecycle delivered type=%s correlation=%s',
           [lEvent.EventType, lEvent.CorrelationId]));
-        lList.Delete(0);
+        lList.Delete(lIndex);
         lEvent.Free;
       end;
       try
@@ -806,9 +1107,27 @@ begin
   try
     lJson := GetJSON(lResponse);
     try
+      if not (lJson is TJSONObject) then Exit;
+      if TJSONObject(lJson).Get('coordinator_claim_id', '') <>
+        fOwner.fOwnership.ClaimId then Exit;
       lCommand := TRecorderCoordinatorCommand.FromJson(lJson);
       if (lCommand <> nil) and (lCommand.CommandId <> '') then
+      begin
+        lCommand.OwnershipGeneration := fOwner.fOwnership.Generation;
+        if lCommand.CorrelationId <> '' then
+        begin
+          fOwner.fSnapshotLock.Acquire;
+          try
+            fOwner.fCommandOrigins.Values[lCommand.CorrelationId] :=
+              fOwner.fOwnership.CoordinatorId;
+            if fOwner.fCommandOrigins.Count > 512 then
+              fOwner.fCommandOrigins.Delete(0);
+          finally
+            fOwner.fSnapshotLock.Release;
+          end;
+        end;
         fOwner.fCommands.Add(lCommand)
+      end
       else
         lCommand.Free;
     finally
@@ -824,38 +1143,33 @@ begin
   fOwner.fState := rccsConnecting;
   while not Terminated do
   begin
-    SendHello;
+    fWakeEvent.ResetEvent;
+    ProcessControlRequests;
+    if (fOwner.fOwnership.CoordinatorId <> '') and
+      (GetTickCount64 - fOwner.fOwnership.LastSuccess >= CRecorderCoordinatorLeaseMs) then
+      ReleaseOwnership;
+    if fOwner.fOwnership.CoordinatorId = '' then
+    begin
+      fOwner.fLastError := '';
+      fWakeEvent.WaitFor(250);
+      Continue;
+    end;
+    fOwner.fLastError := '';
+    if fOwner.fState <> rccsOnline then SendHello;
     if fOwner.fLastError = '' then
     begin
       fOwner.fState := rccsOnline;
-      fBackoffMs := 500;
-      while not Terminated and (fOwner.fState = rccsOnline) do
-      begin
-        { Reset before inspecting pending work. A concurrent SetEvent after
-          this point remains signaled and prevents the pause below. }
-        fWakeEvent.ResetEvent;
-        if SnapshotChanged or
-          (fLastHeartbeat = 0) or
-          (GetTickCount64 - fLastHeartbeat >= QWord(fOwner.fConfig.HeartbeatMs)) then
-          SendHeartbeat;
-        SendResults;
-        SendEvents;
-        PollCommand;
-        if fOwner.fLastError <> '' then Break;
-        { Released by TRecorderCoordinatorClientThread.Wake from Stop or when
-          a command/event is queued; timeout schedules the next poll. }
-        fWakeEvent.WaitFor(250);
-      end;
+      if SnapshotChanged or (fLastHeartbeat = 0) or
+        (GetTickCount64 - fLastHeartbeat >= QWord(fOwner.fConfig.HeartbeatMs)) then
+        SendHeartbeat;
+      if fOwner.fLastError = '' then SendResults;
+      if fOwner.fLastError = '' then SendEvents;
+      if fOwner.fLastError = '' then PollCommand;
     end;
-    if Terminated then Break;
-    fOwner.fState := rccsBackoff;
-    { Released by TRecorderCoordinatorClientThread.Wake from Stop or queued
-      work; timeout schedules the next reconnect attempt. }
-    fWakeEvent.WaitFor(fBackoffMs);
-    fWakeEvent.ResetEvent;
-    if fBackoffMs < 15000 then fBackoffMs := fBackoffMs * 2;
-    fOwner.fLastError := '';
-    fOwner.fState := rccsConnecting;
+    if fOwner.fLastError <> '' then fOwner.fState := rccsBackoff;
+    { The bounded pause also services newly queued ownership requests while
+      the old coordinator is unavailable. No automatic discovery takeover. }
+    fWakeEvent.WaitFor(250);
   end;
 end;
 

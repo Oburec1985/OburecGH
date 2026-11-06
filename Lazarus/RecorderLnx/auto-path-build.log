@@ -1,0 +1,8 @@
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(45,30) Hint: (5023) Unit "uRecorderSpectrumRuntime" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(48,24) Hint: (5023) Unit "uMc201FirmwareResources" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(48,49) Hint: (5023) Unit "uMc201LegacyMdpClient" not used in RecorderLnx
+/mnt/win_share/OburecGH/Lazarus/RecorderLnx/RecorderLnx.lpr(49,3) Hint: (5023) Unit "uMc032Device" not used in RecorderLnx
+(9022) Compiling resource /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx.or
+(9015) Linking /mnt/win_share/OburecGH/Lazarus/RecorderLnx/lib/x86_64-linux/RecorderLnx
+(1008) 2008 lines compiled, 42.4 sec
+(1022) 36 hint(s) issued

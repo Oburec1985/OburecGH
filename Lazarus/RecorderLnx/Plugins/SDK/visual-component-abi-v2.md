@@ -68,6 +68,14 @@ descriptor containing poisoned optional callback slots outside its prefix.
 
 ## Discovery and lifecycle contract
 
+В ABI 2.8 общий фреймворк может передавать при START необязательную запись
+`TRecorderVisualRunContextV2`: заголовок версии и размера, затем `Recording`
+(0 — просмотр, 1 — запись). Указатель действителен только во время вызова.
+Получатель проверяет размер и основную версию; старый V2-маршрут без общего
+фреймворка по-прежнему передаёт START без данных. Уведомление о новых данных
+само по себе не вызывает копирование истории: компонент выбирает, когда и
+какие данные ему нужны.
+
 The library exports `RecorderVisualGetDescriptorV2(index, descriptor,
 capacity)`. The host calls it with indices starting at zero until it returns
 `REC_VISUAL_END_OF_ENUMERATION`. `REC_VISUAL_OK` means one complete descriptor

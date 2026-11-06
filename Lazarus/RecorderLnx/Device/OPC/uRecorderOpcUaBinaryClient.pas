@@ -12,6 +12,16 @@ type
   TRecorderOpcUaStringArray = array of string;
   TRecorderOpcUaDoubleArray = array of Double;
   TRecorderOpcUaCardinalArray = array of Cardinal;
+  TRecorderOpcUaDataChange = record
+    ClientHandle: Cardinal;
+    IsString: Boolean;
+    NumericValue: Double;
+    StringValue: string;
+    TimestampSec: Double;
+    Status: Cardinal;
+  end;
+  PRecorderOpcUaDataChange = ^TRecorderOpcUaDataChange;
+  TRecorderOpcUaDataChangeArray = array of TRecorderOpcUaDataChange;
 
   TRecorderOpcUaDiscoveredNode = class
   public
@@ -57,12 +67,20 @@ type
     fPassword: string;
     fSessionTimeoutMs: Cardinal;
     fRequestTimeoutMs: Cardinal;
+    fBrowseTimeoutMs: Cardinal;
+    fConfiguredBrowseTimeoutMs: Cardinal;
     fTimestampsToReturn: Cardinal;
+    fSubscriptionId: Cardinal;
+    fSubscriptionPublishingIntervalMs: Cardinal;
+    fPendingPublishSequence: Cardinal;
+    fSubscriptionEnabled: Boolean;
     fMaxReferencesPerNode: Cardinal;
     fRevisedSessionTimeoutMs: Double;
     function ActivateSession: Boolean;
     function BrowseNode(const ANodeId, APath: string; ANodes: TObjectList;
       AVisited: TStrings; ADepth: Integer): Boolean;
+    function BrowseParentBatch(AParents: TList; ANodes,
+      ANextParents: TObjectList; AVisited: TStrings): Boolean;
     function CreateSession: Boolean;
     procedure CloseSession;
     procedure CloseSecureChannel;
@@ -71,8 +89,13 @@ type
     function Hello: Boolean;
     function OpenSecureChannel: Boolean;
     function ParseEndpoint: Boolean;
+    function CreateSubscription(ANodeIds: TRecorderOpcUaStringArray;
+      AClientHandles: TRecorderOpcUaCardinalArray;
+      APublishingIntervalMs: Cardinal): Boolean;
+    function Publish(var ANotifications: TRecorderOpcUaDataChangeArray): Boolean;
     function ReadVariableAttributes(
       ANode: TRecorderOpcUaDiscoveredNode): Boolean;
+    function ReadVariableAttributesBatch(ANodes: TObjectList): Boolean;
     function ReadPropertyValue(ANode: TRecorderOpcUaDiscoveredNode): Boolean;
     function SendMessage(AStream: TMemoryStream;
       const AStage: string): Boolean;
@@ -80,12 +103,15 @@ type
   public
     constructor Create(const AEndpoint, AUserName, APassword: string;
       ASessionTimeoutMs: Cardinal; ARequestTimeoutMs: Cardinal = 4000;
-      ATimestampsToReturn: Cardinal = 1);
+      ATimestampsToReturn: Cardinal = 1;
+      ABrowseTimeoutMs: Cardinal = 180000);
     destructor Destroy; override;
     function Connect: Boolean;
     procedure Disconnect;
     function Browse(ANodes: TObjectList;
       AMaxReferencesPerNode: Cardinal = 100): Boolean;
+    function BrowseChildren(const ANodeId, ABrowsePath: string;
+      ANodes: TObjectList; AMaxReferencesPerNode: Cardinal = 100): Boolean;
     function ReadDouble(const ANodeId: string; out AValue: Double;
       out AStatus: Cardinal; out ATimestampSec: Double): Boolean;
     function ReadDoubles(const ANodeIds: TRecorderOpcUaStringArray;
@@ -100,20 +126,26 @@ type
     function WriteScalars(const ANodeIds: TRecorderOpcUaStringArray;
       var ADataTypeNodeIds: TRecorderOpcUaStringArray;
       const AValues: TRecorderOpcUaDoubleArray): Boolean;
+    function StartSubscription(ANodeIds: TRecorderOpcUaStringArray;
+      AClientHandles: TRecorderOpcUaCardinalArray;
+      APublishingIntervalMs: Cardinal): Boolean;
+    function ReceiveSubscriptionChanges(
+      out ANotifications: TRecorderOpcUaDataChangeArray): Boolean;
     property ErrorText: string read fErrorText;
   end;
 
 implementation
 
 uses
-  Math, DateUtils, Base64, uRecorderNetworkBinding;
+  Math, DateUtils, Base64, uRecorderNetworkBinding, uRecorderDebugLog,
+  uRecorderOpcUaTypes;
 
 const
   COpcUaMaxMessageSize = 16 * 1024 * 1024;
   COpcUaTimeoutMs = 4000;
+  COpcUaMinimumBrowseTimeoutMs = 30000;
   COpcUaSecurityPolicyNone =
     'http://opcfoundation.org/UA/SecurityPolicy#None';
-  COpcUaObjectsFolder = 'i=85';
   COpcUaHierarchicalReferences = 'i=33';
   COpcUaNodeClassObject = 1;
   COpcUaNodeClassVariable = 2;
@@ -127,13 +159,437 @@ const
   COpcUaBrowseNextRequest = 533;
   COpcUaReadRequest = 631;
   COpcUaWriteRequest = 673;
+  COpcUaCreateMonitoredItemsRequest = 751;
+  COpcUaCreateSubscriptionRequest = 787;
+  COpcUaPublishRequest = 826;
+  COpcUaDataChangeNotificationNodeId = 'i=811';
+  COpcUaAttributeValue = 13;
+  COpcUaMonitoringModeReporting = 2;
+  COpcUaSubscriptionLifetimeCount = 30;
+  COpcUaSubscriptionKeepAliveCount = 1;
+  COpcUaSubscriptionMaxNotifications = 1000;
+  COpcUaMonitoredItemQueueSize = 1;
   COpcUaAnonymousIdentityToken = 321;
   COpcUaUserNameIdentityToken = 324;
   COpcUaUnixEpochOffsetSeconds = 11644473600;
   COpcUaTicksPerSecond = 10000000;
+  COpcUaVariantArrayFlag = $80;
+  COpcUaVariantDimensionsFlag = $40;
+  COpcUaVariantTypeMask = $3F;
+  COpcUaBuiltInNull = 0;
+  COpcUaBuiltInBoolean = 1;
+  COpcUaBuiltInSByte = 2;
+  COpcUaBuiltInByte = 3;
+  COpcUaBuiltInInt16 = 4;
+  COpcUaBuiltInUInt16 = 5;
+  COpcUaBuiltInInt32 = 6;
+  COpcUaBuiltInUInt32 = 7;
+  COpcUaBuiltInInt64 = 8;
+  COpcUaBuiltInUInt64 = 9;
+  COpcUaBuiltInFloat = 10;
+  COpcUaBuiltInDouble = 11;
+  COpcUaBuiltInString = 12;
+  COpcUaBuiltInDateTime = 13;
+  COpcUaBuiltInGuid = 14;
+  COpcUaBuiltInByteString = 15;
+  COpcUaBuiltInXmlElement = 16;
+  COpcUaBuiltInNodeId = 17;
+  COpcUaBuiltInExpandedNodeId = 18;
+  COpcUaBuiltInStatusCode = 19;
+  COpcUaBuiltInQualifiedName = 20;
+  COpcUaBuiltInLocalizedText = 21;
+  COpcUaBuiltInExtensionObject = 22;
+  COpcUaBuiltInDataValue = 23;
+  COpcUaBuiltInVariant = 24;
+  COpcUaBuiltInDiagnosticInfo = 25;
 
 type
   EOpcUaBinaryError = class(Exception);
+  TOpcUaReader = class
+  private
+    fStream: TStream;
+    procedure Need(ACount: Int64);
+  public
+    constructor Create(AStream: TStream);
+    function ByteValue: Byte;
+    function BooleanValue: Boolean;
+    function UInt16: Word;
+    function UInt32: Cardinal;
+    function Int32: LongInt;
+    function UInt64: QWord;
+    function SingleValue: Single;
+    function DoubleValue: Double;
+    function Raw(ACount: Integer): TBytes;
+    function UaString: string;
+    function ByteString: TBytes;
+    function NodeId(out AEncoded: TBytes): string;
+    function ExpandedNodeId: string;
+    procedure RewindByte;
+    procedure SkipDiagnosticInfo;
+    procedure SkipExtensionObject;
+    function ResponseHeader: Cardinal;
+    procedure SkipApplicationDescription;
+  end;
+
+function OpcUaTimestampText(ATicks: QWord): string; forward;
+
+function OpcUaTimestampSeconds(ATimestampMode: Cardinal;
+  ASourceTicks, AServerTicks: QWord): Double;
+var
+  lTicks: QWord;
+begin
+  case ATimestampMode of
+    0: lTicks := ASourceTicks;
+    1: lTicks := AServerTicks;
+    2:
+      if ASourceTicks <> 0 then lTicks := ASourceTicks
+      else lTicks := AServerTicks;
+  else
+    lTicks := 0;
+  end;
+  if lTicks = 0 then Exit(0);
+  Result := lTicks / COpcUaTicksPerSecond -
+    COpcUaUnixEpochOffsetSeconds;
+end;
+
+function OpcUaJsonQuote(const AValue: string): string;
+var
+  I: Integer;
+  C: Char;
+  lBuilder: TStringBuilder;
+begin
+  lBuilder := TStringBuilder.Create;
+  try
+    lBuilder.Append('"');
+    for I := 1 to Length(AValue) do
+    begin
+      C := AValue[I];
+      case C of
+        '"': lBuilder.Append('\"');
+        '\': lBuilder.Append('\\');
+        #8: lBuilder.Append('\b');
+        #9: lBuilder.Append('\t');
+        #10: lBuilder.Append('\n');
+        #12: lBuilder.Append('\f');
+        #13: lBuilder.Append('\r');
+      else
+        if Ord(C) < 32 then lBuilder.Append('\u00' + IntToHex(Ord(C), 2))
+        else lBuilder.Append(C);
+      end;
+    end;
+    lBuilder.Append('"');
+    Result := lBuilder.ToString;
+  finally
+    lBuilder.Free;
+  end;
+end;
+
+function OpcUaJsonFloat(AValue: Double): string;
+var
+  lSettings: TFormatSettings;
+begin
+  if IsNan(AValue) then Exit('"NaN"');
+  if IsInfinite(AValue) then
+    if AValue < 0 then Exit('"-Infinity"') else Exit('"Infinity"');
+  lSettings := DefaultFormatSettings;
+  lSettings.DecimalSeparator := '.';
+  Result := FloatToStr(AValue, lSettings);
+end;
+
+function OpcUaBytesToBase64(const ABytes: TBytes): string;
+var
+  lRaw: RawByteString;
+begin
+  SetLength(lRaw, Length(ABytes));
+  if Length(ABytes) > 0 then Move(ABytes[0], lRaw[1], Length(ABytes));
+  Result := EncodeStringBase64(lRaw);
+end;
+
+function OpcUaVariantJson(AReader: TOpcUaReader; ADepth: Integer): string; forward;
+
+function OpcUaScalarJson(AReader: TOpcUaReader; ATypeId: Byte;
+  ADepth: Integer): string;
+var
+  lBytes: TBytes;
+  lFlags, lEncoding: Byte;
+  lLength, I, lNamespace: Integer;
+  lNodeId, lBody, lName, lLocale: string;
+  lRawGuid: TGuid;
+  lGuidText: string;
+begin
+  if ADepth > 16 then
+    raise EOpcUaBinaryError.Create('OPC UA Variant nesting is too deep');
+  case ATypeId of
+    COpcUaBuiltInNull: Result := 'null';
+    COpcUaBuiltInBoolean:
+      if AReader.BooleanValue then Result := 'true' else Result := 'false';
+    COpcUaBuiltInSByte: Result := IntToStr(ShortInt(AReader.ByteValue));
+    COpcUaBuiltInByte: Result := IntToStr(AReader.ByteValue);
+    COpcUaBuiltInInt16: Result := IntToStr(SmallInt(AReader.UInt16));
+    COpcUaBuiltInUInt16: Result := IntToStr(AReader.UInt16);
+    COpcUaBuiltInInt32: Result := IntToStr(AReader.Int32);
+    COpcUaBuiltInUInt32: Result := UIntToStr(AReader.UInt32);
+    COpcUaBuiltInInt64: Result := IntToStr(Int64(AReader.UInt64));
+    COpcUaBuiltInUInt64: Result := UIntToStr(AReader.UInt64);
+    COpcUaBuiltInFloat: Result := OpcUaJsonFloat(AReader.SingleValue);
+    COpcUaBuiltInDouble: Result := OpcUaJsonFloat(AReader.DoubleValue);
+    COpcUaBuiltInString, COpcUaBuiltInXmlElement:
+      Result := OpcUaJsonQuote(AReader.UaString);
+    COpcUaBuiltInDateTime:
+      Result := OpcUaJsonQuote(OpcUaTimestampText(AReader.UInt64));
+    COpcUaBuiltInGuid:
+      begin
+        FillChar(lRawGuid, SizeOf(lRawGuid), 0);
+        lRawGuid.D1 := AReader.UInt32;
+        lRawGuid.D2 := AReader.UInt16;
+        lRawGuid.D3 := AReader.UInt16;
+        lBytes := AReader.Raw(8);
+        Move(lBytes[0], lRawGuid.D4[0], 8);
+        lGuidText := GUIDToString(lRawGuid);
+        Result := OpcUaJsonQuote(Copy(lGuidText, 2, Length(lGuidText) - 2));
+      end;
+    COpcUaBuiltInByteString:
+      Result := '{"encoding":"base64","value":' +
+        OpcUaJsonQuote(OpcUaBytesToBase64(AReader.ByteString)) + '}';
+    COpcUaBuiltInNodeId:
+      begin
+        lNodeId := AReader.NodeId(lBytes);
+        Result := OpcUaJsonQuote(lNodeId);
+      end;
+    COpcUaBuiltInExpandedNodeId:
+      Result := OpcUaJsonQuote(AReader.ExpandedNodeId);
+    COpcUaBuiltInStatusCode:
+      begin
+        lLength := AReader.Int32;
+        Result := '{"code":' + UIntToStr(Cardinal(lLength)) +
+          ',"hex":"0x' + IntToHex(Cardinal(lLength), 8) + '"}';
+      end;
+    COpcUaBuiltInQualifiedName:
+      begin
+        lNamespace := AReader.UInt16;
+        lName := AReader.UaString;
+        Result := '{"namespaceIndex":' + IntToStr(lNamespace) +
+          ',"name":' + OpcUaJsonQuote(lName) + '}';
+      end;
+    COpcUaBuiltInLocalizedText:
+      begin
+        lFlags := AReader.ByteValue;
+        lLocale := '';
+        lName := '';
+        if (lFlags and 1) <> 0 then lLocale := AReader.UaString;
+        if (lFlags and 2) <> 0 then lName := AReader.UaString;
+        Result := '{"locale":' + OpcUaJsonQuote(lLocale) +
+          ',"text":' + OpcUaJsonQuote(lName) + '}';
+      end;
+    COpcUaBuiltInExtensionObject:
+      begin
+        lNodeId := AReader.NodeId(lBytes);
+        lEncoding := AReader.ByteValue;
+        lBody := '';
+        if lEncoding = 1 then
+          lBody := OpcUaBytesToBase64(AReader.ByteString)
+        else if lEncoding = 2 then
+          lBody := AReader.UaString
+        else if lEncoding <> 0 then
+          raise EOpcUaBinaryError.CreateFmt(
+            'Unsupported ExtensionObject encoding %d', [lEncoding]);
+        Result := '{"typeId":' + OpcUaJsonQuote(lNodeId) +
+          ',"encoding":' + IntToStr(lEncoding);
+        if lEncoding = 1 then
+          Result := Result + ',"bodyBase64":' + OpcUaJsonQuote(lBody)
+        else if lEncoding = 2 then
+          Result := Result + ',"bodyXml":' + OpcUaJsonQuote(lBody);
+        Result := Result + '}';
+      end;
+    COpcUaBuiltInDataValue:
+      begin
+        lFlags := AReader.ByteValue;
+        Result := '{';
+        if (lFlags and 1) <> 0 then
+        begin
+          Result := Result + '"value":' + OpcUaVariantJson(AReader, ADepth + 1);
+          if (lFlags and $FE) <> 0 then Result := Result + ',';
+        end;
+        if (lFlags and 2) <> 0 then
+        begin
+          Result := Result + '"status":' + UIntToStr(AReader.UInt32);
+          if (lFlags and $FC) <> 0 then Result := Result + ',';
+        end;
+        if (lFlags and 4) <> 0 then
+        begin
+          Result := Result + '"sourceTimestamp":' +
+            OpcUaJsonQuote(OpcUaTimestampText(AReader.UInt64));
+          if (lFlags and $F8) <> 0 then Result := Result + ',';
+        end;
+        if (lFlags and 8) <> 0 then
+        begin
+          Result := Result + '"serverTimestamp":' +
+            OpcUaJsonQuote(OpcUaTimestampText(AReader.UInt64));
+          if (lFlags and $F0) <> 0 then Result := Result + ',';
+        end;
+        if (lFlags and 16) <> 0 then
+        begin
+          Result := Result + '"sourcePicoseconds":' + IntToStr(AReader.UInt16);
+          if (lFlags and $E0) <> 0 then Result := Result + ',';
+        end;
+        if (lFlags and 32) <> 0 then
+          Result := Result + '"serverPicoseconds":' + IntToStr(AReader.UInt16);
+        Result := Result + '}';
+      end;
+    COpcUaBuiltInVariant:
+      Result := OpcUaVariantJson(AReader, ADepth + 1);
+    COpcUaBuiltInDiagnosticInfo:
+      begin
+        lFlags := AReader.ByteValue;
+        Result := '{';
+        if (lFlags and 1) <> 0 then
+        begin Result := Result + '"symbolicId":' + IntToStr(AReader.Int32); if (lFlags and $FE) <> 0 then Result := Result + ','; end;
+        if (lFlags and 2) <> 0 then
+        begin Result := Result + '"namespaceUri":' + IntToStr(AReader.Int32); if (lFlags and $FC) <> 0 then Result := Result + ','; end;
+        if (lFlags and 4) <> 0 then
+        begin Result := Result + '"locale":' + IntToStr(AReader.Int32); if (lFlags and $F8) <> 0 then Result := Result + ','; end;
+        if (lFlags and 8) <> 0 then
+        begin Result := Result + '"localizedText":' + IntToStr(AReader.Int32); if (lFlags and $F0) <> 0 then Result := Result + ','; end;
+        if (lFlags and 16) <> 0 then
+        begin Result := Result + '"additionalInfo":' + OpcUaJsonQuote(AReader.UaString); if (lFlags and $E0) <> 0 then Result := Result + ','; end;
+        if (lFlags and 32) <> 0 then
+        begin Result := Result + '"innerStatusCode":' + UIntToStr(AReader.UInt32); if (lFlags and $C0) <> 0 then Result := Result + ','; end;
+        if (lFlags and 64) <> 0 then Result := Result + '"innerDiagnosticInfo":' + OpcUaScalarJson(AReader, COpcUaBuiltInDiagnosticInfo, ADepth + 1);
+        Result := Result + '}';
+      end;
+  else
+    raise EOpcUaBinaryError.CreateFmt('Unsupported OPC UA built-in type %d',
+      [ATypeId]);
+  end;
+end;
+
+function OpcUaVariantJson(AReader: TOpcUaReader; ADepth: Integer): string;
+var
+  lMask, lTypeId: Byte;
+  lCount, I, lDimensionCount: Integer;
+  lValues, lDimensions: string;
+  lBuilder: TStringBuilder;
+begin
+  if ADepth > 16 then
+    raise EOpcUaBinaryError.Create('OPC UA Variant nesting is too deep');
+  lMask := AReader.ByteValue;
+  lTypeId := lMask and COpcUaVariantTypeMask;
+  if (lMask and COpcUaVariantArrayFlag) = 0 then
+  begin
+    Result := OpcUaScalarJson(AReader, lTypeId, ADepth + 1);
+    Exit;
+  end;
+  lCount := AReader.Int32;
+  if (lCount < -1) or (lCount > COpcUaMaxMessageSize) then
+    raise EOpcUaBinaryError.CreateFmt('Invalid OPC UA array length %d', [lCount]);
+  lBuilder := TStringBuilder.Create;
+  try
+    for I := 0 to lCount - 1 do
+    begin
+      if I > 0 then lBuilder.Append(',');
+      lBuilder.Append(OpcUaScalarJson(AReader, lTypeId, ADepth + 1));
+    end;
+    lValues := lBuilder.ToString;
+  finally
+    lBuilder.Free;
+  end;
+  Result := '{"kind":"array","typeId":' + IntToStr(lTypeId) +
+    ',"values":[' + lValues + ']';
+  if lCount < 0 then Result := Result + ',"isNull":true';
+  if (lMask and COpcUaVariantDimensionsFlag) <> 0 then
+  begin
+    lDimensionCount := AReader.Int32;
+    if (lDimensionCount < 0) or (lDimensionCount > 32) then
+      raise EOpcUaBinaryError.CreateFmt(
+        'Invalid OPC UA array dimensions count %d', [lDimensionCount]);
+    lDimensions := '';
+    for I := 0 to lDimensionCount - 1 do
+    begin
+      if I > 0 then lDimensions := lDimensions + ',';
+      lDimensions := lDimensions + IntToStr(AReader.UInt32);
+    end;
+    Result := Result + ',"dimensions":[' + lDimensions + ']';
+  end;
+  Result := Result + '}';
+end;
+
+function ReadNotificationDataValue(AReader: TOpcUaReader;
+  ATimestampMode: Cardinal;
+  AChange: PRecorderOpcUaDataChange): Boolean;
+var
+  lMask, lVariantMask, lTypeId: Byte;
+  lSourceTicks, lServerTicks: QWord;
+  lStatus: Cardinal;
+  lTextValue: string;
+begin
+  Result := False;
+  lMask := AReader.ByteValue;
+  if (lMask and 1) = 0 then
+  begin
+    if (lMask and 2) <> 0 then AChange^.Status := AReader.UInt32;
+  end
+  else
+  begin
+    lVariantMask := AReader.ByteValue;
+    lTypeId := lVariantMask and COpcUaVariantTypeMask;
+    AChange^.IsString := True;
+    if ((lVariantMask and COpcUaVariantArrayFlag) = 0) and
+      (lTypeId >= COpcUaBuiltInBoolean) and
+      (lTypeId <= COpcUaBuiltInDouble) then
+    begin
+      case lTypeId of
+        COpcUaBuiltInBoolean: AChange^.NumericValue := Ord(AReader.BooleanValue);
+        COpcUaBuiltInSByte: AChange^.NumericValue := ShortInt(AReader.ByteValue);
+        COpcUaBuiltInByte: AChange^.NumericValue := AReader.ByteValue;
+        COpcUaBuiltInInt16: AChange^.NumericValue := SmallInt(AReader.UInt16);
+        COpcUaBuiltInUInt16: AChange^.NumericValue := AReader.UInt16;
+        COpcUaBuiltInInt32: AChange^.NumericValue := AReader.Int32;
+        COpcUaBuiltInUInt32: AChange^.NumericValue := AReader.UInt32;
+        COpcUaBuiltInInt64: AChange^.NumericValue := Int64(AReader.UInt64);
+        COpcUaBuiltInUInt64: AChange^.NumericValue := AReader.UInt64;
+        COpcUaBuiltInFloat: AChange^.NumericValue := AReader.SingleValue;
+        COpcUaBuiltInDouble: AChange^.NumericValue := AReader.DoubleValue;
+      end;
+      AChange^.IsString := False;
+    end
+    else
+    begin
+      if ((lVariantMask and COpcUaVariantArrayFlag) = 0) and
+        ((lTypeId = COpcUaBuiltInString) or
+         (lTypeId = COpcUaBuiltInXmlElement)) then
+        lTextValue := AReader.UaString
+      else
+      begin
+        AReader.RewindByte;
+        lTextValue := OpcUaVariantJson(AReader, 0);
+      end;
+      AChange^.StringValue := lTextValue;
+    end;
+    if (lMask and 2) <> 0 then
+    begin
+      lStatus := AReader.UInt32;
+      AChange^.Status := lStatus;
+    end;
+  end;
+  lSourceTicks := 0;
+  lServerTicks := 0;
+  if (lMask and 4) <> 0 then lSourceTicks := AReader.UInt64;
+  if (lMask and 8) <> 0 then lServerTicks := AReader.UInt64;
+  if (lMask and 16) <> 0 then AReader.UInt16;
+  if (lMask and 32) <> 0 then AReader.UInt16;
+  AChange^.TimestampSec := OpcUaTimestampSeconds(ATimestampMode,
+    lSourceTicks, lServerTicks);
+  Result := (lMask and 1) <> 0;
+end;
+
+type
+  TOpcUaBrowseParent = class
+  public
+    NodeId: string;
+    BrowsePath: string;
+    Depth: Integer;
+    ContinuationPoint: TBytes;
+  end;
 
   TOpcUaWriter = class
   private
@@ -156,31 +612,6 @@ type
     procedure ExtensionObjectNull;
     procedure RequestHeader(const AAuthenticationToken: TBytes;
       ARequestHandle: Cardinal; ATimeoutHintMs: Cardinal = COpcUaTimeoutMs);
-  end;
-
-  TOpcUaReader = class
-  private
-    fStream: TStream;
-    procedure Need(ACount: Int64);
-  public
-    constructor Create(AStream: TStream);
-    function ByteValue: Byte;
-    function BooleanValue: Boolean;
-    function UInt16: Word;
-    function UInt32: Cardinal;
-    function Int32: LongInt;
-    function UInt64: QWord;
-    function SingleValue: Single;
-    function DoubleValue: Double;
-    function Raw(ACount: Integer): TBytes;
-    function UaString: string;
-    function ByteString: TBytes;
-    function NodeId(out AEncoded: TBytes): string;
-    function ExpandedNodeId: string;
-    procedure SkipDiagnosticInfo;
-    procedure SkipExtensionObject;
-    function ResponseHeader: Cardinal;
-    procedure SkipApplicationDescription;
   end;
 
 constructor TRecorderOpcUaDiscoveredNode.Create;
@@ -433,6 +864,13 @@ begin
   end;
 end;
 
+procedure TOpcUaReader.RewindByte;
+begin
+  if fStream.Position <= 0 then
+    raise EOpcUaBinaryError.Create('Cannot rewind OPC UA reader');
+  fStream.Position := fStream.Position - 1;
+end;
+
 function TOpcUaReader.Raw(ACount: Integer): TBytes;
 begin
   Need(ACount); SetLength(Result, ACount);
@@ -601,7 +1039,7 @@ end;
 
 constructor TRecorderOpcUaBinaryClient.Create(const AEndpoint, AUserName,
   APassword: string; ASessionTimeoutMs: Cardinal; ARequestTimeoutMs: Cardinal;
-  ATimestampsToReturn: Cardinal);
+  ATimestampsToReturn: Cardinal; ABrowseTimeoutMs: Cardinal);
 begin
   inherited Create;
   fEndpoint := Trim(AEndpoint);
@@ -611,6 +1049,10 @@ begin
   if fSessionTimeoutMs < 1000 then fSessionTimeoutMs := 1000;
   fRequestTimeoutMs := ARequestTimeoutMs;
   if fRequestTimeoutMs < 100 then fRequestTimeoutMs := 100;
+  fBrowseTimeoutMs := fRequestTimeoutMs;
+  fConfiguredBrowseTimeoutMs := ABrowseTimeoutMs;
+  if fConfiguredBrowseTimeoutMs < COpcUaMinimumBrowseTimeoutMs then
+    fConfiguredBrowseTimeoutMs := COpcUaMinimumBrowseTimeoutMs;
   if ATimestampsToReturn > 3 then ATimestampsToReturn := 1;
   fTimestampsToReturn := ATimestampsToReturn;
   fAnonymousPolicyId := 'anonymous';
@@ -945,6 +1387,289 @@ begin
   except on X: Exception do begin SetError('protocol', X.Message); Disconnect; end; end;
 end;
 
+function TRecorderOpcUaBinaryClient.CreateSubscription(
+  ANodeIds: TRecorderOpcUaStringArray;
+  AClientHandles: TRecorderOpcUaCardinalArray;
+  APublishingIntervalMs: Cardinal): Boolean;
+var
+  B, R: TMemoryStream;
+  W: TOpcUaWriter;
+  Q: TOpcUaReader;
+  D: TBytes;
+  I, N: Integer;
+  lStatus: Cardinal;
+begin
+  Result := False;
+  if Length(ANodeIds) <> Length(AClientHandles) then
+  begin
+    SetError('subscription', 'node and client-handle counts differ');
+    Exit;
+  end;
+  if Length(ANodeIds) = 0 then Exit(True);
+  B := TMemoryStream.Create;
+  R := nil;
+  try
+    try
+    W := TOpcUaWriter.Create(B);
+    try
+      Inc(fRequestHandle);
+      W.RequestHeader(fAuthenticationToken, fRequestHandle,
+        Max(fRequestTimeoutMs, 10000));
+      W.DoubleValue(APublishingIntervalMs);
+      W.UInt32(COpcUaSubscriptionLifetimeCount);
+      W.UInt32(COpcUaSubscriptionKeepAliveCount);
+      W.UInt32(COpcUaSubscriptionMaxNotifications);
+      W.BooleanValue(True);
+      W.ByteValue(0);
+    finally
+      W.Free;
+    end;
+    if not ExchangeService(COpcUaCreateSubscriptionRequest, B, R) then Exit;
+    try
+      Q := TOpcUaReader.Create(R);
+      try
+        Q.UInt32; Q.UInt32; Q.UInt32; Q.UInt32; Q.NodeId(D);
+        lStatus := Q.ResponseHeader;
+        if lStatus <> 0 then
+        begin
+          SetError('create subscription', Format('status 0x%.8x', [lStatus]));
+          Exit;
+        end;
+        fSubscriptionId := Q.UInt32;
+        fSubscriptionPublishingIntervalMs := Cardinal(Trunc(Max(10.0,
+          Q.DoubleValue)));
+        Q.UInt32; { revisedLifetimeCount }
+        Q.UInt32; { revisedMaxKeepAliveCount }
+      finally
+        Q.Free;
+      end;
+    finally
+      R.Free;
+      R := nil;
+    end;
+
+    B.Size := 0;
+    W := TOpcUaWriter.Create(B);
+    try
+      Inc(fRequestHandle);
+      W.RequestHeader(fAuthenticationToken, fRequestHandle,
+        Max(fRequestTimeoutMs, 10000));
+      W.UInt32(fSubscriptionId);
+      W.UInt32(fTimestampsToReturn);
+      W.Int32(Length(ANodeIds));
+      for I := 0 to High(ANodeIds) do
+      begin
+        W.NodeId(ANodeIds[I]);
+        W.UInt32(COpcUaAttributeValue);
+        W.UaString('', True);
+        W.UInt16(0);
+        W.UaString('', True);
+        W.UInt32(COpcUaMonitoringModeReporting);
+        W.UInt32(AClientHandles[I]);
+        W.DoubleValue(APublishingIntervalMs);
+        W.ExtensionObjectNull;
+        W.UInt32(COpcUaMonitoredItemQueueSize);
+        W.BooleanValue(True);
+      end;
+    finally
+      W.Free;
+    end;
+    if not ExchangeService(COpcUaCreateMonitoredItemsRequest, B, R) then Exit;
+    try
+      Q := TOpcUaReader.Create(R);
+      try
+        Q.UInt32; Q.UInt32; Q.UInt32; Q.UInt32; Q.NodeId(D);
+        lStatus := Q.ResponseHeader;
+        if lStatus <> 0 then
+        begin
+          SetError('create monitored items', Format('status 0x%.8x',
+            [lStatus]));
+          Exit;
+        end;
+        N := Q.Int32;
+        if N <> Length(ANodeIds) then
+        begin
+          SetError('create monitored items', Format(
+            'server returned %d results for %d items', [N, Length(ANodeIds)]));
+          Exit;
+        end;
+        for I := 0 to N - 1 do
+        begin
+          lStatus := Q.UInt32;
+          Q.UInt32; { monitoredItemId }
+          Q.DoubleValue;
+          Q.UInt32;
+          Q.SkipExtensionObject;
+          if (lStatus and $C0000000) <> 0 then
+          begin
+            SetError('create monitored item', Format(
+              'NodeId %s returned status 0x%.8x', [ANodeIds[I], lStatus]));
+            Exit;
+          end;
+        end;
+      finally
+        Q.Free;
+      end;
+    finally
+      R.Free;
+      R := nil;
+    end;
+    fSubscriptionEnabled := True;
+    Result := True;
+    except
+      on E: Exception do SetError('create subscription', E.Message);
+    end;
+  finally
+    R.Free;
+    B.Free;
+  end;
+end;
+
+function TRecorderOpcUaBinaryClient.Publish(
+  var ANotifications: TRecorderOpcUaDataChangeArray): Boolean;
+var
+  B, R, LBody: TMemoryStream;
+  W: TOpcUaWriter;
+  Q, LReader: TOpcUaReader;
+  D, LEncoded: TBytes;
+  I, J, N, LEncoding, LBodySize, LItemCount, LDiagnosticCount: Integer;
+  LSubscriptionId, LSequence, LClientHandle, LStatus: Cardinal;
+  LTypeId: string;
+  LChange: TRecorderOpcUaDataChange;
+  LPreviousTimeout, LPublishTimeout: Integer;
+  LFirstUpdate: Boolean;
+begin
+  Result := False;
+  if not fSubscriptionEnabled then Exit(True);
+  B := TMemoryStream.Create;
+  R := nil;
+  LBody := nil;
+  LPublishTimeout := Integer(Max(Cardinal(fRequestTimeoutMs),
+    fSubscriptionPublishingIntervalMs * 3 + 5000));
+  LPreviousTimeout := fStream.IOTimeout;
+  fStream.IOTimeout := LPublishTimeout;
+  try
+    try
+    W := TOpcUaWriter.Create(B);
+    try
+      Inc(fRequestHandle);
+      W.RequestHeader(fAuthenticationToken, fRequestHandle,
+        Cardinal(LPublishTimeout));
+      if fPendingPublishSequence <> 0 then
+      begin
+        W.Int32(1);
+        W.UInt32(fSubscriptionId);
+        W.UInt32(fPendingPublishSequence);
+      end
+      else
+        W.Int32(0);
+    finally
+      W.Free;
+    end;
+    if not ExchangeService(COpcUaPublishRequest, B, R) then Exit;
+    fPendingPublishSequence := 0;
+    Q := TOpcUaReader.Create(R);
+    try
+      Q.UInt32; Q.UInt32; Q.UInt32; Q.UInt32; Q.NodeId(D);
+      LStatus := Q.ResponseHeader;
+      if LStatus <> 0 then
+      begin
+        SetError('publish', Format('status 0x%.8x', [LStatus]));
+        Exit;
+      end;
+      LSubscriptionId := Q.UInt32;
+      if LSubscriptionId <> fSubscriptionId then
+      begin
+        SetError('publish', Format('unexpected subscription id %d',
+          [LSubscriptionId]));
+        Exit;
+      end;
+      N := Q.Int32;
+      for I := 0 to N - 1 do Q.UInt32;
+      Q.BooleanValue;
+      LSequence := Q.UInt32;
+      Q.UInt64; { publishTime }
+      LItemCount := Q.Int32;
+      LFirstUpdate := False;
+      for I := 0 to LItemCount - 1 do
+      begin
+        LTypeId := Q.NodeId(LEncoded);
+        LEncoding := Q.ByteValue;
+        if LEncoding = 0 then Continue;
+        LBodySize := Q.Int32;
+        if (LBodySize < 0) or (LBodySize > COpcUaMaxMessageSize) then
+          raise EOpcUaBinaryError.Create('Invalid notification body size');
+        D := Q.Raw(LBodySize);
+        if not SameText(LTypeId, COpcUaDataChangeNotificationNodeId) then
+          Continue;
+        LBody.Free;
+        LBody := TMemoryStream.Create;
+        if Length(D) > 0 then LBody.WriteBuffer(D[0], Length(D));
+        LBody.Position := 0;
+        LReader := TOpcUaReader.Create(LBody);
+        try
+          N := LReader.Int32;
+          for J := 0 to N - 1 do
+          begin
+            LClientHandle := LReader.UInt32;
+            LChange.IsString := False;
+            LChange.NumericValue := 0;
+            LChange.StringValue := '';
+            LChange.TimestampSec := 0;
+            LChange.Status := 0;
+            LChange.ClientHandle := LClientHandle;
+            if not ReadNotificationDataValue(LReader, fTimestampsToReturn,
+              @LChange) then Continue;
+            SetLength(ANotifications, Length(ANotifications) + 1);
+            ANotifications[High(ANotifications)] := LChange;
+            LFirstUpdate := True;
+          end;
+          LDiagnosticCount := LReader.Int32;
+          for J := 0 to LDiagnosticCount - 1 do LReader.SkipDiagnosticInfo;
+        finally
+          LReader.Free;
+        end;
+      end;
+      N := Q.Int32;
+      for I := 0 to N - 1 do Q.UInt32;
+      N := Q.Int32;
+      for I := 0 to N - 1 do Q.SkipDiagnosticInfo;
+      if LFirstUpdate then fPendingPublishSequence := LSequence;
+      Result := True;
+    finally
+      Q.Free;
+    end;
+  except
+    on E: Exception do SetError('publish', E.Message);
+    end;
+  finally
+    if fStream <> nil then fStream.IOTimeout := LPreviousTimeout;
+    LBody.Free;
+    R.Free;
+    B.Free;
+  end;
+end;
+
+function TRecorderOpcUaBinaryClient.StartSubscription(
+  ANodeIds: TRecorderOpcUaStringArray;
+  AClientHandles: TRecorderOpcUaCardinalArray;
+  APublishingIntervalMs: Cardinal): Boolean;
+begin
+  fSubscriptionEnabled := False;
+  fSubscriptionId := 0;
+  fPendingPublishSequence := 0;
+  if Length(ANodeIds) = 0 then Exit(True);
+  Result := CreateSubscription(ANodeIds, AClientHandles,
+    APublishingIntervalMs);
+end;
+
+function TRecorderOpcUaBinaryClient.ReceiveSubscriptionChanges(
+  out ANotifications: TRecorderOpcUaDataChangeArray): Boolean;
+begin
+  SetLength(ANotifications, 0);
+  Result := Publish(ANotifications);
+end;
+
 procedure TRecorderOpcUaBinaryClient.Disconnect;
 begin
   if fStream <> nil then
@@ -955,6 +1680,10 @@ begin
   FreeAndNil(fStream);
   fSecureChannelId := 0;
   fSecurityTokenId := 0;
+  fSubscriptionId := 0;
+  fSubscriptionPublishingIntervalMs := 0;
+  fPendingPublishSequence := 0;
+  fSubscriptionEnabled := False;
   SetLength(fAuthenticationToken, 0);
 end;
 
@@ -962,6 +1691,7 @@ function TRecorderOpcUaBinaryClient.BrowseNode(const ANodeId, APath: string;
   ANodes: TObjectList; AVisited: TStrings; ADepth: Integer): Boolean;
 var
   B, R: TMemoryStream;
+  lErrorText: string;
   W: TOpcUaWriter;
   lContinuationPoint: TBytes;
 
@@ -1025,14 +1755,6 @@ var
           Item.TypeDefinition := TypeDefinition;
           Item.NodeClass := NodeClass;
           Item.ValueRank := -1;
-          if NodeClass = COpcUaNodeClassVariable then
-          begin
-            if not ReadVariableAttributes(Item) then
-            begin
-              Item.DataTypeName := '<ошибка атрибутов>';
-              fErrorText := '';
-            end;
-          end;
           ANodes.Add(Item);
 
           if NodeClass = COpcUaNodeClassObject then
@@ -1063,14 +1785,25 @@ begin
   try
     W := TOpcUaWriter.Create(B);
     try
-      Inc(fRequestHandle); W.RequestHeader(fAuthenticationToken, fRequestHandle);
+      Inc(fRequestHandle); W.RequestHeader(fAuthenticationToken, fRequestHandle,
+        fBrowseTimeoutMs);
       W.NodeId('i=0'); W.UInt64(0); W.UInt32(0);
       W.UInt32(fMaxReferencesPerNode); W.Int32(1);
       W.NodeId(ANodeId); W.UInt32(0); W.NodeId(COpcUaHierarchicalReferences); W.BooleanValue(True);
       W.UInt32(COpcUaNodeClassObject or COpcUaNodeClassVariable or
         COpcUaNodeClassMethod); W.UInt32(63);
     finally W.Free; end;
-    if not ExchangeService(COpcUaBrowseRequest, B, R) then Exit;
+    if not ExchangeService(COpcUaBrowseRequest, B, R) then
+    begin
+      lErrorText := fErrorText;
+      SetError('browse request', Format('nodeId=%s path=%s depth=%d; %s',
+        [ANodeId, APath, ADepth, lErrorText]));
+      RecorderDebugLog(Format(
+        '[TIME: %s] [TYPE: ERROR] [CONTEXT: TRecorderOpcUaBinaryClient.BrowseNode, Line: 1087] [DATA: endpoint=%s stage=Browse nodeId=%s browsePath=%s depth=%d error=%s]',
+        [FormatDateTime('hh:nn:ss.zzz', Now), fEndpoint, ANodeId,
+         APath, ADepth, lErrorText]));
+      Exit;
+    end;
     try
       if not ProcessBrowseResponse(R, lContinuationPoint) then Exit;
     finally R.Free; end;
@@ -1080,14 +1813,26 @@ begin
       W := TOpcUaWriter.Create(B);
       try
         Inc(fRequestHandle);
-        W.RequestHeader(fAuthenticationToken, fRequestHandle);
+        W.RequestHeader(fAuthenticationToken, fRequestHandle,
+          fBrowseTimeoutMs);
         W.BooleanValue(False);
         W.Int32(1);
         W.ByteString(lContinuationPoint);
       finally
         W.Free;
       end;
-      if not ExchangeService(COpcUaBrowseNextRequest, B, R) then Exit;
+      if not ExchangeService(COpcUaBrowseNextRequest, B, R) then
+      begin
+        lErrorText := fErrorText;
+        SetError('browse next', Format(
+          'nodeId=%s path=%s depth=%d; %s',
+          [ANodeId, APath, ADepth, lErrorText]));
+        RecorderDebugLog(Format(
+          '[TIME: %s] [TYPE: ERROR] [CONTEXT: TRecorderOpcUaBinaryClient.BrowseNode, Line: 1113] [DATA: endpoint=%s stage=BrowseNext nodeId=%s browsePath=%s depth=%d error=%s]',
+          [FormatDateTime('hh:nn:ss.zzz', Now), fEndpoint, ANodeId,
+           APath, ADepth, lErrorText]));
+        Exit;
+      end;
       try
         if not ProcessBrowseResponse(R, lContinuationPoint) then Exit;
       finally
@@ -1098,26 +1843,343 @@ begin
   finally B.Free; end;
 end;
 
+function TRecorderOpcUaBinaryClient.BrowseParentBatch(AParents: TList;
+  ANodes, ANextParents: TObjectList; AVisited: TStrings): Boolean;
+var
+  I: Integer;
+  B, R: TMemoryStream;
+  W: TOpcUaWriter;
+  lContinuations, lNextContinuations: TList;
+  lErrorText: string;
+
+  function ProcessResponse(AResponse: TMemoryStream; AResponseParents,
+    AContinuationParents: TList): Boolean;
+  var
+    Q: TOpcUaReader;
+    D: TBytes;
+    I, J, N, Count: LongInt;
+    NodeClass, Status: Cardinal;
+    NodeId, DisplayName, TypeDefinition, NodePath: string;
+    lLocalizedMask: Byte;
+    lParent, lChild: TOpcUaBrowseParent;
+    lItem: TRecorderOpcUaDiscoveredNode;
+  begin
+    Result := False;
+    Q := TOpcUaReader.Create(AResponse);
+    try
+      Q.UInt32; Q.UInt32; Q.UInt32; Q.UInt32; Q.NodeId(D);
+      Q.ResponseHeader;
+      N := Q.Int32;
+      if N <> AResponseParents.Count then
+      begin
+        SetError('browse batch', Format(
+          'expected %d BrowseResults, received %d',
+          [AResponseParents.Count, N]));
+        Exit;
+      end;
+      for I := 0 to N - 1 do
+      begin
+        lParent := TOpcUaBrowseParent(AResponseParents[I]);
+        Status := Q.UInt32;
+        lParent.ContinuationPoint := Q.ByteString;
+        Count := Q.Int32;
+        if Status <> 0 then
+        begin
+          SetError('browse batch', Format(
+            'nodeId=%s path=%s status=0x%s',
+            [lParent.NodeId, lParent.BrowsePath, IntToHex(Status, 8)]));
+          Exit;
+        end;
+        for J := 0 to Count - 1 do
+        begin
+          Q.NodeId(D);
+          Q.BooleanValue;
+          NodeId := Q.ExpandedNodeId;
+          Q.UInt16;
+          Q.UaString;
+          lLocalizedMask := Q.ByteValue;
+          if (lLocalizedMask and 1) <> 0 then Q.UaString;
+          if (lLocalizedMask and 2) <> 0 then
+            DisplayName := Q.UaString
+          else
+            DisplayName := '';
+          NodeClass := Q.UInt32;
+          TypeDefinition := Q.ExpandedNodeId;
+          if lParent.BrowsePath = '' then
+            NodePath := DisplayName
+          else
+            NodePath := lParent.BrowsePath + '/' + DisplayName;
+
+          lItem := TRecorderOpcUaDiscoveredNode.Create;
+          lItem.NodeId := NodeId;
+          lItem.DisplayName := DisplayName;
+          lItem.BrowsePath := NodePath;
+          lItem.TypeDefinition := TypeDefinition;
+          lItem.NodeClass := NodeClass;
+          lItem.ValueRank := -1;
+          ANodes.Add(lItem);
+
+          if (lParent.Depth < 64) and
+            ((NodeClass = COpcUaNodeClassObject) or
+             ((NodeClass = COpcUaNodeClassVariable) and
+              not lItem.IsProperty)) and
+            (AVisited.IndexOf(NodeId) < 0) then
+          begin
+            AVisited.Add(NodeId);
+            lChild := TOpcUaBrowseParent.Create;
+            lChild.NodeId := NodeId;
+            lChild.BrowsePath := NodePath;
+            lChild.Depth := lParent.Depth + 1;
+            ANextParents.Add(lChild);
+          end;
+        end;
+        if Length(lParent.ContinuationPoint) > 0 then
+          AContinuationParents.Add(lParent);
+      end;
+      Result := True;
+    except
+      on E: Exception do
+        SetError('browse batch decode', E.Message);
+    end;
+    Q.Free;
+  end;
+
+  function ExchangeBrowse(ARequestParents: TList;
+    AContinuation: Boolean; AContinuationParents: TList): Boolean;
+  var
+    I: Integer;
+    lParent: TOpcUaBrowseParent;
+  begin
+    Result := False;
+    B.Clear;
+    W := TOpcUaWriter.Create(B);
+    try
+      Inc(fRequestHandle);
+      W.RequestHeader(fAuthenticationToken, fRequestHandle,
+        fBrowseTimeoutMs);
+      if AContinuation then
+      begin
+        W.BooleanValue(False);
+        W.Int32(ARequestParents.Count);
+        for I := 0 to ARequestParents.Count - 1 do
+        begin
+          lParent := TOpcUaBrowseParent(ARequestParents[I]);
+          W.ByteString(lParent.ContinuationPoint);
+        end;
+      end
+      else
+      begin
+        W.NodeId('i=0'); W.UInt64(0); W.UInt32(0);
+        W.UInt32(fMaxReferencesPerNode);
+        W.Int32(ARequestParents.Count);
+        for I := 0 to ARequestParents.Count - 1 do
+        begin
+          lParent := TOpcUaBrowseParent(ARequestParents[I]);
+          W.NodeId(lParent.NodeId);
+          W.UInt32(0);
+          W.NodeId(COpcUaHierarchicalReferences);
+          W.BooleanValue(True);
+          W.UInt32(COpcUaNodeClassObject or COpcUaNodeClassVariable or
+            COpcUaNodeClassMethod);
+          W.UInt32(63);
+        end;
+      end;
+    finally
+      W.Free;
+    end;
+    if AContinuation then
+      Result := ExchangeService(COpcUaBrowseNextRequest, B, R)
+    else
+      Result := ExchangeService(COpcUaBrowseRequest, B, R);
+    if not Result then
+    begin
+      if ARequestParents.Count > 0 then
+      begin
+        lParent := TOpcUaBrowseParent(ARequestParents[0]);
+        lErrorText := fErrorText;
+        SetError('browse batch request', Format(
+          'firstNodeId=%s path=%s count=%d; %s',
+          [lParent.NodeId, lParent.BrowsePath, ARequestParents.Count,
+           lErrorText]));
+      end;
+      Exit;
+    end;
+    Result := ProcessResponse(R, ARequestParents, AContinuationParents);
+    R.Free;
+    R := nil;
+  end;
+
+begin
+  Result := False;
+  if (AParents = nil) or (AParents.Count = 0) then Exit(True);
+  if (ANodes = nil) or (ANextParents = nil) or (AVisited = nil) then Exit;
+  B := TMemoryStream.Create;
+  R := nil;
+  lContinuations := TList.Create;
+  lNextContinuations := TList.Create;
+  try
+    if not ExchangeBrowse(AParents, False, lContinuations) then Exit;
+    while lContinuations.Count > 0 do
+    begin
+      lNextContinuations.Clear;
+      if not ExchangeBrowse(lContinuations, True, lNextContinuations) then
+        Exit;
+      lContinuations.Clear;
+      for I := 0 to lNextContinuations.Count - 1 do
+        lContinuations.Add(lNextContinuations[I]);
+    end;
+    Result := True;
+  finally
+    R.Free;
+    lNextContinuations.Free;
+    lContinuations.Free;
+    B.Free;
+  end;
+end;
+
 function TRecorderOpcUaBinaryClient.Browse(ANodes: TObjectList;
   AMaxReferencesPerNode: Cardinal): Boolean;
+const
+  CBrowseNodesPerRequest = 2;
 var
+  J, lStart: Integer;
+  lBrowseTimeoutMs: Cardinal;
+  lPreviousBrowseTimeoutMs: Cardinal;
+  lPreviousSocketTimeoutMs: Integer;
   lVisited: TStringList;
+  lPendingParents, lNextParents, lSwapParents: TObjectList;
+  lBrowseBatch: TList;
+  lParent: TOpcUaBrowseParent;
 begin
-  Result := False; if ANodes = nil then Exit; ANodes.Clear;
+  Result := False;
+  if ANodes = nil then Exit;
+  if fStream = nil then
+  begin
+    SetError('browse', 'connection is not open');
+    Exit;
+  end;
+  ANodes.Clear;
+  lBrowseTimeoutMs := fConfiguredBrowseTimeoutMs;
+  if lBrowseTimeoutMs < fRequestTimeoutMs then
+    lBrowseTimeoutMs := fRequestTimeoutMs;
+  if lBrowseTimeoutMs > Cardinal(High(Integer)) then
+    lBrowseTimeoutMs := Cardinal(High(Integer));
+  lPreviousBrowseTimeoutMs := fBrowseTimeoutMs;
+  lPreviousSocketTimeoutMs := fStream.IOTimeout;
+  fBrowseTimeoutMs := lBrowseTimeoutMs;
+  fStream.IOTimeout := Integer(lBrowseTimeoutMs);
   fMaxReferencesPerNode := AMaxReferencesPerNode;
   if fMaxReferencesPerNode < 1 then fMaxReferencesPerNode := 1;
-  lVisited := TStringList.Create;
+  lVisited := nil;
+  lPendingParents := nil;
+  lNextParents := nil;
+  lBrowseBatch := nil;
   try
+    lVisited := TStringList.Create;
     lVisited.CaseSensitive := True;
     lVisited.Sorted := True;
     lVisited.Duplicates := dupIgnore;
+    lPendingParents := TObjectList.Create(True);
+    lNextParents := TObjectList.Create(True);
+    lBrowseBatch := TList.Create;
+    lParent := TOpcUaBrowseParent.Create;
+    lParent.NodeId := CRecorderOpcUaObjectsFolderNodeId;
+    lParent.BrowsePath := 'Objects';
+    lParent.Depth := 0;
+    lPendingParents.Add(lParent);
+    lVisited.Add(lParent.NodeId);
     try
-      Result := BrowseNode(COpcUaObjectsFolder, 'Objects', ANodes,
-        lVisited, 0);
+      while lPendingParents.Count > 0 do
+      begin
+        lNextParents.Clear;
+        lStart := 0;
+        while lStart < lPendingParents.Count do
+        begin
+          lBrowseBatch.Clear;
+          for J := lStart to Min(lStart + CBrowseNodesPerRequest - 1,
+            lPendingParents.Count - 1) do
+            lBrowseBatch.Add(lPendingParents[J]);
+          if not BrowseParentBatch(lBrowseBatch, ANodes, lNextParents,
+            lVisited) then Exit;
+          Inc(lStart, CBrowseNodesPerRequest);
+        end;
+        lSwapParents := lPendingParents;
+        lPendingParents := lNextParents;
+        lNextParents := lSwapParents;
+      end;
+      Result := ReadVariableAttributesBatch(ANodes);
     except
       on E: Exception do SetError('browse', E.Message);
     end;
   finally
+    if fStream <> nil then
+      fStream.IOTimeout := lPreviousSocketTimeoutMs;
+    fBrowseTimeoutMs := lPreviousBrowseTimeoutMs;
+    lBrowseBatch.Free;
+    lNextParents.Free;
+    lPendingParents.Free;
+    lVisited.Free;
+  end;
+end;
+
+function TRecorderOpcUaBinaryClient.BrowseChildren(const ANodeId,
+  ABrowsePath: string; ANodes: TObjectList;
+  AMaxReferencesPerNode: Cardinal): Boolean;
+var
+  lBrowseTimeoutMs: Cardinal;
+  lPreviousBrowseTimeoutMs: Cardinal;
+  lPreviousSocketTimeoutMs: Integer;
+  lVisited: TStringList;
+  lParents, lChildren: TObjectList;
+  lParentBatch: TList;
+  lParent: TOpcUaBrowseParent;
+begin
+  Result := False;
+  if (ANodes = nil) or (Trim(ANodeId) = '') then Exit;
+  if fStream = nil then
+  begin
+    SetError('browse children', 'connection is not open');
+    Exit;
+  end;
+  ANodes.Clear;
+  lBrowseTimeoutMs := fConfiguredBrowseTimeoutMs;
+  if lBrowseTimeoutMs < fRequestTimeoutMs then
+    lBrowseTimeoutMs := fRequestTimeoutMs;
+  if lBrowseTimeoutMs > Cardinal(High(Integer)) then
+    lBrowseTimeoutMs := Cardinal(High(Integer));
+  lPreviousBrowseTimeoutMs := fBrowseTimeoutMs;
+  lPreviousSocketTimeoutMs := fStream.IOTimeout;
+  fBrowseTimeoutMs := lBrowseTimeoutMs;
+  fStream.IOTimeout := Integer(lBrowseTimeoutMs);
+  fMaxReferencesPerNode := Max(1, AMaxReferencesPerNode);
+  lVisited := TStringList.Create;
+  lParents := TObjectList.Create(True);
+  lChildren := TObjectList.Create(True);
+  lParentBatch := TList.Create;
+  try
+    lVisited.CaseSensitive := True;
+    lVisited.Sorted := True;
+    lVisited.Duplicates := dupIgnore;
+    lVisited.Add(ANodeId);
+    lParent := TOpcUaBrowseParent.Create;
+    lParent.NodeId := ANodeId;
+    lParent.BrowsePath := ABrowsePath;
+    lParent.Depth := 0;
+    lParents.Add(lParent);
+    lParentBatch.Add(lParent);
+    try
+      Result := BrowseParentBatch(lParentBatch, ANodes, lChildren, lVisited);
+      if Result then Result := ReadVariableAttributesBatch(ANodes);
+    except
+      on E: Exception do SetError('browse children', E.Message);
+    end;
+  finally
+    if fStream <> nil then
+      fStream.IOTimeout := lPreviousSocketTimeoutMs;
+    fBrowseTimeoutMs := lPreviousBrowseTimeoutMs;
+    lParentBatch.Free;
+    lChildren.Free;
+    lParents.Free;
     lVisited.Free;
   end;
 end;
@@ -1427,7 +2489,8 @@ begin
     W := TOpcUaWriter.Create(B);
     try
       Inc(fRequestHandle);
-      W.RequestHeader(fAuthenticationToken, fRequestHandle);
+      W.RequestHeader(fAuthenticationToken, fRequestHandle,
+        fBrowseTimeoutMs);
       W.DoubleValue(0);
       W.UInt32(0);
       W.Int32(6);
@@ -1471,6 +2534,132 @@ begin
   end;
 end;
 
+function TRecorderOpcUaBinaryClient.ReadVariableAttributesBatch(
+  ANodes: TObjectList): Boolean;
+const
+  CVariablesPerRequest = 8;
+var
+  I, J, lVariableCount, lStart, lChunkCount, lExpectedResults: Integer;
+  lVariables: TList;
+  lVariable: TRecorderOpcUaDiscoveredNode;
+  B, R: TMemoryStream;
+  W: TOpcUaWriter;
+  Q: TOpcUaReader;
+  D: TBytes;
+  N: LongInt;
+  lAttributeId: Cardinal;
+  lAttributesOk: Boolean;
+begin
+  Result := False;
+  if ANodes = nil then Exit;
+  lVariables := TList.Create;
+  try
+    for I := 0 to ANodes.Count - 1 do
+      if TRecorderOpcUaDiscoveredNode(ANodes[I]).NodeClass =
+        COpcUaNodeClassVariable then
+        lVariables.Add(ANodes[I]);
+    lVariableCount := lVariables.Count;
+    lStart := 0;
+    while lStart < lVariableCount do
+    begin
+      lChunkCount := Min(CVariablesPerRequest, lVariableCount - lStart);
+      lExpectedResults := lChunkCount * 6;
+      B := TMemoryStream.Create;
+      R := nil;
+      try
+        W := TOpcUaWriter.Create(B);
+        try
+          Inc(fRequestHandle);
+          W.RequestHeader(fAuthenticationToken, fRequestHandle,
+            fBrowseTimeoutMs);
+          W.DoubleValue(0);
+          W.UInt32(0);
+          W.Int32(lExpectedResults);
+          for I := 0 to lChunkCount - 1 do
+          begin
+            lVariable := TRecorderOpcUaDiscoveredNode(
+              lVariables[lStart + I]);
+            for J := 0 to 5 do
+            begin
+              case J of
+                0: lAttributeId := 13;
+                1: lAttributeId := 14;
+                2: lAttributeId := 15;
+                3: lAttributeId := 17;
+                4: lAttributeId := 18;
+              else
+                lAttributeId := 20;
+              end;
+              W.NodeId(lVariable.NodeId);
+              W.UInt32(lAttributeId);
+              W.UaString('', True);
+              W.UInt16(0);
+              W.UaString('', True);
+            end;
+          end;
+        finally
+          W.Free;
+        end;
+        if not ExchangeService(COpcUaReadRequest, B, R) then
+        begin
+          SetError('browse attributes batch', Format(
+            'firstNodeId=%s count=%d; %s',
+            [TRecorderOpcUaDiscoveredNode(lVariables[lStart]).NodeId,
+             lChunkCount, fErrorText]));
+          Exit;
+        end;
+        try
+          Q := TOpcUaReader.Create(R);
+          try
+            Q.UInt32; Q.UInt32; Q.UInt32; Q.UInt32; Q.NodeId(D);
+            Q.ResponseHeader;
+            N := Q.Int32;
+            if N <> lExpectedResults then
+            begin
+              SetError('browse attributes batch', Format(
+                'expected %d ReadResults, received %d',
+                [lExpectedResults, N]));
+              Exit;
+            end;
+            for I := 0 to lChunkCount - 1 do
+            begin
+              lVariable := TRecorderOpcUaDiscoveredNode(
+                lVariables[lStart + I]);
+              lAttributesOk := ReadDataValueDisplayText(Q,
+                lVariable.ValueText, lVariable.ValueTimestamp,
+                lVariable.ArrayValues);
+              if not ReadDataValueNodeId(Q, lVariable.DataTypeNodeId) then
+                lAttributesOk := False;
+              lVariable.DataTypeName :=
+                DataTypeDisplayName(lVariable.DataTypeNodeId);
+              if not ReadDataValueInt32(Q, lVariable.ValueRank) then
+                lAttributesOk := False;
+              if not ReadDataValueByte(Q, lVariable.AccessLevel) then
+                lAttributesOk := False;
+              if not ReadDataValueByte(Q, lVariable.UserAccessLevel) then
+                lAttributesOk := False;
+              if not ReadDataValueBoolean(Q, lVariable.Historizing) then
+                lAttributesOk := False;
+              if not lAttributesOk then
+                lVariable.DataTypeName := '<ошибка атрибутов>';
+            end;
+          finally
+            Q.Free;
+          end;
+        finally
+          R.Free;
+        end;
+      finally
+        B.Free;
+      end;
+      Inc(lStart, lChunkCount);
+    end;
+    Result := True;
+  finally
+    lVariables.Free;
+  end;
+end;
+
 function TRecorderOpcUaBinaryClient.ReadDoubles(
   const ANodeIds: TRecorderOpcUaStringArray;
   out AValues, ATimestampsSec: TRecorderOpcUaDoubleArray;
@@ -1483,7 +2672,7 @@ var
   D: TBytes;
   Mask, VariantMask, TypeId: Byte;
   N: LongInt;
-  SourceTicks, ServerTicks, Ticks: QWord;
+  SourceTicks, ServerTicks: QWord;
 begin
   Result := False;
   SetLength(AValues, Length(ANodeIds));
@@ -1570,11 +2759,8 @@ begin
             [ANodeIds[I], AStatuses[I]]));
           Exit;
         end;
-        Ticks := SourceTicks;
-        if Ticks = 0 then Ticks := ServerTicks;
-        if Ticks <> 0 then
-          ATimestampsSec[I] := Ticks / COpcUaTicksPerSecond -
-            COpcUaUnixEpochOffsetSeconds;
+        ATimestampsSec[I] := OpcUaTimestampSeconds(fTimestampsToReturn,
+          SourceTicks, ServerTicks);
       end;
       Result := True;
     finally
@@ -1600,9 +2786,8 @@ var
   W: TOpcUaWriter;
   Q: TOpcUaReader;
   D: TBytes;
-  Mask, VariantMask, TypeId: Byte;
   N: LongInt;
-  SourceTicks, ServerTicks, Ticks: QWord;
+  lChange: TRecorderOpcUaDataChange;
 begin
   Result := False;
   SetLength(AValues, Length(ANodeIds));
@@ -1647,37 +2832,17 @@ begin
         end;
         for I := 0 to N - 1 do
         begin
-          SourceTicks := 0;
-          ServerTicks := 0;
-          Mask := Q.ByteValue;
-          if (Mask and 1) = 0 then
+          FillChar(lChange, SizeOf(lChange), 0);
+          if not ReadNotificationDataValue(Q, fTimestampsToReturn,
+            @lChange) then
           begin
-            if (Mask and 2) <> 0 then AStatuses[I] := Q.UInt32;
+            AStatuses[I] := lChange.Status;
             SetError('read strings', Format(
               'NodeId %s has no value; status 0x%.8x',
               [ANodeIds[I], AStatuses[I]]));
             Exit;
           end;
-          VariantMask := Q.ByteValue;
-          if (VariantMask and $80) <> 0 then
-          begin
-            SetError('read strings', 'array values are not supported for ' +
-              ANodeIds[I]);
-            Exit;
-          end;
-          TypeId := VariantMask and $3F;
-          if TypeId <> 12 then
-          begin
-            SetError('read strings', 'expected String, received scalar type ' +
-              IntToStr(TypeId) + ' for ' + ANodeIds[I]);
-            Exit;
-          end;
-          AValues[I] := Q.UaString;
-          if (Mask and 2) <> 0 then AStatuses[I] := Q.UInt32;
-          if (Mask and 4) <> 0 then SourceTicks := Q.UInt64;
-          if (Mask and 8) <> 0 then ServerTicks := Q.UInt64;
-          if (Mask and 16) <> 0 then Q.UInt16;
-          if (Mask and 32) <> 0 then Q.UInt16;
+          AStatuses[I] := lChange.Status;
           if (AStatuses[I] and $80000000) <> 0 then
           begin
             SetError('read strings', Format(
@@ -1685,11 +2850,11 @@ begin
               [ANodeIds[I], AStatuses[I]]));
             Exit;
           end;
-          Ticks := SourceTicks;
-          if Ticks = 0 then Ticks := ServerTicks;
-          if Ticks <> 0 then
-            ATimestampsSec[I] := Ticks / COpcUaTicksPerSecond -
-              COpcUaUnixEpochOffsetSeconds;
+          if lChange.IsString then
+            AValues[I] := lChange.StringValue
+          else
+            AValues[I] := FloatToStr(lChange.NumericValue);
+          ATimestampsSec[I] := lChange.TimestampSec;
         end;
         Result := True;
       finally
@@ -1706,7 +2871,14 @@ end;
 
 function TRecorderOpcUaBinaryClient.ReadDouble(const ANodeId: string;
   out AValue: Double; out AStatus: Cardinal; out ATimestampSec: Double): Boolean;
-var B, R: TMemoryStream; W: TOpcUaWriter; Q: TOpcUaReader; D: TBytes; Mask, VariantMask, TypeId: Byte; N: LongInt; Ticks: QWord;
+var
+  B, R: TMemoryStream;
+  W: TOpcUaWriter;
+  Q: TOpcUaReader;
+  D: TBytes;
+  Mask, VariantMask, TypeId: Byte;
+  N: LongInt;
+  SourceTicks, ServerTicks: QWord;
 begin
   Result := False; AValue := 0; AStatus := 0; ATimestampSec := 0; B := TMemoryStream.Create;
   try
@@ -1763,10 +2935,14 @@ begin
             [ANodeId, AStatus]));
           Exit;
         end;
-        if (Mask and 4) <> 0 then begin Ticks := Q.UInt64; ATimestampSec := Ticks / 10000000.0 - 11644473600.0; end;
-        if (Mask and 8) <> 0 then Q.UInt64;
+        SourceTicks := 0;
+        ServerTicks := 0;
+        if (Mask and 4) <> 0 then SourceTicks := Q.UInt64;
+        if (Mask and 8) <> 0 then ServerTicks := Q.UInt64;
         if (Mask and 16) <> 0 then Q.UInt16;
         if (Mask and 32) <> 0 then Q.UInt16;
+        ATimestampSec := OpcUaTimestampSeconds(fTimestampsToReturn,
+          SourceTicks, ServerTicks);
         Result := True;
       finally Q.Free; R.Free; end;
     except

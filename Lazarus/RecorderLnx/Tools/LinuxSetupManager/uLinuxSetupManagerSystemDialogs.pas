@@ -6,7 +6,7 @@ unit uLinuxSetupManagerSystemDialogs;
 interface
 
 uses
-  Classes, SysUtils, StrUtils, Forms, Process, ExtCtrls;
+  Classes, SysUtils, StrUtils, Forms, Process, ExtCtrls, StdCtrls;
 
 procedure ShowNetworkDialog(AOwner: TComponent);
 procedure ShowProxyDialog(AOwner: TComponent);
@@ -19,7 +19,7 @@ procedure ShowDiskDialog(AOwner: TComponent);
 implementation
 
 uses
-  Controls, StdCtrls, Dialogs, ComCtrls,
+  Controls, Dialogs, ComCtrls,
   fpjson, jsonparser
   {$IFDEF LCLGTK2}, Gtk2, Gtk2Def, Gtk2Proc, Gtk2WSComCtrls{$ENDIF};
 
@@ -51,11 +51,11 @@ type
     fDiskList: TListView;
     fDiskJson: TJSONData;
     fDiskDetails: TMemo;
-    fDetailsHandle: TPanel;
-    fOutputHandle: TPanel;
-    fActiveDiskHandle: TPanel;
-    fDragStartY: Integer;
-    fDragStartHeight: Integer;
+    fDetailsHandle: TSplitter;
+    fOutputHandle: TSplitter;
+    fDiskArea: TPanel;
+    fDiskFsLabel: TLabel;
+    fDiskMountLabel: TLabel;
     fDiskFsCombo: TComboBox;
     fTimeMode: TComboBox;
     fDiskProcess: TProcess;
@@ -74,6 +74,8 @@ type
     procedure BuildProxy;
     procedure BuildAccess;
     procedure BuildTime;
+    procedure TimeModeChange(Sender: TObject);
+    procedure RefreshTimeConfiguration;
     procedure BuildSsh;
     procedure BuildProfile;
     procedure BuildDisk;
@@ -86,14 +88,8 @@ type
     procedure ShowPhysicalDisk(const APath: string);
     procedure FillPhysicalDisks;
     procedure DiskFormShow(Sender: TObject);
+    procedure DiskPageResize(Sender: TObject);
     procedure PaintDiskSplitter(Sender: TObject);
-    procedure PaintDiskHandle(Sender: TObject);
-    procedure DiskHandleMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure DiskHandleMouseMove(Sender: TObject; Shift: TShiftState;
-      X, Y: Integer);
-    procedure DiskHandleMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure DiskFormatClick(Sender: TObject);
     procedure DiskUnmountClick(Sender: TObject);
     procedure DiskRemoveClick(Sender: TObject);
@@ -221,18 +217,13 @@ begin
   Caption := 'Настройка Linux';
   if fKind = skDisk then
   begin
-    fOutputHandle := TPanel.Create(Self);
+    fOutputHandle := TSplitter.Create(Self);
     fOutputHandle.Parent := Self;
     fOutputHandle.Align := alTop;
     fOutputHandle.Height := 12;
-    fOutputHandle.BevelOuter := bvNone;
-    fOutputHandle.ParentColor := False;
-    fOutputHandle.Color := $00E0AD5B;
-    fOutputHandle.Cursor := crVSplit;
-    fOutputHandle.OnPaint := @PaintDiskHandle;
-    fOutputHandle.OnMouseDown := @DiskHandleMouseDown;
-    fOutputHandle.OnMouseMove := @DiskHandleMouseMove;
-    fOutputHandle.OnMouseUp := @DiskHandleMouseUp;
+    fOutputHandle.MinSize := 0;
+    fOutputHandle.AutoSnap := False;
+    fOutputHandle.OnPaint := @PaintDiskSplitter;
   end;
   fPage := TScrollBox.Create(Self);
   fPage.Parent := Self;
@@ -242,6 +233,7 @@ begin
   begin
     fPage.Height := 495;
     fPage.Constraints.MinHeight := 300;
+    fOutputHandle.ResizeControl := fPage;
   end;
   fNextY := 12;
   case fKind of
@@ -252,6 +244,11 @@ begin
     skSsh: BuildSsh;
     skProfile: BuildProfile;
     skDisk: BuildDisk;
+  end;
+  if fKind = skDisk then
+  begin
+    fPage.OnResize := @DiskPageResize;
+    DiskPageResize(fPage);
   end;
   fButtons := TPanel.Create(Self);
   fButtons.Parent := Self;
@@ -312,6 +309,18 @@ begin
   lButton.SetBounds(ALeft, 8, 105, 30);
   lButton.Anchors := [akLeft, akTop];
   lButton.Caption := ACaption;
+  if fKind = skDisk then
+  begin
+    if fButtons.ControlCount > 1 then
+      lButton.Left := fButtons.Controls[fButtons.ControlCount - 2].Left +
+        fButtons.Controls[fButtons.ControlCount - 2].Width + 8;
+    lButton.Width := Canvas.TextWidth(ACaption) + 30;
+    if lButton.Width < 105 then lButton.Width := 105;
+    lButton.Height := Canvas.TextHeight(ACaption) + 12;
+    if lButton.Height < 30 then lButton.Height := 30;
+    if fButtons.Height < lButton.Height + 16 then
+      fButtons.Height := lButton.Height + 16;
+  end;
   lButton.OnClick := AClick;
 end;
 
@@ -325,6 +334,7 @@ begin
   lLabel.SetBounds(12, fNextY + 4, 200, 24);
   lLabel.AutoSize := False;
   lLabel.Caption := ACaption;
+  if fKind = skDisk then fDiskMountLabel := lLabel;
   Result := TEdit.Create(Self);
   Result.Parent := fPage;
   Result.SetBounds(220, fNextY, fPage.ClientWidth - 232, 28);
@@ -356,7 +366,9 @@ var
 begin
   lLabel := TLabel.Create(Self);
   lLabel.Parent := fPage;
-  lLabel.SetBounds(12, fNextY, fPage.ClientWidth - 24, 20);
+  lLabel.SetBounds(12, fNextY, fPage.ClientWidth - 24, 36);
+  lLabel.AutoSize := False;
+  lLabel.WordWrap := True;
   lLabel.Anchors := [akLeft, akTop, akRight];
   lLabel.Caption := ACaption;
   Inc(fNextY, 22);
@@ -750,17 +762,54 @@ begin
   fTimeMode.Parent := fPage;
   fTimeMode.SetBounds(220, fNextY, 535, 28);
   fTimeMode.Style := csDropDownList;
-  fTimeMode.Items.Add('Настроить как NTP-сервер');
-  fTimeMode.Items.Add('Назначить NTP-сервер');
-  fTimeMode.ItemIndex := 0;
+  fTimeMode.Items.Add('Сервер: раздавать время этого ПК');
+  fTimeMode.Items.Add('Клиент: получать время с другого ПК');
+  fTimeMode.ItemIndex := 1;
+  fTimeMode.OnChange := @TimeModeChange;
   Inc(fNextY, 38);
   AddField('Хост NTP-сервера', '192.168.9.66');
   AddField('Подсеть клиентов сервера (IPv4/CIDR)', DefaultNtpSubnet);
   lExample := TLabel.Create(Self);
   lExample.Parent := fPage;
-  lExample.SetBounds(220, fNextY, 535, 22);
-  lExample.Caption := 'Подсеть рассчитана по IPv4-адресу и маске адаптера';
-  Inc(fNextY, 24);
+  lExample.SetBounds(12, fNextY, 740, 48);
+  lExample.WordWrap := True;
+  lExample.Caption := 'Клиент сверяет часы с указанным хостом (например, 192.168.9.66). ' +
+    'Сервер раздаёт собственные часы; поле хоста в этом режиме не используется. ' +
+    'Подсеть клиентов рассчитана по IPv4-адресу и маске адаптера.';
+  Inc(fNextY, 52);
+  TimeModeChange(nil);
+end;
+
+procedure TSetupDialog.TimeModeChange(Sender: TObject);
+begin
+  fFields[1].Enabled := fTimeMode.ItemIndex = 1;
+  fFields[2].Enabled := fTimeMode.ItemIndex = 0;
+end;
+
+procedure TSetupDialog.RefreshTimeConfiguration;
+var
+  lArgs, lValues: TStringList;
+  lText: string;
+begin
+  lArgs := TStringList.Create;
+  lValues := TStringList.Create;
+  try
+    lArgs.Add('configuration');
+    if not RunHelper(CTimeHelper, lArgs, False, '', lText) then Exit;
+    lValues.Text := lText;
+    if lValues.Values['Timezone'] <> '' then
+      fFields[0].Text := lValues.Values['Timezone'];
+    if lValues.Values['Mode'] = 'server' then fTimeMode.ItemIndex := 0
+    else fTimeMode.ItemIndex := 1;
+    if lValues.IndexOfName('Host') >= 0 then
+      fFields[1].Text := lValues.Values['Host'];
+    if lValues.Values['Subnet'] <> '' then
+      fFields[2].Text := lValues.Values['Subnet'];
+    TimeModeChange(nil);
+  finally
+    lValues.Free;
+    lArgs.Free;
+  end;
 end;
 
 procedure TSetupDialog.BuildSsh;
@@ -806,16 +855,18 @@ begin
   lLabel.SetBounds(12, fNextY, fPage.ClientWidth - 24, 20);
   lLabel.Anchors := [akLeft, akTop, akRight];
   lLabel.Caption := 'Выберите физический накопитель, затем его раздел. В Linux том подключается в каталог, например /mnt/Data.';
-  Inc(fNextY, 24);
+  Inc(fNextY, 40);
   lArea := TPanel.Create(Self);
+  fDiskArea := lArea;
   lArea.Parent := fPage;
   lArea.SetBounds(12, fNextY, fPage.ClientWidth - 24, 350);
-  lArea.Anchors := [akLeft, akTop, akRight];
+  lArea.Anchors := [akLeft, akTop];
   lArea.BevelOuter := bvNone;
   fPhysicalPanel := TPanel.Create(Self);
   fPhysicalPanel.Parent := lArea;
   fPhysicalPanel.Align := alTop;
   fPhysicalPanel.Height := 125;
+  fPhysicalPanel.Constraints.MinHeight := 65;
   fPhysicalPanel.BevelOuter := bvNone;
   lLabel := TLabel.Create(Self);
   lLabel.Parent := fPhysicalPanel;
@@ -826,7 +877,7 @@ begin
   fPhysicalList.Parent := fPhysicalPanel;
   fPhysicalList.Align := alClient;
   fPhysicalList.ViewStyle := vsReport;
-  fPhysicalList.ScrollBars := ssAutoVertical;
+  fPhysicalList.ScrollBars := ssAutoBoth;
   fPhysicalList.RowSelect := True;
   fPhysicalList.ReadOnly := True;
   lColumn := fPhysicalList.Columns.Add; lColumn.Caption := 'Физический накопитель'; lColumn.Width := 230;
@@ -839,11 +890,13 @@ begin
   lSplitter.Align := alTop;
   lSplitter.Height := 10;
   lSplitter.MinSize := 65;
+  lSplitter.AutoSnap := False;
   lSplitter.ResizeControl := fPhysicalPanel;
   lSplitter.OnPaint := @PaintDiskSplitter;
   fPartitionPanel := TPanel.Create(Self);
   fPartitionPanel.Parent := lArea;
   fPartitionPanel.Align := alClient;
+  fPartitionPanel.Constraints.MinHeight := 120;
   fPartitionPanel.BevelOuter := bvNone;
   lLabel := TLabel.Create(Self);
   lLabel.Parent := fPartitionPanel;
@@ -854,27 +907,25 @@ begin
   fDiskDetails.Parent := fPartitionPanel;
   fDiskDetails.Align := alBottom;
   fDiskDetails.Height := 52;
+  fDiskDetails.Constraints.MinHeight := 40;
   fDiskDetails.ReadOnly := True;
   fDiskDetails.ScrollBars := ssAutoBoth;
-  fDetailsHandle := TPanel.Create(Self);
+  fDetailsHandle := TSplitter.Create(Self);
   fDetailsHandle.Parent := fPartitionPanel;
   fDetailsHandle.Align := alBottom;
   fDetailsHandle.Height := 12;
-  fDetailsHandle.BevelOuter := bvNone;
-  fDetailsHandle.ParentColor := False;
-  fDetailsHandle.Color := $00E0AD5B;
-  fDetailsHandle.Cursor := crVSplit;
-  fDetailsHandle.OnPaint := @PaintDiskHandle;
-  fDetailsHandle.OnMouseDown := @DiskHandleMouseDown;
-  fDetailsHandle.OnMouseMove := @DiskHandleMouseMove;
-  fDetailsHandle.OnMouseUp := @DiskHandleMouseUp;
+  fDetailsHandle.MinSize := 40;
+  fDetailsHandle.AutoSnap := False;
+  fDetailsHandle.ResizeControl := fDiskDetails;
+  fDetailsHandle.OnPaint := @PaintDiskSplitter;
   fDetailsHandle.Hint := 'Потяните, чтобы изменить высоту списка разделов и сведений';
   fDetailsHandle.ShowHint := True;
   fDiskList := TListView.Create(Self);
   fDiskList.Parent := fPartitionPanel;
   fDiskList.Align := alClient;
+  fDiskList.Constraints.MinHeight := 50;
   fDiskList.ViewStyle := vsReport;
-  fDiskList.ScrollBars := ssAutoVertical;
+  fDiskList.ScrollBars := ssAutoBoth;
   fDiskList.RowSelect := True;
   fDiskList.ReadOnly := True;
   lColumn := fDiskList.Columns.Add; lColumn.Caption := 'Устройство'; lColumn.Width := 310;
@@ -887,13 +938,14 @@ begin
   fDiskList.OnSelectItem := @DiskItemSelect;
   Inc(fNextY, 358);
   lLabel := TLabel.Create(Self);
+  fDiskFsLabel := lLabel;
   lLabel.Parent := fPage;
   lLabel.SetBounds(12, fNextY + 4, 200, 24);
   lLabel.Caption := 'ФС раздела';
   fDiskFsCombo := TComboBox.Create(Self);
   fDiskFsCombo.Parent := fPage;
   fDiskFsCombo.SetBounds(220, fNextY, fPage.ClientWidth - 232, 26);
-  fDiskFsCombo.Anchors := [akLeft, akTop, akRight];
+  fDiskFsCombo.Anchors := [akLeft, akTop];
   fDiskFsCombo.Style := csDropDownList;
   fDiskFsCombo.Items.Add('Авто (определить по разделу)');
   fDiskFsCombo.Items.Add('NTFS');
@@ -906,9 +958,32 @@ begin
   fDiskFsCombo.ShowHint := True;
   Inc(fNextY, 34);
   AddField('Подключить в', '');
+  fFields[0].Anchors := [akLeft, akTop];
   fFields[0].Hint := 'Например /Data или /home/user/Data. Не выбирайте /home целиком.';
   fFields[0].ShowHint := True;
   AddCheck('Подключить только для чтения', False);
+  fChecks[0].Anchors := [akLeft, akTop];
+end;
+
+procedure TSetupDialog.DiskPageResize(Sender: TObject);
+var
+  lWidth, lAreaHeight, lTop: Integer;
+begin
+  if (fDiskArea = nil) or (fDiskFsCombo = nil) or (Length(fFields) = 0) or
+    (Length(fChecks) = 0) then Exit;
+  lWidth := fPage.ClientWidth;
+  if lWidth < 300 then lWidth := 300;
+  lAreaHeight := fPage.ClientHeight - 171;
+  if lAreaHeight < 260 then lAreaHeight := 260;
+  fDiskArea.SetBounds(12, 52, lWidth - 24, lAreaHeight);
+  lTop := fDiskArea.Top + fDiskArea.Height + 8;
+  fDiskFsLabel.Top := lTop + 4;
+  fDiskFsCombo.SetBounds(220, lTop, lWidth - 232, fDiskFsCombo.Height);
+  Inc(lTop, 34);
+  fDiskMountLabel.Top := lTop + 4;
+  fFields[0].SetBounds(220, lTop, lWidth - 232, fFields[0].Height);
+  Inc(lTop, 34);
+  fChecks[0].SetBounds(14, lTop, lWidth - 28, fChecks[0].Height);
 end;
 
 procedure TSetupDialog.PaintDiskSplitter(Sender: TObject);
@@ -925,68 +1000,6 @@ begin
   lSplitter.Canvas.LineTo((lSplitter.Width + 36) div 2, lSplitter.Height div 2 + 1);
 end;
 
-procedure TSetupDialog.PaintDiskHandle(Sender: TObject);
-var
-  lHandle: TPanel;
-begin
-  lHandle := TPanel(Sender);
-  lHandle.Canvas.Brush.Color := $00E0AD5B;
-  lHandle.Canvas.FillRect(lHandle.ClientRect);
-  lHandle.Canvas.Pen.Color := $00FFFFFF;
-  lHandle.Canvas.MoveTo((lHandle.Width - 36) div 2, 4);
-  lHandle.Canvas.LineTo((lHandle.Width + 36) div 2, 4);
-  lHandle.Canvas.MoveTo((lHandle.Width - 36) div 2, 7);
-  lHandle.Canvas.LineTo((lHandle.Width + 36) div 2, 7);
-end;
-
-procedure TSetupDialog.DiskHandleMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if Button <> mbLeft then Exit;
-  fActiveDiskHandle := TPanel(Sender);
-  fDragStartY := Mouse.CursorPos.Y;
-  if fActiveDiskHandle = fDetailsHandle then
-    fDragStartHeight := fDiskDetails.Height
-  else
-    fDragStartHeight := fPage.Height;
-  SetCaptureControl(fActiveDiskHandle);
-end;
-
-procedure TSetupDialog.DiskHandleMouseMove(Sender: TObject;
-  Shift: TShiftState; X, Y: Integer);
-var
-  lHeight, lMaximum: Integer;
-begin
-  if (fActiveDiskHandle = nil) or (Sender <> fActiveDiskHandle) or
-    not (ssLeft in Shift) then Exit;
-  if fActiveDiskHandle = fDetailsHandle then
-  begin
-    lHeight := fDragStartHeight - (Mouse.CursorPos.Y - fDragStartY);
-    lMaximum := fPartitionPanel.ClientHeight - fDetailsHandle.Height - 95;
-    if lMaximum < 40 then lMaximum := 40;
-    if lHeight < 40 then lHeight := 40;
-    if lHeight > lMaximum then lHeight := lMaximum;
-    fDiskDetails.Height := lHeight;
-  end
-  else
-  begin
-    lHeight := fDragStartHeight + Mouse.CursorPos.Y - fDragStartY;
-    lMaximum := ClientHeight - fButtons.Height - fOutputHandle.Height - 80;
-    if lMaximum < 300 then lMaximum := 300;
-    if lHeight < 300 then lHeight := 300;
-    if lHeight > lMaximum then lHeight := lMaximum;
-    fPage.Height := lHeight;
-  end;
-end;
-
-procedure TSetupDialog.DiskHandleMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if (Button <> mbLeft) or (fActiveDiskHandle = nil) then Exit;
-  SetCaptureControl(TControl(nil));
-  fActiveDiskHandle := nil;
-end;
-
 procedure TSetupDialog.DiskFormShow(Sender: TObject);
 {$IFDEF LCLGTK2}
 var
@@ -998,6 +1011,11 @@ var
   lListIndex: Integer;
 {$ENDIF}
 begin
+  if fKind = skTime then
+  begin
+    RefreshTimeConfiguration;
+    Exit;
+  end;
   if (fKind <> skDisk) or (fDiskList = nil) then Exit;
   {$IFDEF LCLGTK2}
   for lListIndex := 0 to 1 do
@@ -1692,7 +1710,11 @@ begin
           'Подсеть клиентов: ' + FieldValue(2);
         Exit;
       end;
-      if AAction = 'show' then lArgs.Add('show')
+      if AAction = 'show' then
+      begin
+        RefreshTimeConfiguration;
+        lArgs.Add('show');
+      end
       else
       begin
         lArgs.Add('set-timezone'); lArgs.Add(FieldValue(0));

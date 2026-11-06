@@ -30,6 +30,7 @@ type
     fBindingError: string;
     fLastSlowCycleLogMs: QWord;
     function OpcDevice: TRecorderOpcUaDevice;
+    function RecorderTimeFromOpcTimestamp(AUtcSeconds: Double): Double;
     function BindServerNodes: Boolean;
     function FlushClientWrites: Boolean;
     procedure LogSlowCycle(AWriteMs, AReadMs: QWord);
@@ -50,7 +51,7 @@ type
 implementation
 
 uses
-  Math, uRecorderDebugLog, uRecorderHardwareLiveDevices;
+  Math, DateUtils, uRecorderDebugLog, uRecorderHardwareLiveDevices;
 
 const
   CRecorderOpcUaReconnectDelayMs = 5000;
@@ -76,11 +77,27 @@ begin
   Result := TRecorderOpcUaDevice(fDevice.GetNativeObject);
 end;
 
+function TRecorderOpcUaDataSource.RecorderTimeFromOpcTimestamp(
+  AUtcSeconds: Double): Double;
+var
+  lSessionStartUtc: TDateTime;
+  lSessionStartUnix: Double;
+begin
+  Result := 0;
+  if (AUtcSeconds <= 0) or (Registry.TimeSystem = nil) then Exit;
+  lSessionStartUtc := Registry.TimeSystem.ChannelTimeToUtc(0);
+  lSessionStartUnix := (lSessionStartUtc - EncodeDate(1970, 1, 1)) *
+    SecsPerDay;
+  Result := AUtcSeconds - lSessionStartUnix;
+end;
+
 procedure TRecorderOpcUaDataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
 var
   I: Integer;
+  lEstimateSettings: TRecorderTagEstimateSettings;
   lName: string;
   lNode: TRecorderOpcUaNode;
+  lRequestedIntervalMs: Cardinal;
 begin
   fBindingError := '';
   SetLength(fNodeTags, OpcDevice.NodeCount);
@@ -115,8 +132,24 @@ begin
     fNodeTags[I].Address := lNode.NodeId;
     fNodeTags[I].ModuleType := CRecorderOpcUaModuleType;
     fNodeTags[I].ExternalWriteAllowed := lNode.Writable;
+    { PollFrequencyHz is used by Recorder as sampling metadata. For OPC UA it
+      must be an upper bound on the configured cadence, not just the server's
+      publishing interval: the source worker also has its own update period. }
+    lRequestedIntervalMs := Max(10, OpcDevice.Config.PublishingIntervalMs);
     fNodeTags[I].PollFrequencyHz := 1000.0 /
-      Max(10, OpcDevice.Config.PublishingIntervalMs);
+      Max(UpdateTimeMs, lRequestedIntervalMs);
+    { Boolean states are discrete. Averaging successive False/True samples
+      turns a valid state into 0.5, so use the latest sample as the default
+      estimate for OPC UA Boolean variables. }
+    if SameText(Trim(lNode.DataTypeNodeId), 'i=1') then
+    begin
+      lEstimateSettings := fNodeTags[I].EstimateSettings;
+      lEstimateSettings.DefaultKind := tekLastValue;
+      lEstimateSettings.EnabledKinds[tekLastValue] := True;
+      lEstimateSettings.EnabledKinds[tekMean] := False;
+      lEstimateSettings.PortionLength := 1;
+      fNodeTags[I].EstimateSettings := lEstimateSettings;
+    end;
     fWriteCursors[I] := fNodeTags[I].ExternalWriteCursor;
   end;
 end;
@@ -384,13 +417,15 @@ begin
     if fNodeMessages[I] <> nil then
     begin
       if OpcDevice.ReadMessageChanged(I, lText, lTime, lQuality) then
+      begin
+        if lTime <= 0 then lTime := DateTimeToUnix(Now, False);
         fMessageRegistry.Publish(fNodeMessages[I], lText, lTime, lQuality);
+      end;
     end
     else if (fNodeTags[I] <> nil) and
       OpcDevice.ReadChanged(I, lValue, lTime, lQuality) then
-      { OPC UA SourceTimestamp is absolute Unix time. Recorder tags use the
-        project elapsed-time scale, which the registry supplies here. }
-      Registry.PublishValue(fNodeTags[I], lValue);
+      Registry.PublishValue(fNodeTags[I],
+        RecorderTimeFromOpcTimestamp(lTime), lValue);
 end;
 
 procedure TRecorderOpcUaDataSource.Stop;

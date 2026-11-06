@@ -1,13 +1,13 @@
 object RecorderDacComponentView: TRecorderDacComponentView
-  Height = 330
+  Height = 560
   Width = 458
-  ClientHeight = 330
+  ClientHeight = 560
   ClientWidth = 458
-  Constraints.MinHeight = 330
+  Constraints.MinHeight = 320
   TabOrder = 0
   object pnlTop: TPanel
     Align = alTop
-    Height = 49
+    Height = 129
     BevelOuter = bvNone
     TabOrder = 0
     object btnPlay: TPanel
@@ -49,10 +49,61 @@ object RecorderDacComponentView: TRecorderDacComponentView
       OnClick = SaveClick
       TabOrder = 3
     end
+    object btnCalibrate: TButton
+      Left = 12
+      Top = 46
+      Width = 168
+      Height = 29
+      Caption = 'Калибровка фазы'
+      OnClick = CalibrateClick
+      TabOrder = 4
+    end
+    object lblOutputStatus: TLabel
+      Left = 12
+      Top = 90
+      Width = 434
+      Height = 35
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = False
+      WordWrap = True
+      ShowHint = True
+    end
+    object lblCalibrationClock: TLabel
+      Left = 188
+      Top = 43
+      Width = 258
+      Height = 18
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = False
+      WordWrap = False
+      Caption = 'Fs: —'
+      ShowHint = True
+    end
+    object lblRateFactor: TLabel
+      Left = 188
+      Top = 65
+      Caption = 'k:'
+    end
+    object edRateFactor: TFloatSpinEdit
+      Left = 208
+      Top = 61
+      Width = 162
+      Height = 25
+      DecimalPlaces = 9
+      Increment = 0.000001
+      MinValue = 0.99
+      MaxValue = 1.01
+      Value = 1
+      Enabled = False
+      Hint = 'k = Fs_eff / Fs_nominal. Ручная поправка; новая калибровка заменяет её.'
+      ShowHint = True
+      OnChange = RateFactorChange
+      TabOrder = 5
+    end
   end
   object pcPrograms: TPageControl
     Left = 8
-    Top = 53
+    Top = 133
     Width = 442
     Height = 48
     ActivePage = tsSin
@@ -74,13 +125,16 @@ object RecorderDacComponentView: TRecorderDacComponentView
     object tsPulse: TTabSheet
       Caption = 'Pulse'
     end
+    object tsConstant: TTabSheet
+      Caption = 'Постоянный уровень'
+    end
   end
   object gbSignal: TGroupBox
     Left = 8
-    Top = 105
+    Top = 185
     Width = 442
     Height = 218
-    Anchors = [akTop, akLeft, akRight, akBottom]
+    Anchors = [akTop, akLeft, akRight]
     Caption = 'Signal Parameters'
     TabOrder = 2
     object lblPulseInterval: TLabel
@@ -273,6 +327,56 @@ object RecorderDacComponentView: TRecorderDacComponentView
       WordWrap = True
       Caption = 'Остановлен'
       Visible = False
+    end
+  end
+  object gbCalibration: TGroupBox
+    Left = 8
+    Top = 408
+    Width = 442
+    Height = 144
+    Anchors = [akTop, akLeft, akRight]
+    Caption = 'Привязка времени по обратной связи'
+    TabOrder = 3
+    object edFeedbackTag: TEdit
+      Left = 12
+      Top = 23
+      Width = 250
+      Height = 25
+      Anchors = [akTop, akLeft, akRight]
+      ReadOnly = True
+      TextHint = 'Измерительный вход PXI'
+      TabOrder = 0
+    end
+    object btnFeedbackTag: TButton
+      Left = 270
+      Top = 23
+      Width = 156
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = 'Обратная связь...'
+      OnClick = SelectFeedbackTag
+      TabOrder = 1
+    end
+    object cbFeedbackSync: TCheckBox
+      Left = 12
+      Top = 52
+      Width = 250
+      Height = 23
+      Caption = 'Привязать время и частоту зеркала'
+      Hint = 'Калибровать время и частоту зеркала по обратной связи'
+      ShowHint = True
+      OnClick = FeedbackSyncClick
+      TabOrder = 2
+    end
+    object lblCalibration: TLabel
+      Left = 12
+      Top = 82
+      Width = 414
+      Height = 58
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = False
+      WordWrap = True
+      Caption = 'Выберите вход обратной связи.'
     end
   end
 end

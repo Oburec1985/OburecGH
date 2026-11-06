@@ -14,10 +14,11 @@ function RecorderDebugLogFileName: string;
 implementation
 
 uses
-  SysUtils, uSharedFileLogger, uRecorderMeraPaths;
+  SysUtils, IniFiles, uSharedFileLogger, uRecorderMeraPaths;
 
 var
   gDeviceLogEnabled: Boolean = True;
+  gDeviceLogSettingsLoaded: Boolean = False;
   gLogFile: string = '';
 
 procedure RecorderDebugLog(const AMessage: string);
@@ -35,13 +36,41 @@ begin
   uSharedFileLogger.RegisterThreadName(AThreadID, AName);
 end;
 
-procedure SetDeviceLogEnabled(AEnabled: Boolean);
+procedure LoadDeviceLogSettings;
+var
+  lIni: TIniFile;
 begin
+  if gDeviceLogSettingsLoaded then Exit;
+  lIni := TIniFile.Create(RecorderAppConfigFileName);
+  try
+    gDeviceLogEnabled := lIni.ReadBool('Diagnostics', 'DeviceLogEnabled', True);
+    gDeviceLogSettingsLoaded := True;
+  finally
+    lIni.Free;
+  end;
+end;
+
+procedure SetDeviceLogEnabled(AEnabled: Boolean);
+var
+  lIni: TIniFile;
+begin
+  LoadDeviceLogSettings;
+  if AEnabled = gDeviceLogEnabled then Exit;
+  if not ForceDirectories(RecorderAppConfigDir) then
+    raise Exception.Create('Cannot create application configuration directory');
+  lIni := TIniFile.Create(RecorderAppConfigFileName);
+  try
+    lIni.WriteBool('Diagnostics', 'DeviceLogEnabled', AEnabled);
+    lIni.UpdateFile;
+  finally
+    lIni.Free;
+  end;
   gDeviceLogEnabled := AEnabled;
 end;
 
 function DeviceLogEnabled: Boolean;
 begin
+  LoadDeviceLogSettings;
   Result := gDeviceLogEnabled;
 end;
 

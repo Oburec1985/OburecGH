@@ -545,13 +545,60 @@ end;
 
 function ExecuteTimeSetup(AArgs: TStrings; out AOutput: string): Integer;
 var lAction, lSub, lServers, lFallback, lText, lError, lConfig: string;
+  lLines: TStringList;
+  lLine: string;
 begin
   Result := 2; AOutput := '';
   if AArgs.Count = 0 then begin AOutput := 'Нужна команда времени.'; Exit; end;
   lAction := AArgs[0];
+  if lAction = 'configuration' then
+  begin
+    Result := RunCommand('timedatectl', ['show', '-p', 'Timezone', '--value'], lText);
+    if Result <> 0 then begin AOutput := lText; Exit; end;
+    AOutput := 'Timezone=' + Trim(lText) + LineEnding;
+    if RunCommand('systemctl', ['is-active', '--quiet',
+      'recorderlnx-ntp-server.service'], lText) = 0 then
+      AOutput := AOutput + 'Mode=server' + LineEnding
+    else if RunCommand('systemctl', ['is-active', '--quiet',
+      'systemd-timesyncd.service'], lText) = 0 then
+      AOutput := AOutput + 'Mode=client' + LineEnding
+    else AOutput := AOutput + 'Mode=inactive' + LineEnding;
+    lLines := TStringList.Create;
+    try
+      if FileExists(CTimeServers) then
+      begin
+        lLines.LoadFromFile(CTimeServers);
+        for lLine in lLines do
+          if (Pos('NTP=', Trim(lLine)) = 1) and (Trim(Copy(Trim(lLine), 5, MaxInt)) <> '') then
+            lServers := Trim(Copy(Trim(lLine), 5, MaxInt));
+        AOutput := AOutput + 'Host=' + lServers + LineEnding;
+      end;
+      if FileExists(CPrivateChronyConfig) then
+        lLines.LoadFromFile(CPrivateChronyConfig)
+      else if FileExists(CChronySetup) then lLines.LoadFromFile(CChronySetup)
+      else lLines.Clear;
+      for lLine in lLines do
+        if Pos('allow ', Trim(lLine)) = 1 then
+          AOutput := AOutput + 'Subnet=' + Trim(Copy(Trim(lLine), 7, MaxInt)) + LineEnding;
+      Result := 0;
+    finally
+      lLines.Free;
+    end;
+    Exit;
+  end;
   if lAction = 'show' then
   begin
     Result := RunCommand('timedatectl', ['status'], AOutput);
+    RunCommand('systemctl', ['is-active', 'systemd-timesyncd.service'], lText);
+    AOutput := AOutput + LineEnding + 'NTP-клиент systemd-timesyncd: ' + Trim(lText);
+    RunCommand('systemctl', ['is-active', 'recorderlnx-ntp-server.service'], lText);
+    AOutput := AOutput + LineEnding + 'NTP-сервер LinuxSetupManager: ' + Trim(lText);
+    if RunCommand('systemctl', ['is-active', '--quiet',
+      'recorderlnx-ntp-server.service'], lText) = 0 then
+      AOutput := AOutput + LineEnding +
+        'NTP-сервер LinuxSetupManager: активен; раздаёт локальное время этого ПК.' + LineEnding +
+        'Это не синхронизация с внешним сервером. Для неё выберите режим клиента.' + LineEnding +
+        'Строка NTP service в timedatectl не учитывает эту отдельную службу.';
     if RunCommand('systemctl', ['is-active', '--quiet', 'chrony.service'], lText) = 0 then
     begin
       if RunCommand('chronyc', ['tracking'], lText) = 0 then
@@ -600,11 +647,24 @@ begin
         'NTP=' + AArgs[1] + LineEnding + 'FallbackNTP=' + LineEnding;
       if not SaveFile(CTimeServers, lText, 420, lError) then
       begin AOutput := lError; Exit; end;
+      { Switching this PC to the client role must also stop its former
+        private NTP server rather than leave both roles enabled. }
+      if FileExists(CPrivateChrony) then
+      begin
+        Result := RunCommand('systemctl', ['disable', '--now',
+          'recorderlnx-ntp-server.service'], AOutput);
+        if Result <> 0 then Exit;
+      end;
       Result := RunCommand('systemctl',
-        ['restart', 'systemd-timesyncd.service'], AOutput);
+        ['enable', '--now', 'systemd-timesyncd.service'], AOutput);
+      if Result = 0 then
+        Result := RunCommand('systemctl',
+          ['restart', 'systemd-timesyncd.service'], AOutput);
       if Result = 0 then
         Result := RunCommand('timedatectl', ['set-ntp', 'true'], AOutput);
-      if Result = 0 then AOutput := 'NTP-клиент настроен: ' + AArgs[1];
+      if Result = 0 then AOutput := 'NTP-клиент настроен: ' + AArgs[1] + LineEnding +
+        'Служба запущена. Синхронизация подтвердится после ответа сервера; ' +
+        'проверьте состояние кнопкой «Показать».';
       Exit;
     end;
     if (lAction = 'ntp-server') and FileExists(CPrivateChrony) then

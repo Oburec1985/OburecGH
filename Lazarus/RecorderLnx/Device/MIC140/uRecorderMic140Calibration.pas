@@ -25,12 +25,17 @@ function RecorderMic140SaveCalibrationToCsv(const AFileName: string;
   ACalibration: TRecorderCalibration): Boolean;
 function RecorderMic140MakeHardwareCalibrationName(ADeviceSerial, ARangeIndex,
   AChannelNumber: Integer): string;
+{ Read-only check for a registered calibration or its CSV for this exact input. }
+function RecorderMic140HasHardwareCalibration(ARegistry: TRecorderTagRegistry;
+  ADeviceSerial, ARangeIndex, AChannelNumber: Integer): Boolean;
 function RecorderMic140UpsertHardwareCalibration(ARegistry: TRecorderTagRegistry;
   const AName: string; ASource: TRecorderCalibration): TRecorderCalibration;
 function RecorderMic140MakeTInHardwareCalibrationName(ADeviceSerial,
   ATInFileNumber: Integer): string;
 function RecorderMic140TInHardwareCalibrCsvPath(ADeviceSerial, ATInListIndex,
   ADevSubRev: Integer): string;
+function RecorderMic140HasTInHardwareCalibration(ARegistry: TRecorderTagRegistry;
+  ADeviceSerial, ATInListIndex, ADevSubRev: Integer): Boolean;
 function RecorderMic140EnsureTInHardwareCalibration(
   ARegistry: TRecorderTagRegistry; ADeviceSerial, ATInListIndex,
   ADevSubRev: Integer; out ACalibrationName: string): Boolean;
@@ -375,6 +380,17 @@ begin
     [ADeviceSerial, RecorderMic140RangeCalibrDirName(ARangeIndex), AChannelNumber]);
 end;
 
+function RecorderMic140HasHardwareCalibration(ARegistry: TRecorderTagRegistry;
+  ADeviceSerial, ARangeIndex, AChannelNumber: Integer): Boolean;
+begin
+  if (ADeviceSerial <= 0) or (AChannelNumber <= 0) then Exit(False);
+  if (ARegistry <> nil) and (ARegistry.FindCalibrationByName(
+    RecorderMic140MakeHardwareCalibrationName(ADeviceSerial, ARangeIndex,
+      AChannelNumber)) <> nil) then Exit(True);
+  Result := FileExistsUTF8(RecorderMic140HardwareCalibrCsvPath(ADeviceSerial,
+    ARangeIndex, AChannelNumber));
+end;
+
 function RecorderMic140UpsertHardwareCalibration(ARegistry: TRecorderTagRegistry;
   const AName: string; ASource: TRecorderCalibration): TRecorderCalibration;
 var
@@ -419,6 +435,21 @@ begin
     PathDelim + CMic140TInCalibrSubDirName + PathDelim +
     Format('%2.2d.csv', [lTInFileNumber]);
 end;
+function RecorderMic140HasTInHardwareCalibration(ARegistry: TRecorderTagRegistry;
+  ADeviceSerial, ATInListIndex, ADevSubRev: Integer): Boolean;
+var
+  lFileNumber: Integer;
+begin
+  if (ADeviceSerial <= 0) or (ATInListIndex < 0) then Exit(False);
+  lFileNumber := Mic140TInCalibrFileNumber(ATInListIndex, ADevSubRev);
+  if lFileNumber <= 0 then Exit(False);
+  if (ARegistry <> nil) and (ARegistry.FindCalibrationByName(
+    RecorderMic140MakeTInHardwareCalibrationName(ADeviceSerial,
+      lFileNumber)) <> nil) then Exit(True);
+  Result := FileExistsUTF8(RecorderMic140TInHardwareCalibrCsvPath(
+    ADeviceSerial, ATInListIndex, ADevSubRev));
+end;
+
 function RecorderMic140EnsureTInHardwareCalibration(
   ARegistry: TRecorderTagRegistry; ADeviceSerial, ATInListIndex,
   ADevSubRev: Integer; out ACalibrationName: string): Boolean;

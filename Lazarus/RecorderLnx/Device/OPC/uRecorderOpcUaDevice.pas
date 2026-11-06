@@ -124,11 +124,13 @@ begin
       fHandle := RecorderOpcUaClientCreate(fConfig.Endpoint, fConfig.UserName,
         GetEnvironmentVariable(fConfig.PasswordEnvironment),
         fConfig.PublishingIntervalMs, fConfig.SessionTimeoutMs,
-        fConfig.RequestTimeoutMs, Ord(fConfig.TimestampMode))
+        fConfig.RequestTimeoutMs, Ord(fConfig.TimestampMode),
+        fConfig.BrowseTimeoutMs)
     else
       fHandle := RecorderOpcUaClientCreate(fConfig.Endpoint, '', '',
         fConfig.PublishingIntervalMs, fConfig.SessionTimeoutMs,
-        fConfig.RequestTimeoutMs, Ord(fConfig.TimestampMode));
+        fConfig.RequestTimeoutMs, Ord(fConfig.TimestampMode),
+        fConfig.BrowseTimeoutMs);
   if fHandle = nil then
   begin
     Fail('connect', 'cannot create OPC UA session');
@@ -169,7 +171,7 @@ begin
     else
       fNodeIndexes[I] := RecorderOpcUaClientAddNode(fHandle,
         Node(I).NodeId, Node(I).Readable, Node(I).Writable,
-        Node(I).DataTypeNodeId);
+        Node(I).DataTypeNodeId, RecorderOpcUaNodeIsMessage(Node(I)));
     if (fConfig.Mode = oumClient) and (fNodeIndexes[I] < 0) then
     begin
       Fail('configure', RecorderOpcUaLastError(fHandle));
@@ -192,7 +194,12 @@ begin
   if fConfig.Mode = oumServer then
     lOk := RecorderOpcUaServerStart(fHandle)
   else
+  begin
     lOk := RecorderOpcUaClientConnect(fHandle);
+    if lOk and (fConfig.PollingType = ouptSubscription) then
+      lOk := RecorderOpcUaClientStartSubscription(fHandle,
+        fConfig.PublishingIntervalMs);
+  end;
   if not lOk then
   begin
     Fail('start', RecorderOpcUaLastError(fHandle));

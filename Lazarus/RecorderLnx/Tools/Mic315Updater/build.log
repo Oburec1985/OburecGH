@@ -1,0 +1,40 @@
+Hint: (lazbuild) Primary config path: "C:\Users\User\AppData\Local\lazarus"
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) [TBuildManager.SetBuildTarget] Old=x86_64-win64--win32 New=x86_64-win64--win32 Changed: OS/CPU=True LCL=False
+Hint: (lazarus) Project needs building: SrcFile outdated Project
+Info: (lazarus) Execute Title="Компиляция проекта, цель: D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\lib\x86_64-win64\Mic315Updater.exe"
+Info: (lazarus) Working Directory="D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\"
+Info: (lazarus) Executable="C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe"
+Info: (lazarus) Param[0]="-Twin64"
+Info: (lazarus) Param[1]="-Px86_64"
+Info: (lazarus) Param[2]="-MObjFPC"
+Info: (lazarus) Param[3]="-Scghi"
+Info: (lazarus) Param[4]="-O1"
+Info: (lazarus) Param[5]="-gw3"
+Info: (lazarus) Param[6]="-gl"
+Info: (lazarus) Param[7]="-l"
+Info: (lazarus) Param[8]="-vewnhibq"
+Info: (lazarus) Param[9]="-FuD:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\"
+Info: (lazarus) Param[10]="-FED:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\lib\x86_64-win64\"
+Info: (lazarus) Param[11]="-oD:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\lib\x86_64-win64\Mic315Updater.exe"
+Info: (lazarus) Param[12]="Mic315Updater.lpr"
+Info: (lazarus) Param[13]="-B"
+Hint: (11030) Start of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Hint: (11031) End of reading config file C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.cfg
+Free Pascal Compiler version 3.2.2 [2025/07/19] for x86_64
+Copyright (c) 1993-2021 by Florian Klaempfl and others
+(1002) Target OS: Win64 for x64
+(3104) Compiling Mic315Updater.lpr
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\Mic315Updater.lpr(135,25) Hint: (5057) Local variable "lMz" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\Mic315Updater.lpr(138,31) Hint: (5057) Local variable "lPeOffset" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\Mic315Updater.lpr(142,25) Hint: (5057) Local variable "lPe" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\Mic315Updater.lpr(163,39) Hint: (5057) Local variable "lLeftData" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\Mic315Updater.lpr(164,46) Hint: (5057) Local variable "lRightData" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\Mic315Updater.lpr(209,20) Hint: (5057) Local variable "lEntry" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\Mic315Updater.lpr(260,20) Hint: (5057) Local variable "lStartup" does not seem to be initialized
+D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\Mic315Updater.lpr(262,20) Hint: (5057) Local variable "lProcess" does not seem to be initialized
+(9022) Compiling resource D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\lib\x86_64-win64\Mic315Updater.obj
+(9015) Linking D:\works\OburecGH\Lazarus\RecorderLnx\Tools\Mic315Updater\lib\x86_64-win64\Mic315Updater.exe
+(1008) 394 lines compiled, 0.2 sec, 286768 bytes code, 13636 bytes data
+(1022) 10 hint(s) issued
+Info: (lazarus) [TCompiler.Compile] end

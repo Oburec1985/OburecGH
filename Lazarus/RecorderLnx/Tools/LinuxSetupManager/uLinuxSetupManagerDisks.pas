@@ -409,11 +409,27 @@ begin
   if lPos > 0 then Result := Copy(Result, 1, lPos - 1);
 end;
 
+function LinesContainExact(const ALines, AValue: string): Boolean;
+var lLines: TStringList; lIndex: Integer;
+begin
+  Result := False;
+  lLines := TStringList.Create;
+  try
+    lLines.Text := ALines;
+    for lIndex := 0 to lLines.Count - 1 do
+      if Trim(lLines[lIndex]) = AValue then Exit(True);
+  finally
+    lLines.Free;
+  end;
+end;
+
 function CheckExistingDevice(const ADevice: string;
   out AUUID, AFstype, AParent, AError: string;
   AAllowMounted: Boolean): Boolean;
 var
-  lValue, lRoot, lTypes, lMounts, lSwap: string;
+  lValue, lRoot, lTypes, lMounts, lSwap, lDeviceId, lCanonical, lSwapPath: string;
+  lSwapLines: TStringList;
+  lIndex: Integer;
 begin
   Result := False;
   AError := '';
@@ -427,18 +443,37 @@ begin
   AParent := '/dev/' + Trim(lValue);
   if not ValidDevice(AParent) or (AParent = '/dev/') then
   begin AError := 'Не удалось определить физический диск.'; Exit; end;
-  if not RunWith('lsblk', ['-nrpo', 'MOUNTPOINTS', AParent], lMounts) then Exit;
+  // Other partitions on the same physical disk can be in active use.  Only
+  // the selected partition must be unmounted for a read-only inspection.
+  if not RunWith('lsblk', ['-nrpo', 'MOUNTPOINTS', ADevice], lMounts) then Exit;
   if (not AAllowMounted) and (Trim(lMounts) <> '') then
-  begin AError := 'На физическом диске есть смонтированные разделы.'; Exit; end;
+  begin AError := 'Выбранный раздел уже смонтирован.'; Exit; end;
   if not RunWith('findmnt', ['-n', '-o', 'SOURCE', '--target', '/'], lRoot) or
     not ValidDevice(FirstLine(lRoot)) then
   begin AError := 'Не удалось доказать, где находится корневая ФС.'; Exit; end;
-  if not RunWith('lsblk', ['-s', '-nrpo', 'PATH', FirstLine(lRoot)], lValue) then Exit;
-  if Pos(AParent + LineEnding, lValue + LineEnding) > 0 then
-  begin AError := 'Физический диск содержит корневую ФС.'; Exit; end;
-  if RunWith('swapon', ['--noheadings', '--raw', '--output', 'NAME'], lSwap) and
-    (Pos(ADevice + LineEnding, lSwap + LineEnding) > 0) then
-  begin AError := 'Раздел используется как swap.'; Exit; end;
+  if not RunWith('lsblk', ['-dnro', 'MAJ:MIN', ADevice], lDeviceId) or
+    (FirstLine(lDeviceId) = '') then
+  begin AError := 'Не удалось определить идентификатор раздела.'; Exit; end;
+  if not RunWith('lsblk', ['-s', '-nrpo', 'MAJ:MIN', FirstLine(lRoot)], lValue) then Exit;
+  // An independent data partition may share a disk with the root filesystem.
+  // Reject the selected partition only when it is actually in root ancestry.
+  if LinesContainExact(lValue, FirstLine(lDeviceId)) then
+  begin AError := 'Выбранный раздел используется корневой ФС.'; Exit; end;
+  if not RunWith('readlink', ['-f', ADevice], lCanonical) then
+  begin AError := 'Не удалось определить устройство раздела.'; Exit; end;
+  if not RunWith('swapon', ['--show=NAME', '--noheadings', '--raw'], lSwap) then
+  begin AError := 'Не удалось проверить используемые swap-устройства.'; Exit; end;
+  lSwapLines := TStringList.Create;
+  try
+    lSwapLines.Text := lSwap;
+    for lIndex := 0 to lSwapLines.Count - 1 do
+      if (Trim(lSwapLines[lIndex]) <> '') and
+        RunWith('readlink', ['-f', Trim(lSwapLines[lIndex])], lSwapPath) and
+        (FirstLine(lSwapPath) = FirstLine(lCanonical)) then
+      begin AError := 'Раздел используется как swap.'; Exit; end;
+  finally
+    lSwapLines.Free;
+  end;
   if not RunWith('blkid', ['-s', 'UUID', '-o', 'value', ADevice], lValue) then Exit;
   AUUID := FirstLine(lValue);
   if not RunWith('blkid', ['-s', 'TYPE', '-o', 'value', ADevice], lValue) then Exit;
@@ -681,7 +716,7 @@ begin
   lReadOnly := OptionValue(AArgs, '--read-only');
   if not SafeMountDestination(lPoint, lError) or
     not ((lReadOnly = 'yes') or (lReadOnly = 'no')) then
-  begin AOutput := lError + ' Укажите --read-only yes|no.'; Exit; end;
+  begin AOutput := lError + UTF8String(' Укажите --read-only yes|no.'); Exit; end;
   if (OptionValue(AArgs, '--confirm-device') <> ADevice) or
     (OptionValue(AArgs, '--confirm-uuid') <> lUuid) then
   begin AOutput := 'Нужно подтвердить точные DEVICE и UUID.'; Exit; end;
@@ -710,6 +745,30 @@ begin
     (not lManaged or (lCurrentMount <> lOldPoint)) then
   begin AOutput := 'Раздел уже подключён вне управляемой точки: ' + lCurrentMount; Exit; end;
   lWasMounted := lManaged and (lCurrentMount = lOldPoint);
+  // ntfs-3g refuses writable access to a hibernated Windows volume.  Detect
+  // this before editing fstab or unmounting anything; never remove hiberfil.
+  if (not lWasMounted) and SameText(lType, 'ntfs') and (lReadOnly = 'no') then
+  begin
+    if not RunWith('which', ['ntfs-3g.probe'], lCheck) then
+    begin
+      AOutput := UTF8String('Не найдена ntfs-3g.probe для проверки состояния NTFS. ') +
+        UTF8String('Установите пакет ntfs-3g и повторите подключение.');
+      Exit;
+    end;
+    if not RunWith('ntfs-3g.probe', ['--readwrite', ADevice], lCheck) then
+    begin
+      // FPC may expose the raw Unix wait status (14 shl 8) as ExitStatus.
+      if (Trim(FirstLine(lCheck)) = 'Код 3584') or
+         (Trim(FirstLine(lCheck)) = 'Код 14') then
+        AOutput := UTF8String('Раздел NTFS находится в состоянии гибернации Windows. ') +
+          UTF8String('Полностью завершите работу Windows (отключите быстрый запуск), затем ') +
+          UTF8String('повторите подключение для записи. Для просмотра можно выбрать ') +
+          UTF8String('«Подключить только для чтения». Данные и fstab не изменены.')
+      else
+        AOutput := UTF8String('Проверка NTFS перед подключением для записи не пройдена: ') + lCheck;
+      Exit;
+    end;
+  end;
   if not MountLayersBelongToDevice(lPoint, ADevice,
     lManaged and (lOldPoint = lPoint), lExistingTarget) then
   begin

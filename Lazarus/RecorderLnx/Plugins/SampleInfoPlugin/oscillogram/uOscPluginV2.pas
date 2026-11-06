@@ -6,24 +6,25 @@ unit uOscPluginV2;
   RecorderLnx domain classes/objects and host-side Oscillogram logic are banned. }
 interface
 uses uRecorderVisualComponentApiV2;
+{ Возвращает описание компонента и адреса функций для ABI. }
 function RecorderVisualGetDescriptorV2(AIndex: LongWord;
   ADescriptor: PRecorderVisualComponentDescriptorV2;
   ADescriptorCapacity: SizeUInt): LongInt; cdecl;
 implementation
 uses Classes, SysUtils, Math, Forms, Controls, uOscModel, uOscTags, uOscUnits,
-  uOscDataAdapter, uOscSettings, uOscNativeForm, uOscLegacyImport;
+  uOscDataAdapter, uOscSettings, uOscNativeForm, uOscLegacyImport, uRecBasicIFrm;
 
+{ Проверяет размер и версию входной структуры ABI. }
 function ValidPayload(AData: Pointer; ASize, ARequired: SizeUInt): Boolean;
 var lHeader: PRecorderVisualAbiHeaderV2;
 begin
   Result := False;
   if (AData = nil) or (ASize < ARequired) then Exit;
   lHeader := PRecorderVisualAbiHeaderV2(AData);
-  Result := (lHeader^.AbiMajor = REC_VISUAL_ABI_V2_MAJOR) and
-    (lHeader^.Size >= ARequired) and (lHeader^.Size <= ASize);
+  Result := (lHeader^.AbiMajor = REC_VISUAL_ABI_V2_MAJOR) and  (lHeader^.Size >= ARequired) and (lHeader^.Size <= ASize);
 end;
 type
-  TOscInstance = class
+  TOscInstance = class(cRecBasicIFrm)
   private
     fServices: PRecorderVisualHostServicesV2;
     fModel: TOscModel;
@@ -36,11 +37,15 @@ type
     procedure RefreshViews;
     function ViewMessage(AKind: LongWord;
       const ASurface: TRecorderVisualSurfaceV2): LongInt;
+  protected
+    function SaveSettings(out AData: UTF8String): LongInt; override;
+    function LoadSettings(const AData: UTF8String): LongInt; override;
   public
     constructor Create(AServices: PRecorderVisualHostServicesV2);
     destructor Destroy; override;
   end;
 
+{ Создаёт модель, представления и каталоги тегов и единиц. }
 constructor TOscInstance.Create(AServices: PRecorderVisualHostServicesV2);
 begin
   inherited Create;
@@ -56,6 +61,34 @@ begin
   fTags.RefreshInfo;
 end;
 
+{ Сохраняет настройки компонента в формате UTF-8 JSON. }
+function TOscInstance.SaveSettings(out AData: UTF8String): LongInt;
+begin
+  AData := fModel.SaveUtf8;
+  Result := REC_VISUAL_OK;
+end;
+
+{ Загружает настройки и восстанавливает модель при ошибке настройки views. }
+function TOscInstance.LoadSettings(const AData: UTF8String): LongInt;
+var lError: string; lBefore: TOscModel;
+begin
+  lBefore := fModel.Clone;
+  try
+    if not fModel.LoadUtf8(AData, lError) then Exit(REC_VISUAL_ERROR);
+    try
+      ConfigureViews;
+      Result := REC_VISUAL_OK;
+    except
+      fModel.Assign(lBefore);
+      ConfigureViews;
+      Result := REC_VISUAL_ERROR;
+    end;
+  finally
+    lBefore.Free;
+  end;
+end;
+
+{ Удаляет представления и принадлежащие экземпляру каталоги и модель. }
 destructor TOscInstance.Destroy;
 begin
   if fViews <> nil then
@@ -71,6 +104,7 @@ begin
   inherited Destroy;
 end;
 
+{ Ищет представление по идентификатору хоста. }
 function TOscInstance.FindView(AId: QWord): TOscNativeForm;
 var I: Integer;
 begin
@@ -82,6 +116,7 @@ begin
   Result := nil;
 end;
 
+{ Перенастраивает представления и готовит их буферы истории. }
 procedure TOscInstance.ConfigureViews;
 var I: Integer;
 begin
@@ -94,6 +129,7 @@ begin
   end;
 end;
 
+{ Обновляет сведения тегов и данные открытых представлений. }
 procedure TOscInstance.RefreshViews;
 var I: Integer;
 begin
@@ -103,6 +139,7 @@ begin
       TOscNativeForm(fViews[I]).DisplayWindowSeconds, fRunning);
 end;
 
+{ Обрабатывает подключение, отключение и изменение нативного представления. }
 function TOscInstance.ViewMessage(AKind: LongWord;
   const ASurface: TRecorderVisualSurfaceV2): LongInt;
 var lView: TOscNativeForm; lBackend: LongWord;
@@ -155,6 +192,7 @@ begin
   Result := REC_VISUAL_OK;
 end;
 
+{ Создаёт экземпляр по сервисам хоста; конфигурация при создании не принимается. }
 function OscCreate(AHostContext, AConfigData: Pointer; AConfigSize: SizeUInt;
   out AInstance: Pointer): LongInt; cdecl;
 begin
@@ -169,6 +207,7 @@ begin
   except Result := REC_VISUAL_ERROR; end;
 end;
 
+{ Уничтожает экземпляр и возвращает результат через ABI. }
 function OscTryDestroy(AInstance: Pointer): LongInt; cdecl;
 begin
   try
@@ -177,58 +216,30 @@ begin
   except Result := REC_VISUAL_ERROR; end;
 end;
 
+{ Совместимый со старыми хостами вариант уничтожения без результата. }
 procedure OscDestroy(AInstance: Pointer); cdecl;
 begin
   { Old peers still use a void callback; never throw across their C boundary. }
   OscTryDestroy(AInstance);
 end;
 
+{ Сохраняет настройки через общий маршрут и сообщает требуемый размер. }
 function OscSave(AInstance, ABuffer: Pointer; ACapacity: SizeUInt;
   out ARequiredSize: SizeUInt): LongInt; cdecl;
-var lData: UTF8String;
 begin
   ARequiredSize := 0;
   if AInstance = nil then Exit(REC_VISUAL_ERROR);
-  try
-    lData := TOscInstance(AInstance).fModel.SaveUtf8;
-    ARequiredSize := Length(lData);
-    if (ABuffer = nil) or (ACapacity < ARequiredSize) then
-      Exit(REC_VISUAL_BUFFER_TOO_SMALL);
-    if ARequiredSize > 0 then Move(lData[1], ABuffer^, ARequiredSize);
-    Result := REC_VISUAL_OK;
-  except Result := REC_VISUAL_ERROR; end;
+  Result := TOscInstance(AInstance).doWriteSettings(ABuffer, ACapacity, ARequiredSize);
 end;
 
+{ Загружает настройки через общий маршрут с сохранением идентичности модели. }
 function OscLoad(AInstance, AStateData: Pointer; AStateSize: SizeUInt): LongInt; cdecl;
-var lData: UTF8String; lError: string; lBefore: TOscModel;
-  lInstance: TOscInstance;
 begin
-  if (AInstance = nil) or (AStateData = nil) or
-    (AStateSize > REC_VISUAL_MAX_STATE_BYTES) then Exit(REC_VISUAL_ERROR);
-  lBefore := nil;
-  try
-    try
-    lInstance := TOscInstance(AInstance);
-    lBefore := lInstance.fModel.Clone;
-    SetString(lData, PAnsiChar(AStateData), AStateSize);
-    if not lInstance.fModel.LoadUtf8(lData, lError) then
-      Exit(REC_VISUAL_ERROR);
-    try
-      lInstance.ConfigureViews;
-      Result := REC_VISUAL_OK;
-    except
-      { Keep the published model identity: views borrow this same instance. }
-      lInstance.fModel.Assign(lBefore);
-      lInstance.ConfigureViews;
-      Result := REC_VISUAL_ERROR;
-    end;
-    except Result := REC_VISUAL_ERROR;
-    end;
-  finally
-    lBefore.Free;
-  end;
+  if AInstance = nil then Exit(REC_VISUAL_ERROR);
+  Result := TOscInstance(AInstance).doReadSettings(AStateData, AStateSize);
 end;
 
+{ Импортирует настройки оригинального проекта и перенастраивает views. }
 function OscImport(AInstance: Pointer; ARequest: PRecorderVisualImportRequestV2;
   ARequestSize: SizeUInt): LongInt; cdecl;
 var lText: UTF8String; lError: string; lBefore: TOscModel;
@@ -260,6 +271,7 @@ begin
   finally lBefore.Free; end;
 end;
 
+{ Открывает редактор настроек и обновляет views после подтверждения. }
 function OscEdit(AInstance, AHostContext, AEditRequest: Pointer;
   AEditRequestSize: SizeUInt): LongInt; cdecl;
 var lCatalog: TOscTagCatalog;
@@ -280,6 +292,7 @@ begin
   except Result := REC_VISUAL_ERROR; end;
 end;
 
+{ Передаёт события хоста конкретному экземпляру и его представлениям. }
 function OscDispatch(AInstance: Pointer; AKind: LongWord;
   AInput: Pointer; AInputSize: SizeUInt; AOutput: Pointer;
   AOutputCapacity: SizeUInt; out AOutputSize: SizeUInt): LongInt; cdecl;

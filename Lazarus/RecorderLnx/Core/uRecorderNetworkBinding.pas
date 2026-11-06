@@ -15,10 +15,18 @@ type
   TRecorderSocketSetup = procedure(ASocket: LongInt);
 
 function RecorderNetworkBindAddress: string;
+function RecorderNetworkConfiguredBindAddress: string;
+function RecorderNetworkHasLegacyBindAddress: Boolean;
 procedure SetRecorderNetworkBindAddress(const AValue: string);
+function RecorderNetworkHasPersistedBindAddress: Boolean;
+procedure RecorderLoadNetworkBindAddress(const ALegacyAddress: string;
+  AHasLegacyAddress: Boolean);
+function RecorderMigrateLegacyNetworkBindAddress(const ALegacyAddress: string): Boolean;
+procedure RecorderSaveNetworkBindAddress;
 procedure RecorderClearDiscoveryHints;
 procedure RecorderAddDiscoveryHintIPv4(const AValue: string);
 procedure RecorderEnumerateLocalIPv4(AItems: TStrings);
+function RecorderNetworkHostIsLocal(const AHost: string): Boolean;
 procedure RecorderEnumerateLocalMacAddresses(AItems: TStrings);
 function RecorderNetworkAddressFromDisplay(const AValue: string): string;
 procedure RecorderSetNetworkDebugLogFile(const AFileName: string);
@@ -41,13 +49,15 @@ function RecorderOpenBoundTcpStream(const AHost: string; APort: Word;
 implementation
 
 uses
-  Resolve, StrUtils, uRecorderDebugLog
+  Resolve, StrUtils, IniFiles, uRecorderDebugLog, uRecorderMeraPaths
   {$ifdef unix}, BaseUnix{$endif}
   {$ifdef windows}, Windows, WinSock2, JwaIpHlpApi, JwaIpTypes,
     JwaIpRtrMib{$endif};
 
 var
   g_RecorderNetworkBindAddress: string = '';
+  g_RecorderNetworkConfiguredBindAddress: string = '';
+  g_RecorderNetworkHasLegacyBindAddress: Boolean = False;
   g_RecorderNetworkDebugLogFile: string = '';
   g_RecorderNetworkDiscoveryHints: TStringList = nil;
 
@@ -176,6 +186,94 @@ end;
 function RecorderNetworkBindAddress: string;
 begin
   Result := g_RecorderNetworkBindAddress;
+end;
+
+function RecorderNetworkConfiguredBindAddress: string;
+begin
+  Result := g_RecorderNetworkConfiguredBindAddress;
+end;
+
+function RecorderNetworkHasLegacyBindAddress: Boolean;
+begin
+  Result := g_RecorderNetworkHasLegacyBindAddress;
+end;
+
+function RecorderNetworkHasPersistedBindAddress: Boolean;
+var
+  lIni: TIniFile;
+begin
+  lIni := TIniFile.Create(RecorderAppConfigFileName);
+  try
+    Result := lIni.ValueExists('Network', 'BindAddress');
+  finally
+    lIni.Free;
+  end;
+end;
+
+procedure RecorderLoadNetworkBindAddress(const ALegacyAddress: string;
+  AHasLegacyAddress: Boolean);
+var
+  lIni: TIniFile;
+  lHasSaved: Boolean;
+  lAddress: string;
+begin
+  lIni := TIniFile.Create(RecorderAppConfigFileName);
+  try
+    lHasSaved := lIni.ValueExists('Network', 'BindAddress');
+    lAddress := lIni.ReadString('Network', 'BindAddress', '');
+  finally
+    lIni.Free;
+  end;
+  g_RecorderNetworkHasLegacyBindAddress := not lHasSaved and AHasLegacyAddress;
+  if lHasSaved then
+    SetRecorderNetworkBindAddress(lAddress)
+  else if AHasLegacyAddress then
+    SetRecorderNetworkBindAddress(ALegacyAddress)
+  else
+    SetRecorderNetworkBindAddress('');
+end;
+
+function RecorderMigrateLegacyNetworkBindAddress(const ALegacyAddress: string): Boolean;
+var
+  lIni: TIniFile;
+  lAddress: THostAddr;
+  lValue: string;
+begin
+  Result := False;
+  lValue := Trim(ALegacyAddress);
+  if lValue <> '' then
+  begin
+    lAddress := StrToHostAddr(lValue);
+    if lAddress.s_addr = 0 then
+      raise ESocketError.CreateFmt('Invalid legacy network bind address: %s', [lValue]);
+    lValue := HostAddrToStr(lAddress);
+  end;
+  if not ForceDirectories(RecorderAppConfigDir) then
+    raise Exception.Create('Cannot create application configuration directory');
+  lIni := TIniFile.Create(RecorderAppConfigFileName);
+  try
+    if lIni.ValueExists('Network', 'BindAddress') then Exit;
+    lIni.WriteString('Network', 'BindAddress', lValue);
+    lIni.UpdateFile;
+    Result := True;
+  finally
+    lIni.Free;
+  end;
+end;
+
+procedure RecorderSaveNetworkBindAddress;
+var
+  lIni: TIniFile;
+begin
+  if not ForceDirectories(RecorderAppConfigDir) then
+    raise Exception.Create('Cannot create application configuration directory');
+  lIni := TIniFile.Create(RecorderAppConfigFileName);
+  try
+    lIni.WriteString('Network', 'BindAddress', RecorderNetworkConfiguredBindAddress);
+    lIni.UpdateFile;
+  finally
+    lIni.Free;
+  end;
 end;
 
 procedure RecorderSetNetworkDebugLogFile(const AFileName: string);
@@ -320,12 +418,28 @@ begin
 end;
 {$endif}
 
+function RecorderNetworkHostIsLocal(const AHost: string): Boolean;
+var
+  lHost: string;
+  lAddress: THostAddr;
+begin
+  lHost := Trim(AHost);
+  if (lHost = '') or SameText(lHost, 'localhost') or (lHost = '::1') then
+    Exit(True);
+  lAddress := StrToHostAddr(lHost);
+  if (lAddress.s_addr = 0) or (HostAddrToStr(lAddress) <> lHost) then
+    Exit(False);
+  if Pos('127.', lHost) = 1 then Exit(True);
+  Result := IsLocalIPv4(lHost);
+end;
+
 procedure SetRecorderNetworkBindAddress(const AValue: string);
 var
   lAddress: THostAddr;
 begin
   if Trim(AValue) = '' then
   begin
+    g_RecorderNetworkConfiguredBindAddress := '';
     g_RecorderNetworkBindAddress := '';
     Exit;
   end;
@@ -333,6 +447,7 @@ begin
   if lAddress.s_addr = 0 then
     raise ESocketError.CreateFmt('Некорректный локальный IPv4-адрес: %s',
       [AValue]);
+  g_RecorderNetworkConfiguredBindAddress := HostAddrToStr(lAddress);
   { Проект может быть общим с Windows. Чужой адрес интерфейса нельзя явно
     привязывать в Linux: в этом случае маршрут выбирает ОС. }
   if not IsLocalIPv4(HostAddrToStr(lAddress)) then

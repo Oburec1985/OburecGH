@@ -66,7 +66,7 @@ function ResolveFromRegistry(const AHost, AShare, ARelative: string): string;
 var
   lSearch: TSearchRec;
   lIni: TIniFile;
-  lHost, lShare, lMount, lCandidate: string;
+  lHost, lHostName, lLocalName, lShare, lMount, lCandidate: string;
 begin
   Result := '';
   if FindFirst(IncludeTrailingPathDelimiter(CRegistryDir) + '*.ini', faAnyFile,
@@ -77,10 +77,14 @@ begin
         lSearch.Name);
       try
         lHost := Trim(lIni.ReadString('Share', 'Host', ''));
+        lHostName := Trim(lIni.ReadString('Share', 'HostName', ''));
+        lLocalName := Trim(lIni.ReadString('Share', 'LocalName', ''));
         lShare := Trim(lIni.ReadString('Share', 'Name', ''));
         lMount := Trim(lIni.ReadString('Share', 'MountPoint', ''));
         if (lMount <> '') and
-          ((AHost = '') or SameText(AHost, lHost)) and
+          ((AHost = '') or SameText(AHost, lHost) or
+           ((lHostName <> '') and SameText(AHost, lHostName)) or
+           ((AShare <> '') and SameText(lLocalName, AHost + '-' + AShare))) and
           ((AShare = '') or SameText(AShare, lShare)) then
         begin
           lCandidate := CandidateFile(lMount, ARelative);
@@ -137,7 +141,10 @@ begin
   if CompareText(Copy(lPath, 1, 6), 'smb://') = 0 then
   begin
     Result := ResolveSmbUri(lPath);
-    if Result <> '' then Exit;
+    { A network URI identifies a specific host and share. Never search other
+      mounts by filename: two recorders commonly use the same frame number. }
+    if Result = '' then Result := lPath;
+    Exit;
   end;
   lSuffix := UsmlSuffix(lPath);
   if lSuffix <> '' then

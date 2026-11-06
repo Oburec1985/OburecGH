@@ -25,19 +25,29 @@ uses
   uRecorderMic140Calibration,
   uRecorderMic140Utils,
   uRecorderMic185DataSource,
+  uRecorderSettingsSourceProbe,
   uMic185MebiusTypes,
   uRecorderHardwareTagSettingsProviders,
   uRecorderTagSettingsProvider,
   uRecorderConfiguredDataSources,
   uRecorderDeviceDataThread,
   uRecorderAcquisitionTypes,
+  uRecorderDriverContractsV2, uRecorderPxiMx248RuntimeTransport,
   uRecorderMeraPaths,
   uSharedFileLogger;
 
 type
+  TMx248RateProbeSource = class(TMockSineDataSource, IPxiMx248RuntimeSampleRateSettings)
+  public
+    ApplyCount: Integer;
+    RejectApply: Boolean;
+    WrongReadback: Boolean;
+    function RuntimeSetSampleRate(AHz: Double; out AReadback: string): TRcOperationResult;
+  end;
+
   TMockDeviceDataThread = class(TRecorderDeviceDataThread)
   protected
-    function ReadBlockFromDevice(var ABlock: TRecorderAcquisitionBlock): Boolean; override;
+    function ReadBlockFromDevice(var ABlock: TRcAcquisitionBlock): Boolean; override;
   public
     procedure PublishSequence(ASequence: Integer);
   end;
@@ -58,6 +68,18 @@ type
 var
   g_Log: TSharedFileLogger;
   g_LogOpened: Boolean = False;
+
+function TMx248RateProbeSource.RuntimeSetSampleRate(AHz: Double;
+  out AReadback: string): TRcOperationResult;
+begin
+  Inc(ApplyCount);
+  AReadback := '';
+  if RejectApply then
+    Exit(TRcOperationResult.Failure(rocInvalidState, 'fake.rate', 'Acquisition is running'));
+  AReadback := 'sample-rate-hz=' + IntToStr(Round(AHz));
+  if WrongReadback then AReadback := 'sample-rate-hz=422';
+  Result := TRcOperationResult.Success;
+end;
 
 procedure LogLine(const AText: string);
 begin
@@ -123,14 +145,14 @@ begin
 end;
 
 function TMockDeviceDataThread.ReadBlockFromDevice(
-  var ABlock: TRecorderAcquisitionBlock): Boolean;
+  var ABlock: TRcAcquisitionBlock): Boolean;
 begin
   Result := False;
 end;
 
 procedure TMockDeviceDataThread.PublishSequence(ASequence: Integer);
 var
-  lBlock: TRecorderAcquisitionBlock;
+  lBlock: TRcAcquisitionBlock;
 begin
   lBlock.ChannelCount := 1;
   lBlock.SampleCount := 2;
@@ -872,6 +894,14 @@ end;
 
 procedure TestPxiMx248TagSettingsSourceFrequency;
 var
+  lSource: TMx248RateProbeSource;
+  lSourceRef: IRecorderDataSource;
+  lOtherSource: TMx248RateProbeSource;
+  lOtherSourceRef: IRecorderDataSource;
+  lOtherProvider: IRecorderTagSettingsProvider;
+  lApplied: Boolean;
+  I: Integer;
+  lExtraTags: array[3..8] of TRecorderTag;
   lApply: TRecorderTagSettingsApplyResult;
   lCalibrationResult: TRecorderHardwareCalibrationResult;
   lConfigured: TRecorderConfiguredDataSource;
@@ -898,13 +928,22 @@ begin
     lTag2.SourceId := 'pxi-mx248:2:14';
     lTag2.Address := '2';
     lTag2.PollFrequencyHz := 512000;
+    for I := 3 to 8 do
+    begin
+      lExtraTags[I] := lRegistry.CreateTag('MX248_ch' + IntToStr(I), 1024);
+      lExtraTags[I].SourceId := lTag1.SourceId;
+      lExtraTags[I].Address := IntToStr(I);
+      lExtraTags[I].PollFrequencyHz := 512000;
+    end;
     lOtherTag := lRegistry.CreateTag('Other_ch01', 1024);
     lOtherTag.SourceId := 'pxi-mx248:3:7';
     lOtherTag.PollFrequencyHz := 512000;
     lOriginalTag1 := lTag1;
 
     lResolver := CreateRecorderHardwareTagSettingsResolver;
-    AssertTrue(lResolver.Resolve(lTag1, nil, lProvider),
+    lSource := TMx248RateProbeSource.Create('pxi-mx248:2:14', 'Fake MX248', 4, 0, 1);
+    lSourceRef := lSource;
+    AssertTrue(lResolver.Resolve(lTag1, lSourceRef, lProvider),
       'Resolve MX-248 tag-settings provider');
     AssertTrue(lProvider.ReadState(lRegistry, lTag1, lState),
       'Read MX-248 tag-settings state');
@@ -926,8 +965,15 @@ begin
     lDraft.PollFrequencyHz := 216000;
     AssertTrue(lProvider.NormalizeDraft(lRegistry, lTag1, lDraft, lError),
       'Supported MX-248 rate must pass normalization: ' + lError);
-    if lProvider.ApplyDraft(lRegistry, lTag1, lDraft, lApply, lError) then
+    lApplied := lProvider.ApplyDraft(lRegistry, lTag1, lDraft, lApply, lError);
+    AssertTrue(lApplied, 'Bound fake runtime apply must succeed without opening native transport: ' + lError);
+    if lApplied then
     begin
+      AssertTrue(lSource.ApplyCount = 1, 'Tag frequency uses the bound runtime exactly once');
+      for I := 3 to 8 do
+        AssertTrue((lRegistry.FindByName('MX248_ch' + IntToStr(I)) = lExtraTags[I]) and
+          SameValue(lExtraTags[I].PollFrequencyHz, 216000, 1e-9),
+          'All eight existing tag identities receive source-wide sample rate');
       AssertTrue(lApply.FrequencyChanged and
         SameValue(lApply.PollFrequencyHz, 216000, 1E-9),
         'MX-248 provider must report source-wide rate change');
@@ -945,6 +991,24 @@ begin
         'MX-248 source packet update must preserve unknown future fields');
       AssertEquals(lConfigured.DefaultPollFrequencyHz, 216000,
         'MX-248 configured source default rate');
+      lSource.RejectApply := True;
+      lOtherSource := TMx248RateProbeSource.Create('pxi-mx248:3:7', 'Other fake', 4, 0, 1);
+      lOtherSourceRef := lOtherSource;
+      AssertTrue(lResolver.Resolve(lOtherTag, lOtherSourceRef, lOtherProvider),
+        'Second resolve binds another source independently');
+      lDraft.PollFrequencyHz := 512000;
+      AssertTrue(not lProvider.ApplyDraft(lRegistry, lTag1, lDraft, lApply, lError),
+        'Owned runtime rejection never falls back to another bridge');
+      AssertEquals(lTag1.PollFrequencyHz, 216000, 'Rejected runtime apply preserves tag frequency');
+      AssertEquals(lConfigured.DefaultPollFrequencyHz, 216000, 'Rejected runtime apply preserves persisted frequency');
+      AssertTrue((lSource.ApplyCount = 2) and (lOtherSource.ApplyCount = 0),
+        'Resolving another source cannot mutate an already bound provider');
+      lSource.RejectApply := False;
+      lSource.WrongReadback := True;
+      AssertTrue(not lProvider.ApplyDraft(lRegistry, lTag1, lDraft, lApply, lError),
+        'Unconfirmed hardware readback rejects persistence');
+      AssertEquals(lConfigured.DefaultPollFrequencyHz, 216000,
+        'Readback mismatch keeps the last confirmed configured frequency');
     end
     else
     begin
@@ -1142,9 +1206,51 @@ begin
   end;
 end;
 
+procedure TestMic185ImportedRateSurvivesProbeSync;
+var
+  lRegistry: TRecorderTagRegistry;
+  lProbe: TRecorderSettingsSourceProbe;
+  lTag: TRecorderTag;
+  lSource: string;
+begin
+  lRegistry := TRecorderTagRegistry.Create;
+  try
+    lSource := RecorderMic185SourceId('192.168.9.155', 4000);
+    RecorderConfiguredDataSourcesEnsure(lRegistry, lSource, 'MIC183/185', 100);
+    lTag := lRegistry.CreateTag('import-test', 4096);
+    lTag.SourceId := lSource;
+    lTag.Address := RecorderMic185MeasurementAddressText(1, 1);
+    lTag.ModuleType := 'MIC183/185';
+    lTag.PollFrequencyHz := 100;
+    lProbe := TRecorderSettingsSourceProbe.Create(lRegistry);
+    try
+      lProbe.BuildMic185(lSource);
+      RecorderMic185ApplySourceFrequency(lRegistry, lSource, 10, 100);
+      lProbe.SyncToRegistry;
+      AssertEquals(RecorderConfiguredDataSourcesFind(lRegistry, lSource).DefaultPollFrequencyHz,
+        100, 'stale probe reproduces old import bug');
+      RecorderMic185ApplySourceFrequency(lRegistry, lSource, 10, 100);
+      lProbe.BuildMic185(lSource);
+      lProbe.SyncToRegistry;
+      AssertEquals(RecorderConfiguredDataSourcesFind(lRegistry, lSource).DefaultPollFrequencyHz,
+        10, 'imported MIC185 rate survives OK source sync');
+      AssertEquals(lTag.PollFrequencyHz, 10, 'imported MIC185 tag rate survives OK');
+    finally
+      lProbe.Free;
+    end;
+  finally
+    lRegistry.Free;
+  end;
+end;
+
 begin
   OpenLog;
   try
+    if SameText(ParamStr(1), '--mic185-import-rate-only') then
+    begin
+      TestMic185ImportedRateSurvivesProbeSync;
+      Exit;
+    end;
     if SameText(ParamStr(1), '--lease-only') then
     begin
       TestDeviceDataThreadLeaseRing;

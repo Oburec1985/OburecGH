@@ -25,6 +25,8 @@ type
     ExecuteAtUtc: TDateTime;
     DeadlineUtc: TDateTime;
     PayloadJson: string;
+    { Local fence; never accepted from the network JSON. }
+    OwnershipGeneration: QWord;
     class function FromJson(AJson: TJSONData): TRecorderCoordinatorCommand;
   end;
 

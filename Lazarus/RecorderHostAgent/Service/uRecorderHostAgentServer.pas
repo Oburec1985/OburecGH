@@ -23,7 +23,7 @@ type
 
 implementation
 
-uses uRecorderHostAgentActions;
+uses uRecorderHostAgentActions, uRecorderHostAgentBackup, jsonparser;
 
 constructor THostAgentServer.Create(AConfig: TRecorderHostAgentConfig);
 begin
@@ -40,6 +40,9 @@ function THostAgentServer.TryStart(out AError: string): Boolean;
 var
   lSocket: TSocket;
   lAddress: TInetSockAddr;
+  {$ifdef unix}
+  lReuseAddress: LongInt;
+  {$endif}
 begin
   Result := False;
   AError := '';
@@ -50,6 +53,17 @@ begin
     Exit;
   end;
   try
+    {$ifdef unix}
+    { TFPHTTPServer enables SO_REUSEADDR. Match it here so a previous
+      connection in TIME_WAIT does not prevent a legitimate restart. }
+    lReuseAddress := 1;
+    if fpSetSockOpt(lSocket, SOL_SOCKET, SO_REUSEADDR, @lReuseAddress,
+      SizeOf(lReuseAddress)) <> 0 then
+    begin
+      AError := 'cannot configure TCP socket address reuse';
+      Exit;
+    end;
+    {$endif}
     FillChar(lAddress, SizeOf(lAddress), 0);
     lAddress.sin_family := AF_INET;
     lAddress.sin_port := htons(fConfig.Port);
@@ -102,6 +116,9 @@ var
   lMessage: string;
   lOk: Boolean;
   lCode: Integer;
+  lData: TJSONData;
+  lObj: TJSONObject;
+  lSnapshotId, lRelativePath, lProjectName: string;
 begin
   if not Authorized(ARequest) then
   begin
@@ -133,6 +150,39 @@ begin
 
     lResult.Add('message', lMessage);
     Reply(AResponse, lResult, lCode);
+  end
+  else if (ARequest.Method = 'POST') and
+    ((ARequest.URI = '/api/v1/backup/prepare') or (ARequest.URI = '/api/v1/backup/cleanup') or (ARequest.URI = '/api/v1/backup/verify')) then
+  begin
+    lData:=nil; lResult:=TJSONObject.Create;
+    try
+      try
+        lData:=GetJSON(ARequest.Content);
+        if not (lData is TJSONObject) then raise Exception.Create('Expected JSON object');
+        lObj:=TJSONObject(lData);
+        if ARequest.URI='/api/v1/backup/prepare' then
+        begin
+          if (lObj.Get('layout','') <> CHostBackupLayout) or
+            not lObj.Get('configurations',False) or lObj.Get('program',False) or
+            lObj.Get('plugins',False) then
+            raise Exception.Create('Backup requires an updated panel and settings-only layout');
+          lOk:=HostAgentPrepareBackup(fConfig,lObj.Get('calibrations',False),
+            lSnapshotId,lRelativePath,lProjectName,lMessage);
+        end
+        else if ARequest.URI='/api/v1/backup/verify' then
+          lOk:=HostAgentVerifyBackup(fConfig,lObj.Get('snapshot_id',''),lMessage)
+        else lOk:=HostAgentCleanupBackup(fConfig,lObj.Get('snapshot_id',''),lMessage);
+      except on E:Exception do begin lOk:=False; lMessage:=E.Message; end; end;
+      if lOk then begin
+        lResult.Add('result_code','noError'); lCode:=200;
+        if ARequest.URI='/api/v1/backup/prepare' then begin
+          lResult.Add('snapshot_id',lSnapshotId); lResult.Add('relative_path',lRelativePath);
+          lResult.Add('layout', CHostBackupLayout); lResult.Add('project_name', lProjectName);
+        end;
+      end else begin lResult.Add('result_code','notReady'); lCode:=409; end;
+      lResult.Add('message',lMessage);
+      Reply(AResponse,lResult,lCode); lResult:=nil;
+    finally lData.Free; lResult.Free; end;
   end
   else if (ARequest.Method = 'POST') and
     (ARequest.URI = '/api/v1/system/shutdown') then

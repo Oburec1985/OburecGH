@@ -13,28 +13,88 @@
     <BuildModes>
       <Item Name="Default" Default="True"/>
     </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2"/>
+    </RunParams>
+    <RequiredPackages>
+      <Item>
+        <PackageName Value="LzrObrPack"/>
+      </Item>
+      <Item>
+        <PackageName Value="LazOpenGLContext"/>
+      </Item>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+    </RequiredPackages>
     <Units>
       <Unit>
         <Filename Value="SampleInfoPlugin.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit>
-      <Unit><Filename Value="oscillogram/uOscPluginV2.pas"/><IsPartOfProject Value="True"/></Unit>
-      <Unit><Filename Value="oscillogram/model/uOscModel.pas"/><IsPartOfProject Value="True"/></Unit>
-      <Unit><Filename Value="oscillogram/model/uOscLegacyImport.pas"/><IsPartOfProject Value="True"/></Unit>
-      <Unit><Filename Value="oscillogram/data/uOscDataAdapter.pas"/><IsPartOfProject Value="True"/></Unit>
-      <Unit><Filename Value="oscillogram/data/uOscTags.pas"/><IsPartOfProject Value="True"/></Unit>
-      <Unit><Filename Value="oscillogram/data/uOscUnits.pas"/><IsPartOfProject Value="True"/></Unit>
-      <Unit><Filename Value="oscillogram/view/uOscBehavior.pas"/><IsPartOfProject Value="True"/></Unit>
-      <Unit><Filename Value="oscillogram/view/uOscView.pas"/><IsPartOfProject Value="True"/></Unit>
-      <Unit><Filename Value="oscillogram/view/uOscNativeForm.pas"/><IsPartOfProject Value="True"/><ComponentName Value="OscNativeForm"/><ResourceBaseClass Value="Form"/></Unit>
-      <Unit><Filename Value="oscillogram/view/uOscBaseForm.pas"/><IsPartOfProject Value="True"/><ComponentName Value="OscBaseForm"/><ResourceBaseClass Value="Form"/></Unit>
-      <Unit><Filename Value="oscillogram/editor/uOscSettings.pas"/><IsPartOfProject Value="True"/><ComponentName Value="OscSettings"/><ResourceBaseClass Value="Form"/></Unit>
+      <Unit>
+        <Filename Value="uCreateComponents.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/uOscPluginV2.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/uOscPluginFactory.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/model/uOscModel.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/model/uOscLegacyImport.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/data/uOscDataAdapter.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/data/uOscTags.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/data/uOscUnits.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/view/uOscBehavior.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/view/uOscView.pas"/>
+        <IsPartOfProject Value="True"/>
+        <HasResources Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/view/uOscNativeForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="OscNativeForm"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/view/uOscBaseForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="OscBaseForm"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="oscillogram/editor/uOscSettings.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="OscSettings"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
     </Units>
-    <RequiredPackages>
-      <Item><PackageName Value="LzrObrPack"/></Item>
-      <Item><PackageName Value="LazOpenGLContext"/></Item>
-      <Item><PackageName Value="LCL"/></Item>
-    </RequiredPackages>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>

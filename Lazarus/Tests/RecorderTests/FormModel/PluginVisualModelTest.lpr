@@ -5,10 +5,11 @@ program PluginVisualModelTest;
 {$codepage utf8}
 
 uses
-  Interfaces, Forms, Controls, Classes, SysUtils, IniFiles,
+  Interfaces, Forms, Controls, Classes, SysUtils, IniFiles, Process, SyncObjs,
   {$IFDEF MSWINDOWS} Windows, {$ENDIF}
   uRecorderFormModel, uRecorderPluginRuntime, uRecorderVisualControl,
-  uRecorderTags, uRecorderVisualComponentApiV2;
+  uRecorderTags, uRecorderVisualComponentApiV2, uRecorderStateMachine,
+  uRecorderPluginApi;
 
 type
   TTestPluginVisualComponent = class(TRecorderPluginVisualComponent)
@@ -25,6 +26,77 @@ type
   public
     constructor Create;
   end;
+
+  TProbeServicesFn = function(AAfterShutdown:LongInt):LongInt; cdecl;
+  TInFlightHarness = class
+    Entered, ReleaseLog, ShutdownDone: TEvent;
+    Runtime: TRecorderPluginRuntime;
+    Probe: TProbeServicesFn;
+    Error: string;
+    Block, ReentrantChecked: Boolean;
+    constructor Create;
+    destructor Destroy; override;
+    procedure LogMessage(const AMessage:string);
+  end;
+  TShutdownWorker = class(TThread)
+    Harness: TInFlightHarness;
+    procedure Execute; override;
+  end;
+  TObserveWorker = class(TThread)
+    Harness: TInFlightHarness;
+    procedure Execute; override;
+  end;
+
+constructor TInFlightHarness.Create;
+begin
+  inherited Create;
+  Entered:=TEvent.Create(nil,True,False,'');
+  ReleaseLog:=TEvent.Create(nil,True,False,'');
+  ShutdownDone:=TEvent.Create(nil,True,False,'');
+end;
+
+destructor TInFlightHarness.Destroy;
+begin
+  ShutdownDone.Free; ReleaseLog.Free; Entered.Free;
+  inherited Destroy;
+end;
+
+procedure TInFlightHarness.LogMessage(const AMessage:string);
+begin
+  ReentrantChecked:=not Runtime.TryBeginShutdown;
+  if not Block then Exit;
+  Entered.SetEvent;
+  if ReleaseLog.WaitFor(10000)<>wrSignaled then
+    Error:='blocked callback timed out';
+end;
+
+procedure TShutdownWorker.Execute;
+begin
+  if Harness.Entered.WaitFor(10000)<>wrSignaled then begin
+    Harness.Error:='callback did not begin'; Harness.ShutdownDone.SetEvent; Exit;
+  end;
+  try
+    if Harness.Runtime.TryBeginShutdown then
+      Harness.Error:='active callback shutdown was accepted'
+    else if Harness.Runtime.LoadedCount<>1 then
+      Harness.Error:='shutdown refusal damaged runtime';
+  except
+    on E:Exception do Harness.Error:='shutdown failed: '+E.Message;
+  end;
+  Harness.ShutdownDone.SetEvent;
+end;
+
+procedure TObserveWorker.Execute;
+begin
+  if Harness.Entered.WaitFor(10000)<>wrSignaled then begin
+    Harness.Error:='callback did not begin'; Harness.ReleaseLog.SetEvent; Exit;
+  end;
+  if Harness.ShutdownDone.WaitFor(8000)<>wrSignaled then
+    Harness.Error:='shutdown refusal did not return'
+  else if Harness.Probe(0)<>REC_VISUAL_OK then
+    Harness.Error:='services unavailable after shutdown refusal';
+  Harness.ReleaseLog.SetEvent;
+end;
 
 procedure TTestPluginVisualComponent.DoStart;
 begin
@@ -134,7 +206,10 @@ begin
 end;
 
 procedure RunRuntimeTests(const APluginFileName: string;
-  APermanentDetachFailure: Boolean = False; ADestroyStatusFailure:Boolean = False);
+  APermanentDetachFailure: Boolean = False; ADestroyStatusFailure:Boolean = False;
+  AManagedLifecycle:Boolean = False; AProbePinnedServices:Boolean = False;
+  AProbeInFlight:Boolean = False; ACloseRetry:Boolean = False;
+  AInitFail:Boolean = False);
 type
   TProbeState = record
     Magic: QWord;
@@ -156,12 +231,16 @@ type
   end;
   TNativeViewCount = function: LongWord; cdecl;
   TCleanupFailedDestroy = function: LongInt; cdecl;
+  TProbeBorrowedServices = function(AAfterShutdown:LongInt):LongInt; cdecl;
 var
   lPluginDirectory, lPluginPath, lConfigFileName: string;
+  lSuffix: string;
+  lGuid: TGUID;
+  lCreatedPlugin, lCreatedConfig, lCreatedDirectory: Boolean;
   lIni: TMemIniFile;
   lRegistry: TRecorderComponentFactory;
   lRuntime: TRecorderPluginRuntime;
-  lSource, lCopy, lPrefixComponent: TRecorderPluginVisualComponent;
+  lSource, lCopy, lPrefixComponent, lSecond: TRecorderPluginVisualComponent;
   lFactory: TRecorderComponentFactoryBase;
   lState: TProbeState;
   lBytes: TRecorderPluginConfigBytes;
@@ -174,6 +253,7 @@ var
   lSurface: TRecorderVisualSurfaceV2;
   lEstimateSettings: TRecorderTagEstimateSettings;
   lEstimateKind: TRecorderTagEstimateKind;
+  lMachine: TRecorderStateMachine;
   {$IFDEF MSWINDOWS}
   lNativeHost: TRecorderPluginVisualHostControl;
   lNativeChild, lOldNativeChild: HWND;
@@ -184,23 +264,52 @@ var
   lNativeViewCount: TNativeViewCount;
   lFailedDestroyCount,lVoidDestroyCount:TNativeViewCount;
   lCleanupFailedDestroy:TCleanupFailedDestroy;
+  lProbeBorrowedServices:TProbeBorrowedServices;
+  lFinalizePinnedPlugin:TCleanupFailedDestroy;
+  lPinnedProbeStatus:LongInt;
+  lProbeLogService:TCleanupFailedDestroy;
+  lInFlight:TInFlightHarness;
+  lShutdownWorker:TShutdownWorker;
+  lObserveWorker:TObserveWorker;
+  lExternalModule:HMODULE;
+  lCloseCount,lPluginDestroyCount,lWorkerStopCount,lWorkerRunning:TNativeViewCount;
+  lDestroyBefore:LongWord;
   {$ENDIF}
 begin
+  lCreatedPlugin:=False; lCreatedConfig:=False; lCreatedDirectory:=False;
+  {$IFDEF MSWINDOWS}
+  lExternalModule:=0;
+  if ACloseRetry or AInitFail then begin
+    if AInitFail then
+      Check(SetEnvironmentVariable('RECORDER_CLOSE_PROBE','initfail'),'init failure injection env')
+    else
+      Check(SetEnvironmentVariable('RECORDER_CLOSE_PROBE','failonce'),'close injection env');
+  end;
+  {$ENDIF}
   if (APluginFileName = '') or not FileExists(APluginFileName) then
     raise Exception.Create('Runtime smoke plugin file is missing');
   lPluginDirectory := IncludeTrailingPathDelimiter(
     ExtractFilePath(ParamStr(0))) + 'plugins';
+  lCreatedDirectory := not DirectoryExists(lPluginDirectory);
   if not ForceDirectories(lPluginDirectory) then
     raise Exception.Create('Could not create runtime smoke plugin directory');
+  if CreateGUID(lGuid) <> 0 then
+    raise Exception.Create('Could not generate unique fixture name');
+  lSuffix := GUIDToString(lGuid);
   lPluginPath := IncludeTrailingPathDelimiter(lPluginDirectory) +
-    ExtractFileName(APluginFileName);
+    ChangeFileExt(ExtractFileName(APluginFileName), '') + '-' + lSuffix +
+    ExtractFileExt(APluginFileName);
   lConfigFileName := IncludeTrailingPathDelimiter(
-    ExtractFilePath(ParamStr(0))) + 'visual-runtime-smoke.ini';
+    ExtractFilePath(ParamStr(0))) + 'visual-runtime-smoke-' + lSuffix + '.ini';
+  if FileExists(lPluginPath) or FileExists(lConfigFileName) then
+    raise Exception.Create('Unique fixture path unexpectedly exists');
   CopyFile(APluginFileName, lPluginPath);
+  lCreatedPlugin:=True;
   lIni := TMemIniFile.Create(lConfigFileName);
   try
     lIni.WriteInteger('Plugins', 'Count', 1);
-    lIni.WriteString('Plugin0', 'FileName', ExtractFileName(APluginFileName));
+    lIni.WriteString('Plugin0', 'FileName', ExtractFileName(lPluginPath));
+    lCreatedConfig:=True;
     lIni.UpdateFile;
   finally
     lIni.Free;
@@ -235,6 +344,38 @@ begin
   {$IFDEF MSWINDOWS} lNativeHost := nil; {$ENDIF}
   try
     lRuntime.LoadConfigured(lConfigFileName);
+    {$IFDEF MSWINDOWS}
+    if AInitFail then begin
+      Check(lRuntime.LoadedCount=0,'failed plugin counted as loaded');
+      Check(not lRegistry.IsComponentRegistered('test.stateful-visual'),
+        'failed plugin registered a factory');
+      lPinnedModule:=GetModuleHandle(PChar(ExtractFileName(lPluginPath)));
+      Check(lPinnedModule<>0,'failed-init DLL was unloaded before worker stop');
+      Pointer(lCloseCount):=GetProcAddress(lPinnedModule,'ProbeCloseCount');
+      Pointer(lPluginDestroyCount):=GetProcAddress(lPinnedModule,'ProbePluginDestroyCount');
+      Pointer(lWorkerStopCount):=GetProcAddress(lPinnedModule,'ProbeWorkerStopCount');
+      Pointer(lWorkerRunning):=GetProcAddress(lPinnedModule,'ProbeWorkerRunning');
+      Check(Assigned(lCloseCount) and Assigned(lPluginDestroyCount) and
+        Assigned(lWorkerStopCount) and Assigned(lWorkerRunning),'initfail fixture exports missing');
+      Check((lCloseCount()=1) and (lPluginDestroyCount()=0) and
+        (lWorkerRunning()=1) and (lWorkerStopCount()=0),
+        'failed init did not preserve worker and plugin after refused close');
+      lExternalModule:=Windows.LoadLibrary(PChar(lPluginPath));
+      Check(lExternalModule<>0,'cannot hold failed-init fixture for counters');
+      Check(lRuntime.TryBeginShutdown,'failed-init quarantine close retry failed');
+      Check((lCloseCount()=2) and (lWorkerStopCount()=1) and
+        (lWorkerRunning()=0) and (lPluginDestroyCount()=0),
+        'failed-init quarantine did not join worker before destruction');
+      lRuntime.Free; lRuntime:=nil;
+      Check(lPluginDestroyCount()=1,'failed-init plugin was not destroyed after close');
+      Check(Windows.FreeLibrary(lExternalModule),'failed-init fixture reference not released');
+      lExternalModule:=0;
+      Check(GetModuleHandle(PChar(ExtractFileName(lPluginPath)))=0,
+        'failed-init plugin was not unloaded');
+      WriteLn('RESULT failed PluginCreate quarantine/retry passed');
+      Exit;
+    end;
+    {$ENDIF}
     Check(lRuntime.LoadedCount = 1, 'V2 plugin was not loaded by runtime');
     Check(lRegistry.IsComponentRegistered('test.stateful-visual'),
       'V2 descriptor factory was not registered');
@@ -258,8 +399,11 @@ begin
     lSource := TRecorderPluginVisualComponent(
       lFactory.CreateComponentForPage(lCreateContext));
     lRegistry.DoStart;
+    lRuntime.NotifyRunTransition(rstStopToView);
     lRegistry.DoUpdateData;
+    if AManagedLifecycle then lRuntime.NotifyAll(PN_UPDATEDATA);
     lRegistry.DoStop;
+    lRuntime.NotifyRunTransition(rstViewToStop);
     Check(lFactory.SaveOpaqueComponentState(lSource) = rosSuccess,
       'could not inspect plugin host-service observations');
     Check(Length(lSource.ConfigBlob) = SizeOf(lState), 'probe state ABI size');
@@ -288,6 +432,100 @@ begin
     Check((lState.StartCount = 1) and (lState.UpdateCount = 1) and
       (lState.StopCount = 1), 'production lifecycle did not reach plugin');
     Check(lState.ServiceChecks = 17, 'plugin service edge checks were skipped');
+    { Проверяем настоящие переходы автомата и отсутствие второго события
+      от общего реестра как для старого, так и для нового маршрута V2. }
+    if not ADestroyStatusFailure then begin
+    lSecond := TRecorderPluginVisualComponent(
+      lFactory.CreateComponentForPage(lCreateContext));
+    try
+      if AManagedLifecycle then begin
+        lRuntime.NotifyAll(PN_RCINITIALIZED);
+        Check(lFactory.SaveOpaqueComponentState(lSource)=rosSuccess,
+          'cannot inspect first initialization order');
+        Move(lSource.ConfigBlob[0],lState,SizeOf(lState));
+        Check((lState.SurfaceReserved and $80000000)<>0,
+          'first instance did not observe catalog before initialization');
+        Check(lFactory.SaveOpaqueComponentState(lSecond)=rosSuccess,
+          'cannot inspect second initialization order');
+        Move(lSecond.ConfigBlob[0],lState,SizeOf(lState));
+        Check((lState.SurfaceReserved and $80000000)<>0,
+          'second instance did not observe catalog before initialization');
+      end;
+      lMachine := TRecorderStateMachine.Create;
+      try
+        lMachine.StartPreview(rscSignalLevel);
+        Check((lMachine.State = rsPreviewArmed) and (lMachine.LastTransition = rstNone),
+          'Stop to Armed must not start acquisition');
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+        lMachine.Stop;
+        Check((lMachine.State = rsStop) and (lMachine.LastTransition = rstNone),
+          'Armed to Stop must not emit stop');
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+        lMachine.StartPreview(rscManual);
+        Check(lMachine.LastTransition = rstStopToView, 'Stop to Preview transition');
+      lRegistry.DoStart;
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+        lMachine.StartRecord(rscManual);
+        Check(lMachine.LastTransition = rstViewToRecord, 'Preview to Record transition');
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+        lMachine.StartPreview(rscManual);
+        Check(lMachine.LastTransition = rstRecordToView, 'Record to Preview transition');
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+        lMachine.Stop;
+        Check(lMachine.LastTransition = rstViewToStop, 'Preview to Stop transition');
+      lRegistry.DoStop;
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+        lMachine.StartPreview(rscManual);
+        lRegistry.DoStart;
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+        lMachine.StartRecord(rscSignalLevel);
+        Check((lMachine.State = rsRecordArmed) and (lMachine.LastTransition = rstNone),
+          'Preview to RecordArmed must not start recording');
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+        lMachine.Stop;
+        Check(lMachine.LastTransition = rstViewToStop,
+          'Preview to RecordArmed to Stop must stop preview');
+        lRegistry.DoStop;
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+        lMachine.StartRecord(rscSignalLevel);
+        Check((lMachine.State = rsRecordArmed) and (lMachine.LastTransition = rstNone),
+          'Stop to RecordArmed must not start acquisition');
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+        lMachine.StartConditionMet;
+        Check(lMachine.LastTransition = rstStopToRecord,
+          'RecordArmed trigger must start recording');
+        lRegistry.DoStart;
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+        lMachine.Stop;
+        Check(lMachine.LastTransition = rstRecordToStop, 'Record to Stop transition');
+        lRegistry.DoStop;
+        lRuntime.NotifyRunTransition(lMachine.LastTransition);
+      finally
+        lMachine.Free;
+      end;
+      Check(lFactory.SaveOpaqueComponentState(lSource) = rosSuccess,
+        'cannot inspect first old V2 transition counters');
+      Move(lSource.ConfigBlob[0], lState, SizeOf(lState));
+      Check((lState.StartCount = 6) and (lState.StopCount = 4),
+        'first instance missed or duplicated transition events');
+      if AManagedLifecycle then
+        Check(lState.ErrorReserved = $12131323,
+          'first instance received wrong start mode or event order');
+      Check(lFactory.SaveOpaqueComponentState(lSecond) = rosSuccess,
+        'cannot inspect second old V2 transition counters');
+      Move(lSecond.ConfigBlob[0], lState, SizeOf(lState));
+      Check((lState.StartCount = 5) and (lState.StopCount = 3),
+        'second instance missed or duplicated transition events');
+      if AManagedLifecycle then
+        Check(lState.ErrorReserved = $12131323,
+          'second instance received wrong start mode or event order');
+    finally
+      lFactory.ReleaseComponent(lSecond);
+    end;
+    Check(lFactory.SaveOpaqueComponentState(lSource) = rosSuccess,
+      'cannot restore first instance probe snapshot');
+    Move(lSource.ConfigBlob[0], lState, SizeOf(lState));
+    end;
     lState.Magic := QWord($56495355414C5632);
     lState.Value := 735;
     SetLength(lBytes, SizeOf(lState));
@@ -480,11 +718,103 @@ begin
     { Runtime teardown must unregister factories, destroy their instances, and
       only then unload the containing library. Keep both controls alive here. }
     {$IFDEF MSWINDOWS}
+    if AProbePinnedServices then begin
+      lPinnedModule:=GetModuleHandle(PChar(ExtractFileName(lPluginPath)));
+      Check(lPinnedModule<>0,'pre-shutdown fixture module absent');
+      Pointer(lProbeBorrowedServices):=GetProcAddress(lPinnedModule,'ProbeBorrowedServices');
+      Check(Assigned(lProbeBorrowedServices),'borrowed services probe absent');
+      Check(lProbeBorrowedServices(0)=REC_VISUAL_OK,
+        'borrowed services failed before runtime shutdown');
+    end;
     if ADestroyStatusFailure then
       Check(SetEnvironmentVariable('RECORDER_DESTROY_PROBE','error'),'destroy injection env');
     {$ENDIF}
-    lRuntime.Free;
-    lRuntime := nil;
+    if AProbeInFlight then begin
+      { Нативные окна отсоединены на UI-потоке до teardown worker. }
+      Check(lView.Detach=REC_VISUAL_OK,'cannot detach first view for concurrency');
+      Check(lSurvivingView.Detach=REC_VISUAL_OK,'cannot detach second view for concurrency');
+      Pointer(lProbeLogService):=GetProcAddress(lPinnedModule,'ProbeLogService');
+      Check(Assigned(lProbeLogService),'blocking callback probe absent');
+      lInFlight:=TInFlightHarness.Create;
+      lShutdownWorker:=nil; lObserveWorker:=nil;
+      try
+        lInFlight.Runtime:=lRuntime; lInFlight.Probe:=lProbeBorrowedServices;
+        lRuntime.OnLogMessage:=@lInFlight.LogMessage;
+        Check(lProbeLogService()=REC_VISUAL_OK,'reentrant callback probe failed');
+        Check(lInFlight.ReentrantChecked,'runtime permits reentrant shutdown');
+        Check(lRuntime.CanShutdown,'runtime stayed blocked after callback');
+        lInFlight.Block:=True;
+        lShutdownWorker:=TShutdownWorker.Create(True);
+        lShutdownWorker.FreeOnTerminate:=False; lShutdownWorker.Harness:=lInFlight;
+        lObserveWorker:=TObserveWorker.Create(True);
+        lObserveWorker.FreeOnTerminate:=False; lObserveWorker.Harness:=lInFlight;
+        lShutdownWorker.Start; lObserveWorker.Start;
+        Check(lProbeLogService()=REC_VISUAL_OK,'blocking callback probe failed');
+        lObserveWorker.WaitFor; lShutdownWorker.WaitFor;
+        Check(lInFlight.Error='',lInFlight.Error);
+        Check(lInFlight.ShutdownDone.WaitFor(0)=wrSignaled,'shutdown refusal did not finish');
+        Check(lRuntime.TryBeginShutdown,'shutdown retry after callback failed');
+        lRuntime.Free;
+        lRuntime:=nil;
+      finally
+        lInFlight.ReleaseLog.SetEvent;
+        lShutdownWorker.Free; lObserveWorker.Free; lInFlight.Free;
+      end;
+    end else begin
+      {$IFDEF MSWINDOWS}
+      if ACloseRetry then begin
+        lExternalModule:=Windows.LoadLibrary(PChar(lPluginPath));
+        Check(lExternalModule<>0,'cannot hold fixture for teardown counters');
+        Pointer(lCloseCount):=GetProcAddress(lExternalModule,'ProbeCloseCount');
+        Pointer(lPluginDestroyCount):=GetProcAddress(lExternalModule,'ProbePluginDestroyCount');
+        Pointer(lWorkerStopCount):=GetProcAddress(lExternalModule,'ProbeWorkerStopCount');
+        Pointer(lWorkerRunning):=GetProcAddress(lExternalModule,'ProbeWorkerRunning');
+        Pointer(lVoidDestroyCount):=GetProcAddress(lExternalModule,'ProbeVoidDestroyCount');
+        Pointer(lProbeBorrowedServices):=GetProcAddress(lExternalModule,'ProbeBorrowedServices');
+        Pointer(lProbeLogService):=GetProcAddress(lExternalModule,'ProbeLogService');
+        Check(Assigned(lCloseCount) and Assigned(lPluginDestroyCount) and
+          Assigned(lWorkerStopCount) and Assigned(lWorkerRunning) and
+          Assigned(lVoidDestroyCount) and Assigned(lProbeBorrowedServices) and
+          Assigned(lProbeLogService),'close retry fixture exports missing');
+        lInFlight:=TInFlightHarness.Create;
+        try
+          lInFlight.Runtime:=lRuntime;
+          lRuntime.OnLogMessage:=@lInFlight.LogMessage;
+          Check(lProbeLogService()=REC_VISUAL_OK,'active callback probe failed');
+          Check(lInFlight.ReentrantChecked,'active callback shutdown was not refused');
+          Check((lRuntime.LoadedCount=1) and lRegistry.IsComponentRegistered('test.stateful-visual'),
+            'active callback refusal destroyed runtime');
+        finally
+          lRuntime.OnLogMessage:=nil;
+          lInFlight.Free;
+        end;
+        lDestroyBefore:=lVoidDestroyCount();
+        Check((lWorkerRunning()=1) and (lWorkerStopCount()=0),'fixture worker not active');
+        Check(not lRuntime.TryBeginShutdown,'first plugin close should fail');
+        Check((lCloseCount()=1) and (lPluginDestroyCount()=0) and
+          (lVoidDestroyCount()=lDestroyBefore) and (lWorkerRunning()=1) and
+          (lWorkerStopCount()=0),'close refusal destroyed state or worker');
+        Check((lRuntime.LoadedCount=1) and lRegistry.IsComponentRegistered('test.stateful-visual')
+          and (lProbeBorrowedServices(0)=REC_VISUAL_OK),'close refusal destroyed host services');
+        Check(lRuntime.TryBeginShutdown,'second plugin close should succeed');
+        Check((lCloseCount()=2) and (lWorkerStopCount()=1) and (lWorkerRunning()=0) and
+          (lPluginDestroyCount()=0) and (lVoidDestroyCount()=lDestroyBefore),
+          'successful close did not join worker before destruction');
+        Check(lRuntime.TryBeginShutdown and (lCloseCount()=2),
+          'successful close was not idempotent');
+      end;
+      {$ENDIF}
+      lRuntime.Free;
+      lRuntime := nil;
+      {$IFDEF MSWINDOWS}
+      if ACloseRetry then begin
+        Check((lPluginDestroyCount()=1) and (lVoidDestroyCount()>lDestroyBefore),
+          'successful shutdown did not destroy instances/plugin');
+        Check(Windows.FreeLibrary(lExternalModule),'external fixture reference not released');
+        lExternalModule:=0;
+      end;
+      {$ENDIF}
+    end;
     Check(not lView.Active and not lSurvivingView.Active and
       not lSurvivingView.Attached, 'view sessions survived DLL unload');
     lSurvivingView.Resize(lSurface);
@@ -508,8 +838,19 @@ begin
       Check(lFailedDestroyCount()>0,'destroy failure did not retain allocated instance');
       Check(lVoidDestroyCount()=0,'host called void destruction after status ERROR');
       Check(lNativeViewCount()=0,'successful detach left native views during destroy ERROR');
+      if AProbePinnedServices then begin
+        lPinnedProbeStatus:=lProbeBorrowedServices(1);
+        Check(lPinnedProbeStatus=REC_VISUAL_OK,
+          'pinned services did not safely refuse access after shutdown: '+
+          IntToStr(lPinnedProbeStatus));
+      end;
       Check(lCleanupFailedDestroy()=REC_VISUAL_OK,'fixture failed-instance cleanup');
       Check(lFailedDestroyCount()=0,'fixture leaked retained instance');
+      if AProbePinnedServices and AManagedLifecycle then begin
+        Pointer(lFinalizePinnedPlugin):=GetProcAddress(lPinnedModule,'ProbeFinalizePinnedPlugin');
+        Check(Assigned(lFinalizePinnedPlugin) and
+          (lFinalizePinnedPlugin()=REC_VISUAL_OK),'fixture managed plugin cleanup');
+      end;
       Check(Windows.FreeLibrary(lPinnedModule),'fixture destroy-status pin cleanup');
       WriteLn('RESULT PluginVisualModelTest destroy status ERROR pin passed');
     end
@@ -519,17 +860,48 @@ begin
   finally
     {$IFDEF MSWINDOWS} lNativeHost.Free; {$ENDIF}
     {$IFDEF MSWINDOWS} SetEnvironmentVariable('RECORDER_DESTROY_PROBE',nil); {$ENDIF}
+    {$IFDEF MSWINDOWS} SetEnvironmentVariable('RECORDER_CLOSE_PROBE',nil); {$ENDIF}
+    {$IFDEF MSWINDOWS} if lExternalModule<>0 then Windows.FreeLibrary(lExternalModule); {$ENDIF}
     lRuntime.Free;
     lView.Free;
     lSurvivingView.Free;
     lRegistry.Free;
     lTagRegistry.Free;
     lPage.Free;
-    SysUtils.DeleteFile(lConfigFileName);
-    SysUtils.DeleteFile(lPluginPath);
-    RemoveDir(lPluginDirectory);
+    if lCreatedConfig then SysUtils.DeleteFile(lConfigFileName);
+    if lCreatedPlugin then SysUtils.DeleteFile(lPluginPath);
+    if lCreatedDirectory then RemoveDir(lPluginDirectory);
   end;
   WriteLn('RESULT PluginVisualModelTest runtime cycle passed');
+end;
+
+{ Рискованный сценарий отказа плагина выполняется только в дочернем процессе:
+  авария или зависание callback не повреждают основной процесс тестирования. }
+procedure RunPinnedServicesChild(const APluginFileName:string; AManaged:Boolean;
+  AInFlight:Boolean=False; AInFlightSuccess:Boolean=False; ACloseRetry:Boolean=False;
+  AInitFail:Boolean=False);
+var p:TProcess; lDeadline:QWord;
+begin
+  p:=TProcess.Create(nil);
+  try
+    p.Executable:=ParamStr(0);
+    p.Parameters.Add(APluginFileName);
+    if AInitFail then p.Parameters.Add('initfail-child')
+    else if ACloseRetry then p.Parameters.Add('close-retry-child')
+    else if AInFlightSuccess then p.Parameters.Add('inflight-success-child')
+    else if AInFlight then p.Parameters.Add('inflight-child')
+    else p.Parameters.Add('pinned-services-child');
+    if AManaged then p.Parameters.Add('managed');
+    p.Options:=[poNoConsole];
+    p.Execute;
+    lDeadline:=GetTickCount64+15000;
+    while p.Running and (GetTickCount64<lDeadline) do Sleep(10);
+    if p.Running then begin
+      p.Terminate(1);
+      raise Exception.Create('pinned-services child timed out');
+    end;
+    Check(p.ExitStatus=0,'pinned-services child failed: '+IntToStr(p.ExitStatus));
+  finally p.Free; end;
 end;
 
 begin
@@ -539,13 +911,50 @@ begin
       Application.Initialize;
       Application.ShowMainForm := False;
     end;
+    if (ParamCount>1) and (ParamStr(2)='pinned-services-child') then begin
+      RunRuntimeTests(ParamStr(1),False,True,
+        (ParamCount>2) and (ParamStr(3)='managed'),True);
+      WriteLn('RESULT pinned services child passed');
+      Exit;
+    end;
+    if (ParamCount>1) and (ParamStr(2)='inflight-child') then begin
+      RunRuntimeTests(ParamStr(1),False,True,True,True,True);
+      WriteLn('RESULT inflight gateway child passed');
+      Exit;
+    end;
+    if (ParamCount>1) and (ParamStr(2)='inflight-success-child') then begin
+      RunRuntimeTests(ParamStr(1),False,False,True,True,True);
+      WriteLn('RESULT inflight successful unload child passed');
+      Exit;
+    end;
+    if (ParamCount>1) and (ParamStr(2)='close-retry-child') then begin
+      RunRuntimeTests(ParamStr(1),False,False,True,False,False,True);
+      WriteLn('RESULT PluginClose refusal/retry and worker join passed');
+      Exit;
+    end;
+    if (ParamCount>1) and (ParamStr(2)='initfail-child') then begin
+      RunRuntimeTests(ParamStr(1),False,False,True,False,False,False,True);
+      Exit;
+    end;
     RunTests;
     if ParamCount > 0 then
     begin
-      RunRuntimeTests(ParamStr(1));
-      RunRuntimeTests(ParamStr(1));
-      {$IFDEF MSWINDOWS} RunRuntimeTests(ParamStr(1), True); {$ENDIF}
-      {$IFDEF MSWINDOWS} RunRuntimeTests(ParamStr(1),False,True); {$ENDIF}
+      if (ParamCount > 1) and (ParamStr(2) = 'managed') then
+      begin
+        RunRuntimeTests(ParamStr(1),False,False,True);
+        {$IFDEF MSWINDOWS} RunPinnedServicesChild(ParamStr(1),True); {$ENDIF}
+        {$IFDEF MSWINDOWS} RunPinnedServicesChild(ParamStr(1),True,True); {$ENDIF}
+        {$IFDEF MSWINDOWS} RunPinnedServicesChild(ParamStr(1),True,True,True); {$ENDIF}
+        {$IFDEF MSWINDOWS} RunPinnedServicesChild(ParamStr(1),True,False,False,True); {$ENDIF}
+        {$IFDEF MSWINDOWS} RunPinnedServicesChild(ParamStr(1),True,False,False,False,True); {$ENDIF}
+      end
+      else begin
+        RunRuntimeTests(ParamStr(1));
+        RunRuntimeTests(ParamStr(1));
+        {$IFDEF MSWINDOWS} RunRuntimeTests(ParamStr(1), True); {$ENDIF}
+        {$IFDEF MSWINDOWS} RunRuntimeTests(ParamStr(1),False,True); {$ENDIF}
+        {$IFDEF MSWINDOWS} RunPinnedServicesChild(ParamStr(1),False); {$ENDIF}
+      end;
       WriteLn('RESULT PluginVisualModelTest runtime passed');
     end
     else

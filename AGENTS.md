@@ -37,3 +37,8 @@
   owning rule lives in `README_AI.md` in the vault.
 - Never store passwords, tokens, personal data or private source excerpts in
   prompts, skills, logs or MemoryDB.
+- If semantic search is blocked by another MemoryDB process, automatically use
+  `search_original_recorder.py --takeover` to recover access. Stop only a process
+  verified as this exact MemoryDB MCP server; never kill unrelated Python
+  processes or delete the storage lock file. Explicit user authorization:
+  2026-10-26.

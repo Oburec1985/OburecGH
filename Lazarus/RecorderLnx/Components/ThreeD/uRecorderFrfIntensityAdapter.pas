@@ -9,6 +9,7 @@ type
     CurveId, TargetNodeId: QWord;
     PointNumber: Integer;
     Gain, MarkerSizePixels: Double;
+    IntensityLogScale: Boolean;
     Color: TColor;
     Axis: T3dMotionAxis;
     Visualization: TRecorderPointVisualization;
@@ -42,6 +43,7 @@ type
     fBindings: array of TRecorderFrfIntensityBinding;
     fMarkers: array of TRecorderIntensityMarker;
     fValues, fPhases: array of Double;
+    fAnyLogBindings, fAnyLinearBindings: Boolean;
     fNormalizationSampler: IRecorderFrfSampler;
     fNormalizationVersion: QWord;
     fNormalizationMin, fNormalizationMax, fNormalizationPeak: Double;
@@ -114,15 +116,21 @@ begin
   if fScene<>nil then fScene.RemoveLabels(PtrUInt(Self));
   fProvider:=AProvider;
   fNormalizationReady:=False;
+  fNormalizationPeak:=0;
   fNormalizationSampler:=nil;
   fScene:=AScene;
   SetLength(fBindings,Length(ABindings));
   SetLength(fMarkers,Length(ABindings));
   SetLength(fValues,Length(ABindings));
   SetLength(fPhases,Length(ABindings));
+  fAnyLogBindings:=False;
+  fAnyLinearBindings:=False;
   for lIndex:=0 to High(ABindings) do
   begin
     fBindings[lIndex]:=ABindings[lIndex];
+    if ABindings[lIndex].Enabled then
+      if ABindings[lIndex].IntensityLogScale then fAnyLogBindings:=True
+      else fAnyLinearBindings:=True;
     fMarkers[lIndex]:=Default(TRecorderIntensityMarker);
     fMarkers[lIndex].Visible:=(fScene<>nil) and
       ResolvePosition(fBindings[lIndex],fMarkers[lIndex].Position);
@@ -185,20 +193,28 @@ function TRecorderFrfIntensityAdapter.Update(AFrequencyHz, APhase: Double;
   AAnimating: Boolean): Boolean;
 var lSampler:IRecorderFrfSampler; lAmplitude:IRecorderAmplitudeSampler;
   lBand:IRecorderFrfBandSampler;
-  lIndex:Integer; lMaximum,lValue,lPhase,lSize,lPulse:Double;
+  lIndex:Integer;
+  lMaximum,lMinimum,lCurrentMaximum,lValue,lPhase,lSize,lPulse:Double;
+  lLogMinimum,lLogSpan,lInverseLogSpan,lRadius:Double;
   lMarker:TRecorderIntensityMarker;
 begin
   Result:=False;
   if (fProvider=nil) or (fScene=nil) then Exit;
   lSampler:=fProvider.AcquireSnapshot;
   if lSampler=nil then Exit;
-  UpdateNormalization(lSampler);
+  if fAnyLinearBindings then UpdateNormalization(lSampler);
   lMaximum:=0;
+  lMinimum:=0;
+  lCurrentMaximum:=0;
   Supports(lSampler,IRecorderAmplitudeSampler,lAmplitude);
   Supports(lSampler,IRecorderFrfBandSampler,lBand);
   for lIndex:=0 to High(fBindings) do
   begin
     fValues[lIndex]:=-1;
+    { Resolve the geometry once, as before, but retain it for presentation so
+      an absent point cannot define the logarithmic range of visible points. }
+    fMarkers[lIndex].Visible:=ResolvePosition(fBindings[lIndex],
+      fMarkers[lIndex].Position);
     if not fBindings[lIndex].Enabled then Continue;
     if fBindings[lIndex].BandRms then
     begin
@@ -218,11 +234,30 @@ begin
     fValues[lIndex]:=lValue;
     fPhases[lIndex]:=lPhase;
     lMaximum:=Max(lMaximum,lValue);
+    if fAnyLogBindings and fMarkers[lIndex].Visible then
+    begin
+      lCurrentMaximum:=Max(lCurrentMaximum,lValue);
+      if (lValue>0) and ((lMinimum=0) or (lValue<lMinimum)) then
+        lMinimum:=lValue;
+    end;
   end;
+  { Log radius spans the positive measured points at this frequency. Keep the
+    legacy preset-band reference exclusively for linear radius normalization. }
+  lLogMinimum:=0;
+  lInverseLogSpan:=0;
+  if fAnyLogBindings and (lMinimum>0) and (lCurrentMaximum>lMinimum) then
+  begin
+    lLogMinimum:=Log10(lMinimum);
+    lLogSpan:=Log10(lCurrentMaximum)-lLogMinimum;
+    if (lLogSpan>0) and not IsNan(lLogSpan) and not IsInfinite(lLogSpan) then
+      lInverseLogSpan:=1/lLogSpan;
+  end;
+  if fNormalizationPeak>0 then lMaximum:=fNormalizationPeak;
   for lIndex:=0 to High(fBindings) do
   begin
     lMarker:=Default(TRecorderIntensityMarker);
-    lMarker.Visible:=ResolvePosition(fBindings[lIndex],lMarker.Position);
+    lMarker.Visible:=fMarkers[lIndex].Visible;
+    lMarker.Position:=fMarkers[lIndex].Position;
     lMarker.DrawSymbol:=True;
     lMarker.PointLabel:=fBindings[lIndex].PointLabel;
     if fBindings[lIndex].ShowIntensityValues and (fValues[lIndex]>=0) then
@@ -231,10 +266,21 @@ begin
       lMarker.PointLabel:=lMarker.PointLabel+' = '+FloatToStrF(fValues[lIndex],ffGeneral,5,0);
     end;
     lSize:=0;
-    { Preset range reference stays fixed while the frequency cursor moves. }
-    if fNormalizationPeak>0 then lMaximum:=fNormalizationPeak;
     if (lMaximum>0) and lMarker.Visible and (fValues[lIndex]>=0) then
-      lSize:=2*fBindings[lIndex].MarkerSizePixels*fValues[lIndex]/lMaximum;
+    begin
+      if not fBindings[lIndex].IntensityLogScale then
+        lRadius:=fValues[lIndex]/lMaximum
+      else if fValues[lIndex]>0 then
+      begin
+        { An equal-positive set, including one measured point, has no span:
+          show full radius instead of dividing by zero or hiding valid data. }
+        if lInverseLogSpan=0 then lRadius:=1
+        else lRadius:=EnsureRange((Log10(fValues[lIndex])-lLogMinimum)*
+          lInverseLogSpan,0,1);
+      end
+      else lRadius:=0;
+      lSize:=2*fBindings[lIndex].MarkerSizePixels*lRadius;
+    end;
     lPulse:=1;
     if AAnimating then lPulse:=Abs(Sin(APhase+fPhases[lIndex]));
     lMarker.SizePixels:=lSize*lPulse;

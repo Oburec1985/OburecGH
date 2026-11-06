@@ -11,27 +11,45 @@ uses
 type
   TRecorderDacWaveMode = (rdwmSine, rdwmAccurateSine, rdwmSweepSine);
 
+  { Continuous mono engineering level, independent of oscillator frequency.
+    Configure validates the immutable level; FillBlock allocates nothing. }
+  TRecorderDacConstantProvider = class(TInterfacedObject, IRecorderDacSampleProvider, IRecorderDacPlaybackRateControl)
+  private
+    fLevel: Double;
+    fFramesPerBlock: Integer;
+  public
+    constructor Create(ALevel: Double);
+    function Configure(const AConfig: TRecorderDacConfig;
+      out AResult: TRecorderDacResult): Boolean;
+    function CanSetPlaybackSampleRate(AHz: Double; out AResult: TRecorderDacResult): Boolean;
+    function SetPlaybackSampleRate(AHz: Double; out AResult: TRecorderDacResult): Boolean;
+    procedure Reset;
+    function FillBlock(ABuffer: PDouble; AFrameCapacity: Integer;
+      out AFrameCount: Integer; out AResult: TRecorderDacResult): Boolean;
+  end;
+
   { Finite sine bursts. Interval includes the silent tail; parameters are
     immutable during playback, and frame counters persist across blocks. }
-  TRecorderDacPulseProvider = class(TInterfacedObject, IRecorderDacSampleProvider)
+  TRecorderDacPulseProvider = class(TInterfacedObject, IRecorderDacSampleProvider, IRecorderDacPlaybackRateControl)
   private
     fFrequency, fAmplitude, fInterval: Double;
     fPeriods, fCount: Integer;
     fConfig: TRecorderDacConfig;
-    fPosition, fIntervalFrames, fTotalFrames: Int64;
-    fActiveSec: Double;
+    fActiveSec, fElapsedSeconds: Double;
   public
     constructor Create(AFrequency, AAmplitude, AInterval: Double;
       APeriods, ACount: Integer);
     function Configure(const AConfig: TRecorderDacConfig;
       out AResult: TRecorderDacResult): Boolean;
+    function CanSetPlaybackSampleRate(AHz: Double; out AResult: TRecorderDacResult): Boolean;
+    function SetPlaybackSampleRate(AHz: Double; out AResult: TRecorderDacResult): Boolean;
     procedure Reset;
     function FillBlock(ABuffer: PDouble; AFrameCapacity: Integer;
       out AFrameCount: Integer; out AResult: TRecorderDacResult): Boolean;
   end;
 
   TRecorderDacWaveProvider = class(TInterfacedObject,
-    IRecorderDacSampleProvider)
+    IRecorderDacSampleProvider, IRecorderDacPlaybackRateControl)
   private
     fMode: TRecorderDacWaveMode;
     fFrequencyHz: Double;
@@ -48,13 +66,15 @@ type
       AAmplitude, ASweepStartHz, ASweepEndHz, ASweepTimeSec: Double);
     function Configure(const AConfig: TRecorderDacConfig;
       out AResult: TRecorderDacResult): Boolean;
+    function CanSetPlaybackSampleRate(AHz: Double; out AResult: TRecorderDacResult): Boolean;
+    function SetPlaybackSampleRate(AHz: Double; out AResult: TRecorderDacResult): Boolean;
     procedure Reset;
     function FillBlock(ABuffer: PDouble; AFrameCapacity: Integer;
       out AFrameCount: Integer; out AResult: TRecorderDacResult): Boolean;
   end;
 
   TRecorderDacSineProvider = class(TInterfacedObject,
-    IRecorderDacSampleProvider)
+    IRecorderDacSampleProvider, IRecorderDacPlaybackRateControl)
   private
     fAmplitude: Double;
     fFrequencyHz: Double;
@@ -66,13 +86,15 @@ type
     constructor Create(AFrequencyHz, AAmplitude: Double; AOffset: Double = 0);
     function Configure(const AConfig: TRecorderDacConfig;
       out AResult: TRecorderDacResult): Boolean;
+    function CanSetPlaybackSampleRate(AHz: Double; out AResult: TRecorderDacResult): Boolean;
+    function SetPlaybackSampleRate(AHz: Double; out AResult: TRecorderDacResult): Boolean;
     procedure Reset;
     function FillBlock(ABuffer: PDouble; AFrameCapacity: Integer;
       out AFrameCount: Integer; out AResult: TRecorderDacResult): Boolean;
   end;
 
   TRecorderDacTagProvider = class(TInterfacedObject,
-    IRecorderDacSampleProvider, IRecorderDacSourceIdentity)
+    IRecorderDacSampleProvider, IRecorderDacSourceIdentity, IRecorderDacPlaybackRateControl)
   private
     fTag: TRecorderTag;
     fTagName: string;
@@ -84,6 +106,8 @@ type
     constructor Create(ATag: TRecorderTag);
     function Configure(const AConfig: TRecorderDacConfig;
       out AResult: TRecorderDacResult): Boolean;
+    function CanSetPlaybackSampleRate(AHz: Double; out AResult: TRecorderDacResult): Boolean;
+    function SetPlaybackSampleRate(AHz: Double; out AResult: TRecorderDacResult): Boolean;
     procedure Reset;
     function FillBlock(ABuffer: PDouble; AFrameCapacity: Integer;
       out AFrameCount: Integer; out AResult: TRecorderDacResult): Boolean;
@@ -92,6 +116,136 @@ type
   end;
 
 implementation
+
+function ValidPlaybackRate(ARate, AFrequency: Double;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := not IsNan(ARate) and not IsInfinite(ARate) and
+    (ARate > 0) and (AFrequency <= ARate / 2);
+  if Result then AResult := RecorderDacOk
+  else AResult := RecorderDacFailed(rdeInvalidConfig, rdsgConfigure, 'Invalid playback sample rate');
+end;
+
+function TRecorderDacConstantProvider.CanSetPlaybackSampleRate(AHz: Double;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := ValidPlaybackRate(AHz, 0, AResult);
+end;
+
+function TRecorderDacConstantProvider.SetPlaybackSampleRate(AHz: Double;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := CanSetPlaybackSampleRate(AHz, AResult);
+end;
+
+function TRecorderDacWaveProvider.CanSetPlaybackSampleRate(AHz: Double;
+  out AResult: TRecorderDacResult): Boolean;
+var
+  lMaximum: Double;
+begin
+  lMaximum := fFrequencyHz;
+  if fMode = rdwmSweepSine then lMaximum := Max(fSweepStartHz, fSweepEndHz);
+  Result := ValidPlaybackRate(AHz, lMaximum, AResult);
+end;
+
+function TRecorderDacWaveProvider.SetPlaybackSampleRate(AHz: Double;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := CanSetPlaybackSampleRate(AHz, AResult);
+  if Result then fConfig.SampleRateHz := AHz;
+end;
+
+function TRecorderDacSineProvider.CanSetPlaybackSampleRate(AHz: Double;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := ValidPlaybackRate(AHz, fFrequencyHz, AResult);
+end;
+
+function TRecorderDacSineProvider.SetPlaybackSampleRate(AHz: Double;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := CanSetPlaybackSampleRate(AHz, AResult);
+  if not Result then Exit;
+  fConfig.SampleRateHz := AHz;
+  fStep := 2 * Pi * fFrequencyHz / AHz;
+end;
+
+function TRecorderDacPulseProvider.CanSetPlaybackSampleRate(AHz: Double;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := ValidPlaybackRate(AHz, fFrequency, AResult);
+end;
+
+function TRecorderDacPulseProvider.SetPlaybackSampleRate(AHz: Double;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := CanSetPlaybackSampleRate(AHz, AResult);
+  if Result then fConfig.SampleRateHz := AHz;
+end;
+
+function TRecorderDacTagProvider.CanSetPlaybackSampleRate(AHz: Double;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := ValidPlaybackRate(AHz, 0, AResult) and
+    (Abs(AHz - fConfig.SampleRateHz) < 1e-9);
+  if not Result then AResult := RecorderDacFailed(rdeUnsupported, rdsgConfigure,
+    'Tag provider cannot change playback clock without resampling');
+end;
+
+function TRecorderDacTagProvider.SetPlaybackSampleRate(AHz: Double;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  Result := CanSetPlaybackSampleRate(AHz, AResult);
+end;
+
+constructor TRecorderDacConstantProvider.Create(ALevel: Double);
+begin
+  inherited Create;
+  fLevel := ALevel;
+end;
+
+function TRecorderDacConstantProvider.Configure(const AConfig: TRecorderDacConfig;
+  out AResult: TRecorderDacResult): Boolean;
+begin
+  fFramesPerBlock := 0;
+  Result := False;
+  if not RecorderDacValidateConfig(AConfig, AResult) then Exit;
+  if (AConfig.ChannelCount <> 1) or IsNan(fLevel) or IsInfinite(fLevel) or
+    (fLevel < AConfig.MinimumValue) or (fLevel > AConfig.MaximumValue) then
+  begin
+    AResult := RecorderDacFailed(rdeInvalidConfig, rdsgConfigure,
+      'Constant level requires mono output and a finite level within DAC range');
+    Exit;
+  end;
+  fFramesPerBlock := AConfig.FramesPerBlock;
+  AResult := RecorderDacOk;
+  Result := True;
+end;
+
+procedure TRecorderDacConstantProvider.Reset;
+begin
+  { A constant level has no phase or finite-series cursor to reset. }
+end;
+
+function TRecorderDacConstantProvider.FillBlock(ABuffer: PDouble;
+  AFrameCapacity: Integer; out AFrameCount: Integer;
+  out AResult: TRecorderDacResult): Boolean;
+var
+  I: Integer;
+begin
+  AFrameCount := 0;
+  Result := (ABuffer <> nil) and (fFramesPerBlock > 0) and
+    (AFrameCapacity >= fFramesPerBlock);
+  if not Result then
+  begin
+    AResult := RecorderDacFailed(rdeBufferTooSmall, rdsgWrite,
+      'Constant level block requires configured output buffer capacity');
+    Exit;
+  end;
+  for I := 0 to fFramesPerBlock - 1 do ABuffer[I] := fLevel;
+  AFrameCount := fFramesPerBlock;
+  AResult := RecorderDacOk;
+end;
 
 constructor TRecorderDacPulseProvider.Create(AFrequency, AAmplitude,
   AInterval: Double; APeriods, ACount: Integer);
@@ -119,9 +273,7 @@ begin
   fActiveSec := fPeriods / fFrequency;
   if (fInterval < fActiveSec) or
     (fInterval * AConfig.SampleRateHz > High(Int64) / fCount / 2) then Exit;
-  fIntervalFrames := Round(fInterval * AConfig.SampleRateHz);
-  if fIntervalFrames < 1 then Exit;
-  fTotalFrames := fIntervalFrames * fCount;
+  if Round(fInterval * AConfig.SampleRateHz) < 1 then Exit;
   fConfig := AConfig;
   Reset;
   AResult := RecorderDacOk;
@@ -130,7 +282,7 @@ end;
 
 procedure TRecorderDacPulseProvider.Reset;
 begin
-  fPosition := 0;
+  fElapsedSeconds := 0;
 end;
 
 function TRecorderDacPulseProvider.FillBlock(ABuffer: PDouble;
@@ -141,15 +293,16 @@ var
   lTime, lValue: Double;
 begin
   AFrameCount := 0;
-  if fPosition >= fTotalFrames then
+  if fElapsedSeconds >= fInterval * fCount - 1e-12 then
   begin
     AResult := RecorderDacFailed(rdeCompleted, rdsgWrite, 'Pulse series completed');
     Exit(False);
   end;
-  AFrameCount := Integer(Min(Int64(AFrameCapacity), fTotalFrames - fPosition));
+  AFrameCount := Min(AFrameCapacity, Ceil((fInterval * fCount - fElapsedSeconds) *
+    fConfig.SampleRateHz - 1e-9));
   for I := 0 to AFrameCount - 1 do
   begin
-    lTime := (fPosition mod fIntervalFrames) / fConfig.SampleRateHz;
+    lTime := fElapsedSeconds - Floor((fElapsedSeconds + 1e-12) / fInterval) * fInterval;
     if lTime < fActiveSec then
       lValue := fAmplitude * Sin(2 * Pi * fFrequency * lTime)
     else lValue := 0;
@@ -158,7 +311,7 @@ begin
       ABuffer^ := lValue;
       Inc(ABuffer);
     end;
-    Inc(fPosition);
+    fElapsedSeconds := fElapsedSeconds + 1 / fConfig.SampleRateHz;
   end;
   AResult := RecorderDacOk;
   Result := True;

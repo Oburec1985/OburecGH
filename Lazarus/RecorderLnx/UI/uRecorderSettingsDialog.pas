@@ -37,6 +37,7 @@ uses
   uRecorderHardwareLiveDevices, uRecorderVirtualTagDialog,
   uRecorderNetworkBinding, uRecorderPluginInfo, uRecorderPluginConfig,
   uRecorderPluginRuntime, uRecorderPluginApi, uLuaCalcSettingsDialog,
+  uRecorderCoordinatorClient,
   uRecorderWindowDragTrace;
 
 type
@@ -67,6 +68,8 @@ type
     btnSelectedChannelsClear: TButton;
     cbHideInactiveSelectedChannels: TCheckBox;
     cbOnlyVirtualSelectedChannels: TCheckBox;
+    cbFilterChannelUnits: TCheckBox;
+    cmbChannelUnitCategory: TComboBox;
     pnCreateVirtualTag: TPanel;
     btnCreateVirtualTag: TBitBtn;
     btnChannelImport: TButton;
@@ -117,6 +120,7 @@ type
     fWorkDirEdit: TEdit;                        // Рабочий каталог сохранения файлов
     fRecordShareNameEdit: TEdit;                // Имя SMB-ресурса каталога замеров
     btnPublishRecordDir: TButton;               // Публикация каталога замеров в SMB
+    btnPublishMeraFiles: TButton;
     fMeraFilesPathEdit: TEdit;                  // Каталог Mera Files (SDB, калибровки)
     fTemplateCheck: TCheckBox;                  // Флаг использования шаблона имени файла
     fTemplateButton: TButton;                   // Кнопка настройки шаблона
@@ -142,6 +146,11 @@ type
     fStopReturnToPreviewCheck: TCheckBox;       // Флаг возврата в режим просмотра после останова
 
     // Обработчики событий UI элементов диалога
+    gbWorkstation: TGroupBox;
+    edWorkstationName: TEdit;
+    cbUseComputerName: TCheckBox;
+    procedure WorkstationNameChanged(Sender: TObject);
+    procedure UseComputerNameChanged(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
     procedure ConditionChanged(Sender: TObject);
@@ -223,9 +232,9 @@ type
     fPluginRuntime: TRecorderPluginRuntime;
     fSourceProbe: TRecorderSettingsSourceProbe;
     fDeviceImageList: TCustomImageList;
-    fVirtualTagIcon: TBitmap;
-    fInactiveTagIcon: TBitmap;
-    fProtocolTagIcon: TBitmap;
+    fVirtualTagIcon: Graphics.TBitmap;
+    fInactiveTagIcon: Graphics.TBitmap;
+    fProtocolTagIcon: Graphics.TBitmap;
     fProtocolTagImageIndex: Integer;
     fTagDialogImageList: TCustomImageList;      // Список иконок диалога настройки тегов
     fSelectedChannelTags: TList;                // Row-map выбранных каналов на TRecorderTag
@@ -235,6 +244,7 @@ type
     fSelectedChannelsPopup: TPopupMenu;
     fTagTreePendingMoveTags: TList;
     fTagTreeMoveTargetsOnly: Boolean;
+    fUpdatingChannelUnitCategories: Boolean;
     fSelectedSortColumn: Integer;               // Колонка текущей сортировки выбранных каналов
     fSelectedSortAscending: Boolean;            // Направление текущей сортировки
     fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Черновая модель алгоритмов вкладки каналов
@@ -253,6 +263,8 @@ type
     procedure fSelectedChannelsGridMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure fSelectedChannelsGridMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure SelectedChannelsFilterChanged(Sender: TObject);
+    procedure RefreshChannelUnitCategories;
+    function ChannelPassesUnitFilter(ATag: TRecorderTag): Boolean;
     procedure SelectedChannelsFilterClearClick(Sender: TObject);
     procedure GridPaint(Sender: TObject);
     procedure InitializeChannelExchangeButtons;
@@ -401,6 +413,10 @@ type
     function ReadSecondsAsMs(AEdit: TEdit; ADefaultMs: Cardinal): Cardinal;
   protected
     procedure WndProc(var TheMessage: TLMessage); override;
+  private
+    fCoordinatorClient: TRecorderCoordinatorClient;
+    fWorkstationUpdating, fWorkstationChanged: Boolean;
+    procedure SetCoordinatorClient(AClient: TRecorderCoordinatorClient);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -428,7 +444,8 @@ function ShowRecorderSettingsDialog(AOwner: TComponent;
   ADeviceImageList: TCustomImageList;
   ATagDialogImageList: TCustomImageList;
   out ADataSourcesChanged: Boolean;
-  APluginRuntime: TRecorderPluginRuntime = nil): Boolean;
+  APluginRuntime: TRecorderPluginRuntime = nil;
+  ACoordinatorClient: TRecorderCoordinatorClient = nil): Boolean;
 
 { Opens settings dialog internals and invokes MIC185 edit (no full settings modal). }
 function RecorderSettingsDialogDebugEditMic185(AOwner: TComponent;
@@ -439,7 +456,7 @@ function RecorderSettingsDialogDebugEditMic185(AOwner: TComponent;
 implementation
 
 uses
-  StrUtils, ssockets, Process,
+  StrUtils, ssockets, Process, uRecorderUnitManager,
   uRecorderTachoAlgorithmFrame, uRecorderPhaseAlgorithmFrame,
   uRecorderCounterAlgorithmFrame, uRecorderArithmeticAlgorithmFrame,
   uSharedAsync,
@@ -455,9 +472,10 @@ uses
   uRecorderPxiMx248Types, uRecorderPxiMx248WindowsTransport,
   uRecorderPxiMx248ConfiguredEditor, uRecorderPxiMx248DiscoveryWorker,
   uRecorderDriverContractsV2,
-  uRecorderDebugLog,
+  uRecorderDebugLog, uRecorderMachineStorage,
   uRecorderTagTableExchange, uRecorderOpcUaTypes, uModbusCoreTypes,
-  uRecorderSqlDbSettingsDialog, uRecorderSqlDataSource;
+  uRecorderSqlDbSettingsDialog, uRecorderSqlDataSource
+  {$IFDEF MSWINDOWS}, Windows, ShellApi{$ENDIF}, Types;
 
 {$R *.lfm}
 
@@ -629,7 +647,8 @@ function ShowRecorderSettingsDialog(AOwner: TComponent;
   ADeviceImageList: TCustomImageList;
   ATagDialogImageList: TCustomImageList;
   out ADataSourcesChanged: Boolean;
-  APluginRuntime: TRecorderPluginRuntime): Boolean;
+  APluginRuntime: TRecorderPluginRuntime;
+  ACoordinatorClient: TRecorderCoordinatorClient): Boolean;
 var
   lDialog: TRecorderSettingsDialog;
 begin
@@ -639,6 +658,7 @@ begin
     lDialog.DeviceImageList := ADeviceImageList;
     lDialog.TagDialogImageList := ATagDialogImageList;
     lDialog.PluginRuntime := APluginRuntime;
+    lDialog.SetCoordinatorClient(ACoordinatorClient);
     lDialog.Recorder := ARecorder;
     { Вход в конфигурацию проверяет существующие сессии, но не программирует приборы. }
     RecorderHardwareRefreshLiveSourceWarnings;
@@ -748,16 +768,16 @@ end;
 procedure AssignButtonImage(AButton: TBitBtn; AImages: TCustomImageList;
   AIndex: Integer);
 var
-  lBitmap: TBitmap;
-  lNative: TBitmap;
+  lBitmap: Graphics.TBitmap;
+  lNative: Graphics.TBitmap;
   lW, lH: Integer;
 begin
   if (AButton = nil) or (AImages = nil) or (AIndex < 0) or
     (AIndex >= AImages.Count) then
     Exit;
 
-  lNative := TBitmap.Create;
-  lBitmap := TBitmap.Create;
+  lNative := Graphics.TBitmap.Create;
+  lBitmap := Graphics.TBitmap.Create;
   try
     lNative.SetSize(AImages.Width, AImages.Height);
     AImages.GetBitmap(AIndex, lNative);
@@ -776,7 +796,7 @@ begin
     lBitmap.SetSize(lW, lH);
     lBitmap.Canvas.Brush.Color := clBtnFace;
     lBitmap.Canvas.FillRect(0, 0, lW, lH);
-    lBitmap.Canvas.StretchDraw(Rect(0, 0, lW, lH), lNative);
+    lBitmap.Canvas.StretchDraw(Types.Rect(0, 0, lW, lH), lNative);
     
     AButton.Caption := '';
     AButton.Glyph.Assign(lBitmap);
@@ -810,7 +830,7 @@ var
 
 function AddProtocolTagIcon(AImages: TCustomImageList): Integer;
 var
-  lBitmap: TBitmap;
+  lBitmap: Graphics.TBitmap;
 begin
   Result := -1;
   if AImages = nil then Exit;
@@ -818,7 +838,7 @@ begin
     (g_ProtocolTagImageIndex >= 0) and
     (g_ProtocolTagImageIndex < AImages.Count) then
     Exit(g_ProtocolTagImageIndex);
-  lBitmap := TBitmap.Create;
+  lBitmap := Graphics.TBitmap.Create;
   try
     lBitmap.SetSize(16, 16);
     lBitmap.Transparent := True;
@@ -890,12 +910,6 @@ begin
   fWindowDragTrace := TRecorderWindowDragTrace.Create('settings');
   fPluginCatalog := TRecorderPluginCatalog.Create;
   InitializePluginPage;
-  {$IFNDEF UNIX}
-  if btnPublishRecordDir <> nil then
-    btnPublishRecordDir.Visible := False;
-  if fWorkDirEdit <> nil then
-    fWorkDirEdit.Width := 526;
-  {$ENDIF}
   fDataSourcesChanged := False;
   fSelectedChannelTags := TList.Create;
   fAvailableChannelSignals := TList.Create;
@@ -974,6 +988,8 @@ begin
     cbHideInactiveSelectedChannels.OnChange := @SelectedChannelsFilterChanged;
   if cbOnlyVirtualSelectedChannels <> nil then
     cbOnlyVirtualSelectedChannels.OnChange := @SelectedChannelsFilterChanged;
+  cbFilterChannelUnits.OnChange := @SelectedChannelsFilterChanged;
+  cmbChannelUnitCategory.OnChange := @SelectedChannelsFilterChanged;
   if btnChannelImport <> nil then
     btnChannelImport.OnClick := @btnChannelImportClick;
   if btnChannelExport <> nil then
@@ -1417,7 +1433,7 @@ var
   var
     lSearchText: string;
   begin
-    Result := ATag <> nil;
+    Result := (ATag <> nil) and ChannelPassesUnitFilter(ATag);
     if not Result then
       Exit;
     if (cbHideInactiveSelectedChannels <> nil) and
@@ -2003,18 +2019,18 @@ begin
   begin
     if CDeviceVirtualTagImageIndex < fDeviceImageList.Count then
     begin
-      fVirtualTagIcon := TBitmap.Create;
+      fVirtualTagIcon := Graphics.TBitmap.Create;
       fDeviceImageList.GetBitmap(CDeviceVirtualTagImageIndex, fVirtualTagIcon);
     end;
     if CDeviceInactiveTagImageIndex < fDeviceImageList.Count then
     begin
-      fInactiveTagIcon := TBitmap.Create;
+      fInactiveTagIcon := Graphics.TBitmap.Create;
       fDeviceImageList.GetBitmap(CDeviceInactiveTagImageIndex, fInactiveTagIcon);
     end;
     fProtocolTagImageIndex := AddProtocolTagIcon(fDeviceImageList);
     if fProtocolTagImageIndex >= 0 then
     begin
-      fProtocolTagIcon := TBitmap.Create;
+      fProtocolTagIcon := Graphics.TBitmap.Create;
       fDeviceImageList.GetBitmap(fProtocolTagImageIndex, fProtocolTagIcon);
     end;
   end;
@@ -2344,12 +2360,14 @@ begin
     4:
       Result := CompareValue(ATagA.PollFrequencyHz, ATagB.PollFrequencyHz);
     5:
-      Result := 0;
+      Result := CompareText(ATagA.UnitName, ATagB.UnitName);
     6:
-      Result := CompareText(ATagA.SourceId, ATagB.SourceId);
+      Result := 0;
     7:
-      Result := CompareText(ATagA.Description, ATagB.Description);
+      Result := CompareText(ATagA.SourceId, ATagB.SourceId);
     8:
+      Result := CompareText(ATagA.Description, ATagB.Description);
+    9:
       Result := CompareValue(ATagA.Id, ATagB.Id);
   else
     Result := CompareText(ATagA.Name, ATagB.Name);
@@ -3623,11 +3641,11 @@ var
         end;
         if lTag = nil then
           lTag := fRecorder.TagRegistry.CreateTag(lTagName,
-            Ceil(Max(4096, lSignal.FrequencyHz)), AGroup = rsgMeraFile);
+            Ceil(Math.Max(4096, lSignal.FrequencyHz)), AGroup = rsgMeraFile);
       end;
 
       ApplyMeraSignalToTag(lTag, lSignal);
-      lTag.EnsureBufferCapacity(Ceil(Max(4096, lSignal.FrequencyHz)));
+      lTag.EnsureBufferCapacity(Ceil(Math.Max(4096, lSignal.FrequencyHz)));
     end;
   end;
 
@@ -4785,6 +4803,18 @@ begin
     if (AOldSourceId <> '') and not SameText(AOldSourceId, ANewSourceId) then
       fRecorder.TagRegistry.UnregisterActiveSource(AOldSourceId);
     fRecorder.TagRegistry.RegisterActiveSource(ANewSourceId);
+  end
+  else if RecorderIsOpcUaSource(ANewSourceId, '') then
+  begin
+    if (AOldSourceId <> '') and not SameText(AOldSourceId, ANewSourceId) then
+      fRecorder.TagRegistry.UnregisterActiveSource(AOldSourceId);
+    fRecorder.TagRegistry.RegisterActiveSource(ANewSourceId);
+  end
+  else if SameText(ANewSourceId, CRecorderSqlSourceId) then
+  begin
+    { SQL mirror tags are ordinary non-virtual source tags. Keep their source
+      active so the main channel table does not filter them out. }
+    fRecorder.TagRegistry.RegisterActiveSource(CRecorderSqlSourceId);
   end;
 
   if ARefreshUi then
@@ -4795,6 +4825,8 @@ begin
       transaction already linked this MX route, so keep its tags visible. }
     if TryParseRcMx248SourceId(ANewSourceId, lMxChassis, lMxSlot) then
       fRecorder.TagRegistry.RegisterActiveSource(ANewSourceId);
+    if SameText(ANewSourceId, CRecorderSqlSourceId) then
+      fRecorder.TagRegistry.RegisterActiveSource(CRecorderSqlSourceId);
     PopulateChannelGrids;
     if fSelectedChannelsGrid <> nil then
       fSelectedChannelsGrid.Invalidate;
@@ -5431,6 +5463,7 @@ var
   lEntries: TRecorderHardwareTreeEntries;
   lEntry: TRecorderHardwareTreeEntry;
   lAcquiring: Boolean;
+  lIsOpcUa: Boolean;
   lHost: string;
   lNodeCaption: string;
   lSerialNumber: LongWord;
@@ -5463,6 +5496,7 @@ begin
         lEntry := lEntries[I];
         lConfig := RecorderConfiguredDataSourcesFind(fRecorder.TagRegistry,
           lEntry.SourceId);
+        lIsOpcUa := RecorderIsOpcUaSource(lEntry.SourceId, '');
         if (lConfig <> nil) and SameText(lConfig.ModuleType, 'PXI MX-248') then
           { MX-248 source identity remains in node data. The editable caption
             is intentionally only the operator alias. }
@@ -5476,6 +5510,8 @@ begin
           lNodeCaption := lNodeCaption + UTF8Encode(' [адрес: ') +
             RecorderConfiguredSourceAddress(fRecorder.TagRegistry,
               lEntry.SourceId) + ']';
+        if lEntry.Enabled and lEntry.LinkOk and not lEntry.HasLinkedTags then
+          lNodeCaption := lNodeCaption + UTF8Encode(' [каналы не привязаны]');
         if TryParseRecorderMic185SourceId(lEntry.SourceId, lHost, lPort) then
         begin
           if not (RecorderMic185TryGetLiveDeviceInfo(lHost, lPort,
@@ -5499,10 +5535,21 @@ begin
         else
           fRecorder.TagRegistry.UnregisterActiveSource(lEntry.SourceId);
       { A configured node without channel bindings is not a usable datasource. }
-      if lEntry.Enabled and lEntry.LinkOk and lEntry.HasLinkedTags then
+      if lEntry.Enabled and lEntry.LinkOk then
       begin
-        lSourceNode.ImageIndex := CDeviceControllerImageIndex;
-        lSourceNode.SelectedIndex := CDeviceControllerImageIndex;
+        if lIsOpcUa or lEntry.HasLinkedTags then
+        begin
+          lSourceNode.ImageIndex := CDeviceControllerImageIndex;
+          lSourceNode.SelectedIndex := CDeviceControllerImageIndex;
+        end
+        else
+        begin
+          { The protocol can be reachable even before any Recorder channels
+            have been linked. Keep this draft state visually distinct from an
+            offline/disabled source. }
+          lSourceNode.ImageIndex := CDeviceModuleImageIndex;
+          lSourceNode.SelectedIndex := CDeviceModuleImageIndex;
+        end;
       end
       else
       begin
@@ -5552,7 +5599,7 @@ begin
 
   if fSelectedChannelsGrid <> nil then
   begin
-    fSelectedChannelsGrid.ColCount := 9;
+    fSelectedChannelsGrid.ColCount := 10;
     fSelectedChannelsGrid.FixedRows := 1;
     fSelectedChannelsGrid.RowCount := 2;
     fSelectedChannelsGrid.ColWidths[0] := 20;
@@ -5561,10 +5608,11 @@ begin
     fSelectedChannelsGrid.Cells[2, 0] := 'Адрес';
     fSelectedChannelsGrid.Cells[3, 0] := 'Тип';
     fSelectedChannelsGrid.Cells[4, 0] := 'Частота';
-    fSelectedChannelsGrid.Cells[5, 0] := 'ГХ';
-    fSelectedChannelsGrid.Cells[6, 0] := 'Группа';
-    fSelectedChannelsGrid.Cells[7, 0] := 'Информация';
-    fSelectedChannelsGrid.Cells[8, 0] := 'ID';
+    fSelectedChannelsGrid.Cells[5, 0] := 'Ед.';
+    fSelectedChannelsGrid.Cells[6, 0] := 'ГХ';
+    fSelectedChannelsGrid.Cells[7, 0] := 'Группа';
+    fSelectedChannelsGrid.Cells[8, 0] := 'Информация';
+    fSelectedChannelsGrid.Cells[9, 0] := 'ID';
     fSelectedChannelsGrid.Cells[0, 1] := '';
     fSelectedChannelsGrid.Cells[1, 1] := '';
     fSelectedChannelsGrid.Cells[2, 1] := '';
@@ -5574,6 +5622,7 @@ begin
     fSelectedChannelsGrid.Cells[6, 1] := '';
     fSelectedChannelsGrid.Cells[7, 1] := '';
     fSelectedChannelsGrid.Cells[8, 1] := '';
+    fSelectedChannelsGrid.Cells[9, 1] := '';
   end;
 end;
 
@@ -5592,7 +5641,7 @@ var
   var
     lSearchText: string;
   begin
-    Result := ATag <> nil;
+    Result := (ATag <> nil) and ChannelPassesUnitFilter(ATag);
     if not Result then
       Exit;
     if (cbHideInactiveSelectedChannels <> nil) and
@@ -5640,6 +5689,7 @@ var
   end;
 begin
   SetGridHeaders;
+  RefreshChannelUnitCategories;
 
   lFilterText := '';
   if edSelectedChannelsFilter <> nil then
@@ -5706,10 +5756,11 @@ begin
         fSelectedChannelsGrid.Cells[2, lRow] := lTag.Address;
         fSelectedChannelsGrid.Cells[3, lRow] := lTag.ModuleType;
         fSelectedChannelsGrid.Cells[4, lRow] := FormatFloat('0.######', lTag.PollFrequencyHz);
-        fSelectedChannelsGrid.Cells[5, lRow] := '-';
-        fSelectedChannelsGrid.Cells[6, lRow] := EffectiveTagGroupPath(lTag);
-        fSelectedChannelsGrid.Cells[7, lRow] := lTag.Description;
-        fSelectedChannelsGrid.Cells[8, lRow] := IntToStr(lTag.Id);
+        fSelectedChannelsGrid.Cells[5, lRow] := lTag.UnitName;
+        fSelectedChannelsGrid.Cells[6, lRow] := '-';
+        fSelectedChannelsGrid.Cells[7, lRow] := EffectiveTagGroupPath(lTag);
+        fSelectedChannelsGrid.Cells[8, lRow] := lTag.Description;
+        fSelectedChannelsGrid.Cells[9, lRow] := IntToStr(lTag.Id);
         Inc(lRow);
       end;
     finally
@@ -5954,7 +6005,7 @@ begin
   lButton.Caption := '...';
   lButton.OnClick := @WorkDirBrowseClick;
   AddLabel(Self, lGroup, 10, 204, 'Сетевое имя');
-  fRecordShareNameEdit := AddEdit(Self, lGroup, 100, 200, 180, 'MeraFiles');
+  fRecordShareNameEdit := AddEdit(Self, lGroup, 100, 200, 180, 'USML');
   fTemplateCheck := AddCheck(Self, lGroup, 310, 204, 'Шаблон');
   fTemplateButton := TButton.Create(Self);
   fTemplateButton.Parent := lGroup;
@@ -5968,7 +6019,18 @@ begin
 
   lGroup := AddGroup(Self, lLeftPanel, 8, 498, 620, 66, 'База градуировочных характеристик');
   AddLabel(Self, lGroup, 10, 18, 'Каталог Mera Files');
-  fMeraFilesPathEdit := AddEdit(Self, lGroup, 10, 36, 526, '');
+  fMeraFilesPathEdit := AddEdit(Self, lGroup, 10, 36, 480, '');
+  lButton := TButton.Create(Self);
+  lButton.Parent := lGroup;
+  lButton.Left := 494;
+  lButton.Top := 34;
+  lButton.Width := 46;
+  lButton.Height := 26;
+  lButton.Caption := '⇧';
+  lButton.Hint := 'Опубликовать Mera Files как сетевой ресурс MeraFiles';
+  lButton.ShowHint := True;
+  lButton.Tag := 1;
+  lButton.OnClick := @PublishRecordDirClick;
   lButton := TButton.Create(Self);
   lButton.Parent := lGroup;
   lButton.Left := 548;
@@ -6247,7 +6309,7 @@ begin
   if cbNetworkInterface <> nil then
   begin
     RecorderEnumerateLocalIPv4(cbNetworkInterface.Items);
-    lBindAddress := RecorderNetworkBindAddress;
+    lBindAddress := RecorderNetworkConfiguredBindAddress;
     if lBindAddress = '' then
       cbNetworkInterface.ItemIndex := 0
     else
@@ -6275,9 +6337,17 @@ end;
 
 { Перенос настроек из UI в объект fRecorder.RunSettings }
 procedure TRecorderSettingsDialog.StoreToSettings;
+var
+  lPreviousBindAddress, lPreviousMeraPath: string;
 begin
   if fRecorder.RunSettings = nil then
     Exit;
+  if fWorkstationChanged and (fCoordinatorClient <> nil) then
+  begin
+    fCoordinatorClient.SetWorkstationName(edWorkstationName.Text,
+      cbUseComputerName.Checked);
+    SetCoordinatorClient(fCoordinatorClient);
+  end;
 
   { Внешние кнопки «Применить» и OK также должны сохранить текущую строку
     алгоритма, даже если внутренняя кнопка спектра не была нажата. }
@@ -6285,13 +6355,6 @@ begin
     (SelectedRuntimeAlgorithm <> nil) then
     StoreSelectedAlgorithmSettings;
   SyncSpectrumSampleRatesFromTags;
-
-  if cbNetworkInterface <> nil then
-    if cbNetworkInterface.ItemIndex <= 0 then
-      SetRecorderNetworkBindAddress('')
-    else
-      SetRecorderNetworkBindAddress(
-        RecorderNetworkAddressFromDisplay(cbNetworkInterface.Text));
 
   if fStartLevelRadio.Checked then
     fRecorder.RunSettings.StartCondition := rscSignalLevel
@@ -6324,19 +6387,76 @@ begin
   fRecorder.RunSettings.RecordRootDir := IncludeTrailingPathDelimiter(Trim(fWorkDirEdit.Text));
   if fRecordShareNameEdit <> nil then
     fRecorder.RunSettings.RecordShareName := Trim(fRecordShareNameEdit.Text);
-  if fMeraFilesPathEdit <> nil then
-  begin
-    SetRecorderMeraFilesPath(fMeraFilesPathEdit.Text);
-    fRecorder.RunSettings.MeraFilesPath := RecorderMeraFilesPath;
-    fMeraFilesPathEdit.Text := fRecorder.RunSettings.MeraFilesPath;
-  end
+  if RecorderMachineStorageInitialized then
+    lPreviousMeraPath := RecorderMachineMeraPath
   else
-    SetRecorderMeraFilesPath(fRecorder.RunSettings.MeraFilesPath);
-  fRecorder.RunSettings.RequireValid;
-  if fRecorder.TagRegistry <> nil then
-  begin
-    fRecorder.TagRegistry.SpectrumConfigs.Assign(fSpectrumConfigTree);
-    fRecorder.TagRegistry.FrequencyBands.Assign(fFrequencyBands);
+    lPreviousMeraPath := fRecorder.RunSettings.MeraFilesPath;
+  try
+    if fMeraFilesPathEdit <> nil then
+    begin
+      SetRecorderMeraFilesPath(fMeraFilesPathEdit.Text);
+      fRecorder.RunSettings.MeraFilesPath := RecorderMeraFilesPath;
+      fMeraFilesPathEdit.Text := fRecorder.RunSettings.MeraFilesPath;
+    end
+    else
+      SetRecorderMeraFilesPath(fRecorder.RunSettings.MeraFilesPath);
+    fRecorder.RunSettings.RequireValid;
+    if fRecorder.TagRegistry <> nil then
+    begin
+      fRecorder.TagRegistry.SpectrumConfigs.Assign(fSpectrumConfigTree);
+      fRecorder.TagRegistry.FrequencyBands.Assign(fFrequencyBands);
+    end;
+    if cbNetworkInterface <> nil then
+    begin
+      lPreviousBindAddress := RecorderNetworkConfiguredBindAddress;
+      try
+        if cbNetworkInterface.ItemIndex <= 0 then
+          SetRecorderNetworkBindAddress('')
+        else
+          SetRecorderNetworkBindAddress(
+            RecorderNetworkAddressFromDisplay(cbNetworkInterface.Text));
+        RecorderSaveNetworkBindAddress;
+      except
+        SetRecorderNetworkBindAddress(lPreviousBindAddress);
+        raise;
+      end;
+    end;
+    { Commit the machine path only after earlier Apply steps succeed. }
+    if RecorderMachineStorageInitialized and
+      (fRecorder.RunSettings.MeraFilesPath <> RecorderMachineMeraPath) then
+      try
+        SaveRecorderMachineStorage(fRecorder.RunSettings.MeraFilesPath);
+      except
+        on E: ERecorderMachineStorageCommitUncertain do
+          raise ERecorderMachineStorageCommitUncertain.Create(
+            E.Message + ' Earlier settings, including network interface, may already be applied.');
+        on E: Exception do
+          raise Exception.Create(E.Message +
+            ' Earlier settings, including network interface, may already be applied.');
+      end;
+  except
+    on E: ERecorderMachineStorageCommitUncertain do
+    begin
+      if RecorderMachineStorageCommitUncertain then
+      begin
+        { The persisted value cannot be verified. Keep the last known safe
+          runtime path; the storage remains locked for writes until restart. }
+        SetRecorderMeraFilesPath(lPreviousMeraPath);
+        fRecorder.RunSettings.MeraFilesPath := lPreviousMeraPath;
+      end
+      else
+      begin
+        SetRecorderMeraFilesPath(RecorderMachineMeraPath);
+        fRecorder.RunSettings.MeraFilesPath := RecorderMachineMeraPath;
+      end;
+      raise;
+    end;
+    else
+    begin
+      SetRecorderMeraFilesPath(lPreviousMeraPath);
+      fRecorder.RunSettings.MeraFilesPath := lPreviousMeraPath;
+      raise;
+    end;
   end;
 end;
 
@@ -6411,6 +6531,51 @@ begin
   if SelectDirectory('Каталог Mera Files', '', lDir) then
     fMeraFilesPathEdit.Text := ExcludeTrailingPathDelimiter(lDir);
 end;
+procedure TRecorderSettingsDialog.SetCoordinatorClient(
+  AClient: TRecorderCoordinatorClient);
+var
+  lName: string;
+  lUseComputerName: Boolean;
+begin
+  fCoordinatorClient := AClient;
+  gbWorkstation.Enabled := AClient <> nil;
+  if AClient = nil then Exit;
+  AClient.GetWorkstationName(lName, lUseComputerName);
+  fWorkstationUpdating := True;
+  try
+    edWorkstationName.Text := lName;
+    cbUseComputerName.Checked := lUseComputerName;
+    fWorkstationChanged := False;
+  finally
+    fWorkstationUpdating := False;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.WorkstationNameChanged(Sender: TObject);
+begin
+  if fWorkstationUpdating then Exit;
+  fWorkstationUpdating := True;
+  try
+    cbUseComputerName.Checked := False;
+    fWorkstationChanged := True;
+  finally
+    fWorkstationUpdating := False;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.UseComputerNameChanged(Sender: TObject);
+begin
+  if fWorkstationUpdating then Exit;
+  fWorkstationUpdating := True;
+  try
+    if cbUseComputerName.Checked then
+      edWorkstationName.Text := RecorderComputerName;
+    fWorkstationChanged := True;
+  finally
+    fWorkstationUpdating := False;
+  end;
+end;
+
 procedure TRecorderSettingsDialog.ApplyButtonClick(Sender: TObject);
 begin
   StoreToSettings;
@@ -6877,16 +7042,30 @@ var
   lDirectory, lShareName: string;
   lOutput: TStringList;
   lProcess: TProcess;
+  lIsMeraFiles: Boolean;
+  {$IFDEF MSWINDOWS}
+  lExec: TShellExecuteInfoW;
+  lArgs, lExe: UnicodeString;
+  lExitCode: DWORD;
+  {$ENDIF}
 begin
+  lIsMeraFiles := (Sender is TButton) and (TButton(Sender).Tag = 1);
+  if lIsMeraFiles then
+  begin
+    lDirectory := ExcludeTrailingPathDelimiter(Trim(fMeraFilesPathEdit.Text));
+    lShareName := 'MeraFiles';
+  end
+  else begin
   lDirectory := ExcludeTrailingPathDelimiter(Trim(fWorkDirEdit.Text));
   if fRecordShareNameEdit <> nil then
     lShareName := Trim(fRecordShareNameEdit.Text)
   else
     lShareName := Trim(fRecorder.RunSettings.RecordShareName);
+  end;
   if not DirectoryExists(lDirectory) then
   begin
     MessageDlg('Публикация каталога',
-      UTF8Encode('Каталог замеров не существует: ') +
+      UTF8Encode('Каталог не существует: ') +
       lDirectory, mtError, [mbOK], 0);
     Exit;
   end;
@@ -6916,7 +7095,8 @@ begin
       lOutput.LoadFromStream(lProcess.Output);
       if lProcess.ExitStatus = 0 then
       begin
-        fRecorder.RunSettings.RecordShareName := lShareName;
+        if not lIsMeraFiles then
+          fRecorder.RunSettings.RecordShareName := lShareName;
         MessageDlg('Публикация каталога',
           'Каталог доступен как сетевой ресурс ' + lShareName + '.',
           mtInformation, [mbOK], 0);
@@ -6936,9 +7116,43 @@ begin
     lProcess.Free;
   end;
   {$ELSE}
-  MessageDlg('Публикация каталога',
-    'В Windows укажите готовый UNC-путь опубликованного каталога.',
+  {$IFDEF MSWINDOWS}
+  if (Pos('"', lDirectory) > 0) or (Pos('"', lShareName) > 0) then
+  begin
+    MessageDlg('Публикация каталога', 'Недопустимые символы в пути или имени ресурса.',
+      mtError, [mbOK], 0);
+    Exit;
+  end;
+  lExe := UTF8Decode(SysUtils.GetEnvironmentVariable('SystemRoot') + '\System32\net.exe');
+  lArgs := UTF8Decode('share "' + lShareName + '=' + lDirectory + '"');
+  FillChar(lExec, SizeOf(lExec), 0);
+  lExec.cbSize := SizeOf(lExec);
+  lExec.fMask := SEE_MASK_NOCLOSEPROCESS;
+  lExec.lpVerb := 'runas';
+  lExec.lpFile := PWideChar(lExe);
+  lExec.lpParameters := PWideChar(lArgs);
+  lExec.nShow := SW_HIDE;
+  if not ShellExecuteExW(@lExec) then
+  begin
+    MessageDlg('Публикация каталога', 'Не удалось запустить публикацию с правами администратора.',
+      mtError, [mbOK], 0);
+    Exit;
+  end;
+  try
+    WaitForSingleObject(lExec.hProcess, INFINITE);
+    if GetExitCodeProcess(lExec.hProcess, lExitCode) and (lExitCode = 0) then
+      MessageDlg('Публикация каталога', 'Каталог опубликован как ' + lShareName + '.',
+        mtInformation, [mbOK], 0)
+    else
+      MessageDlg('Публикация каталога', 'Не удалось создать ресурс. Проверьте права и наличие ресурса с таким именем.',
+        mtError, [mbOK], 0);
+  finally
+    CloseHandle(lExec.hProcess);
+  end;
+  {$ELSE}
+  MessageDlg('Публикация каталога', 'Публикация не поддерживается на этой системе.',
     mtInformation, [mbOK], 0);
+  {$ENDIF}
   {$ENDIF}
 end;
 
@@ -6968,6 +7182,7 @@ end;
 { Applies an imported MIC-185 frequency through the device-wide configuration.
   MIC-185 cannot use independent measurement rates for separate channels. }
 procedure ApplyImportedMic185Frequencies(ARecorder: TRecorder;
+  ASourceProbe: TRecorderSettingsSourceProbe;
   var AResult: TRecorderTagTableExchangeResult);
 var
   I: Integer;
@@ -7000,6 +7215,10 @@ begin
       Continue;
     RecorderMic185ApplySourceFrequency(ARecorder.TagRegistry, lSourceId,
       lFrequencyHz, ARecorder.RunSettings.DataUpdateMs);
+    { The probe also supplies frequencies when OK synchronizes sources.
+      Refresh its cached signals so they cannot restore the old rate. }
+    if ASourceProbe <> nil then
+      ASourceProbe.BuildMic185(lSourceId);
   end;
 end;
 
@@ -7051,7 +7270,7 @@ begin
         lBeforeProgramming := ProgrammingState;
         ImportRecorderTagsFromTable(fRecorder.TagRegistry,
           fRecorder.SqlDbManager.Config, lDialog.FileName, lResult);
-        ApplyImportedMic185Frequencies(fRecorder, lResult);
+        ApplyImportedMic185Frequencies(fRecorder, fSourceProbe, lResult);
         fRecorder.SqlDbManager.SaveConfig;
         MarkSignalsFromRegistry;
         PopulateHardwareTree;
@@ -7203,6 +7422,16 @@ begin
     Exit;
   end;
 
+  { Leave modifier clicks to TStringGrid: it uses the previous pivot to
+    extend the range. Resetting Selection here destroys Shift selection. }
+  if (ssShift in Shift) or (ssCtrl in Shift) then
+  begin
+    fCanDrag := False;
+    fDragSelectActive := False;
+    fSelectingGrid := nil;
+    Exit;
+  end;
+
   if (lRow >= lGrid.Selection.Top) and (lRow <= lGrid.Selection.Bottom) then
   begin
     fCanDrag := True;
@@ -7279,7 +7508,7 @@ end;
 procedure TRecorderSettingsDialog.fSelectedChannelsGridDrawCell(Sender: TObject;
   aCol, aRow: Integer; aRect: TRect; aState: TGridDrawState);
 var
-  lBitmap: TBitmap;
+  lBitmap: Graphics.TBitmap;
   lIconLeft: Integer;
   lIconTop: Integer;
   lIconRect: TRect;
@@ -7639,9 +7868,72 @@ begin
   end;
 end;
 
-procedure TRecorderSettingsDialog.SelectedChannelsFilterChanged(Sender: TObject);
+function ChannelUnitCategory(const AUnit: string): string;
+var
+  lInfo: TRecorderUnitInfo;
 begin
+  Result := Trim(AUnit);
+  if (Result = '') or (Result = '-') then
+    Exit('Без единиц');
+  if RecorderUnitManager.TryGetUnitInfo(Result, lInfo) then
+  begin
+    Result := RecorderUnitManager.QuantityCaption(lInfo.QuantityId);
+    if Result = lInfo.QuantityId then
+      Result := lInfo.BaseUnitName;
+  end;
+end;
+
+procedure TRecorderSettingsDialog.RefreshChannelUnitCategories;
+var
+  lCategories: TStringList;
+  lPrevious: string;
+  I, lIndex: Integer;
+begin
+  if (fRecorder = nil) or (fRecorder.TagRegistry = nil) then Exit;
+  lPrevious := cmbChannelUnitCategory.Text;
+  lCategories := TStringList.Create;
+  fUpdatingChannelUnitCategories := True;
+  try
+    lCategories.Sorted := True;
+    lCategories.Duplicates := dupIgnore;
+    for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+      lCategories.Add(ChannelUnitCategory(fRecorder.TagRegistry.Tags[I].UnitName));
+    if cmbChannelUnitCategory.Items.Text <> lCategories.Text then
+    begin
+      cmbChannelUnitCategory.Items.Assign(lCategories);
+      lIndex := lCategories.IndexOf(lPrevious);
+      if lIndex < 0 then
+      begin
+        cbFilterChannelUnits.Checked := False;
+        if lCategories.Count > 0 then lIndex := 0;
+      end;
+      cmbChannelUnitCategory.ItemIndex := lIndex;
+    end;
+    cbFilterChannelUnits.Enabled := lCategories.Count > 0;
+    cmbChannelUnitCategory.Enabled := cbFilterChannelUnits.Enabled;
+  finally
+    fUpdatingChannelUnitCategories := False;
+    lCategories.Free;
+  end;
+end;
+
+function TRecorderSettingsDialog.ChannelPassesUnitFilter(ATag: TRecorderTag): Boolean;
+begin
+  Result := not cbFilterChannelUnits.Checked or
+    (cmbChannelUnitCategory.ItemIndex < 0) or
+    SameText(ChannelUnitCategory(ATag.UnitName), cmbChannelUnitCategory.Text);
+end;
+
+procedure TRecorderSettingsDialog.SelectedChannelsFilterChanged(Sender: TObject);
+var
+  lSelected: TRecorderTag;
+  lIndex: Integer;
+begin
+  if fUpdatingChannelUnitCategories then Exit;
+  lSelected := SelectedTagByGridRow(fSelectedChannelsGrid.Row);
   PopulateChannelGrids;
+  lIndex := fSelectedChannelTags.IndexOf(lSelected);
+  if lIndex >= 0 then fSelectedChannelsGrid.Row := lIndex + 1;
 end;
 
 procedure TRecorderSettingsDialog.SelectedChannelsFilterClearClick(Sender: TObject);
@@ -7720,7 +8012,7 @@ end;
 
 initialization
   RegisterClasses([
-    TPageControl, TTabSheet, TPanel, TGroupBox, TLabel, TEdit, TCheckBox,
+    TPageControl, TTabSheet, TPanel, TScrollBox, TGroupBox, TLabel, TEdit, TCheckBox,
     TRadioButton, TRadioGroup, TComboBox, TButton, TTreeView, TStringGrid,
     TSplitter
   ]);

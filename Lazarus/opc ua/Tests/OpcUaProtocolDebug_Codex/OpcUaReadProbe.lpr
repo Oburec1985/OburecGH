@@ -23,6 +23,7 @@ var
   lQuality: Cardinal;
   lTime, lValue: Double;
   lStringNodeId: string;
+  lBrowsePath: string;
   lStringNodeIds, lStringValues: TRecorderOpcUaStringArray;
   lStringTimes: TRecorderOpcUaDoubleArray;
   lStringQualities: TRecorderOpcUaCardinalArray;
@@ -41,17 +42,32 @@ begin
     WriteLn('CONNECT OK');
     lNodes := TObjectList.Create(True);
     try
-      if not lClient.Browse(lNodes) then
+      if ParamCount > 1 then
+      begin
+        if ParamCount > 2 then lBrowsePath := ParamStr(3)
+        else lBrowsePath := 'Objects';
+        if not lClient.BrowseChildren(ParamStr(2), lBrowsePath, lNodes) then
+        begin
+          WriteLn('BROWSE CHILDREN FAIL: ', lClient.ErrorText);
+          Halt(4);
+        end;
+        WriteLn('BROWSE CHILDREN OK: nodes=', lNodes.Count,
+          ' parent=', ParamStr(2), ' path=', lBrowsePath);
+      end
+      else if not lClient.Browse(lNodes) then
       begin
         WriteLn('BROWSE FAIL: ', lClient.ErrorText);
         Halt(4);
       end;
-      WriteLn('BROWSE OK: nodes=', lNodes.Count);
+      if ParamCount <= 1 then WriteLn('BROWSE OK: nodes=', lNodes.Count);
       lTagChildren := 0;
       lTagsChildren := 0;
       for I := 0 to lNodes.Count - 1 do
       begin
         lNode := TRecorderOpcUaDiscoveredNode(lNodes[I]);
+        if ParamCount > 1 then
+          WriteLn('NODE: name=', lNode.DisplayName, ' path=', lNode.BrowsePath,
+            ' nodeId=', lNode.NodeId);
         if (lStringNodeId = '') and
           (SameText(lNode.DataTypeNodeId, 'i=12') or
            SameText(lNode.DataTypeNodeId, 'ns=0;i=12')) and

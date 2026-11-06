@@ -55,7 +55,7 @@ type
 
 implementation
 
-uses SysUtils;
+uses SysUtils, uRecorderAudioDacSelection, uRecorderDebugLog;
 
 constructor TRecorderAudioDacBackend.Create(const AEndpoint: string);
 begin
@@ -305,7 +305,9 @@ var
   I, J, lCount, lDefaultDevice, lOutputCount, lHostApi, lDuplicateCount: Integer;
   lApi: TRecorderPortAudioApi;
   lInfo: PPaDeviceInfo;
-  lText: string;
+  lText, lTrace: string;
+  lDevices: TRecorderAudioOutputInfos;
+  lSelections: TRecorderAudioOutputSelections;
 begin
   SetLength(AEndpoints, 0);
   lApi := TRecorderPortAudioApi.Create;
@@ -332,31 +334,49 @@ begin
       end;
       lDefaultDevice := lApi.GetDefaultOutputDevice();
       lHostApi := -1;
-      lInfo := lApi.GetDeviceInfo(lDefaultDevice);
+      lInfo := nil;
+      if lDefaultDevice >= 0 then lInfo := lApi.GetDeviceInfo(lDefaultDevice);
       if lInfo <> nil then lHostApi := lInfo^.HostApi;
-      lOutputCount := 0;
+      SetLength(lDevices, lCount);
       for I := 0 to lCount - 1 do
       begin
+        lDevices[I].NativeIndex := I;
+        lDevices[I].HostApi := -1;
         lInfo := lApi.GetDeviceInfo(I);
-        if (lInfo = nil) or (lInfo^.MaxOutputChannels <= 0) then Continue;
-        { Enumerate one host API: Windows exposes each physical endpoint again
-          through MME, DirectSound, WASAPI and WDM/KS. Keep the default host's
-          supported format behaviour instead of merging devices by name. }
-        if (lHostApi >= 0) and (lInfo^.HostApi <> lHostApi) then Continue;
-        lText := StrPas(lInfo^.Name);
-        {$IFDEF WINDOWS}
-        if SameText(lText, 'Microsoft Sound Mapper - Output') then Continue;
-        {$ENDIF}
-        SetLength(AEndpoints, lOutputCount + 1);
+        lDevices[I].Available := lInfo <> nil;
+        if lInfo = nil then Continue;
+        lDevices[I].HostApi := lInfo^.HostApi;
+        lDevices[I].OutputChannels := lInfo^.MaxOutputChannels;
+        if lInfo^.Name <> nil then lDevices[I].Name := StrPas(lInfo^.Name);
+        lDevices[I].SampleRateHz := lInfo^.DefaultSampleRate;
+      end;
+      SelectRecorderAudioOutputs(lDevices, lHostApi,
+        {$IFDEF WINDOWS}True{$ELSE}False{$ENDIF}, lSelections);
+      lOutputCount := 0;
+      for I := 0 to High(lSelections) do
+        if lSelections[I].Selected then Inc(lOutputCount);
+      SetLength(AEndpoints, lOutputCount);
+      lTrace := Format('[DAC audio discovery] default_index=%d default_host=%d raw_count=%d selected_count=%d',
+        [lDefaultDevice, lHostApi, lCount, lOutputCount]);
+      lOutputCount := 0;
+      for I := 0 to High(lDevices) do
+      begin
+        lTrace := lTrace + Format(' | raw_index=%d host=%d outputs=%d name="%s" selected=%s preferred_host=%d reason=%s',
+          [lDevices[I].NativeIndex, lDevices[I].HostApi, lDevices[I].OutputChannels,
+           lDevices[I].Name, BoolToStr(lSelections[I].Selected, True),
+           lSelections[I].PreferredHost, RecorderAudioSelectionReasonText(lSelections[I].Reason)]);
+        if not lSelections[I].Selected then Continue;
         AEndpoints[lOutputCount].BackendId := BackendId;
-        if I = lDefaultDevice then
-          AEndpoints[lOutputCount].Endpoint := 'default'
-        else
-          AEndpoints[lOutputCount].Endpoint := IntToStr(I);
-        AEndpoints[lOutputCount].DisplayName := lText;
-        AEndpoints[lOutputCount].SampleRateHz := lInfo^.DefaultSampleRate;
+        { Keep the selected device explicit: default can change on RDP attach. }
+        AEndpoints[lOutputCount].Endpoint := IntToStr(lDevices[I].NativeIndex);
+        AEndpoints[lOutputCount].DisplayName := lDevices[I].Name;
+        if AEndpoints[lOutputCount].DisplayName = '' then
+          AEndpoints[lOutputCount].DisplayName := 'Audio output [' +
+            AEndpoints[lOutputCount].Endpoint + ']';
+        AEndpoints[lOutputCount].SampleRateHz := lDevices[I].SampleRateHz;
         Inc(lOutputCount);
       end;
+      RecorderDebugLog(lTrace);
       { Equal captions may be separate HDMI ports. Preserve both endpoints and
         make them distinguishable instead of deleting a physical output. }
       for I := 0 to High(AEndpoints) do
@@ -364,11 +384,11 @@ begin
         lText := AEndpoints[I].DisplayName;
         lDuplicateCount := 0;
         for J := 0 to High(AEndpoints) do
-          if SameText(lText, AEndpoints[J].DisplayName) then
+          if lText = AEndpoints[J].DisplayName then
             Inc(lDuplicateCount);
         if lDuplicateCount > 1 then
           for J := High(AEndpoints) downto I do
-            if SameText(lText, AEndpoints[J].DisplayName) then
+            if lText = AEndpoints[J].DisplayName then
               AEndpoints[J].DisplayName := lText + ' [' +
                 AEndpoints[J].Endpoint + ']';
       end;

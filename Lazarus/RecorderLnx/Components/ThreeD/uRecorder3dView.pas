@@ -1719,6 +1719,7 @@ begin
       IntensityBindings[IntensityCount].Color:=F.Color;
       IntensityBindings[IntensityCount].PointNumber:=F.PointNumber;
       IntensityBindings[IntensityCount].MarkerSizePixels:=F.MarkerSizePixels;
+      IntensityBindings[IntensityCount].IntensityLogScale:=F.IntensityLogScale;
       IntensityBindings[IntensityCount].IntensitySource:=F.IntensitySource;
       IntensityBindings[IntensityCount].Visualization:=F.Visualization;
       IntensityBindings[IntensityCount].Axis:=F.Axis;

@@ -11,11 +11,11 @@ object CoordinatorMainForm: TCoordinatorMainForm
   OnDestroy = FormDestroy
   object pnlService: TPanel
     Left = 0
-    Height = 48
+    Height = 82
     Top = 0
     Width = 1000
     Align = alTop
-    ClientHeight = 48
+    ClientHeight = 82
     ClientWidth = 1000
     TabOrder = 0
     object btnSave: TButton
@@ -31,7 +31,7 @@ object CoordinatorMainForm: TCoordinatorMainForm
       Left = 296
       Height = 19
       Top = 12
-      Width = 164
+      Width = 240
       Caption = 'Создавать события записи'
       ParentShowHint = False
       ShowHint = True
@@ -53,19 +53,28 @@ object CoordinatorMainForm: TCoordinatorMainForm
       TabOrder = 2
     end
     object btnSyncSdb: TButton
-      Left = 480
+      Left = 12
       Height = 28
-      Top = 12
-      Width = 156
+      Top = 46
+      Width = 210
       Caption = 'Синхронизировать SDB'
       TabOrder = 3
       OnClick = btnSyncSdbClick
     end
+    object btnSyncSqlChannels: TButton
+      Left = 230
+      Height = 28
+      Top = 46
+      Width = 260
+      Caption = 'Синхронизировать SQL-каналы'
+      TabOrder = 4
+      OnClick = btnSyncSqlChannelsClick
+    end
   end
   object pageMain: TPageControl
     Left = 0
-    Height = 617
-    Top = 48
+    Height = 583
+    Top = 82
     Width = 1000
     ActivePage = tabHosts
     Align = alClient
@@ -77,12 +86,12 @@ object CoordinatorMainForm: TCoordinatorMainForm
       ClientWidth = 992
       object pnlHostCommands: TPanel
         Left = 0
-        Height = 44
+        Height = 76
         Top = 0
         Width = 992
         Align = alTop
         BevelOuter = bvNone
-        ClientHeight = 44
+        ClientHeight = 76
         ClientWidth = 992
         TabOrder = 0
         object btnCommandStartAll: TSpeedButton
@@ -171,20 +180,20 @@ object CoordinatorMainForm: TCoordinatorMainForm
           OnClick = btnShutdownAllClick
         end
         object cbStartAllOnAnyRecording: TCheckBox
-          Left = 454
+          Left = 200
           Height = 19
-          Top = 10
-          Width = 239
+          Top = 46
+          Width = 330
           Caption = 'При старте одного запускать остальные'
           TabOrder = 3
           OnChange = cbStartAllOnAnyRecordingChange
         end
         object cbSqlRecordingAll: TCheckBox
-          Left = 294
+          Left = 8
           Height = 19
           Hint = 'Включить или выключить запись в SQL БД на всех RecorderLnx'
-          Top = 10
-          Width = 152
+          Top = 46
+          Width = 185
           Caption = 'SQL запись у всех'
           ParentShowHint = False
           ShowHint = True
@@ -192,16 +201,16 @@ object CoordinatorMainForm: TCoordinatorMainForm
           OnChange = cbSqlRecordingAllChange
         end
         object lblSqlRecordPeriod: TLabel
-          Left = 696
+          Left = 540
           Height = 15
-          Top = 14
-          Width = 70
+          Top = 48
+          Width = 108
           Caption = 'Период SQL, с'
         end
         object seSqlRecordPeriod: TSpinEdit
-          Left = 772
+          Left = 652
           Height = 23
-          Top = 10
+          Top = 44
           Width = 58
           MaxValue = 86400
           MinValue = 1
@@ -209,11 +218,11 @@ object CoordinatorMainForm: TCoordinatorMainForm
           Value = 1
         end
         object btnSetSqlPeriodAll: TButton
-          Left = 836
+          Left = 718
           Height = 27
           Hint = 'Назначить единый период SQL-записи всем RecorderLnx'
-          Top = 8
-          Width = 94
+          Top = 42
+          Width = 120
           Caption = 'Применить'
           ParentShowHint = False
           ShowHint = True
@@ -224,10 +233,10 @@ object CoordinatorMainForm: TCoordinatorMainForm
       object gridHosts: TStringGrid
         Left = 0
         Height = 401
-        Top = 44
+        Top = 76
         Width = 992
         Align = alClient
-        ColCount = 12
+        ColCount = 14
         Columns = <        
           item
             Title.Caption = 'Статус'
@@ -235,6 +244,7 @@ object CoordinatorMainForm: TCoordinatorMainForm
           end        
           item
             Title.Caption = 'Instance ID'
+            Visible = False
             Width = 150
           end        
           item
@@ -244,6 +254,14 @@ object CoordinatorMainForm: TCoordinatorMainForm
           item
             Title.Caption = 'Компьютер'
             Width = 120
+          end
+          item
+            Title.Caption = 'Связь с RecorderLnx'
+            Width = 150
+          end
+          item
+            Title.Caption = 'Последняя команда'
+            Width = 260
           end        
           item
             Title.Caption = 'MAC'
@@ -296,6 +314,24 @@ object CoordinatorMainForm: TCoordinatorMainForm
         ClientHeight = 144
         ClientWidth = 992
         TabOrder = 2
+        object btnClaimRecorder: TButton
+          Left = 656
+          Height = 28
+          Top = 8
+          Width = 112
+          Caption = 'Захватить'
+          TabOrder = 13
+          OnClick = btnClaimRecorderClick
+        end
+        object btnReleaseRecorder: TButton
+          Left = 776
+          Height = 28
+          Top = 8
+          Width = 112
+          Caption = 'Освободить'
+          TabOrder = 14
+          OnClick = btnReleaseRecorderClick
+        end
         object lblSelectedHost: TLabel
           Left = 8
           Height = 15
@@ -304,7 +340,7 @@ object CoordinatorMainForm: TCoordinatorMainForm
           Caption = 'Адрес хоста:'
         end
         object edtSelectedHost: TEdit
-          Left = 112
+          Left = 160
           Height = 23
           Top = 8
           Width = 248
@@ -312,7 +348,7 @@ object CoordinatorMainForm: TCoordinatorMainForm
           OnChange = edtSelectedHostChange
         end
         object btnCommandStop: TBitBtn
-          Left = 368
+          Left = 416
           Height = 30
           Top = 8
           Width = 38
@@ -323,7 +359,7 @@ object CoordinatorMainForm: TCoordinatorMainForm
           OnClick = btnCommandStopClick
         end
         object btnCommandPreview: TBitBtn
-          Left = 407
+          Left = 455
           Height = 30
           Top = 8
           Width = 38
@@ -334,7 +370,7 @@ object CoordinatorMainForm: TCoordinatorMainForm
           OnClick = btnCommandPreviewClick
         end
         object btnCommandStart: TBitBtn
-          Left = 446
+          Left = 494
           Height = 30
           Top = 8
           Width = 38
@@ -345,7 +381,7 @@ object CoordinatorMainForm: TCoordinatorMainForm
           OnClick = btnCommandStartClick
         end
         object btnWakeSelected: TBitBtn
-          Left = 520
+          Left = 568
           Height = 30
           Hint = 'Вкл.ПК'
           Top = 8
@@ -359,7 +395,7 @@ object CoordinatorMainForm: TCoordinatorMainForm
           OnClick = btnWakeSelectedClick
         end
         object btnShutdownSelected: TBitBtn
-          Left = 559
+          Left = 607
           Height = 30
           Hint = 'Выкл.ПК'
           Top = 8
@@ -380,17 +416,17 @@ object CoordinatorMainForm: TCoordinatorMainForm
           Caption = 'Firebird-сервер:'
         end
         object edtDatabaseHost: TEdit
-          Left = 112
+          Left = 160
           Height = 23
           Top = 40
           Width = 248
           TabOrder = 6
         end
         object btnSetDatabaseForAll: TButton
-          Left = 368
+          Left = 416
           Height = 28
           Top = 41
-          Width = 204
+          Width = 250
           Caption = 'Установить всем путь к базе'
           TabOrder = 7
           OnClick = btnSetDatabaseForAllClick
@@ -403,42 +439,43 @@ object CoordinatorMainForm: TCoordinatorMainForm
           Caption = 'Имя:'
         end
         object edtHostName: TEdit
-          Left = 112
+          Left = 160
           Height = 23
           Top = 72
           Width = 248
           TabOrder = 8
+          OnChange = edtSelectedHostChange
         end
         object btnAddHost: TButton
-          Left = 368
+          Left = 416
           Height = 28
           Top = 72
-          Width = 100
+          Width = 145
           Caption = 'Добавить хост'
           TabOrder = 9
           OnClick = btnAddHostClick
         end
         object btnDeleteHost: TButton
-          Left = 472
+          Left = 569
           Height = 28
           Top = 72
-          Width = 100
+          Width = 145
           Caption = 'Удалить хост'
           TabOrder = 10
           OnClick = btnDeleteHostClick
         end
         object btnSetPrimarySdb: TButton
-          Left = 368
+          Left = 416
           Height = 28
           Top = 104
-          Width = 120
+          Width = 180
           Caption = 'Сделать основным'
           Enabled = False
           TabOrder = 11
           OnClick = btnSetPrimarySdbClick
         end
         object btnLaunchSelected: TBitBtn
-          Left = 483
+          Left = 532
           Height = 30
           Hint = 'Запустить RecorderLnx'
           Top = 8
@@ -451,7 +488,7 @@ object CoordinatorMainForm: TCoordinatorMainForm
           ParentShowHint = False
           ShowHint = True
           Spacing = 0
-          TabOrder = 12
+          TabOrder = 13
           OnClick = btnLaunchSelected_Click
         end
       end
