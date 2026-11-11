@@ -6,6 +6,18 @@ unit uRecorderMic185DataSource;
   The protocol/device units in this folder are copies of the standalone
   Tests/mic185 implementation. This adapter binds them to RecorderLnx tags and
   data-source lifecycle.
+
+  Tag settings and unit-mode capabilities belong to this datasource.
+  ReadState only inspects the model and registered curves; construction and
+  ConfigureTags must not resolve device identity or perform hardware I/O.
+  Unit-mode edits during acquisition require Stop until a live transaction
+  is explicitly implemented here. No MIC183/185 provider adapter is used.
+
+  Hardware lifecycle boundary: PrepareHardware, Reconfigure and channel
+  programming must not build or validate tag GX pipelines. A software unit/GX
+  error cannot make a successful device reset look like a hardware failure.
+  Start validates/prepares the runtime transformations before starting sample
+  acquisition; explicit runtime refresh/balance rebuilds remain separate.
 }
 
 {$mode objfpc}{$H+}
@@ -16,7 +28,7 @@ interface
 uses
   Classes, SysUtils, fpjson,
   uRecorderDataSources, uRecorderDeviceInterfaces, uRecorderAcquisitionTypes,
-  uRecorderTags, uRecorderConfiguredDataSources,
+  uRecorderTags, uRecorderTagSettingsProvider, uRecorderConfiguredDataSources,
   uMic185Device, uMic185Constants, uMic185MebiusTypes;
 
 const
@@ -214,6 +226,7 @@ type
     ChannelCalibrations: TRecorderCalibrationArray;
     ChannelConversions: array of Double;
     PowerMa: Double;
+    OutputScale: Double;
   end;
   TRecorderMic185ValueTransformArray = array of TRecorderMic185ValueTransform;
 
@@ -227,7 +240,8 @@ function RecorderMic185ResolveHardwareCalibrationForTransform(
 
 type
   TRecorderMic185DataSource = class(TRecorderDataSourceBase,
-    IRecorderZeroBalanceSupport, IRecorderZeroBalanceTraceSupport)
+    IRecorderZeroBalanceSupport, IRecorderZeroBalanceTraceSupport,
+    IRecorderTagSettingsProvider)
   private
     fChannelTagNames: TStringList;
     fChannelTags: array of TRecorderTag;
@@ -255,6 +269,7 @@ type
     fRuntimeChannelSettings: TMic185ChannelProgramSettingsArray;
     fSelectedNames: TStringList;
     fZeroBalanceTrace: TRecorderZeroBalanceTraceEvent;
+    function OwnsSettingsTag(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): Boolean;
     function ChannelSelected(const AChannel: TRecorderDeviceChannel): Boolean;
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
       const AAddress: string): TRecorderTag;
@@ -273,6 +288,24 @@ type
     procedure DoTick; override;
     procedure PrepareHardware; override;
   public
+    function ReadState(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+      out AState: TRecorderTagSettingsState): Boolean;
+    function NormalizeDraft(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+      var ADraft: TRecorderTagSettingsDraft; out AErrorText: string): Boolean;
+    function ApplyDraft(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+      const ADraft: TRecorderTagSettingsDraft;
+      out AResult: TRecorderTagSettingsApplyResult;
+      out AErrorText: string): Boolean;
+    function DownloadHardwareCalibration(ARegistry: TRecorderTagRegistry;
+      ATag: TRecorderTag; out AResult: TRecorderHardwareCalibrationResult;
+      out AErrorText: string): Boolean;
+    function GetUnits(ATag: TRecorderTag): string; override;
+    procedure GetUnitNames(ATag: TRecorderTag; AUnitNames: TStrings); override;
+    procedure UpdateScales(ATag: TRecorderTag); override;
+    function CanSetUnits(ATag: TRecorderTag;
+      const AUnitName: string; out AErrorText: string): Boolean; override;
+    function SetUnits(ATag: TRecorderTag;
+      const AUnitName: string; out AErrorText: string): Boolean; override;
     constructor Create(const ASourceId, AHost: string; APort: Word;
       APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
       ASelectedNames: TStrings = nil);
@@ -854,6 +887,7 @@ var
   lIndex: Integer;
   lItem: TJSONObject;
   lUnitName: string;
+  lTag: TRecorderTag;
 begin
   lUnitName := Trim(AUnitName);
   if (ARegistry = nil) or (lUnitName = '') or SameText(lUnitName, 'код') or
@@ -884,6 +918,16 @@ begin
       lItem.Delete(lIndex);
     lItem.Add('unitName', lUnitName);
     Mic185StoreSourceConfigObject(lEntry, lConfig);
+    for I := 0 to ARegistry.TagCount - 1 do
+    begin
+      lTag := ARegistry.Tags[I];
+      if SameText(lTag.SourceId, ASourceId) and
+        SameMic185Address(lTag.Address, AAddress) then
+      begin
+        lTag.SourceUnitName := lUnitName;
+        lTag.SourceHardwareOutputUnitName := lUnitName;
+      end;
+    end;
   finally
     lConfig.Free;
   end;
@@ -2265,9 +2309,11 @@ var
   lStepK: Double;
 begin
   Result.Valid := ATag <> nil;
+  if ATag <> nil then ATag.ClearCalibrationWarning;
   Result.IsLinear := True;
   Result.K := 1.0;
   Result.B := 0.0;
+  Result.OutputScale := 1.0;
   Result.Settings := ASettings;
   lSourceUnit := RecorderMic185GetSourceChannelUnitName(ARegistry,
     ATag.SourceId, ATag.Address);
@@ -2280,14 +2326,17 @@ begin
   Result.HardwareCalibration := AHardwareCalibration;
   SetLength(Result.ChannelCalibrations, 0);
   SetLength(Result.ChannelConversions, 0);
-  { Missing hardware GX must not stop acquisition.  In this state the only
-    honest value we can publish is the untouched ADC code: do not apply
-    balance, unit conversion or channel calibrations that expect physical
-    units. }
+  { A physical source boundary cannot accept uncalibrated codes. Validate the
+    plan before acquisition, rather than publish codes labelled as Ohm/mV. }
   if ATag.HardwareCalibrationEnabled and (AHardwareCalibration = nil) then
-    Exit;
+    raise ERecorderDataSourceError.CreateFmt(
+      'MIC-185 tag %s: hardware calibration was not found', [ATag.Name]);
   if not ATag.HardwareCalibrationEnabled then
+  begin
     Result.HardwareCalibration := nil;
+    Result.Settings.SoftBalanceFine := 0;
+    Result.UnitMode := mruMillivolts;
+  end;
   Result.PowerMa := Mic185EffectivePowerMa(ASettings);
   Result.PowerMa := RecorderMic185ApplyCurrentCalibration(ARegistry, ATag,
     Result.PowerMa);
@@ -2301,25 +2350,25 @@ begin
       Result.IsLinear := False;
   end;
 
-  if Result.IsLinear then
+  if Result.IsLinear and ATag.HardwareCalibrationEnabled then
   begin
     Result.B := Result.B - Result.K * ASettings.SoftBalanceFine;
     Mic185ApplyUnitLine(Result.K, Result.B, ASettings, Result.UnitMode,
       Result.PowerMa);
   end;
 
-  if (ARegistry = nil) or (ATag = nil) or (not ATag.ChannelCalibrationEnabled) or
-    (ATag.CalibrationNames = nil) then
-    Exit;
-
   lCurrentUnit := lSourceUnit;
+  if not ATag.HardwareCalibrationEnabled then lCurrentUnit := 'code';
+  if ATag.ChannelCalibrationEnabled then
   for I := 0 to ATag.CalibrationNames.Count - 1 do
   begin
     if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
       Continue;
     lCalibration := ARegistry.FindCalibrationByName(ATag.CalibrationNames[I]);
     if lCalibration = nil then
-      Continue;
+      raise ERecorderDataSourceError.CreateFmt(
+        'MIC-185 tag %s: channel calibration "%s" was not found',
+        [ATag.Name, ATag.CalibrationNames[I]]);
     lConversion := 1.0;
     if (Trim(lCurrentUnit) <> '') and
       (Trim(lCalibration.UnitIn) <> '') and
@@ -2327,11 +2376,10 @@ begin
       not RecorderUnitManager.TryGetConversionFactor(lCurrentUnit,
         lCalibration.UnitIn, lConversion) then
     begin
-      RecorderMic185Log(Format(
-        'MIC-185 calibration unit mismatch tag=%s step=%s: %s -> %s',
+      ATag.AddCalibrationWarning(Format(
+        'MIC-185 calibration unit mismatch tag=%s step=%s: %s -> %s; applying numeric GX without unit conversion',
         [ATag.Name, lCalibration.Name, lCurrentUnit, lCalibration.UnitIn]));
       lConversion := 1.0;
-      Result.IsLinear := False;
     end;
     SetLength(Result.ChannelCalibrations, Length(Result.ChannelCalibrations) + 1);
     Result.ChannelCalibrations[High(Result.ChannelCalibrations)] := lCalibration;
@@ -2346,6 +2394,26 @@ begin
     end;
     if Trim(lCalibration.UnitOut) <> '' then
       lCurrentUnit := Trim(lCalibration.UnitOut);
+  end;
+  if not ATag.AutoUnit then
+  begin
+    lConversion := 1.0;
+    if not SameText(lCurrentUnit, ATag.UnitName) and
+      not RecorderUnitManager.TryGetConversionFactor(lCurrentUnit,
+        ATag.UnitName, lConversion) then
+    begin
+      ATag.AddCalibrationWarning(Format(
+        'MIC-185 tag %s: incompatible output units %s -> %s; preserving numeric GX result',
+        [ATag.Name, lCurrentUnit, ATag.UnitName]));
+      ATag.UnitName := lCurrentUnit;
+      lConversion := 1.0;
+    end;
+    Result.OutputScale := lConversion;
+    if Result.IsLinear then
+    begin
+      Result.K := Result.K * Result.OutputScale;
+      Result.B := Result.B * Result.OutputScale;
+    end;
   end;
 end;
 
@@ -2382,6 +2450,7 @@ begin
         Result := Result * ATransform.ChannelConversions[I];
       Result := ATransform.ChannelCalibrations[I].Transform(Result);
     end;
+  Result := Result * ATransform.OutputScale;
 end;
 
 function RecorderMic185CommutationText(ACommutIndex: LongWord): string;
@@ -2406,17 +2475,21 @@ end;
 
 function RecorderMic185ChannelAddressToIndex(const AAddress: string): Integer;
 var
-  lStartPos: Integer;
+  lStartPos, I: Integer;
   lText: string;
 begin
   Result := -1;
   lText := Mic185CanonicalAddress(AAddress);
   lStartPos := RPos('-', lText);
-  if lStartPos <= 0 then
-    Exit;
-  lText := Copy(lText, lStartPos + 1, MaxInt);
-  if (Pos('t', LowerCase(lText)) > 0) or SameText(lText, 'uts') then
-    Exit;
+  if lStartPos = 1 then Exit;
+  if lStartPos > 1 then
+    lText := Copy(lText, lStartPos + 1, MaxInt);
+  { ConfigureTags may use a bare canonical channel (01..64), while project
+    addresses also retain node-01. Parse the same decimal measurement index
+    for both; never infer an index from TIn/UTS/diagnostic suffixes. }
+  if lText = '' then Exit;
+  for I := 1 to Length(lText) do
+    if not (lText[I] in ['0'..'9']) then Exit;
   if not TryStrToInt(lText, Result) then
     Exit(-1);
   Dec(Result);
@@ -2816,6 +2889,7 @@ begin
         if lMode <> '' then
         begin
           lTag.SourceUnitName := lMode;
+          lTag.SourceHardwareOutputUnitName := lMode;
           if lTag.AutoUnit then
             ARegistry.SyncTagAutoUnit(lTag, True);
         end
@@ -3062,6 +3136,275 @@ begin
   AErrorText := 'Нет активного подключения MIC183/185';
 end;
 
+function HasExternalCalibration(ATag: TRecorderTag;
+  const ADraft: TRecorderTagSettingsDraft): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  if not ADraft.ChannelCalibrationEnabled then Exit;
+  for I := 0 to ATag.CalibrationNames.Count - 1 do
+    if RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+      Exit(True);
+end;
+
+function TRecorderMic185DataSource.OwnsSettingsTag(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag): Boolean;
+begin
+  Result := (ARegistry <> nil) and (ATag <> nil) and
+    ((Registry = nil) or (Registry = ARegistry)) and
+    SameText(RecorderNormalizeTagSourceId(ATag.SourceId),
+      RecorderNormalizeTagSourceId(SourceId));
+end;
+
+function TRecorderMic185DataSource.GetUnits(ATag: TRecorderTag): string;
+var
+  lSettings: TMic185ChannelProgramSettings;
+begin
+  if (ATag = nil) or not OwnsSettingsTag(ATag.OwnerRegistry, ATag) or
+    (RecorderMic185ChannelAddressToIndex(ATag.Address) < 0) then
+    Exit(inherited GetUnits(ATag));
+  if not ATag.HardwareCalibrationEnabled then Exit('code');
+  Result := RecorderMic185GetSourceChannelUnitName(ATag.OwnerRegistry,
+    SourceId, ATag.Address);
+  if Result = '' then
+  begin
+    RecorderMic185GetSourceChannelMode(ATag.OwnerRegistry, SourceId, ATag.Address,
+      ATag.PollFrequencyHz, lSettings);
+    Result := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
+  end;
+end;
+
+procedure TRecorderMic185DataSource.GetUnitNames(ATag: TRecorderTag;
+  AUnitNames: TStrings);
+begin
+  if AUnitNames = nil then Exit;
+  if (ATag = nil) or not OwnsSettingsTag(ATag.OwnerRegistry, ATag) or
+    (RecorderMic185ChannelAddressToIndex(ATag.Address) < 0) then
+  begin
+    inherited GetUnitNames(ATag, AUnitNames);
+    Exit;
+  end;
+  AUnitNames.Clear;
+  AUnitNames.Add('мВ');
+  AUnitNames.Add('Ом');
+  AUnitNames.Add('мкстрн');
+  AUnitNames.Add('V');
+  AUnitNames.Add('uV');
+  AUnitNames.Add('kV');
+end;
+
+procedure TRecorderMic185DataSource.UpdateScales(ATag: TRecorderTag);
+begin
+  if (ATag = nil) or (ATag.OwnerRegistry = nil) then Exit;
+  inherited UpdateScales(ATag);
+  if State = dssRunning then RefreshRuntimeTransforms;
+end;
+
+function TRecorderMic185DataSource.ReadState(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  out AState: TRecorderTagSettingsState): Boolean;
+var
+  lCalibration: TRecorderCalibration;
+  lSettings: TMic185ChannelProgramSettings;
+  lK, lB, lOffset, lPowerMa, lFactor: Double;
+  lUnit: string;
+begin
+  RecorderInitTagSettingsState(AState);
+  Result := OwnsSettingsTag(ARegistry, ATag);
+  AState.HardwareSourceConfigurable := Result;
+  if not Result then Exit;
+  AState.HardwareCalibrationDownloadable := True;
+  AState.SourceUnitName := GetUnits(ATag);
+  AState.OutputUnitName := AState.SourceUnitName;
+  { Project the registered ADC curve through the source's unit conversion.
+    Reading the dialog must not resolve a serial, load CSV or contact hardware. }
+  lCalibration := ARegistry.FindCalibrationByName(ATag.HardwareCalibrationName);
+  if lCalibration <> nil then
+  begin
+    if RecorderMic185TryExtractHardwareKx(lCalibration, lK, lB) then
+    begin
+      RecorderMic185GetSourceChannelMode(ARegistry, SourceId, ATag.Address,
+        ATag.PollFrequencyHz, lSettings);
+      lSettings.PowerMaCode := RecorderMic185GetSourcePowerMaCode(ARegistry, SourceId);
+      lUnit := RecorderMic185GetSourceChannelUnitName(ARegistry,
+        SourceId, ATag.Address);
+      if lUnit = '' then lUnit := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
+      lPowerMa := RecorderMic185ApplyCachedCurrentCalibration(ARegistry, ATag,
+        Mic185EffectivePowerMa(lSettings));
+      lOffset := 0;
+      Mic185ApplyUnitLine(lK, lOffset, lSettings,
+        Mic185RuntimeUnitFromName(lUnit, lSettings.MeasRangeIndex), lPowerMa);
+      if RecorderUnitManager.TryGetConversionFactor(lUnit, ATag.GetUnits, lFactor) then
+        lK := lK * lFactor;
+      { The display retains k * (code - b): unit scaling changes k, while b
+        remains the registered ADC zero in codes. }
+      AState.HardwareCalibrationText := RecorderMic185FormatHardwareKx(lK, lB);
+    end
+    else AState.HardwareCalibrationText := lCalibration.Name;
+  end;
+end;
+
+function TRecorderMic185DataSource.NormalizeDraft(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  var ADraft: TRecorderTagSettingsDraft; out AErrorText: string): Boolean;
+begin
+  AErrorText := '';
+  Result := OwnsSettingsTag(ARegistry, ATag);
+  if not Result then AErrorText := 'Tag settings do not belong to this datasource';
+  if Result then
+    ADraft.PollFrequencyHz := RecorderMic185NormalizeFrequency(ADraft.PollFrequencyHz);
+end;
+
+function TRecorderMic185DataSource.ApplyDraft(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  const ADraft: TRecorderTagSettingsDraft;
+  out AResult: TRecorderTagSettingsApplyResult;
+  out AErrorText: string): Boolean;
+var
+  lRange: Double;
+  lSettings: TMic185ChannelProgramSettings;
+  lOriginalSourceUnit: string;
+  lSourceUnit: string;
+begin
+  RecorderInitTagSettingsApplyResult(AResult);
+  AErrorText := '';
+  Result := OwnsSettingsTag(ARegistry, ATag);
+  if not Result then AErrorText := 'Tag settings do not belong to this datasource';
+  if not Result then Exit;
+  if not SameValue(ATag.PollFrequencyHz, ADraft.PollFrequencyHz, 1E-9) then
+  begin
+    RecorderMic185ApplySourceFrequency(ARegistry, ATag.SourceId,
+      ADraft.PollFrequencyHz, ADraft.DataUpdateMs);
+    fPollFrequencyHz := ADraft.PollFrequencyHz;
+    AResult.PollFrequencyHz := ADraft.PollFrequencyHz;
+    AResult.FrequencyChanged := True;
+  end;
+  lOriginalSourceUnit := RecorderMic185GetSourceChannelUnitName(ARegistry,
+    ATag.SourceId, ATag.Address);
+  lSourceUnit := Trim(ADraft.UnitName);
+  if HasExternalCalibration(ATag, ADraft) then
+    lSourceUnit := lOriginalSourceUnit;
+  if MatchText(lSourceUnit, ['V', 'mV', 'uV', 'kV', 'В']) then
+    lSourceUnit := 'мВ'
+  else if SameText(lSourceUnit, 'Ohm') then
+    lSourceUnit := 'Ом'
+  else if SameText(lSourceUnit, 'uStrain') then
+    lSourceUnit := 'мкстрн';
+  if MatchText(lSourceUnit, ['мВ', 'мВ(тензо)', 'Ом', 'мкстрн', 'мкм/м']) and
+    not SameText(lOriginalSourceUnit, lSourceUnit) then
+  begin
+    RecorderMic185SetSourceChannelUnitName(ARegistry, ATag.SourceId,
+      ATag.Address, ADraft.PollFrequencyHz, lSourceUnit);
+    AResult.SourceUnitName := lSourceUnit;
+    AResult.SourceUnitChanged := True;
+  end;
+  if MatchText(lSourceUnit, ['мВ', 'мВ(тензо)', 'Ом', 'мкстрн', 'мкм/м']) and
+    not ADraft.AutoUnit and not SameText(ATag.UnitName, ADraft.UnitName) then
+  begin
+    AResult.UnitName := ADraft.UnitName;
+    AResult.UnitChanged := True;
+  end;
+  if ADraft.HardwareCalibrationEnabled then
+  begin
+    RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True);
+    RecorderMic185GetSourceChannelMode(ARegistry, ATag.SourceId, ATag.Address,
+      ADraft.PollFrequencyHz, lSettings);
+    if SameText(ADraft.UnitName, 'код') or SameText(ADraft.UnitName, 'code') then
+    begin
+      AResult.UnitName := RecorderMic185GetSourceChannelUnitName(ARegistry,
+        ATag.SourceId, ATag.Address);
+      if AResult.UnitName = '' then
+        AResult.UnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
+      AResult.UnitChanged := True;
+    end;
+    lRange := RecorderMic185EffectiveRangeMaxForTag(ARegistry, ATag,
+      lSettings, ADraft.UnitName);
+    AResult.RangeMin := -lRange;
+    AResult.RangeMax := lRange;
+    AResult.RangeChanged := True;
+  end;
+  AResult.SignalHistoryMustBeCleared :=
+    (ATag.HardwareCalibrationEnabled <> ADraft.HardwareCalibrationEnabled) or
+    AResult.SourceUnitChanged or AResult.UnitChanged;
+end;
+
+function TRecorderMic185DataSource.DownloadHardwareCalibration(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  out AResult: TRecorderHardwareCalibrationResult;
+  out AErrorText: string): Boolean;
+var
+  lB, lK: Double;
+begin
+  RecorderInitHardwareCalibrationResult(AResult);
+  AErrorText := '';
+  Result := OwnsSettingsTag(ARegistry, ATag);
+  if not Result then AErrorText := 'Tag settings do not belong to this datasource';
+  if not Result then Exit;
+  Result := RecorderMic185DownloadHardwareCalibrationFromDeviceEx(ARegistry,
+    ATag, lK, lB, AResult.CalibrationName, AErrorText);
+  if Result then
+    AResult.PresentationText := RecorderMic185FormatHardwareKx(lK, lB);
+end;
+
+function TRecorderMic185DataSource.CanSetUnits(
+  ATag: TRecorderTag;
+  const AUnitName: string; out AErrorText: string): Boolean;
+var
+  ARegistry: TRecorderTagRegistry;
+  lInfo: TRecorderUnitInfo;
+begin
+  ARegistry := nil;
+  if ATag <> nil then ARegistry := ATag.OwnerRegistry;
+  AErrorText := '';
+  Result := OwnsSettingsTag(ARegistry, ATag);
+  if not Result then
+  begin
+    AErrorText := 'MIC-185 tag settings are unavailable';
+    Exit;
+  end;
+  if State = dssRunning then
+  begin
+    AErrorText := 'Stop the datasource before changing its unit mode';
+    Exit(False);
+  end;
+  { Batch validation only inspects the requested category and the model;
+    it never resolves identity, loads current GX or mutates a tag. }
+  Result := RecorderUnitManager.TryGetUnitInfo(AUnitName, lInfo) and
+    (SameText(lInfo.QuantityId, RECORDER_QUANTITY_RAW_CODE) or
+     SameText(lInfo.QuantityId, RECORDER_QUANTITY_VOLTAGE) or
+     SameText(lInfo.QuantityId, 'resistance') or
+     SameText(lInfo.QuantityId, 'strain'));
+  if not Result then AErrorText := 'MIC-185 does not support source units ' + AUnitName;
+end;
+
+function TRecorderMic185DataSource.SetUnits(ATag: TRecorderTag; const AUnitName: string; out AErrorText: string): Boolean;
+var
+  ARegistry: TRecorderTagRegistry;
+  lInfo: TRecorderUnitInfo;
+  lMode: string;
+begin
+  ARegistry := nil;
+  if ATag <> nil then ARegistry := ATag.OwnerRegistry;
+  Result := CanSetUnits(ATag, AUnitName, AErrorText);
+  if not Result then Exit;
+  RecorderUnitManager.TryGetUnitInfo(AUnitName, lInfo);
+  if SameText(lInfo.QuantityId, RECORDER_QUANTITY_RAW_CODE) then
+    ATag.HardwareCalibrationEnabled := False
+  else
+  begin
+    if SameText(lInfo.QuantityId, RECORDER_QUANTITY_VOLTAGE) then lMode := 'мВ'
+    else if SameText(lInfo.QuantityId, 'resistance') then lMode := 'Ом'
+    else lMode := 'мкстрн';
+    RecorderMic185SetSourceChannelUnitName(ARegistry, SourceId,
+      ATag.Address, ATag.PollFrequencyHz, lMode);
+    ATag.HardwareCalibrationEnabled := True;
+  end;
+  ATag.AutoUnit := False;
+  ATag.UnitName := Trim(AUnitName);
+  ATag.ClearSignalHistory;
+end;
+
 constructor TRecorderMic185DataSource.Create(const ASourceId, AHost: string;
   APort: Word; APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
   ASelectedNames: TStrings);
@@ -3192,8 +3535,10 @@ begin
     begin
       RecorderMic185BuildSourceProgramSettings(Registry, SourceId,
         fPollFrequencyHz, fRuntimeChannelSettings);
-      CacheRuntimeChannels;
     end;
+    { Balancing changed the software correction. Refresh it explicitly here;
+      the hardware programming operation itself must stay independent of GX. }
+    CacheRuntimeChannels;
     RecorderMic185Log(Format(
       'ZeroBalance %s runtime transform cache refreshed', [SourceId]));
   end;
@@ -3320,7 +3665,6 @@ begin
        RecorderMic185FormatGroupAddition(lGroupAddition), lSummary]));
   lDevice.ApplyChannelProgramSettings(lSettings, lGroupAddition,
     lTemperatureCompensation, lModuleSettings);
-  CacheRuntimeChannels;
 end;
 
 procedure TRecorderMic185DataSource.BuildRuntimeTransforms(
@@ -3403,6 +3747,7 @@ procedure TRecorderMic185DataSource.DoCreateTags(ARegistry: TRecorderTagRegistry
 var
   I: Integer;
   lCapacity: Integer;
+  lRangePowerMa: Double;
   lChannels: TRecorderDeviceChannelArray;
   lChannelSettings: TMic185ChannelProgramSettings;
   lTag: TRecorderTag;
@@ -3456,14 +3801,19 @@ begin
       if lUnitName <> '' then
       begin
         lTag.SourceUnitName := lUnitName;
+        lTag.SourceHardwareOutputUnitName := lUnitName;
         if lTag.AutoUnit then
           ARegistry.SyncTagAutoUnit(lTag, True)
       end
       else if Trim(lTag.UnitName) = '' then
         lTag.UnitName := RecorderMic185RangeUnitText(
           lChannelSettings.MeasRangeIndex);
-      lTag.RangeMax := RecorderMic185EffectiveRangeMaxForTag(ARegistry,
-        lTag, lChannelSettings, lTag.UnitName);
+      { Binding tags is model-only. Preserve a registered current GX, but do
+        not resolve serials or load CSV/hardware merely to show the range. }
+      lRangePowerMa := RecorderMic185ApplyCachedCurrentCalibration(ARegistry,
+        lTag, Mic185EffectivePowerMa(lChannelSettings));
+      lTag.RangeMax := Mic185EffectiveRangeMaxWithPower(lChannelSettings,
+        lTag.UnitName, lRangePowerMa);
       lTag.RangeMin := -lTag.RangeMax;
     end
     else
@@ -3641,6 +3991,8 @@ begin
   if (not fHardwarePrepared) and fHardwarePrepareAttempted then
     Exit;
   RecorderHardwareClearSourceWarning(SourceId);
+  { Logical acquisition preparation is distinct from hardware reset/program.
+    Keep validation before TryStart; invalid units must still block sampling. }
   CacheRuntimeChannels;
   if fDevice.State <> rdsStarted then
   begin
@@ -3786,6 +4138,8 @@ begin
         Ohm or strain merely because the transform could not be resolved. }
       if not lTransform.Valid then
         Continue;
+      lTag.StageRawValue(fTimes[ABlock.SampleCount - 1],
+        ABlock.Values[I][ABlock.SampleCount - 1]);
       if lTransform.IsLinear then
         for J := 0 to ABlock.SampleCount - 1 do
           fValues[J] := lTransform.K * ABlock.Values[I][J] + lTransform.B
@@ -3795,8 +4149,12 @@ begin
             lTransform);
     end
     else
+    begin
+      lTag.StageRawValue(fTimes[ABlock.SampleCount - 1],
+        ABlock.Values[I][ABlock.SampleCount - 1]);
       for J := 0 to ABlock.SampleCount - 1 do
         fValues[J] := ABlock.Values[I][J];
+    end;
     Registry.AddBlockSamples(lTag, fTimes, fValues, ABlock.SampleCount, True);
     { Значения уже пересчитаны: передаём тот же блок без повторного
       LastBlockSnapshot и второго поиска тега по имени. }

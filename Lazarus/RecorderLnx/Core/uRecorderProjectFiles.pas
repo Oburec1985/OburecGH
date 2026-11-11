@@ -959,6 +959,8 @@ begin
   try
     lRoot.Add('format', 'RecorderLnx.ProjectConfig');
     lRoot.Add('version', 1);
+    lRoot.Add('tagSortField', Ord(ATags.DisplaySortField));
+    lRoot.Add('tagSortAscending', ATags.DisplaySortAscending);
     { Keep legacy data only until the workstation setting is persisted. }
     if RecorderNetworkHasLegacyBindAddress and
       not RecorderNetworkHasPersistedBindAddress then
@@ -995,6 +997,7 @@ begin
       lTagJson.Add('address', lTag.Address);
       lTagJson.Add('unit', lTag.UnitName);
       lTagJson.Add('sourceUnit', lTag.SourceUnitName);
+      lTagJson.Add('sourceHardwareOutputUnit', lTag.SourceHardwareOutputUnitName);
       lTagJson.Add('description', lTag.Description);
       lTagJson.Add('groupPath', lTag.GroupPath);
       lTagJson.Add('sourceId', lTag.SourceId);
@@ -1116,6 +1119,11 @@ begin
       Exit;
 
     ATags.Clear;
+    I := lRoot.Get('tagSortField', Ord(rtsAddress));
+    if (I < Ord(Low(TRecorderTagSortField))) or
+      (I > Ord(High(TRecorderTagSortField))) then I := Ord(rtsAddress);
+    ATags.SetDisplaySort(TRecorderTagSortField(I),
+      lRoot.Get('tagSortAscending', True));
     LoadRecorderConfiguredDataSources(lRoot, ATags);
     LoadCalibrationList(FindArray(lRoot, 'calibrations'), ATags.Calibrations);
     LoadSpectrumConfigs(FindArray(lRoot, 'spectrumConfigs'), ATags.SpectrumConfigs);
@@ -1145,6 +1153,7 @@ begin
         lTag.Address := lTagJson.Get('address', lTag.Address);
         lTag.UnitName := lTagJson.Get('unit', lTag.UnitName);
         lTag.SourceUnitName := lTagJson.Get('sourceUnit', lTag.UnitName);
+        lTag.SourceHardwareOutputUnitName := lTagJson.Get('sourceHardwareOutputUnit', '');
         lTag.Description := lTagJson.Get('description', lTag.Description);
         lTag.GroupPath := lTagJson.Get('groupPath', lTag.GroupPath);
         lTag.SourceId := lTagJson.Get('sourceId', lTag.SourceId);
@@ -2148,6 +2157,7 @@ begin
             lIni.WriteBool(lSection, 'SqlShowTagAlarmEvents', TRecorderSqlTrendComponent(lComponent).ShowTagAlarmEvents);
             lIni.WriteBool(lSection, 'SqlShowTagRangeEvents', TRecorderSqlTrendComponent(lComponent).ShowTagRangeEvents);
             lIni.WriteBool(lSection, 'SqlShowOnlyUnresolvedEventPoints', TRecorderSqlTrendComponent(lComponent).ShowOnlyUnresolvedEventPoints);
+            lIni.WriteBool(lSection, 'SqlOnlyRecorderTags', TRecorderSqlTrendComponent(lComponent).OnlyRecorderTags);
             lIni.WriteInteger(lSection, 'SqlDisplayCount', TRecorderSqlTrendComponent(lComponent).DisplayCount);
             lIni.WriteInteger(lSection, 'SqlActiveDisplay', TRecorderSqlTrendComponent(lComponent).ActiveDisplayIndex);
             for K := 0 to TRecorderSqlTrendComponent(lComponent).DisplayCount - 1 do
@@ -3367,6 +3377,8 @@ begin
                 lIni.ReadBool(lSection, 'SqlShowTagRangeEvents', True);
               TRecorderSqlTrendComponent(lComponent).ShowOnlyUnresolvedEventPoints :=
                 lIni.ReadBool(lSection, 'SqlShowOnlyUnresolvedEventPoints', False);
+              TRecorderSqlTrendComponent(lComponent).OnlyRecorderTags :=
+                lIni.ReadBool(lSection, 'SqlOnlyRecorderTags', True);
               lItemCount := lIni.ReadInteger(lSection, 'SqlDisplayCount', -1);
               if lItemCount < 0 then
                 TRecorderSqlTrendComponent(lComponent).ImportLegacyTrend

@@ -3,6 +3,7 @@
 - [development-rules.md](development-rules.md) - правила разработки RecorderLnx.
 - [current-plan.md](current-plan.md) - текущий рабочий план.
 - [data_sources_architecture.md](data_sources_architecture.md) - источники данных и теги.
+- [Схема DataSource ↔ Tag](data-source-tag-207/README.md) — интерактивный снимок архитектуры версии 0.1.207.
 - [recorder_run_lifecycle.md](recorder_run_lifecycle.md) - жизненный цикл Recorder.
 - [tag-data-client-model.md](tag-data-client-model.md) - клиенты кольцевых буферов тегов.
 - [dac-output-architecture.md](dac-output-architecture.md) - расширяемый ЦАП, backend и двусторонняя связь с тегами.

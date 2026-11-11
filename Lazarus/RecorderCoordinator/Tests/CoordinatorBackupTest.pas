@@ -134,19 +134,19 @@ begin
   RetryCount := 0; BackupTestBeforeExportRetry := @RetryWithoutWait;
   {$ENDIF}
   WriteText(lRoot + 'calibr/.recorder-backup-export-0123456789abcdef0123456789abcdef', 'stale');
-  Check(not BackupRecorderHost(lDest, lHost, [boConfigurations], lReport), 'stale marker rejected');
+  Check(not BackupRecorderHost(lDest, lHost, [boConfigurations, boCalibrations], lReport), 'selected stale GX marker rejected');
   Check(not DirectoryExists(lDest + '/stale-marker'), 'stale export preflight');
   {$IFDEF BACKUP_TEST_HOOKS}
   Check(RetryCount = 1, 'exactly one stale export retry');
   TestMarkerPath := lRoot + 'calibr/.recorder-backup-export-0123456789abcdef0123456789abcdef';
   RetryCount := 0; BackupTestBeforeExportRetry := @RepairExportOnRetry;
   lHost.DisplayName := 'retry-success';
-  Check(BackupRecorderHost(lDest, lHost, [boConfigurations], lReport), 'repaired export retry succeeds: ' + lReport);
+  Check(BackupRecorderHost(lDest, lHost, [boConfigurations, boCalibrations], lReport), 'repaired export retry succeeds: ' + lReport);
   Check(RetryCount = 1, 'one retry before success');
   Check(DeleteFile(TestMarkerPath), 'remove marker');
   RetryCount := 0;
   lHost.DisplayName := 'retry-missing-marker';
-  Check(BackupRecorderHost(lDest, lHost, [boConfigurations], lReport), 'missing marker retry succeeds: ' + lReport);
+  Check(BackupRecorderHost(lDest, lHost, [boConfigurations, boCalibrations], lReport), 'missing marker retry succeeds: ' + lReport);
   Check(RetryCount = 1, 'missing marker retried once');
   BackupTestBeforeExportRetry := nil;
   {$ENDIF}
@@ -163,12 +163,15 @@ begin
     lIni.UpdateFile; finally lIni.Free; end;
   Check(not BackupRecorderHost(lDest, lHost, [boConfigurations], lReport), 'missing active project');
   Check(not DirectoryExists(lDest + '/missing'), 'preflight creates nothing on failure');
+  lIni := TIniFile.Create(lConfig + '/backup-export-info.ini');
+  try lIni.WriteString('BackupExport', 'ProjectsRoot', '/remote/config');
+    lIni.UpdateFile; finally lIni.Free; end;
   lHost.DisplayName := 'nested';
-  Check(not BackupRecorderHost(lProgram, lHost, [boProgram], lReport), 'destination in source');
+  Check(not BackupRecorderHost(lProjects + '/001', lHost, [boConfigurations], lReport), 'destination in source');
   {$IFDEF UNIX}
-  Check(fpSymlink(PChar('/etc/passwd'), PChar(lProgram + '/plugins/link')) = 0, 'create symlink');
+  Check(fpSymlink(PChar('/etc/passwd'), PChar(lProjects + '/001/link')) = 0, 'create symlink');
   lHost.DisplayName := 'symlink';
-  Check(not BackupRecorderHost(lDest, lHost, [boPlugins], lReport), 'symlink must fail');
+  Check(not BackupRecorderHost(lDest, lHost, [boConfigurations], lReport), 'symlink must fail');
   lSnapshot := FindSnapshot(lDest + '/symlink');
   Check(FileExists(lSnapshot + '/.backup-incomplete'), 'failed copy marked incomplete');
   {$ENDIF}

@@ -323,6 +323,17 @@ object MainForm: TMainForm
         GroupIndex = 41
         OnClick = btnViewModeClick
       end
+      object cbShowRawCodes: TCheckBox
+        Left = 236
+        Height = 23
+        Top = 6
+        Width = 170
+        Caption = 'Показывать коды'
+        Hint = 'Последний исходный отсчёт до балансировки и всех ГХ'
+        ShowHint = True
+        OnChange = cbShowRawCodesChange
+        TabOrder = 0
+      end
     end
     object sgFormular: TStringGrid
       Left = 0

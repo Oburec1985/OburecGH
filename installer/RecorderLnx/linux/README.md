@@ -55,6 +55,16 @@ Output:
 
 `Output/recorderlnx_0.1.9_amd64.deb`
 
+## One-click KIP and ARM update
+
+`..\update-kip-arm.bat` starts the configured VMware build machine in the
+background, rebuilds every Linux binary, creates the DEB, stops RecorderLnx on
+KIP-1..KIP-4 and ARM, and installs the same package on all five computers. It
+then starts RecorderLnx on the four KIP computers and leaves ARM stopped.
+Machine paths, credentials and the exact target inventory are kept only in the
+local `..\update-kip-arm.local.psd1` file. The script never reads the broader
+deployment inventory, so SQL servers and auxiliary computers are not updated.
+
 ## Install On Linux
 
 ```bash

@@ -122,26 +122,28 @@ begin
   finally FindClose(S); end;
 end;
 
+function ActiveProjectDir(const Root: string): string; forward;
+
 function RuntimeMeraRoot(const Root: string): string;
 var App,Project,Run,Storage: string; Ini:TIniFile;
 begin
   App:=IncludeTrailingPathDelimiter(Root)+'RecorderLnx';
   Storage:=IncludeTrailingPathDelimiter(App)+'storage.ini';
   if FileExists(Storage) then begin
+    RequireSafe(Storage,False);
     Ini:=TIniFile.Create(Storage);
     try Result:=Trim(Ini.ReadString('Storage','MeraFilesPath','')); finally Ini.Free; end;
   end else begin
-    Ini:=TIniFile.Create(IncludeTrailingPathDelimiter(App)+'app.ini');
-    try Project:=Trim(Ini.ReadString('Application','DefaultProjectConfigDir','config/projects/default')); finally Ini.Free; end;
-    if not ((Length(Project)>0) and (Project[1]=DirectorySeparator)) then Project:=ExpandFileName(IncludeTrailingPathDelimiter(App)+Project);
+    Project:=ActiveProjectDir(Root);
     Run:=IncludeTrailingPathDelimiter(Project)+'default.run-control.ini';
     if not FileExists(Run) then Run:=IncludeTrailingPathDelimiter(Project)+'run-control.ini';
     if not FileExists(Run) then raise Exception.Create('Missing project run-control');
+    RequireSafe(Run,False);
     Ini:=TIniFile.Create(Run);
     try Result:=Trim(Ini.ReadString('Mera','FilesPath','')); finally Ini.Free; end;
   end;
-  if (Result='') or not ((Length(Result)>0) and (Result[1]=DirectorySeparator)) then raise Exception.Create('Invalid Mera Files path');
-  Result:=ExcludeTrailingPathDelimiter(Result); RequireSafe(Result,True);
+  if not IsAbsolutePath(Result) then raise Exception.Create('Invalid Mera Files path');
+  Result:=ExcludeTrailingPathDelimiter(ExpandFileName(Result)); RequireSafe(Result,True);
 end;
 
 function ActiveProjectDir(const Root: string): string;

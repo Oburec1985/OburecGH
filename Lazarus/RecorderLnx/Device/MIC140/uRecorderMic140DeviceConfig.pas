@@ -116,6 +116,10 @@ procedure RecorderMic140EnsureThermoCompensationForSource(ARegistry: TRecorderTa
   const ASourceId: string);
 procedure RecorderMic140UpdateChannelSettings(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag; const ASettings: TRecorderMic140ChannelSettings);
+{ Explicit cold configuration only: fill an empty temperature scale from the
+  installed type-K GOST catalogue. Existing operator choices are preserved. }
+function RecorderMic140TryAssignDefaultThermocouple(ARegistry: TRecorderTagRegistry;
+  var ASettings: TRecorderMic140ChannelSettings): Boolean;
 function RecorderMic140TagUsesThermoCompensation(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag): Boolean;
 { Синхронизирует отображаемый выход тега с реальным конвейером MIC-140:
@@ -147,7 +151,7 @@ procedure DoneRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResul
 implementation
 
 uses
-  Math, uRecorderMeraSdbThermocouples, uRecorderMic140LegacyConstants,
+  Math, StrUtils, uRecorderUnitManager, uRecorderMeraSdbThermocouples, uRecorderMic140LegacyConstants,
   uRecorderProjectFiles, uRecorderMic140DataSource, uRecorderMic140Thermocouple,
   uRecorderConfiguredDataSources;
 
@@ -199,6 +203,10 @@ var
   lAutoUnit: string;
   lMode: string;
   lUnit: string;
+  lDisplayUnit: string;
+  lHasExternal: Boolean;
+  lFactor: Double;
+  I: Integer;
 begin
   if ATag = nil then
     Exit;
@@ -220,12 +228,40 @@ begin
     lAutoUnit := lUnit
   else
     lAutoUnit := 'code';
+  if Trim(ASettings.ThermocoupleScaleName) <> '' then
+    for I := ATag.CalibrationNames.Count - 1 downto 0 do
+      if SameText(ATag.CalibrationNames[I],
+        'TC ' + ASettings.ThermocoupleScaleName) then
+        ATag.CalibrationNames.Delete(I);
+  lHasExternal := False;
+  if ATag.ChannelCalibrationEnabled then
+    for I := 0 to ATag.CalibrationNames.Count - 1 do
+      if RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+      begin
+        lHasExternal := True;
+        Break;
+      end;
+  lDisplayUnit := ATag.UnitName;
+  if not lHasExternal then
+  begin
+    if ATag.AutoUnit then
+      lDisplayUnit := lAutoUnit
+    else if ATag.HardwareCalibrationEnabled and
+      not SameText(lUnit, ATag.UnitName) and
+      not RecorderUnitManager.TryGetConversionFactor(lUnit, ATag.UnitName,
+        lFactor) then
+      lDisplayUnit := lUnit;
+  end;
   if (not SameText(ATag.SourceValueMode, lMode)) or
-    (ATag.AutoUnit and (not SameText(ATag.UnitName, lAutoUnit))) then
+    (not SameText(ATag.UnitName, lDisplayUnit)) then
     ATag.ClearSignalHistory;
   ATag.SourceValueMode := lMode;
-  if ATag.AutoUnit then
-    ATag.UnitName := lAutoUnit;
+  ATag.SourceHardwareOutputUnitName := lUnit;
+  ATag.SourceUnitName := lUnit;
+  { Project source edits back into a manual display only when its previous
+    quantity no longer exists. Keep compatible prefixes and external GX output. }
+  if not SameText(ATag.UnitName, lDisplayUnit) then
+    ATag.UnitName := lDisplayUnit;
 end;
 
 function RecorderMic140ChannelGradRangeText(const ASettings: TRecorderMic140ChannelSettings): string;
@@ -780,6 +816,42 @@ begin
   lConfig.ThermoCompensationEnabled := True;
 end;
 
+function RecorderMic140TryAssignDefaultThermocouple(ARegistry: TRecorderTagRegistry;
+  var ASettings: TRecorderMic140ChannelSettings): Boolean;
+var
+  lNames: TStringList;
+  lCandidate: TRecorderMic140ChannelSettings;
+  lName, lMatch: string;
+  I: Integer;
+begin
+  Result := False;
+  if (ARegistry = nil) or not RecorderMic140ChannelUsesTemperature(ASettings) or
+    (Trim(ASettings.ThermocoupleScaleName) <> '') or
+    (Trim(ASettings.ThermocoupleScalePath) <> '') then Exit;
+  lNames := TStringList.Create;
+  try
+    RecorderMeraListThermocoupleScales(lNames);
+    lNames.Sort;
+    for I := 0 to lNames.Count - 1 do
+    begin
+      lName := lNames[I];
+      lMatch := StringReplace(lName, ' ', '', [rfReplaceAll]);
+      if not (StartsText('K_ГОСТР8', lMatch) or
+        StartsText('К_ГОСТР8', lMatch)) then Continue;
+      lCandidate := ASettings;
+      lCandidate.ThermocoupleScaleName := lName;
+      lCandidate.ThermocoupleScalePath := RecorderMeraThermocoupleRelativePath(lName);
+      if (ARegistry.FindCalibrationByName('TC ' + lName) = nil) and
+        (RecorderMic140EnsureThermocoupleCalibration(ARegistry, lCandidate) = '') then
+        Continue;
+      ASettings := lCandidate;
+      Exit(True);
+    end;
+  finally
+    lNames.Free;
+  end;
+end;
+
 procedure RecorderMic140UpdateChannelSettings(ARegistry: TRecorderTagRegistry;
   ATag: TRecorderTag; const ASettings: TRecorderMic140ChannelSettings);
 var
@@ -796,6 +868,7 @@ begin
       Exit;
   end;
   lConfig.SetChannelSettings(lChannelNumber, ATag.Address, ASettings);
+  RecorderMic140ApplyTagOutputPresentation(ATag, ASettings);
 end;
 
 function RecorderMic140TagUsesThermoCompensation(ARegistry: TRecorderTagRegistry;
@@ -1030,11 +1103,13 @@ end;
 procedure LoadMic140DeviceConfigs(AJson: TJSONObject;
   ARegistry: TRecorderTagRegistry);
 var
-  I: Integer;
+  I, lChannel: Integer;
   lArray: TJSONArray;
   lConfig: TRecorderMic140SourceConfig;
   lItem: TJSONObject;
   lSourceId: string;
+  lTag: TRecorderTag;
+  lSettings: TRecorderMic140ChannelSettings;
 begin
   if (AJson = nil) or (ARegistry = nil) then
     Exit;
@@ -1058,6 +1133,15 @@ begin
   end;
   { Host из mic140 — источник истины; SourceId пересчитывается. }
   RecorderMic140CanonicalizeSourceIds(ARegistry);
+  { Rebuild source-owned presentation before the registry compiles tag stages.
+    A legacy TC link is the source's internal curve, not an external sensor GX. }
+  for I := 0 to ARegistry.TagCount - 1 do
+  begin
+    lTag := ARegistry.Tags[I];
+    if not RecorderMic140TryGetChannelSettings(ARegistry, lTag, lChannel,
+      lSettings) then Continue;
+    RecorderMic140ApplyTagOutputPresentation(lTag, lSettings);
+  end;
 end;
 
 procedure InitRecorderMic140DialogResult(var AResult: TRecorderMic140DialogResult);

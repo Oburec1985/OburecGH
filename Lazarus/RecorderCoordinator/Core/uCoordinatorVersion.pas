@@ -6,7 +6,7 @@ interface
 
 const
   COORDINATOR_APP_NAME = 'RCPanel';
-  COORDINATOR_VERSION = '0.1.34';
+  COORDINATOR_VERSION = '0.1.35';
 
 function CoordinatorWindowCaption: string;
 

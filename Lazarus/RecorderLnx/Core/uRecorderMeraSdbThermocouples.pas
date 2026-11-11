@@ -68,14 +68,14 @@ var
 begin
   Result := 0;
   lDiskDir := IncludeTrailingPathDelimiter(ADiskDir);
-  if not DirectoryExists(lDiskDir) then
+  if not DirectoryExistsUTF8(lDiskDir) then
     Exit;
   lDirName := ExtractFileName(ExcludeTrailingPathDelimiter(lDiskDir));
   lBasenames := TStringList.Create;
   try
     lBasenames.Sorted := True;
     lBasenames.Duplicates := dupIgnore;
-    if FindFirst(lDiskDir + '*', faAnyFile, SR) = 0 then
+    if FindFirstUTF8(lDiskDir + '*', faAnyFile, SR) = 0 then
     try
       repeat
         if (SR.Attr and faDirectory) <> 0 then
@@ -88,9 +88,9 @@ begin
         if FileExistsUTF8(lDiskDir + lBase + '.csv') or
           FileExistsUTF8(lDiskDir + lBase + '.CSV') then
           lBasenames.Add(lBase);
-      until FindNext(SR) <> 0;
+      until FindNextUTF8(SR) <> 0;
     finally
-      FindClose(SR);
+      FindCloseUTF8(SR);
     end;
     Result := lBasenames.Count;
   finally
@@ -122,13 +122,13 @@ begin
   if ADepth < 0 then
     Exit(False);
   lDiskDir := IncludeTrailingPathDelimiter(ADiskDir);
-  if not DirectoryExists(lDiskDir) then
+  if not DirectoryExistsUTF8(lDiskDir) then
     Exit(False);
   if RecorderMeraIsThermocoupleFolderName(ExtractFileName(
     ExcludeTrailingPathDelimiter(lDiskDir))) and
     RecorderMeraTryThermocoupleDir(lDiskDir, AFolderKey) then
     Exit(True);
-  if FindFirst(lDiskDir + '*', faDirectory, SR) = 0 then
+  if FindFirstUTF8(lDiskDir + '*', faDirectory, SR) = 0 then
   try
     repeat
       if (SR.Attr and faDirectory) = 0 then
@@ -142,9 +142,9 @@ begin
         lChildKey := SR.Name;
       if RecorderMeraScanThermocoupleTree(lChildDir, lChildKey, ADepth - 1) then
         Exit(True);
-    until FindNext(SR) <> 0;
+    until FindNextUTF8(SR) <> 0;
   finally
-    FindClose(SR);
+    FindCloseUTF8(SR);
   end;
   Result := False;
 end;
@@ -168,14 +168,14 @@ begin
   end;
 
   if (MeraCachedThermocoupleDir <> '') and
-    DirectoryExists(MeraCachedThermocoupleDir) and
+    DirectoryExistsUTF8(MeraCachedThermocoupleDir) and
     (RecorderMeraCountScalePairs(MeraCachedThermocoupleDir) > 0) then
     Exit(True);
 
   RecorderMeraResetThermocoupleCache;
 
   lRoot := IncludeTrailingPathDelimiter(ExpandFileName(RecorderSdbRootDir));
-  if not DirectoryExists(lRoot) then
+  if not DirectoryExistsUTF8(lRoot) then
     Exit(False);
 
   if RecorderMeraTryThermocoupleDir(lRoot +
@@ -183,7 +183,7 @@ begin
     CMeraSdbThermocoupleFolder) then
     Exit(True);
 
-  if FindFirst(lRoot + '*', faDirectory, SR) = 0 then
+  if FindFirstUTF8(lRoot + '*', faDirectory, SR) = 0 then
   try
     repeat
       if (SR.Attr and faDirectory) = 0 then
@@ -194,7 +194,7 @@ begin
       lGostKey := SR.Name;
       if RecorderMeraTryThermocoupleDir(lGostDir, lGostKey) then
         Exit(True);
-      if FindFirst(lGostDir + '*', faDirectory, SR2) = 0 then
+      if FindFirstUTF8(lGostDir + '*', faDirectory, SR2) = 0 then
       try
         repeat
           if (SR2.Attr and faDirectory) = 0 then
@@ -205,13 +205,13 @@ begin
           lTcKey := lGostKey + '\' + SR2.Name;
           if RecorderMeraTryThermocoupleDir(lTcDir, lTcKey) then
             Exit(True);
-        until FindNext(SR2) <> 0;
+        until FindNextUTF8(SR2) <> 0;
       finally
-        FindClose(SR2);
+        FindCloseUTF8(SR2);
       end;
-    until FindNext(SR) <> 0;
+    until FindNextUTF8(SR) <> 0;
   finally
-    FindClose(SR);
+    FindCloseUTF8(SR);
   end;
 
   Result := RecorderMeraScanThermocoupleTree(lRoot, '', 6);
@@ -300,14 +300,14 @@ begin
   if AItems = nil then
     Exit;
   lDiskDir := IncludeTrailingPathDelimiter(ADiskDir);
-  if not DirectoryExists(lDiskDir) then
+  if not DirectoryExistsUTF8(lDiskDir) then
     Exit;
   lDirName := ExtractFileName(ExcludeTrailingPathDelimiter(lDiskDir));
   lBasenames := TStringList.Create;
   try
     lBasenames.Sorted := True;
     lBasenames.Duplicates := dupIgnore;
-    if FindFirst(lDiskDir + '*', faAnyFile, SR) = 0 then
+    if FindFirstUTF8(lDiskDir + '*', faAnyFile, SR) = 0 then
     try
       repeat
         if (SR.Attr and faDirectory) <> 0 then
@@ -320,9 +320,9 @@ begin
         if FileExistsUTF8(lDiskDir + lBase + '.csv') or
           FileExistsUTF8(lDiskDir + lBase + '.CSV') then
           lBasenames.Add(lBase);
-      until FindNext(SR) <> 0;
+      until FindNextUTF8(SR) <> 0;
     finally
-      FindClose(SR);
+      FindCloseUTF8(SR);
     end;
     for lI := 0 to lBasenames.Count - 1 do
       if AItems.IndexOf(lBasenames[lI]) < 0 then
@@ -348,7 +348,9 @@ begin
       RecorderSdbListScaleKeys(RecorderMeraThermocoupleFolderKey, lFiles);
     for lI := 0 to lFiles.Count - 1 do
     begin
-      lName := ChangeFileExt(ExtractFileName(lFiles[lI]), '');
+      { Directory collection already returns extensionless scale keys. Names
+        such as K_ГОСТ Р 8.585-2001 contain significant dots. }
+      lName := RecorderMeraThermocoupleDisplayName(lFiles[lI]);
       if lName = '' then
         Continue;
       if SameText(lName, 'Термопары') or SameText(lName, 'Thermocouples') then
@@ -392,7 +394,7 @@ begin
   lDiskDir := IncludeTrailingPathDelimiter(MeraCachedThermocoupleDir);
   lBestKey := '';
   lBestLen := -1;
-  if FindFirst(lDiskDir + '*.xml', faAnyFile, SR) = 0 then
+  if FindFirstUTF8(lDiskDir + '*.xml', faAnyFile, SR) = 0 then
   try
     repeat
       if (SR.Attr and faDirectory) <> 0 then
@@ -411,9 +413,9 @@ begin
           lBestKey := RecorderMeraThermocoupleRelativePath(lBestBase);
         end;
       end;
-    until FindNext(SR) <> 0;
+    until FindNextUTF8(SR) <> 0;
   finally
-    FindClose(SR);
+    FindCloseUTF8(SR);
   end;
   Result := lBestKey;
 end;

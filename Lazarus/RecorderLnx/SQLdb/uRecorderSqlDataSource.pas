@@ -169,6 +169,11 @@ var
   lBinding: TRecorderSqlSourceBinding;
   lTag: TRecorderTag;
 begin
+  { Visibility of hardware-backed tags is controlled by the registry's active
+    source set.  Register the SQL source while configuring it so imported tags
+    remain visible after loading a saved project, not only immediately after
+    the import dialog has registered the source. }
+  ARegistry.RegisterActiveSource(SourceId);
   for I := 0 to fBindings.Count - 1 do
   begin
     lBinding := TRecorderSqlSourceBinding(fBindings[I]);
@@ -203,22 +208,23 @@ procedure TRecorderSqlDataSource.DoTick;
 var
   I: Integer;
   lBinding: TRecorderSqlSourceBinding;
-  lError: string;
   lValues: TRecorderSqlLatestValues;
 begin
-  { Проверка выполняется до SQL-запроса. Если сервер пропал уже во время
-    Preview/Record, поток сам переводит источник в offline и завершается;
-    последующий Stop не ждёт системный таймаут Firebird. }
-  if not RecorderSqlServerAvailable(fConfig, lError) then
-  begin
-    RecorderHardwareMarkSourceOffline(SourceId, lError);
-    RecorderDebugLog(Format('[DataSource:%s] SQL server lost: %s',
-      [SourceId, lError]));
-    RequestStop;
-    Exit;
+  { Read the complete current-value frame with one SQL statement.  A separate
+    TCP probe here used to add another network round-trip every second; the
+    production query itself is the authoritative connectivity check. }
+  try
+    fRepository.ReadLatestSignalValues(fSignalNames, lValues);
+  except
+    on E: Exception do
+    begin
+      RecorderHardwareMarkSourceOffline(SourceId, E.Message);
+      RecorderDebugLog(Format('[DataSource:%s] SQL frame read failed: %s',
+        [SourceId, E.Message]));
+      RequestStop;
+      Exit;
+    end;
   end;
-
-  fRepository.ReadLatestSignalValues(fSignalNames, lValues);
   for I := 0 to High(lValues) do
   begin
     lBinding := BindingBySignal(lValues[I].SignalName);

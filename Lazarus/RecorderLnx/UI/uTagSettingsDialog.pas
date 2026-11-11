@@ -163,6 +163,9 @@ type
     /// OnClick кнопки «Градуировка» открывает секундный мастер градуировки тега.
     procedure TagCalibrationButtonClick(Sender: TObject);
   private
+    fPendingSourceUnit: string;
+    fPresentedUnitText: string;
+    fUnitControlsUpdate: Integer;
     fImages: TCustomImageList;                           // Единый список иконок главной формы
     fCommandImages: TCustomImageList;                    // Список иконок устройства (ilCommandButtons)
     fTagRegistry: TRecorderTagRegistry;                  // Реестр тегов
@@ -238,10 +241,12 @@ type
     procedure AutoUnitCheckClick(Sender: TObject);
     /// OnDropDown комбобокса единиц актуализирует список перед его раскрытием.
     procedure UnitComboDropDown(Sender: TObject);
-    /// OnSelect единицы в Auto меняет UnitOut выходной ГХ, не снимая AutoUnit.
+    /// Commits selected/typed source mode to the dialog draft, never a shared GX.
     procedure UnitComboSelect(Sender: TObject);
     /// Строит список единиц по выходу реально применяемой цепочки ГХ.
     procedure RefreshUnitChoices;
+    function TryGetCommonSourceUnitNames(AItems: TStrings): Boolean;
+    procedure ApplySelectedUnits(const AUnitName: string);
     /// OnClick галки оценки синхронизирует набор расчётов и оценку по умолчанию.
     procedure EstimateCheckClick(Sender: TObject);
     /// OnChange списка оценки по умолчанию включает выбранную оценку в расчёт.
@@ -258,7 +263,6 @@ type
     function TryGetStrainDeviceExcitation(ATag: TRecorderTag;
       out AExcitation: string): Boolean;
     /// Возвращает последнюю реально применяемую ГХ, задающую выход AutoUnit.
-    function FindOutputCalibration(ATag: TRecorderTag): TRecorderCalibration;
     /// Проверяет наличие применяемой ГХ с определённой выходной единицей.
     function SelectedCalibrationEnabled(ATag: TRecorderTag): Boolean;
     /// Возвращает исходную единицу тега до автоматического преобразования ГХ.
@@ -527,6 +531,7 @@ begin
   fAutoUnitCheck.OnClick := @AutoUnitCheckClick;
   fUnitCombo.OnDropDown := @UnitComboDropDown;
   fUnitCombo.OnSelect := @UnitComboSelect;
+  fUnitCombo.OnExit := @UnitComboSelect;
   btnOk.OnClick := @OkButtonClick;
   fApplyButton.OnClick := @ApplyButtonClick;
   { Назначаем runtime-обработчики явно: кнопки панели устройства могли быть
@@ -780,6 +785,7 @@ end;
 
 procedure TTagSettingsDialog.HardwareCurveCheckClick(Sender: TObject);
 begin
+  if fUnitControlsUpdate > 0 then Exit;
   { При множественном выборе cbGrayed означает разные исходные значения.
     Первый явный щелчок должен стать общей командой «включить», иначе LCL
     оставляет промежуточное состояние и StoreToTags пропускает все теги. }
@@ -792,6 +798,7 @@ end;
 
 procedure TTagSettingsDialog.ChannelCurveCheckClick(Sender: TObject);
 begin
+  if fUnitControlsUpdate > 0 then Exit;
   if fChannelCurveCheck.State = cbGrayed then
     fChannelCurveCheck.State := cbChecked;
   fChannelCurveCheck.AllowGrayed := False;
@@ -822,7 +829,7 @@ begin
 
   case AKind of
     0: AValue := TagAt(0).Name;
-    1: AValue := TagAt(0).UnitName;
+    1: AValue := TagAt(0).GetUnits;
     2:
       begin
         AValue := TagAt(0).Address;
@@ -837,7 +844,7 @@ begin
   begin
     case AKind of
       0: lValue := TagAt(I).Name;
-      1: lValue := TagAt(I).UnitName;
+      1: lValue := TagAt(I).GetUnits;
       2:
         begin
           lValue := TagAt(I).Address;
@@ -1565,6 +1572,9 @@ var
   lProvider: IRecorderTagSettingsProvider;
   lState: TRecorderTagSettingsState;
 begin
+  fPendingSourceUnit := '';
+  Inc(fUnitControlsUpdate);
+  try
   if fTags.Count = 1 then
   begin
     Caption := 'Настройка канала ' + TagAt(0).Name;
@@ -1586,13 +1596,6 @@ begin
     fUnitCombo.Text := lText
   else
     fUnitCombo.Text := '';
-  if (fTags.Count = 1) and ResolveSettingsProvider(TagAt(0), lProvider) then
-  begin
-    RecorderInitTagSettingsState(lState);
-    if lProvider.ReadState(fTagRegistry, TagAt(0), lState) and
-      (Trim(lState.OutputUnitName) <> '') then
-      fUnitCombo.Text := lState.OutputUnitName;
-  end;
   if AllString(2, lText) then
     fModuleEdit.Text := lText
   else
@@ -1772,6 +1775,9 @@ begin
     fSetpointRangeAlarmInfoEdit.Text := lText
   else
     fSetpointRangeAlarmInfoEdit.Text := CMixedAlarmInfoText;
+  finally
+    Dec(fUnitControlsUpdate);
+  end;
 end;
 
 { Безопасное чтение вещественных чисел с заменой точек/запятых }
@@ -1811,6 +1817,11 @@ var
   lChannelChanged: Boolean;
   lRuntimeTransformChanged: Boolean;
 begin
+  { Enter/default-button activation need not move focus out of the combo. }
+  if (fTags.Count > 0) and
+    not SameText(Trim(fUnitCombo.Text), fPresentedUnitText) and
+    (fPendingSourceUnit = '') then
+    UnitComboSelect(fUnitCombo);
   if fNameEdit.Enabled and (Trim(fNameEdit.Text) <> '') then
   begin
     lExisting := fTagRegistry.FindByName(Trim(fNameEdit.Text));
@@ -1925,6 +1936,8 @@ begin
       lTag.AutoUnit := lDraft.AutoUnit;
       lTag.HardwareCalibrationEnabled := lDraft.HardwareCalibrationEnabled;
       lTag.ChannelCalibrationEnabled := lDraft.ChannelCalibrationEnabled;
+      if (not lDraft.AutoUnit) and (not lApplyResult.UnitChanged) then
+        lTag.UnitName := lDraft.UnitName;
       lRuntimeTransformChanged := lRuntimeTransformChanged or
         lApplyResult.SourceUnitChanged or lApplyResult.UnitChanged or
         lHardwareChanged or lChannelChanged;
@@ -2112,7 +2125,14 @@ begin
   if ResolveSettingsProvider(ATag, lProvider) and
     lProvider.ReadState(fTagRegistry, ATag, lState) then
   begin
-    AUnitName := Trim(lState.OutputUnitName);
+    if fHardwareCurveCheck.State <> cbChecked then
+    begin
+      AUnitName := 'code';
+      Exit(True);
+    end;
+    if fPendingSourceUnit <> '' then
+      AUnitName := fPendingSourceUnit
+    else AUnitName := Trim(lState.OutputUnitName);
     if Trim(AUnitName) = '' then
       AUnitName := Trim(lState.SourceUnitName);
     if Trim(AUnitName) <> '' then
@@ -2128,31 +2148,6 @@ begin
     AUnitName := Trim(lCalibration.UnitOut);
     Result := True;
   end;
-end;
-
-function TTagSettingsDialog.FindOutputCalibration(
-  ATag: TRecorderTag): TRecorderCalibration;
-var
-  I: Integer;
-begin
-  Result := nil;
-  if (ATag = nil) or (fTagRegistry = nil) then
-    Exit;
-
-  if (fChannelCurveCheck.State = cbChecked) and
-    (ATag.CalibrationNames <> nil) then
-    for I := ATag.CalibrationNames.Count - 1 downto 0 do
-    begin
-      if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
-        Continue;
-      Result := fTagRegistry.FindCalibrationByName(ATag.CalibrationNames[I]);
-      if Result <> nil then
-        Exit;
-    end;
-
-  if fHardwareCurveCheck.State = cbChecked then
-    Result := fTagRegistry.FindCalibrationByName(
-      ATag.HardwareCalibrationName);
 end;
 
 function TTagSettingsDialog.SelectedCalibrationEnabled(
@@ -2185,20 +2180,75 @@ begin
     fUnitCombo.Text := lUnitName;
 end;
 
+procedure TTagSettingsDialog.ApplySelectedUnits(const AUnitName: string);
+var
+  I: Integer;
+begin
+  { All channels must accept the mode before the first channel is changed. }
+  if fTags.Count > 1 then
+    for I := 0 to fTags.Count - 1 do
+      try
+        TagAt(I).ValidateUnits(AUnitName);
+      except
+        on E: ERecorderTagError do
+          raise ERecorderTagError.Create(TagAt(I).Name + ': ' + E.Message);
+      end;
+  for I := 0 to fTags.Count - 1 do TagAt(I).SetUnits(AUnitName);
+end;
+
+function TTagSettingsDialog.TryGetCommonSourceUnitNames(AItems: TStrings): Boolean;
+var
+  lSource: IRecorderDataSource;
+  lNames: TStringList;
+  lTag: TRecorderTag;
+  lInfo: TRecorderUnitInfo;
+  lName: string;
+  I, J: Integer;
+begin
+  Result := False;
+  AItems.Clear;
+  if fTags.Count = 0 then Exit;
+  lNames := TStringList.Create;
+  try
+    for I := 0 to fTags.Count - 1 do
+    begin
+      lTag := TagAt(I);
+      if not Supports(lTag.GetSource, IRecorderDataSource, lSource) then Exit;
+      lNames.Clear;
+      lSource.GetUnitNames(lTag, lNames);
+      if lNames.Count = 0 then Exit;
+      for J := 0 to lNames.Count - 1 do
+      begin
+        lName := lNames[J];
+        if RecorderUnitManager.TryGetUnitInfo(lName, lInfo) then lName := lInfo.Name;
+        lNames[J] := lName;
+      end;
+      if I = 0 then AItems.Assign(lNames)
+      else for J := AItems.Count - 1 downto 0 do
+        if lNames.IndexOf(AItems[J]) < 0 then AItems.Delete(J);
+    end;
+    Result := True;
+  finally
+    lNames.Free;
+    if not Result then AItems.Clear;
+  end;
+end;
+
 procedure TTagSettingsDialog.RefreshUnitChoices;
 var
   lAllUnits: TStringList;
   lOutputUnit: string;
   lOutputInfo: TRecorderUnitInfo;
   lCandidateInfo: TRecorderUnitInfo;
-  lProvider: IRecorderTagSettingsProvider;
-  lState: TRecorderTagSettingsState;
+  lText: string;
   I: Integer;
 begin
   if fUnitCombo = nil then
     Exit;
 
+  lText := Trim(fUnitCombo.Text);
   lAllUnits := TStringList.Create;
+  Inc(fUnitControlsUpdate);
   try
     RecorderUnitManager.FillUnitNames(lAllUnits);
     fUnitCombo.Items.BeginUpdate;
@@ -2207,34 +2257,47 @@ begin
       { При включённой ГХ ручная единица описывает уже физический выход
         цепочки. Категорию задаёт UnitOut последней канальной ГХ; если
         канальной цепочки нет — UnitOut аппаратной ГХ. }
-      if (fTags.Count = 1) and (fAutoUnitCheck.State = cbChecked) and
-        TryGetChannelCalibrationOutputUnit(TagAt(0), lOutputUnit) and
-        RecorderUnitManager.TryGetUnitInfo(lOutputUnit, lOutputInfo) then
+      if not TryGetCommonSourceUnitNames(fUnitCombo.Items) then
       begin
-        for I := 0 to lAllUnits.Count - 1 do
-          if RecorderUnitManager.TryGetUnitInfo(lAllUnits[I], lCandidateInfo) and
-            SameText(lCandidateInfo.QuantityId, lOutputInfo.QuantityId) then
-            fUnitCombo.Items.Add(lAllUnits[I]);
-      end
-      else if (fTags.Count = 1) and ResolveSettingsProvider(TagAt(0), lProvider) and
-        lProvider.ReadState(fTagRegistry, TagAt(0), lState) and
-        (Length(lState.UnitNames) > 0) then
+        { Resolve the effective quantity, never offer the entire unit catalogue.
+          A manually entered unit is the fallback for tags without a source. }
+        lOutputUnit := '';
+        if fTags.Count = 1 then
+        begin
+          TryGetChannelCalibrationOutputUnit(TagAt(0), lOutputUnit);
+          if (lOutputUnit = '') and (Trim(TagAt(0).SourceId) <> '') then
+          begin
+            lOutputUnit := TagAt(0).SourceHardwareOutputUnitName;
+            if lOutputUnit = '' then lOutputUnit := TagAt(0).SourceUnitName;
+          end;
+        end;
+        if lOutputUnit = '' then lOutputUnit := lText;
+        if (lOutputUnit = '') or SameText(lOutputUnit, '-') or
+          SameText(lOutputUnit, 'a.u.') then lOutputUnit := 'б.р.';
+        if RecorderUnitManager.TryGetUnitInfo(lOutputUnit, lOutputInfo) then
+        begin
+          for I := 0 to lAllUnits.Count - 1 do
+            if RecorderUnitManager.TryGetUnitInfo(lAllUnits[I], lCandidateInfo) and
+              SameText(lCandidateInfo.QuantityId, lOutputInfo.QuantityId) then
+              fUnitCombo.Items.Add(lAllUnits[I]);
+        end
+        else fUnitCombo.Items.Add(lOutputUnit);
+      end;
+      if (lText = '') or SameText(lText, '-') or SameText(lText, 'a.u.') then
       begin
-        for I := 0 to High(lState.UnitNames) do
-          fUnitCombo.Items.Add(lState.UnitNames[I]);
-      end
-      else
-      begin
-        { Без активной ГХ сохраняем общий выбор, включая служебные единицы. }
-        fUnitCombo.Items.Add('-');
-        fUnitCombo.Items.Add('a.u.');
-        fUnitCombo.Items.Add('code');
-        fUnitCombo.Items.AddStrings(lAllUnits);
+        if fUnitCombo.Items.Count > 0 then lText := fUnitCombo.Items[0];
       end;
     finally
       fUnitCombo.Items.EndUpdate;
     end;
+    { Native combo widgets keep selection separately from their edit text.
+      Rebuilding items must restore both, otherwise a stale index (e.g. uV)
+      can replace a correctly displayed degC when focus/Auto changes. }
+    fUnitCombo.ItemIndex := fUnitCombo.Items.IndexOf(lText);
+    fUnitCombo.Text := lText;
+    fPresentedUnitText := Trim(lText);
   finally
+    Dec(fUnitControlsUpdate);
     lAllUnits.Free;
   end;
 end;
@@ -2246,14 +2309,50 @@ end;
 
 procedure TTagSettingsDialog.UnitComboSelect(Sender: TObject);
 var
-  I: Integer;
-  lCalibration: TRecorderCalibration;
+  lNames: TStringList;
   lOutputUnit: string;
   lSelectedInfo: TRecorderUnitInfo;
   lOutputInfo: TRecorderUnitInfo;
 begin
-  if (fTags.Count <> 1) or (Trim(fUnitCombo.Text) = '') then
+  if fUnitControlsUpdate > 0 then Exit;
+  if (fTags.Count = 0) or (Trim(fUnitCombo.Text) = '') then
     Exit;
+  { OnExit also follows programmatic previews such as the hardware checkbox.
+    An unchanged displayed value is not a manual unit selection. }
+  if SameText(Trim(fUnitCombo.Text), fPresentedUnitText) then Exit;
+
+  { Source modes are selected through the model command. Never rewrite a
+    shared ADC curve merely because a different source unit was selected. }
+  if RecorderUnitManager.TryGetUnitInfo(fUnitCombo.Text, lSelectedInfo) then
+    lOutputUnit := lSelectedInfo.Name
+  else lOutputUnit := Trim(fUnitCombo.Text);
+  lNames := TStringList.Create;
+  try
+    if TryGetCommonSourceUnitNames(lNames) and (lNames.IndexOf(lOutputUnit) >= 0) then
+      begin
+        ApplySelectedUnits(lOutputUnit);
+        fPendingSourceUnit := lOutputUnit;
+        fUnitCombo.Text := lOutputUnit;
+        { Selecting a physical datasource mode explicitly requests its hardware
+          stage. AutoUnit itself never switches calibration flags. }
+        fHardwareCurveCheck.Checked := True;
+        fAutoUnitCheck.AllowGrayed := False;
+        fAutoUnitCheck.Checked := False;
+        { The source has committed the mode and rebuilt its scales. Refresh
+          its presentation now; the registered ADC curve need not change. }
+        Inc(fUnitControlsUpdate);
+        try
+          UpdateHardwareCurveText;
+          UpdateHardwareCurveButtons;
+        finally
+          Dec(fUnitControlsUpdate);
+        end;
+        fPresentedUnitText := Trim(fUnitCombo.Text);
+        Exit;
+      end;
+  finally
+    lNames.Free;
+  end;
 
   { При активной ГХ список уже отфильтрован по физической величине;
     дополнительная проверка не даёт editable-combobox случайно сменить
@@ -2270,35 +2369,19 @@ begin
     end;
   end;
 
-  if fAutoUnitCheck.State = cbChecked then
-  begin
-    { В Auto выбранная пользователем совместимая единица становится UnitOut
-      выходной ГХ. ConvertOutputUnit одновременно пересчитывает коэффициенты,
-      поэтому физическое преобразование остаётся тем же. }
-    lCalibration := FindOutputCalibration(TagAt(0));
-    if (lCalibration <> nil) and
-      lCalibration.ConvertOutputUnit(Trim(fUnitCombo.Text)) then
-    begin
-      for I := 0 to fTagRegistry.TagCount - 1 do
-        fTagRegistry.RebuildScales(fTagRegistry.Tags[I]);
-      UpdateChannelCurveText;
-      UpdateHardwareCurveText;
-      Exit;
-    end;
-  end;
-
+  ApplySelectedUnits(fUnitCombo.Text);
   fAutoUnitCheck.AllowGrayed := False;
   fAutoUnitCheck.Checked := False;
+  fPresentedUnitText := Trim(fUnitCombo.Text);
 end;
 
 procedure TTagSettingsDialog.AutoUnitCheckClick(Sender: TObject);
 var
-  lProvider: IRecorderTagSettingsProvider;
-  lState: TRecorderTagSettingsState;
   lOutputUnit: string;
   lCurrentInfo: TRecorderUnitInfo;
   lOutputInfo: TRecorderUnitInfo;
 begin
+  if fUnitControlsUpdate > 0 then Exit;
   if fAutoUnitCheck.State = cbUnchecked then
   begin
     if fTags.Count = 1 then
@@ -2317,15 +2400,6 @@ begin
         fUnitCombo.Text := BaseUnitName(TagAt(0));
       RefreshUnitChoices;
     end;
-    Exit;
-  end;
-  if (fAutoUnitCheck.State = cbChecked) and (fTags.Count = 1) and
-    ResolveSettingsProvider(TagAt(0), lProvider) and
-    lProvider.ReadState(fTagRegistry, TagAt(0), lState) and
-    (Trim(lState.OutputUnitName) <> '') then
-  begin
-    fUnitCombo.Text := lState.OutputUnitName;
-    RefreshUnitChoices;
     Exit;
   end;
   ApplyAutoUnitFromChannelCalibration;

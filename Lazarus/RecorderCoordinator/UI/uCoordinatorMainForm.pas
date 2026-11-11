@@ -41,7 +41,6 @@ type
     btnOpenEvent: TButton;
     btnRefreshEvents: TButton;
     btnRefresh: TSpeedButton;
-    btnSave: TButton;
     btnTestStorage: TButton;
     btnLaunchSelected: TBitBtn;
     btnClaimRecorder: TButton;
@@ -116,13 +115,14 @@ type
     procedure btnOpenEventClick(Sender: TObject);
     procedure btnRefreshEventsClick(Sender: TObject);
     procedure btnRefreshClick(Sender: TObject);
-    procedure btnSaveClick(Sender: TObject);
     procedure btnTestStorageClick(Sender: TObject);
     procedure cbCreateRecordingEventsChange(Sender: TObject);
     procedure cbSqlRecordingAllChange(Sender: TObject);
     procedure cbStartAllOnAnyRecordingChange(Sender: TObject);
     procedure dtpEventsToChange(Sender: TObject);
     procedure edtSelectedHostChange(Sender: TObject);
+    procedure ServiceEditorEditingDone(Sender: TObject);
+    procedure StorageEditorEditingDone(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure gridHostsDrawCell(Sender: TObject; aCol, aRow: Integer;
@@ -154,6 +154,7 @@ type
     fPendingSqlAllowedNames: TStringList;
     procedure AddLog(const AText: string);
     procedure CreateHostContextMenu;
+    procedure HostActionsClick(Sender: TObject);
     procedure DrainBackgroundDiagnostics;
     procedure ApplyServiceSettings;
     procedure ApplyStorageEditor;
@@ -398,6 +399,7 @@ begin
   fServer.ConfigureControl(fConfig.CoordinatorId, fConfig.CoordinatorToken);
   CreateHostContextMenu;
   edtEventWindow.Text := IntToStr(fConfig.EventWindowSec);
+  seSqlRecordPeriod.Value := fConfig.SqlRecordPeriodSec;
   edtDatabaseHost.Text := DefaultFirebirdHost;
   fLoading := True;
   cbCreateRecordingEvents.Checked := fConfig.CreateRecordingEvents;
@@ -481,6 +483,7 @@ begin
   fModel.EventWindowSec := fConfig.EventWindowSec;
   fModel.CreateRecordingEvents := fConfig.CreateRecordingEvents;
   fModel.StartAllOnAnyRecording := fConfig.StartAllOnAnyRecording;
+  fConfig.SqlRecordPeriodSec := seSqlRecordPeriod.Value;
 end;
 
 procedure TCoordinatorMainForm.cbStartAllOnAnyRecordingChange(Sender: TObject);
@@ -677,7 +680,9 @@ begin
         UniversalTimeToLocal(fSqlEvents[lIndex].StartedAtUtc));
       gridEvents.Cells[2, lIndex + 1] := fSqlEvents[lIndex].State;
       gridEvents.Cells[3, lIndex + 1] := IntToStr(fSqlEvents[lIndex].PackageCount);
-      gridEvents.Cells[4, lIndex + 1] :=
+      if fSqlEvents[lIndex].TotalSize < 0 then
+        gridEvents.Cells[4, lIndex + 1] := '-'
+      else gridEvents.Cells[4, lIndex + 1] :=
         FormatFloat('#,##0', fSqlEvents[lIndex].TotalSize);
       gridEvents.Cells[5, lIndex + 1] := fSqlEvents[lIndex].EventId;
     end;
@@ -896,6 +901,7 @@ end;
 procedure TCoordinatorMainForm.btnAddStorageClick(Sender: TObject);
 begin
   fConfig.AddStorage;
+  fConfig.Save;
   RefreshStorages;
   gridStorages.Row := fConfig.StorageCount + 1;
   LoadStorageEditor;
@@ -1065,19 +1071,31 @@ begin
   UpdateHostEditorMode;
 end;
 
-procedure TCoordinatorMainForm.btnSaveClick(Sender: TObject);
+procedure TCoordinatorMainForm.ServiceEditorEditingDone(Sender: TObject);
 begin
+  if fLoading or (fConfig = nil) then Exit;
   ApplyServiceSettings;
+  fConfig.Save;
+end;
+
+procedure TCoordinatorMainForm.StorageEditorEditingDone(Sender: TObject);
+var
+  lRow: Integer;
+begin
+  if fLoading or (fConfig = nil) then Exit;
+  lRow := gridStorages.Row;
   ApplyStorageEditor;
   fConfig.Save;
   RefreshStorages;
-  AddLog('Настройки сохранены: ' + fConfig.FileName);
+  if (lRow >= 0) and (lRow < gridStorages.RowCount) then
+    gridStorages.Row := lRow;
 end;
 
 procedure TCoordinatorMainForm.btnTestStorageClick(Sender: TObject);
 var lMessage: string;
 begin
   ApplyStorageEditor;
+  fConfig.Save;
   if fConfig.TestStorage(SelectedStorage, lMessage) then
     ShowMessage('Проверка успешна' + LineEnding + lMessage)
   else
@@ -1602,13 +1620,85 @@ procedure TCoordinatorMainForm.CreateHostContextMenu;
 var
   lMenu: TPopupMenu;
   lAddHostItem: TMenuItem;
+  lButton: TButton;
 begin
   lMenu := TPopupMenu.Create(Self);
   lAddHostItem := TMenuItem.Create(lMenu);
   lAddHostItem.Caption := 'Добавить хост';
   lAddHostItem.OnClick := @AddHostMenuItemClick;
   lMenu.Items.Add(lAddHostItem);
+  lAddHostItem := TMenuItem.Create(lMenu);
+  lAddHostItem.Caption := 'Настройки команд хоста...';
+  lAddHostItem.OnClick := @HostActionsClick;
+  lMenu.Items.Add(lAddHostItem);
   gridHosts.PopupMenu := lMenu;
+  lButton := TButton.Create(Self);
+  lButton.Parent := pnlHostActions;
+  lButton.SetBounds(720, 72, 175, 28);
+  lButton.Caption := 'Настройки хоста...';
+  lButton.OnClick := @HostActionsClick;
+end;
+
+procedure TCoordinatorMainForm.HostActionsClick(Sender: TObject);
+var
+  lHost: TJSONObject;
+  lDialog: TForm;
+  lRecording, lShutdown, lLaunch: TCheckBox;
+  lOk, lCancel: TButton;
+  lId: string;
+begin
+  lId := SelectedHostId;
+  if lId = '' then
+  begin
+    MessageDlg('Настройки хоста', 'Выберите хост в таблице.', mtInformation, [mbOK], 0);
+    Exit;
+  end;
+  lHost := fModel.HostByIdJson(lId);
+  try
+    lDialog := TForm.CreateNew(Self);
+    try
+      lDialog.Caption := 'Команды хоста: ' + lHost.Get('address', '');
+      lDialog.Position := poOwnerFormCenter;
+      lDialog.BorderStyle := bsDialog;
+      lDialog.SetBounds(0, 0, 460, 190);
+      lRecording := TCheckBox.Create(lDialog);
+      lRecording.Parent := lDialog;
+      lRecording.SetBounds(16, 16, 420, 24);
+      lRecording.Caption := 'Реагировать на запуск записи';
+      lRecording.Checked := lHost.Get('allow_recording', True);
+      lShutdown := TCheckBox.Create(lDialog);
+      lShutdown.Parent := lDialog;
+      lShutdown.SetBounds(16, 48, 420, 24);
+      lShutdown.Caption := 'Реагировать на выключение ПК';
+      lShutdown.Checked := lHost.Get('allow_shutdown', True);
+      lLaunch := TCheckBox.Create(lDialog);
+      lLaunch.Parent := lDialog;
+      lLaunch.SetBounds(16, 80, 420, 24);
+      lLaunch.Caption := 'Реагировать на запуск Recorder';
+      lLaunch.Checked := lHost.Get('allow_launch', True);
+      lOk := TButton.Create(lDialog);
+      lOk.Parent := lDialog;
+      lOk.SetBounds(238, 125, 90, 30);
+      lOk.Caption := 'ОК';
+      lOk.ModalResult := mrOk;
+      lCancel := TButton.Create(lDialog);
+      lCancel.Parent := lDialog;
+      lCancel.SetBounds(338, 125, 100, 30);
+      lCancel.Caption := 'Отмена';
+      lCancel.ModalResult := mrCancel;
+      if lDialog.ShowModal = mrOk then
+      begin
+        if not fModel.SetHostActions(lId, lRecording.Checked,
+          lShutdown.Checked, lLaunch.Checked) then
+          MessageDlg('Настройки хоста', 'Хост не найден.', mtError, [mbOK], 0)
+        else RefreshHosts;
+      end;
+    finally
+      lDialog.Free;
+    end;
+  finally
+    lHost.Free;
+  end;
 end;
 
 procedure TCoordinatorMainForm.AddHostMenuItemClick(Sender: TObject);
@@ -1633,6 +1723,11 @@ procedure TCoordinatorMainForm.btnSetSqlPeriodAllClick(Sender: TObject);
 var
   lPayload: TJSONObject;
 begin
+  { The value is both a command parameter and a persistent RCPanel setting.
+    Otherwise the command works until restart, while the editor silently
+    returns to the design-time default of one second. }
+  fConfig.SqlRecordPeriodSec := seSqlRecordPeriod.Value;
+  fConfig.Save;
   lPayload := TJSONObject.Create;
   try
     lPayload.Add('enabled', cbSqlRecordingAll.Checked);
@@ -1651,6 +1746,17 @@ var
   lHost: TJSONObject;
 begin
   if Trim(AAddress) = '' then Exit;
+  lHost := fModel.HostByAddressJson(Trim(AAddress));
+  try
+    if ((AAction = haaStartRecorder) and not lHost.Get('allow_launch', True)) or
+       ((AAction = haaShutdown) and not lHost.Get('allow_shutdown', True)) then
+    begin
+      AddLog('Команда пропущена по настройке хоста: ' + AAddress);
+      Exit;
+    end;
+  finally
+    lHost.Free;
+  end;
   if AAction = haaStartRecorder then
   begin
     lHost := fModel.HostByAddressJson(Trim(AAddress));
@@ -2004,6 +2110,13 @@ begin
 end;
 
 procedure TCoordinatorMainForm.gridStoragesSelection(Sender: TObject; aCol, aRow: Integer);
-begin LoadStorageEditor; end;
+begin
+  fLoading := True;
+  try
+    LoadStorageEditor;
+  finally
+    fLoading := False;
+  end;
+end;
 
 end.

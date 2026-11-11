@@ -26,6 +26,7 @@ type
     fPackages: TRecorderSqlDbMeraPackages;
     fEntryPaths: array of string;
     fLocationIds: array of string;
+    fSourceHosts: array of string;
     procedure Deliver;
   protected
     procedure Execute; override;
@@ -71,6 +72,7 @@ type
     fPackages: TRecorderSqlDbMeraPackages;
     fEntryPaths: array of string;
     fLocationIds: array of string;
+    fSourceHosts: array of string;
     fLoadError: string;
     fOpenAllWhenLoaded: Boolean;
     procedure AcceptPackages(AWorker: TRecorderMeraPackageLoadThread);
@@ -85,6 +87,8 @@ type
     procedure UpdateStatusCaption;
     function UnresolvedRowCount: Integer;
     function RowResolves(AIndex: Integer): Boolean;
+    function RowPending(AIndex: Integer): Boolean;
+    function ResolvePackagePath(AIndex: Integer; const APath: string): string;
   public
     constructor CreateDialog(AOwner: TComponent; const AConfigFileName: string;
       const AEvent: TRecorderSqlDbMeraEvent;
@@ -138,7 +142,7 @@ end;
 procedure TRecorderMeraPackageLoadThread.Execute;
 var
   I, J, K: Integer;
-  lEntryPath, lFrameDir, lFrameName: string;
+  lEntryPath, lFrameDir, lFrameName, lSourceHost: string;
   lConfig: TRecorderSqlDbConfig;
   lFiles: TRecorderSqlDbMeraFiles;
   lLocations: TRecorderSqlDbFileLocations;
@@ -153,6 +157,7 @@ begin
       lRepository.ListMeraPackages(fEventId, fPackages);
       SetLength(fEntryPaths, Length(fPackages));
       SetLength(fLocationIds, Length(fPackages));
+      SetLength(fSourceHosts, Length(fPackages));
       for I := 0 to High(fPackages) do
       begin
         if Terminated then Exit;
@@ -164,15 +169,21 @@ begin
               filesystem name.  Only a published location may be opened. }
             lRepository.ListDataFileLocations(lFiles[J].FileId, lLocations);
             for K := 0 to High(lLocations) do
-              if SameText(lLocations[K].State, 'ready') and
+              if (SameText(lLocations[K].State, 'ready') or
+                  SameText(lLocations[K].State, 'building')) and
                  (Trim(lLocations[K].PathKey) <> '') then
               begin
+                lSourceHost := '';
+                if SameText(lLocations[K].LocationKind, 'source-local') then
+                  lSourceHost := fPackages[I].HostName;
                 lEntryPath := ResolveRecorderNetworkPath(
-                  lLocations[K].PathKey);
+                  lLocations[K].PathKey, lSourceHost);
                 if fEntryPaths[I] = '' then
                 begin
                   fEntryPaths[I] := lEntryPath;
+                  if fEntryPaths[I] = '' then fEntryPaths[I] := lLocations[K].PathKey;
                   fLocationIds[I] := lLocations[K].Id;
+                  fSourceHosts[I] := lSourceHost;
                 end;
                 { Совместимость с событиями, записанными старым клиентом:
                   он публиковал несуществующий record.mera, хотя writer создаёт
@@ -190,6 +201,7 @@ begin
                 begin
                   fEntryPaths[I] := lEntryPath;
                   fLocationIds[I] := lLocations[K].Id;
+                  fSourceHosts[I] := lSourceHost;
                   Break;
                 end;
               end;
@@ -199,6 +211,10 @@ begin
     except
       on E: Exception do fErrorText := E.Message;
     end;
+    { Deliver only materialized values. UI edit commands must not run while
+      this worker retains a database connection/read transaction. }
+    FreeAndNil(lRepository);
+    FreeAndNil(lConfig);
     if not Terminated then Synchronize(@Deliver);
   finally
     lRepository.Free;
@@ -251,6 +267,7 @@ begin
   fPackages := AWorker.fPackages;
   fEntryPaths := AWorker.fEntryPaths;
   fLocationIds := AWorker.fLocationIds;
+  fSourceHosts := AWorker.fSourceHosts;
   fLoadError := AWorker.fErrorText;
   FillPackages;
   if fOpenAllWhenLoaded then
@@ -292,7 +309,11 @@ begin
       fEvent.DisplayName := Trim(edDisplayName.Text);
       fEvent.Description := Trim(memDescription.Text);
       for I := 0 to High(fEntryPaths) do
+      begin
+        if fEntryPaths[I] <> Trim(grdPackages.Cells[6, I + 1]) then
+          fSourceHosts[I] := ''; { An explicit operator-selected local copy. }
         fEntryPaths[I] := Trim(grdPackages.Cells[6, I + 1]);
+      end;
       fDialogResult := medrChanged;
       lblStatus.Caption := 'Изменения сохранены.';
       Result := True;
@@ -342,6 +363,18 @@ begin
   end;
 end;
 
+function TRecorderMeraEventDialog.ResolvePackagePath(AIndex: Integer;
+  const APath: string): string;
+var
+  lSourceHost: string;
+begin
+  lSourceHost := '';
+  if (AIndex >= 0) and (AIndex <= High(fSourceHosts)) and
+    (AIndex <= High(fEntryPaths)) and (Trim(APath) = fEntryPaths[AIndex]) then
+    lSourceHost := fSourceHosts[AIndex];
+  Result := ResolveRecorderNetworkPath(Trim(APath), lSourceHost);
+end;
+
 function TRecorderMeraEventDialog.RowResolves(AIndex: Integer): Boolean;
 var
   lPath: string;
@@ -349,8 +382,14 @@ begin
   Result := False;
   if (AIndex < 0) or (AIndex > High(fPackages)) or
     (AIndex > High(fEntryPaths)) then Exit;
-  lPath := ResolveRecorderNetworkPath(Trim(fEntryPaths[AIndex]));
+  lPath := ResolvePackagePath(AIndex, grdPackages.Cells[6, AIndex + 1]);
   Result := (lPath <> '') and FileExists(lPath);
+end;
+
+function TRecorderMeraEventDialog.RowPending(AIndex: Integer): Boolean;
+begin
+  Result := (AIndex >= 0) and (AIndex <= High(fPackages)) and
+    SameText(fPackages[AIndex].Recording.State, 'building');
 end;
 
 procedure TRecorderMeraEventDialog.FillPackages;
@@ -366,8 +405,10 @@ begin
     grdPackages.Cells[1, I + 1] := fPackages[I].Recording.DisplayName;
     grdPackages.Cells[2, I + 1] := fPackages[I].HostName;
     grdPackages.Cells[3, I + 1] := fPackages[I].Recording.State;
-    grdPackages.Cells[4, I + 1] := IntToStr(fPackages[I].FileCount);
-    grdPackages.Cells[5, I + 1] := FormatFloat('#,##0', fPackages[I].TotalSize);
+    if fPackages[I].FileCount < 0 then grdPackages.Cells[4, I + 1] := '-'
+    else grdPackages.Cells[4, I + 1] := IntToStr(fPackages[I].FileCount);
+    if fPackages[I].TotalSize < 0 then grdPackages.Cells[5, I + 1] := '-'
+    else grdPackages.Cells[5, I + 1] := FormatFloat('#,##0', fPackages[I].TotalSize);
     grdPackages.Cells[6, I + 1] := fEntryPaths[I];
   end;
   UpdateButtons;
@@ -380,12 +421,12 @@ var
 begin
   Result := 0;
   for I := 0 to High(fPackages) do
-    if not RowResolves(I) then Inc(Result);
+    if not RowPending(I) and not RowResolves(I) then Inc(Result);
 end;
 
 procedure TRecorderMeraEventDialog.UpdateStatusCaption;
 var
-  lUnresolved: Integer;
+  lUnresolved, lPending, I: Integer;
 begin
   if fLoadError <> '' then
   begin
@@ -403,6 +444,11 @@ begin
     Exit;
   end;
   lblStatus.Caption := Format('Загружено пакетов: %d', [Length(fPackages)]);
+  lPending := 0;
+  for I := 0 to High(fPackages) do
+    if RowPending(I) then Inc(lPending);
+  if lPending > 0 then
+    lblStatus.Caption := lblStatus.Caption + Format(' | Записывается: %d', [lPending]);
   if lUnresolved > 0 then
     lblStatus.Caption := lblStatus.Caption + ' | ' + UTF8Encode('замер не ' +
       'найден: ') + IntToStr(lUnresolved) + UTF8Encode(' (нет файла на диске)');
@@ -449,6 +495,7 @@ var
 begin
   if (ARow <= 0) or (ARow > Length(fPackages)) or
     ((ACol <> 1) and (ACol <> 6)) then Exit;
+  if RowPending(ARow - 1) then Exit;
   lResolved := RowResolves(ARow - 1);
   lText := grdPackages.Cells[ACol, ARow];
   if not lResolved then
@@ -554,7 +601,7 @@ begin
     begin
       if not SameText(Trim(fPackages[I].HostName), Trim(AHostName)) then Continue;
       lRawPath := Trim(grdPackages.Cells[6, I + 1]);
-      lResolved := ResolveRecorderNetworkPath(lRawPath);
+      lResolved := ResolvePackagePath(I, lRawPath);
       if (lResolved <> '') and FileExists(lResolved) then Continue;
       if (I > High(fLocationIds)) or (fLocationIds[I] = '') then Continue;
       lExpectedName := ExtractFileName(StringReplace(lRawPath, '\', '/',
@@ -566,6 +613,7 @@ begin
           fLocationIds[I], lFound) then
       begin
         fEntryPaths[I] := lFound;
+        fSourceHosts[I] := '';
         grdPackages.Cells[6, I + 1] := lFound;
         Inc(Result);
       end;
@@ -582,8 +630,12 @@ var
   lRepaired: Integer;
 begin
   if (AIndex < 0) or (AIndex > High(fPackages)) then Exit;
-  lOpenPath := ResolveRecorderNetworkPath(
-    Trim(grdPackages.Cells[6, AIndex + 1]));
+  if RowPending(AIndex) then
+  begin
+    lblStatus.Caption := 'Запись ещё выполняется. Открытие доступно после завершения.';
+    Exit;
+  end;
+  lOpenPath := ResolvePackagePath(AIndex, grdPackages.Cells[6, AIndex + 1]);
   if (lOpenPath <> '') and FileExists(lOpenPath) and OpenDocument(lOpenPath) then
   begin
     lblStatus.Caption := 'Открыт выбранный замер.';
@@ -610,8 +662,7 @@ begin
     Exit;
   end;
   lRepaired := RepairMissingPaths(lDirectory, fPackages[AIndex].HostName);
-  lOpenPath := ResolveRecorderNetworkPath(
-    Trim(grdPackages.Cells[6, AIndex + 1]));
+  lOpenPath := ResolvePackagePath(AIndex, grdPackages.Cells[6, AIndex + 1]);
   if (lOpenPath <> '') and FileExists(lOpenPath) and OpenDocument(lOpenPath) then
     lblStatus.Caption := Format('Открыт выбранный замер; исправлено путей: %d',
       [lRepaired])
@@ -630,11 +681,11 @@ begin
   lRequested := 0;
   for I := 0 to High(fPackages) do
   begin
+    if RowPending(I) then Continue;
     if ASelectedOnly and
       (grdPackages.Cells[0, I + 1] <> UTF8Encode('Да')) then Continue;
     Inc(lRequested);
-    lOpenPath := ResolveRecorderNetworkPath(
-      Trim(grdPackages.Cells[6, I + 1]));
+    lOpenPath := ResolvePackagePath(I, grdPackages.Cells[6, I + 1]);
     if (lOpenPath <> '') and FileExists(lOpenPath) and
       OpenDocument(lOpenPath) then
       Inc(lOpened);
@@ -651,8 +702,8 @@ begin
   lCount := 0;
   SetLength(lIds, Length(fPackages));
   for I := 0 to High(fPackages) do
-    if (not ASelectedOnly) or
-      (grdPackages.Cells[0, I + 1] = UTF8Encode('Да')) then
+    if not RowPending(I) and ((not ASelectedOnly) or
+      (grdPackages.Cells[0, I + 1] = UTF8Encode('Да'))) then
     begin
       lIds[lCount] := fPackages[I].Recording.Id;
       Inc(lCount);

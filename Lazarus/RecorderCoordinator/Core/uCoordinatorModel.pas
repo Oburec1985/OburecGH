@@ -7,7 +7,8 @@ interface
 
 uses
   Classes, SysUtils, DateUtils, SyncObjs, fpjson, jsonparser,
-  uSharedFileLogger, uCoordinatorHostStore, uCoordinatorSqlQueueStore;
+  uSharedFileLogger, uCoordinatorHostStore, uCoordinatorSqlQueueStore,
+  uRecorderMeraPackageManifest;
 
 type
   TCoordinatorHost = class
@@ -28,6 +29,7 @@ type
     LastSeenUtc: TDateTime;
     LastHttpSeenUtc: TDateTime;
     Managed: Boolean;
+    DisableRecording, DisableShutdown, DisableLaunch: Boolean;
     ControlOwner: string;
     ControlClaim: string;
     PcReachable: Boolean;
@@ -50,6 +52,7 @@ type
     WindowEndsUtc: TDateTime;
     Recordings: TStringList;
     CompletedRecordings: TStringList;
+    InstanceIds: TStringList;
     constructor Create;
     destructor Destroy; override;
     function ToJson: TJSONObject;
@@ -84,6 +87,7 @@ type
     State: string;
     LocalPath: string;
     EntryFile: string;
+    Manifest: TRecorderMeraPackageManifest;
     StartedUtc: TDateTime;
     FinishedUtc: TDateTime;
   end;
@@ -110,7 +114,8 @@ type
     function MergeNamedIdentityAlias(AHost: TCoordinatorHost): TCoordinatorHost;
     function MergeHostAliases(AHost: TCoordinatorHost;
       const AAddress, AMacAddress: string): Boolean;
-    function FindOpenEvent(const AStartedUtc: TDateTime): TCoordinatorEvent;
+    function FindOpenEvent(const AStartedUtc: TDateTime;
+      const AInstanceId: string): TCoordinatorEvent;
     function FindEventByRecording(
       const ARecordingId: string): TCoordinatorEvent;
     function FindCommand(const ACommandId: string): TCoordinatorCommand;
@@ -154,6 +159,8 @@ type
     function SetHostDisplayName(const AInstanceId,
       ADisplayName: string): Boolean;
     function SetHostAddress(const AInstanceId, AAddress: string): Boolean;
+    function SetHostActions(const AInstanceId: string; ARecording, AShutdown,
+      ALaunch: Boolean): Boolean;
     function RestoreIgnoredHost(const AInstanceId, AAddress,
       AMacAddress: string): Boolean;
     function IgnoreHost(const AInstanceId: string): Boolean;
@@ -270,6 +277,9 @@ begin
     lEffectiveState := State;
   Result := TJSONObject.Create;
   Result.Add('instance_id', InstanceId);
+  Result.Add('allow_recording', not DisableRecording);
+  Result.Add('allow_shutdown', not DisableShutdown);
+  Result.Add('allow_launch', not DisableLaunch);
   Result.Add('address', Address);
   if WorkstationName <> '' then Result.Add('host_name', WorkstationName)
   else Result.Add('host_name', HostName);
@@ -317,11 +327,14 @@ begin
   inherited Create;
   Recordings := TStringList.Create;
   CompletedRecordings := TStringList.Create;
+  InstanceIds := TStringList.Create;
+  InstanceIds.CaseSensitive := False;
 end;
 
 destructor TCoordinatorEvent.Destroy;
 begin
   CompletedRecordings.Free;
+  InstanceIds.Free;
   Recordings.Free;
   inherited Destroy;
 end;
@@ -465,6 +478,9 @@ begin
       if (lHost.State = '') and (Trim(lHosts[lIndex].RecorderState) <> '') then
         lHost.State := lHosts[lIndex].RecorderState;
       lHost.Managed := lHost.Managed or lHosts[lIndex].Managed;
+      lHost.DisableRecording := lHosts[lIndex].DisableRecording;
+      lHost.DisableShutdown := lHosts[lIndex].DisableShutdown;
+      lHost.DisableLaunch := lHosts[lIndex].DisableLaunch;
       MergeHostAliases(lHost, lAddress, lHosts[lIndex].MacAddress);
     end;
     MergeStoredIdentityAliases;
@@ -731,6 +747,9 @@ begin
     lHosts[lIndex].MeraFilesPath := lHost.MeraFilesPath;
     lHosts[lIndex].RecorderState := lHost.State;
     lHosts[lIndex].Managed := lHost.Managed;
+    lHosts[lIndex].DisableRecording := lHost.DisableRecording;
+    lHosts[lIndex].DisableShutdown := lHost.DisableShutdown;
+    lHosts[lIndex].DisableLaunch := lHost.DisableLaunch;
   end;
   try
     fHostStore.Save(lHosts);
@@ -982,6 +1001,9 @@ begin
   if (AHost.SqlLocalDatabase = '') and (AHost.LastHttpSeenUtc = 0) then
     AHost.SqlLocalDatabase := AAlias.SqlLocalDatabase;
   AHost.Managed := AHost.Managed or AAlias.Managed;
+  AHost.DisableRecording := AHost.DisableRecording or AAlias.DisableRecording;
+  AHost.DisableShutdown := AHost.DisableShutdown or AAlias.DisableShutdown;
+  AHost.DisableLaunch := AHost.DisableLaunch or AAlias.DisableLaunch;
   if AAlias.PcReachabilityKnown and
     ((not AHost.PcReachabilityKnown) or (AAlias.LastPingUtc > AHost.LastPingUtc)) then
   begin
@@ -1076,7 +1098,8 @@ begin
   end;
 end;
 
-function TCoordinatorModel.FindOpenEvent(const AStartedUtc: TDateTime): TCoordinatorEvent;
+function TCoordinatorModel.FindOpenEvent(const AStartedUtc: TDateTime;
+  const AInstanceId: string): TCoordinatorEvent;
 var
   lIndex: Integer;
   lEvent: TCoordinatorEvent;
@@ -1085,8 +1108,15 @@ begin
   for lIndex := fEvents.Count - 1 downto 0 do
   begin
     lEvent := TCoordinatorEvent(fEvents[lIndex]);
+    { A new recording on a host already represented in this event is a new
+      take. A previously unseen participant may report its earlier start late,
+      even after the known participants have completed. Legacy messages with
+      no source identity retain the conservative completed-event boundary. }
     if (AStartedUtc >= lEvent.StartedUtc) and
-      (AStartedUtc < lEvent.WindowEndsUtc) then
+      (AStartedUtc < lEvent.WindowEndsUtc) and
+      (((AInstanceId <> '') and (lEvent.InstanceIds.IndexOf(AInstanceId) < 0)) or
+       ((AInstanceId = '') and
+        (lEvent.CompletedRecordings.Count < lEvent.Recordings.Count))) then
       Exit(lEvent);
   end;
 end;
@@ -1144,7 +1174,7 @@ begin
   for lIndex := 0 to fHosts.Count - 1 do
   begin
     lHost := TCoordinatorHost(fHosts[lIndex]);
-    if (not lHost.Managed) or (lHost.LastSeenUtc = 0) or
+    if lHost.DisableRecording or (not lHost.Managed) or (lHost.LastSeenUtc = 0) or
       (SecondsBetween(Now, lHost.LastSeenUtc) > 10) or
       SameText(lHost.InstanceId, AInitiatorId) or
       SameText(lHost.State, 'recording') or
@@ -1478,13 +1508,14 @@ var
   lEvent: TCoordinatorEvent;
   lHost: TCoordinatorHost;
   lInfo: TCoordinatorRecordingLifecycle;
+  lManifestData, lPayloadData: TJSONData;
   lPersistenceError: string;
   lStarted: TDateTime;
   lReceivedUtc: TDateTime;
   lSentAtUtc: TDateTime;
   lClockOffsetSec: Double;
   lClientFinishedText, lClientStartedText, lCorrelation, lMessageType, lRecordingId,
-    lSentAtText: string;
+    lSentAtText, lInstanceId: string;
   lClientFinishedValid, lClientTimeValid, lClockFallback, lNewEvent, lNotifyLifecycle,
     lSentAtValid: Boolean;
 begin
@@ -1515,6 +1546,9 @@ begin
   lNotifyLifecycle := False;
   fLock.Acquire;
   try
+    lInstanceId := Trim(JsonString(AData, 'instance_id', ''));
+    lHost := FindHost(lInstanceId);
+    if lHost <> nil then lInstanceId := lHost.InstanceId;
     AddDiagnosticLocked(Format(
       'Получено %s: recorder=%s; recording=%s; CreateRecordingEvents=%s',
       [lMessageType, JsonString(AData, 'instance_id', ''), lRecordingId,
@@ -1544,10 +1578,22 @@ begin
       Exit;
     end;
 
-    if SameText(lMessageType, 'recording.completed') then
-      lEvent := FindEventByRecording(lRecordingId)
-    else
-      lEvent := FindOpenEvent(lStarted);
+    { A retry belongs to the original event even after its window has closed.
+      A repeated host starting another recording begins a new take. }
+    lEvent := FindEventByRecording(lRecordingId);
+    if (lEvent <> nil) and SameText(lMessageType, 'recording.started') and
+      (lEvent.CompletedRecordings.IndexOf(lRecordingId) >= 0) then
+    begin
+      { The completed message is authoritative. A delayed start retry must
+        neither reopen the group nor downgrade persisted ready locations. }
+      Result := lEvent.ToJson;
+      Result.Add('result_code', 'noError');
+      Result.Add('event_created', False);
+      Result.Add('event_matched', True);
+      Exit;
+    end;
+    if (lEvent = nil) and SameText(lMessageType, 'recording.started') then
+      lEvent := FindOpenEvent(lStarted, lInstanceId);
     if SameText(lMessageType, 'recording.completed') and (lEvent = nil) then
     begin
       { Completion must never be attached by a time-window guess. RecordingId
@@ -1593,7 +1639,11 @@ begin
         [lEvent.EventId, lEvent.CorrelationId, lRecordingId]));
     end;
     if (lRecordingId <> '') and (lEvent.Recordings.IndexOf(lRecordingId) < 0) then
+    begin
       lEvent.Recordings.Add(lRecordingId);
+      if (lInstanceId <> '') and (lEvent.InstanceIds.IndexOf(lInstanceId) < 0) then
+        lEvent.InstanceIds.Add(lInstanceId);
+    end;
     if SameText(lMessageType, 'recording.completed') then
     begin
       if (lRecordingId <> '') and
@@ -1627,6 +1677,11 @@ begin
       lInfo.State := 'building';
     lInfo.LocalPath := JsonString(AData, 'local_path', '');
     lInfo.EntryFile := JsonString(AData, 'entry_file', '');
+    lManifestData := AData.Find('package_manifest');
+    lPayloadData := AData.Find('payload');
+    if (lManifestData = nil) and (lPayloadData is TJSONObject) then
+      lManifestData := TJSONObject(lPayloadData).Find('package_manifest');
+    lInfo.Manifest := RecorderReadMeraManifest(lManifestData);
     lInfo.StartedUtc := lStarted;
     if SameText(lMessageType, 'recording.completed') then
       lInfo.FinishedUtc := lEvent.FinishedUtc
@@ -1724,6 +1779,9 @@ begin
       for lIndex := 0 to fHosts.Count - 1 do
       begin
         lHost := TCoordinatorHost(fHosts[lIndex]);
+        if lHost.DisableRecording and
+          (SameText(JsonString(AData, 'command', ''), 'recording.start') or
+           SameText(JsonString(AData, 'command', ''), 'recording.start_at')) then Continue;
         if (ControlId <> '') and ((lHost.ControlOwner <> ControlId) or
           (lHost.ControlClaim = '')) then Continue;
         lCommand := TCoordinatorCommand.Create;
@@ -1756,6 +1814,15 @@ begin
       Exit;
     end;
     lHost := FindHost(lTarget);
+    if (lHost <> nil) and lHost.DisableRecording and
+      (SameText(JsonString(AData, 'command', ''), 'recording.start') or
+       SameText(JsonString(AData, 'command', ''), 'recording.start_at')) then
+    begin
+      Result := TJSONObject.Create;
+      Result.Add('result_code', 'disabled');
+      Result.Add('result_text', 'Запись отключена в настройках хоста');
+      Exit;
+    end;
     if (ControlId <> '') and ((lHost = nil) or
       (lHost.ControlOwner <> ControlId) or (lHost.ControlClaim = '')) then
     begin
@@ -2156,6 +2223,40 @@ begin
     Result := lHost <> nil;
     if not Result then Exit;
     lHost.HostName := Trim(ADisplayName);
+    SaveHostsLocked;
+  finally
+    fLock.Release;
+  end;
+end;
+
+function TCoordinatorModel.SetHostActions(const AInstanceId: string;
+  ARecording, AShutdown, ALaunch: Boolean): Boolean;
+var
+  lHost: TCoordinatorHost;
+  lCommand: TCoordinatorCommand;
+  I: Integer;
+begin
+  fLock.Acquire;
+  try
+    lHost := FindHost(AInstanceId);
+    Result := lHost <> nil;
+    if not Result then Exit;
+    lHost.DisableRecording := not ARecording;
+    lHost.DisableShutdown := not AShutdown;
+    lHost.DisableLaunch := not ALaunch;
+    if not ARecording then
+      for I := 0 to fCommands.Count - 1 do
+      begin
+        lCommand := TCoordinatorCommand(fCommands[I]);
+        if SameText(lCommand.InstanceId, lHost.InstanceId) and
+          SameText(lCommand.State, 'pending') and
+          (SameText(lCommand.CommandName, 'recording.start') or
+           SameText(lCommand.CommandName, 'recording.start_at')) then
+        begin
+          lCommand.State := 'cancelled';
+          lCommand.ResultCode := 'disabled';
+        end;
+      end;
     SaveHostsLocked;
   finally
     fLock.Release;

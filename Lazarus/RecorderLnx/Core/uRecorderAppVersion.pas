@@ -6,7 +6,7 @@ unit uRecorderAppVersion;
 interface
 
 const
-  CRecorderLnxVersion = '0.1.195';
+  CRecorderLnxVersion = '0.1.208';
   CRecorderLnxCaption = 'RecorderLnx ' + CRecorderLnxVersion;
   CRecorderDefaultSoftwareArticle = 'БЛИЖ.409801.100.236-01';
 

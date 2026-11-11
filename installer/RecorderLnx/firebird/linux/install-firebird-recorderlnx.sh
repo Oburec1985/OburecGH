@@ -424,6 +424,11 @@ EOF
   runtime_user="$(desktop_user)"
   if [ -n "$runtime_user" ]; then
     runtime_group="$(id -gn "$runtime_user")"
+    # TIniFile creates RecorderCoordinator.ini.bak beside the INI on every
+    # immediate save.  The desktop user therefore needs directory write
+    # access, not only ownership of the existing INI file.
+    chgrp "$runtime_group" /opt/mera/RecorderCoordinator
+    chmod 0775 /opt/mera/RecorderCoordinator
     chown "$runtime_user:$runtime_group" "$config_file" "$log_file"
     chown -R "$runtime_user:$runtime_group" /var/opt/mera/RecorderCoordinator
     chmod 0600 "$config_file" "$log_file"

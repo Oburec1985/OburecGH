@@ -345,11 +345,18 @@ begin
   { Драйверы исторически публиковали code/codes/код. Это одна безразмерная
     исходная величина, поэтому все варианты должны давать единичный переход. }
   RegisterQuantity(RECORDER_QUANTITY_RAW_CODE, 'code', ['codes', 'код', 'коды']);
+  RegisterQuantity('dimensionless', 'б.р.', ['-', 'a.u.', 'б/р']);
 
   RegisterQuantity(RECORDER_QUANTITY_VOLTAGE, 'V', ['В', 'volt', 'volts']);
   RegisterUnit(RECORDER_QUANTITY_VOLTAGE, 'mV', 1E-3, ['мВ']);
   RegisterUnit(RECORDER_QUANTITY_VOLTAGE, 'uV', 1E-6, ['мкВ', 'µV', 'μV']);
   RegisterUnit(RECORDER_QUANTITY_VOLTAGE, 'kV', 1E3, ['кВ']);
+
+  RegisterQuantity('temperature', 'degC', ['°C', 'градусы', 'град.С']);
+  RegisterQuantity('resistance', 'Ohm', ['Ом', 'ohms', 'Ω']);
+  RegisterUnit('resistance', 'kOhm', 1E3, ['кОм']);
+  RegisterQuantity('strain', 'strain', []);
+  RegisterUnit('strain', 'uStrain', 1E-6, ['мкстрн', 'мкм/м']);
 
   RegisterQuantity(RECORDER_QUANTITY_ACCELERATION, 'm/s2',
     ['m/s^2', 'm/s²', 'м/с2', 'м/с^2', 'м/с²']);

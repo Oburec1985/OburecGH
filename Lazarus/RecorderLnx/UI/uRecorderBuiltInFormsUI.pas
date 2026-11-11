@@ -13,7 +13,7 @@ interface
 
 uses
   Classes, Controls, ExtCtrls, Forms, Grids, Spin, StdCtrls, Graphics,
-  uRecorder, uRecorderFormModel, uRecorderMessages;
+  uRecorder, uRecorderFormModel, uRecorderMessages, uRecorderTags;
 
 const
   CRecorderDigitalFormPageId = 'DigitalForm';
@@ -37,6 +37,7 @@ type
     fMessageRows: TRecorderMessageSnapshotArray;
     fRecorder: TRecorder;
     fViewMode: TRecorderDigitalViewMode;
+    fShowRawCodes: Boolean;
     procedure RenderMessages(ARebuild: Boolean);
   public
     procedure Configure(ARecorder: TRecorder; AForms: TRecorderFormManager;
@@ -52,9 +53,11 @@ type
     function BaseVisible: Boolean;
     procedure ToggleDigitalMode;
     procedure SetDigitalViewMode(AValue: TRecorderDigitalViewMode);
+    procedure SetShowRawCodes(AValue: Boolean);
     procedure PrepareDigitalCanvas(ACol, ARow: Integer;
       AState: TGridDrawState);
     function DigitalTagNameAtRow(ARow: Integer): string;
+    function FocusDigitalTag(ATag: TRecorderTag): Boolean;
     property ViewMode: TRecorderDigitalViewMode read fViewMode;
   end;
 
@@ -64,8 +67,7 @@ implementation
 
 uses
   DateUtils, Math, SysUtils,
-  uRecorderDigitalPageView, uRecorderOglOscillogramView, uRecorderStateMachine,
-  uRecorderTags;
+  uRecorderDigitalPageView, uRecorderOglOscillogramView, uRecorderStateMachine;
 
 procedure TRecorderBuiltInFormsFrame.Configure(ARecorder: TRecorder;
   AForms: TRecorderFormManager; ADigitalGrid: TStringGrid);
@@ -90,10 +92,17 @@ begin
     RenderMessages(ARebuild)
   else if ARebuild then
     RenderRecorderDigitalPage(fDigitalGrid, fRecorder.TagRegistry,
-      fRecorder.AlarmEngine)
+      fRecorder.AlarmEngine, fShowRawCodes)
   else
     UpdateRecorderDigitalPage(fDigitalGrid, fRecorder.TagRegistry,
-      fRecorder.AlarmEngine);
+      fRecorder.AlarmEngine, fShowRawCodes);
+end;
+
+procedure TRecorderBuiltInFormsFrame.SetShowRawCodes(AValue: Boolean);
+begin
+  if fShowRawCodes = AValue then Exit;
+  fShowRawCodes := AValue;
+  if fViewMode = rdvmTags then RenderDigital(True);
 end;
 
 procedure TRecorderBuiltInFormsFrame.RenderMessages(ARebuild: Boolean);
@@ -264,6 +273,34 @@ begin
     fDigitalGrid.Canvas.Brush.Color := TColor(lColor);
     fDigitalGrid.Canvas.Font.Color := clBlack;
   end;
+end;
+
+function TRecorderBuiltInFormsFrame.FocusDigitalTag(ATag: TRecorderTag): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  if (ATag = nil) or (fDigitalGrid = nil) or (fFormManager = nil) or
+    (fFormManager.ActivePage = nil) or
+    (fFormManager.ActivePage.Id <> CRecorderDigitalFormPageId) then Exit;
+  if fViewMode <> rdvmTags then
+  begin
+    SetDigitalViewMode(rdvmTags);
+    RenderDigital(True);
+  end;
+  { One tag can occupy several estimate rows. Navigate by identity, not by
+    the filtered source-list index or the presentation text. }
+  for I := 1 to fDigitalGrid.RowCount - 1 do
+    if fDigitalGrid.Objects[0, I] = ATag then
+    begin
+      fDigitalGrid.Row := I;
+      fDigitalGrid.Col := 4;
+      if (I < fDigitalGrid.TopRow) or
+        (I >= fDigitalGrid.TopRow + Max(1, fDigitalGrid.VisibleRowCount - 1)) then
+        fDigitalGrid.TopRow := I;
+      if fDigitalGrid.CanFocus then fDigitalGrid.SetFocus;
+      Exit(True);
+    end;
 end;
 
 function TRecorderBuiltInFormsFrame.DigitalTagNameAtRow(ARow: Integer): string;

@@ -203,7 +203,7 @@ begin
     fSettings.ThermocoupleScalePath := lPath;
   end;
 
-  if (fOutputModeCombo.ItemIndex = 1) and (lName <> '') then
+  if fOutputModeCombo.ItemIndex = 1 then
     fSettings.OutputMode := 'degC'
   else
     fSettings.OutputMode := 'mV';

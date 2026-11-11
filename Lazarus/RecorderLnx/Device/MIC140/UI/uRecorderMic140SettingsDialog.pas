@@ -437,6 +437,7 @@ begin
   if ShowRecorderMic140ChannelDialog(Self, lFirstRow, fDeviceSerial, fDevSubRev,
     lSettings, lBulkCount) then
   begin
+    RecorderMic140TryAssignDefaultThermocouple(fTagRegistry, lSettings);
     for I := 0 to ARows.Count - 1 do
     begin
       if not TryStrToInt(ARows[I], lRow) then

@@ -30,7 +30,7 @@ begin
     lHost.ConfigRoots[3].SourcePath := lBase + '/RecorderSDB';
     lHost.ConfigRoots[3].DestinationName := 'SDB';
     if not BackupRecorderHost(ParamStr(1), lHost,
-      [boProgram, boPlugins, boConfigurations], lReport) then Inc(lErrors);
+      [boConfigurations], lReport) then Inc(lErrors);
     WriteLn(lReport);
   end;
   if lErrors <> 0 then Halt(1);

@@ -207,6 +207,8 @@ type
       X, Y: Integer);
     procedure fHardwareTreeMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure fHardwareTreeContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
     procedure fHardwareTreeKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure fHardwareTreeEditing(Sender: TObject; Node: TTreeNode;
@@ -245,8 +247,6 @@ type
     fTagTreePendingMoveTags: TList;
     fTagTreeMoveTargetsOnly: Boolean;
     fUpdatingChannelUnitCategories: Boolean;
-    fSelectedSortColumn: Integer;               // Колонка текущей сортировки выбранных каналов
-    fSelectedSortAscending: Boolean;            // Направление текущей сортировки
     fSpectrumConfigTree: TRecorderSpectrumConfigTree; // Черновая модель алгоритмов вкладки каналов
     fFrequencyBands: TRecorderFrequencyBandList; // Черновая модель частотных полос
     fAlgorithmDropMenu: TPopupMenu;
@@ -299,8 +299,6 @@ type
     function RemoveDeletedSourceTagByName(const ATagName: string): Boolean;
     function SelectedTagByGridRow(ARow: Integer): TRecorderTag;
     procedure CollectSelectedGridTags(ATags: TList);
-    function CompareTagsForSelectedGrid(ATagA, ATagB: TRecorderTag): Integer;
-    procedure SortSelectedTags(ATags: TList);
     procedure SortSelectedChannelsByColumn(AColumn: Integer);
     procedure OpenChannelTagSettings(ATag: TRecorderTag);
     procedure OpenChannelTagsSettings(ATags: TList);
@@ -391,9 +389,6 @@ type
     procedure SetTagDialogImageList(AValue: TCustomImageList);
     procedure SetDialogButtonImages;
     procedure InitializeHardwareTree;
-    procedure AdjustRecorderTabTextSpacing;
-    procedure RecorderFormShow(Sender: TObject);
-    procedure RecorderFormResize(Sender: TObject);
     
     // Динамическое построение UI (используется при отсутствии lfm-файла формы)
     procedure BuildUi;
@@ -820,7 +815,7 @@ const
   CDeviceModuleImageIndex = CIconDeviceModule;
   CDeviceTreeProbeTimeoutMs = 1000;
   CTagGroupFolderImageIndex = CIconFolderOpen;
-  CTagGroupDefault = 'Основные каналы';
+  CTagGroupDefault = CRecorderDefaultTagGroupPath;
   CTagGroupAuxiliary = 'Вспомогательные каналы';
   CMeraSampleFile = 'D:\works\mera\mera files signals\shocks\signal0005\signal0005.mera';
 
@@ -891,22 +886,11 @@ begin
   {$ENDIF}
 end;
 
-procedure PlaceAfter(AReference, AControl: TControl);
-const
-  CControlGap = 8;
-begin
-  if (AReference = nil) or (AControl = nil) then
-    Exit;
-  AControl.Left := AReference.Left + AReference.Width + CControlGap;
-end;
-
 constructor TRecorderSettingsDialog.Create(AOwner: TComponent);
 var
   lSearchButton: TBitBtn;
 begin
   inherited Create(AOwner);
-  OnShow := @RecorderFormShow;
-  OnResize := @RecorderFormResize;
   fWindowDragTrace := TRecorderWindowDragTrace.Create('settings');
   fPluginCatalog := TRecorderPluginCatalog.Create;
   InitializePluginPage;
@@ -916,8 +900,6 @@ begin
   fTagTreePendingMoveTags := TList.Create;
   fSpectrumConfigTree := TRecorderSpectrumConfigTree.Create;
   fFrequencyBands := TRecorderFrequencyBandList.Create;
-  fSelectedSortColumn := 2;
-  fSelectedSortAscending := True;
 
   if (btnChannelEdit = nil) and (pnChannelMoveButtons <> nil) then
   begin
@@ -1051,59 +1033,8 @@ begin
   ArrangeAlgorithmControls;
   InitializeHardwareTree;
   UpdateConditionControls;
-  AdjustRecorderTabTextSpacing;
-end;
-
-procedure TRecorderSettingsDialog.AdjustRecorderTabTextSpacing;
-var
-  lControl: TComponent;
-begin
-  lControl := FindComponent('lbScreenUpdate');
-  if lControl is TControl then
-    PlaceAfter(TControl(lControl), fScreenUpdateEdit);
-  lControl := FindComponent('lbScreenUpdateSec');
-  if lControl is TControl then
-    PlaceAfter(fScreenUpdateEdit, TControl(lControl));
-
-  lControl := FindComponent('lbBufferSeconds');
-  if lControl is TControl then
-    PlaceAfter(TControl(lControl), fBufferSecondsEdit);
-  lControl := FindComponent('lbBufferSecondsSec');
-  if lControl is TControl then
-    PlaceAfter(fBufferSecondsEdit, TControl(lControl));
-
-  lControl := FindComponent('lbDataUpdate');
-  if lControl is TControl then
-    PlaceAfter(TControl(lControl), fDataUpdateEdit);
-  lControl := FindComponent('lbDataUpdateSec');
-  if lControl is TControl then
-    PlaceAfter(fDataUpdateEdit, TControl(lControl));
-
-  PlaceAfter(fStartManualRadio, fStartLevelRadio);
-  PlaceAfter(fStartTriggerRadio, fStartTriggerEdit);
-  lControl := FindComponent('lbStartChannel');
-  if lControl is TControl then
-    PlaceAfter(TControl(lControl), fStartChannelCombo);
-
-  PlaceAfter(fStopManualRadio, fStopLevelRadio);
-  PlaceAfter(fStopDurationRadio, fStopDurationEdit);
-  lControl := FindComponent('lbStopDurationSec');
-  if lControl is TControl then
-    PlaceAfter(fStopDurationEdit, TControl(lControl));
-  lControl := FindComponent('lbStopChannel');
-  if lControl is TControl then
-    PlaceAfter(TControl(lControl), fStopChannelCombo);
-end;
-
-procedure TRecorderSettingsDialog.RecorderFormShow(Sender: TObject);
-begin
-  { GTK окончательно вычисляет ширину AutoSize-label только после показа. }
-  AdjustRecorderTabTextSpacing;
-end;
-
-procedure TRecorderSettingsDialog.RecorderFormResize(Sender: TObject);
-begin
-  AdjustRecorderTabTextSpacing;
+  { Recorder tab geometry belongs to the designer resource, including the
+    common input column. Do not reposition fields by measured label widths. }
 end;
 
 procedure TRecorderSettingsDialog.InitializeChannelExchangeButtons;
@@ -2288,134 +2219,16 @@ begin
   end;
 end;
 
-function CompareAddressText(const ALeft, ARight: string): Integer;
-var
-  lLeftNode: Integer;
-  lRightNode: Integer;
-  lLeftChannel: Integer;
-  lRightChannel: Integer;
-
-  function SplitAddress(const AText: string; out ANode,
-    AChannel: Integer): Boolean;
-  var
-    lDash: Integer;
-    lStart: Integer;
-    lTail: string;
-    lText: string;
-  begin
-    Result := False;
-    ANode := 0;
-    AChannel := 0;
-    lText := Trim(AText);
-    if Pos('185-', UpperCase(lText)) = 1 then
-      lText := Copy(lText, Length('185-') + 1, MaxInt);
-    lStart := Pos('{', lText);
-    if lStart > 0 then
-      Delete(lText, lStart, 1);
-    if (lText <> '') and (lText[Length(lText)] = '}') then
-      Delete(lText, Length(lText), 1);
-    lDash := Pos('-', lText);
-    if lDash <= 0 then
-      Exit;
-    lTail := Copy(lText, lDash + 1, MaxInt);
-    if (lTail = '') or (Pos('t', LowerCase(lTail)) > 0) or
-      SameText(lTail, 'uts') then
-      Exit;
-    Result := TryStrToInt(Copy(lText, 1, lDash - 1), ANode) and
-      TryStrToInt(lTail, AChannel);
-  end;
-
-begin
-  if SplitAddress(ALeft, lLeftNode, lLeftChannel) and
-    SplitAddress(ARight, lRightNode, lRightChannel) then
-  begin
-    Result := CompareValue(lLeftNode, lRightNode);
-    if Result = 0 then
-      Result := CompareValue(lLeftChannel, lRightChannel);
-    Exit;
-  end;
-  Result := CompareText(ALeft, ARight);
-end;
-
-function TRecorderSettingsDialog.CompareTagsForSelectedGrid(ATagA,
-  ATagB: TRecorderTag): Integer;
-begin
-  Result := 0;
-  if (ATagA = nil) or (ATagB = nil) then
-    Exit;
-
-  case fSelectedSortColumn of
-    0:
-      Result := 0;
-    1:
-      Result := CompareText(ATagA.Name, ATagB.Name);
-    2:
-      begin
-        Result := CompareAddressText(ATagA.Address, ATagB.Address);
-        if Result = 0 then
-          Result := CompareText(ATagA.Name, ATagB.Name);
-      end;
-    3:
-      Result := CompareText(ATagA.ModuleType, ATagB.ModuleType);
-    4:
-      Result := CompareValue(ATagA.PollFrequencyHz, ATagB.PollFrequencyHz);
-    5:
-      Result := CompareText(ATagA.UnitName, ATagB.UnitName);
-    6:
-      Result := 0;
-    7:
-      Result := CompareText(ATagA.SourceId, ATagB.SourceId);
-    8:
-      Result := CompareText(ATagA.Description, ATagB.Description);
-    9:
-      Result := CompareValue(ATagA.Id, ATagB.Id);
-  else
-    Result := CompareText(ATagA.Name, ATagB.Name);
-  end;
-
-  if (Result = 0) and (fSelectedSortColumn <> 2) then
-  begin
-    Result := CompareAddressText(ATagA.Address, ATagB.Address);
-    if Result = 0 then
-      Result := CompareText(ATagA.Name, ATagB.Name);
-  end;
-
-  if not fSelectedSortAscending then
-    Result := -Result;
-end;
-
-procedure TRecorderSettingsDialog.SortSelectedTags(ATags: TList);
-var
-  I: Integer;
-  J: Integer;
-  lTemp: Pointer;
-begin
-  if ATags = nil then
-    Exit;
-
-  for I := 0 to ATags.Count - 2 do
-    for J := I + 1 to ATags.Count - 1 do
-      if CompareTagsForSelectedGrid(TRecorderTag(ATags[I]),
-        TRecorderTag(ATags[J])) > 0 then
-      begin
-        lTemp := ATags[I];
-        ATags[I] := ATags[J];
-        ATags[J] := lTemp;
-      end;
-end;
-
 procedure TRecorderSettingsDialog.SortSelectedChannelsByColumn(AColumn: Integer);
+var
+  lAscending: Boolean;
 begin
-  if AColumn <= 0 then
-    Exit;
-
-  if fSelectedSortColumn = AColumn then
-    fSelectedSortAscending := not fSelectedSortAscending
-  else
-  begin
-    fSelectedSortColumn := AColumn;
-    fSelectedSortAscending := True;
-  end;
+  if (fRecorder = nil) or (AColumn <= 0) or
+    (AColumn > Ord(High(TRecorderTagSortField))) then Exit;
+  lAscending := True;
+  if Ord(fRecorder.TagRegistry.DisplaySortField) = AColumn then
+    lAscending := not fRecorder.TagRegistry.DisplaySortAscending;
+  fRecorder.TagRegistry.SetDisplaySort(TRecorderTagSortField(AColumn), lAscending);
   PopulateChannelGrids;
 end;
 
@@ -5728,14 +5541,10 @@ begin
     lSelectedTags := TList.Create;
     try
       if fRecorder.TagRegistry <> nil then
-        for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
-        begin
-          lTag := fRecorder.TagRegistry.Tags[I];
-          if SelectedTagPassesFilter(lTag) then
-            lSelectedTags.Add(lTag);
-        end;
-
-      SortSelectedTags(lSelectedTags);
+        fRecorder.TagRegistry.GetDisplayTags(lSelectedTags);
+      for I := lSelectedTags.Count - 1 downto 0 do
+        if not SelectedTagPassesFilter(TRecorderTag(lSelectedTags[I])) then
+          lSelectedTags.Delete(I);
 
       if FindComponent('gbSelectedChannels') is TGroupBox then
         TGroupBox(FindComponent('gbSelectedChannels')).Caption :=
@@ -5787,6 +5596,7 @@ begin
   fHardwareTree.OnChange := @fHardwareTreeChange;
   fHardwareTree.OnMouseMove := @fHardwareTreeMouseMove;
   fHardwareTree.OnMouseDown := @fHardwareTreeMouseDown;
+  fHardwareTree.OnContextPopup := @fHardwareTreeContextPopup;
   fHardwareTree.OnEditing := @fHardwareTreeEditing;
   fHardwareTree.OnEdited := @fHardwareTreeEdited;
   fHardwareTree.ShowHint := True;
@@ -5858,6 +5668,43 @@ begin
   { Keep a Ctrl/Shift multi-selection when its context menu is opened. }
   if (lNode <> nil) and (not lNode.Selected) then
     fHardwareTree.Selected := lNode;
+end;
+
+procedure TRecorderSettingsDialog.fHardwareTreeContextPopup(Sender: TObject;
+  MousePos: TPoint; var Handled: Boolean);
+var
+  lNode: TTreeNode;
+  lPopupPoint: TPoint;
+  lRect: TRect;
+begin
+  Handled := False;
+  if (fHardwareTree = nil) or (fHardwareTree.PopupMenu = nil) then
+    Exit;
+
+  { Explicitly open the LCL popup instead of relying on the platform's
+    implicit Gtk context-menu dispatch.  The latter is intermittently lost
+    in an RDP session, although the right-button event reaches the tree. }
+  if (MousePos.X >= 0) and (MousePos.Y >= 0) then
+  begin
+    lNode := fHardwareTree.GetNodeAt(MousePos.X, MousePos.Y);
+    if (lNode <> nil) and (not lNode.Selected) then
+      fHardwareTree.Selected := lNode;
+    lPopupPoint := fHardwareTree.ClientToScreen(MousePos);
+  end
+  else
+  begin
+    lNode := fHardwareTree.Selected;
+    if lNode <> nil then
+    begin
+      lRect := lNode.DisplayRect(True);
+      lPopupPoint := Point(lRect.Left, lRect.Bottom);
+      lPopupPoint := fHardwareTree.ClientToScreen(lPopupPoint);
+    end
+    else
+      lPopupPoint := fHardwareTree.ClientToScreen(Point(8, 8));
+  end;
+  fHardwareTree.PopupMenu.PopUp(lPopupPoint.X, lPopupPoint.Y);
+  Handled := True;
 end;
 
 { Динамическое создание пользовательского интерфейса }
@@ -7392,21 +7239,15 @@ var
 
   function HeaderResizeHit(AGrid: TStringGrid; AX, ACol: Integer): Boolean;
   var
-    I: Integer;
-    lBoundary: Integer;
+    lBounds: TRect;
   begin
     Result := False;
     if (AGrid = nil) or (ACol < 0) then
       Exit;
 
-    lBoundary := 0;
-    for I := 0 to ACol - 1 do
-      Inc(lBoundary, AGrid.ColWidths[I]);
-    if Abs(AX - lBoundary) <= 4 then
-      Exit(True);
-
-    Inc(lBoundary, AGrid.ColWidths[ACol]);
-    Result := Abs(AX - lBoundary) <= 4;
+    lBounds := AGrid.CellRect(ACol, 0);
+    Result := (Abs(AX - lBounds.Left) <= 4) or
+      (Abs(AX - lBounds.Right) <= 4);
   end;
 begin
   lGrid := TStringGrid(Sender);
@@ -7416,7 +7257,8 @@ begin
   lGrid.MouseToCell(X, Y, lCol, lRow);
   if lRow = 0 then
   begin
-    if (lGrid = fSelectedChannelsGrid) and ((lCol = 1) or (lCol = 2)) and
+    if (lGrid = fSelectedChannelsGrid) and (lCol >= 1) and (lCol <= 9) and
+      (lCol <> 6) and
       (not HeaderResizeHit(lGrid, X, lCol)) then
       SortSelectedChannelsByColumn(lCol);
     Exit;

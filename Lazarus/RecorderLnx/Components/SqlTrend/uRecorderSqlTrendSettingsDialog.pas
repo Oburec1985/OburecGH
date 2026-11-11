@@ -31,6 +31,7 @@ type
     cbDisplay: TComboBox;
     cbLineAxis: TComboBox;
     cbLineVisible: TCheckBox;
+    cbOnlyRecorderTags: TCheckBox;
     cbShowEvents: TCheckBox;
     cbShowRecordingEvents: TCheckBox;
     cbShowTagAlarmEvents: TCheckBox;
@@ -213,6 +214,7 @@ begin
   cbShowTagAlarmEvents.Checked := fDraft.ShowTagAlarmEvents;
   cbShowTagRangeEvents.Checked := fDraft.ShowTagRangeEvents;
   cbShowOnlyUnresolvedEvents.Checked := fDraft.ShowOnlyUnresolvedEventPoints;
+  cbOnlyRecorderTags.Checked := fDraft.OnlyRecorderTags;
   UpdateEventFilterControls;
   edWindowHours.Text := FloatToStr(fDraft.DurationSec / SecsPerDay);
   FillAxes;
@@ -224,12 +226,12 @@ end;
 procedure TRecorderSqlTrendSettingsDialog.ConfigureLayout;
 begin
   AutoScroll := False;
-  Constraints.MinHeight := 680;
+  Constraints.MinHeight := 740;
 
   fBottomPanel := TPanel.Create(Self);
   fBottomPanel.Parent := Self;
   fBottomPanel.Align := alBottom;
-  fBottomPanel.Height := 214;
+  fBottomPanel.Height := 244;
   fBottomPanel.BevelOuter := bvNone;
 
   gbTime.Parent := fBottomPanel;
@@ -240,8 +242,8 @@ begin
   gbAxes.Anchors := [akLeft, akRight, akBottom];
   btnImportAutoDisplays.Width := Max(190,
     Canvas.TextWidth(btnImportAutoDisplays.Caption) + 32);
-  btnImportAutoDisplays.Left := btnAutoAxes.Left + btnAutoAxes.Width -
-    btnImportAutoDisplays.Width;
+  cbOnlyRecorderTags.Width := Max(180,
+    Canvas.TextWidth(cbOnlyRecorderTags.Caption) + 30);
 
   OnResize := @FormResize;
   LayoutDialog;
@@ -257,12 +259,23 @@ const
   COuterMargin = 8;
   CSectionGap = 8;
   CAxesHeight = 130;
-  CTimeHeight = 168;
+  CTimeHeight = 198;
   CButtonHeight = 30;
 var
   lAxesTop: Integer;
 begin
   if fBottomPanel = nil then Exit;
+
+  { Keep the filter checkbox and its native check mark completely separate
+    from the import button.  Placing the checkbox to the right left only the
+    remaining few pixels at some Linux DPI/font combinations, so the button
+    visually covered the check mark. }
+  btnImportAutoDisplays.Left := ClientWidth - COuterMargin -
+    btnImportAutoDisplays.Width;
+  cbOnlyRecorderTags.Left := Max(COuterMargin,
+    btnImportAutoDisplays.Left - CSectionGap - cbOnlyRecorderTags.Width);
+  cbOnlyRecorderTags.Top := btnImportAutoDisplays.Top +
+    (btnImportAutoDisplays.Height - cbOnlyRecorderTags.Height) div 2;
 
   gbTime.SetBounds(COuterMargin, 0,
     Max(1, fBottomPanel.ClientWidth - 2 * COuterMargin), CTimeHeight);
@@ -296,7 +309,8 @@ begin
     lHost := 'local';
   Result := Format('%s|%s|%d|%s', [
     RecorderSqlDbBackendToString(AConfig.Backend), lHost, AConfig.Port,
-    AConfig.DatabaseFileName]);
+    AConfig.DatabaseFileName]) + '|recorder=' +
+    BoolToStr(fDraft.OnlyRecorderTags, True);
 end;
 
 procedure TRecorderSqlTrendSettingsDialog.LoadCachedSignals;
@@ -885,7 +899,9 @@ begin
         try
           R.ListSignalInfos(lInfos, False);
           for I := 0 to High(lInfos) do
-            lNames.Add(lInfos[I].Name);
+            if (not cbOnlyRecorderTags.Checked) or
+              (not SameText(Trim(lInfos[I].RecorderSourceId), 'SQL database')) then
+              lNames.Add(lInfos[I].Name);
         finally
           R.Free;
         end;
@@ -1202,6 +1218,7 @@ begin
   fDraft.ShowTagAlarmEvents := cbShowTagAlarmEvents.Checked;
   fDraft.ShowTagRangeEvents := cbShowTagRangeEvents.Checked;
   fDraft.ShowOnlyUnresolvedEventPoints := cbShowOnlyUnresolvedEvents.Checked;
+  fDraft.OnlyRecorderTags := cbOnlyRecorderTags.Checked;
   fComponent.AssignSqlTrend(fDraft);
   ModalResult := mrOk;
 end;

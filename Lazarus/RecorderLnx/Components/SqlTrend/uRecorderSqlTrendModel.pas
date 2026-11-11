@@ -53,6 +53,7 @@ type
     fShowTagAlarmEvents: Boolean;
     fShowTagRangeEvents: Boolean;
     fShowOnlyUnresolvedEventPoints: Boolean;
+    fOnlyRecorderTags: Boolean;
     fTimeMode: TRecorderSqlTrendTimeMode;
     fToUtc: Double;
     function GetActiveDisplay: TRecorderSqlTrendDisplay;
@@ -89,6 +90,10 @@ type
     property ShowOnlyUnresolvedEventPoints: Boolean
       read fShowOnlyUnresolvedEventPoints
       write fShowOnlyUnresolvedEventPoints;
+    { Не показывать в списке SQL-тренда теги, которые сами были зеркалированы
+      из SQL database. Остаются собственные теги Recorder, записанные в БД. }
+    property OnlyRecorderTags: Boolean read fOnlyRecorderTags
+      write fOnlyRecorderTags;
     property DisplayCount: Integer read GetDisplayCount;
     property Displays[AIndex: Integer]: TRecorderSqlTrendDisplay read GetDisplay;
     property ActiveDisplayIndex: Integer read fActiveDisplayIndex
@@ -198,6 +203,7 @@ begin
   fShowTagAlarmEvents := True;
   fShowTagRangeEvents := True;
   fShowOnlyUnresolvedEventPoints := False;
+  fOnlyRecorderTags := True;
   if AxisCount = 0 then
   begin
     lAxis := AddAxis;
@@ -283,6 +289,7 @@ begin
   fShowTagAlarmEvents := ASource.fShowTagAlarmEvents;
   fShowTagRangeEvents := ASource.fShowTagRangeEvents;
   fShowOnlyUnresolvedEventPoints := ASource.fShowOnlyUnresolvedEventPoints;
+  fOnlyRecorderTags := ASource.fOnlyRecorderTags;
 end;
 
 constructor TRecorderSqlTrendFactory.Create;

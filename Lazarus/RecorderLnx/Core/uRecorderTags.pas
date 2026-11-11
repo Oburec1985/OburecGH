@@ -9,13 +9,18 @@ unit uRecorderTags;
 
   Место в архитектуре:
     Core/domain. Модуль не зависит от LCL и не обращается к устройствам напрямую.
-    Источники данных и плагины будут записывать значения в TRecorderTagRegistry,
-    а UI, обработчики и запись будут читать снимки через теги и события core.
-
-  Ограничения первой версии:
-    Значения сигнала пока представлены как Double + время в секундах. Строковые
-    состояния, блоковые пакеты, тарировки и аппаратные коды будут добавлены после
-    проверки базового потока данных.
+    Источники данных публикуют значения, UI и запись читают снимки тегов.
+    Явная смена единиц: SetUnits -> GetSource -> интерфейс самого источника.
+    Registry владеет тегами/ГХ и при создании передаёт привязку источника;
+    в запросе GetSource реестр не участвует. Привязка снимается менеджером до
+    уничтожения источников. Внутреннее присваивание UnitName не вызывает SetUnits.
+    Поиск источника относится к настройке; рабочий расчёт использует подготовленные
+    ссылки и коэффициенты без вызовов GetSource и поиска по SourceId на отсчёте.
+    Единицы источника читаются через общий IRecorderDataSource; отдельные
+    интерфейсы для смены единиц или её проверки не добавлять. Последняя
+    включённая канальная ГХ задаёт единицы результата. Несовместимость единиц
+    ступеней создаёт предупреждение тега, но не отменяет математические ГХ
+    и не является аппаратной ошибкой. Совместимые единицы пересчитываются.
 }
 
 {$mode objfpc}{$H+}
@@ -206,8 +211,31 @@ type
   { TRecorderTag
     Доменная модель одного измерительного/служебного тега. Тег хранит метаданные
     и собственный буфер сигнала; запись значений идет через AddSample. }
+  TRecorderCalibration = class;
+  TRecorderTagRegistry = class;
+  TRecorderTagSourceResolver = function(const ASourceId: string): IInterface of object;
+
+  { Shared presentation order. Runtime storage and tag identities never move. }
+  TRecorderTagSortField = (rtsNone, rtsName, rtsAddress, rtsModuleType,
+    rtsFrequency, rtsUnit, rtsCalibration, rtsGroup, rtsDescription, rtsId);
+
   TRecorderTag = class
+  private type
+    TUnitRequest = record
+      UnitName: string;
+      Source: IInterface;
+      ExternalDisplay: Boolean;
+      Raw: Boolean;
+    end;
   private
+    fSourceResolver: TRecorderTagSourceResolver;
+    fRawLock: TRTLCriticalSection;
+    fRawValue: Double;
+    fRawTimeSec: Double;
+    fRawPending: Boolean;
+    fRawValid: Boolean;
+    fSourceInputIsRaw: Boolean;
+    fRegistry: TRecorderTagRegistry;
     fBlockTimeDomain: TRecorderBlockTimeDomain;
     fAddress: string;                                          { Адрес тега (например, в модуле) }
     fDescription: string;                                      { Описание тега }
@@ -262,6 +290,21 @@ type
     fTextValue: string;                                        { Текстовое представление последнего значения }
     fUnitName: string;                                         { Единица измерения }
     fSourceUnitName: string;                                   { Единица исходного значения до ГХ }
+    fSourceHardwareOutputUnitName: string;
+    fSourceSteps: array of record
+      Calibration: TRecorderCalibration;
+      InputScale: Double;
+    end;
+    fSourceStepCount: Integer;
+    fSourceFinalScale: Double;
+    fSourceTransformError: string;
+    fPreparedHardwareCalibration: TRecorderCalibration;
+    fPreparedHardwareInputScale: Double;
+    fCalibrationWarning: string;
+    procedure FinishRawPublication(ATimeSec: Double);
+    function PrepareUnitRequest(const AValue: string): TUnitRequest;
+    procedure SetSourceId(const AValue: string);
+    procedure SetAddress(const AValue: string);
     function GetBlockCounter: QWord;
     function GetRecordingSignalBuffer: TRecorderSignalBuffer;
     function GetRecordingPollFrequencyHz: Double;
@@ -275,6 +318,7 @@ type
       const AValue: TRecorderTagSetpoint);
     procedure SetUnitName(const AValue: string);
     procedure SetSourceUnitName(const AValue: string);
+    procedure SetSourceHardwareOutputUnitName(const AValue: string);
     procedure SetAutoUnit(AValue: Boolean);
     procedure SetHardwareCalibrationEnabled(AValue: Boolean);
     procedure SetHardwareCalibrationName(const AValue: string);
@@ -289,6 +333,27 @@ type
       ACapacity: Integer = 4096; AIsVirtual: Boolean = False);
     { Деструктор уничтожает внутренний буфер сигнала }
     destructor Destroy; override;
+
+    { Explicit cold configuration command. Changes datasource mode through its
+      standard interface; internal UnitName assignments never call it. }
+    procedure SetUnits(const AValue: string);
+    { Non-mutating preflight for an atomic batch of explicit unit commands. }
+    { Cold binding supplied by the source manager. GetSource resolves the
+      current SourceId; no registry query and no retained obsolete source. }
+    procedure BindSourceResolver(AResolver: TRecorderTagSourceResolver);
+    function GetSource: IInterface;
+    function GetLastScale: TRecorderCalibration;
+    function GetUnits: string;
+    procedure AddCalibrationWarning(const AText: string);
+    procedure ClearCalibrationWarning;
+    property CalibrationWarning: string read fCalibrationWarning;
+    property OwnerRegistry: TRecorderTagRegistry read fRegistry;
+    procedure ValidateUnits(const AValue: string);
+    { Source publishes the original last input sample before any balance/GX.
+      It becomes visible only with the corresponding physical publication. }
+    procedure StageRawValue(ATimeSec, AValue: Double);
+    procedure ClearRawValue;
+    function TryGetRawValue(out AValue: Double): Boolean;
 
     { Добавляет числовое значение в буфер тега. }
     procedure AddSample(ATimeSec, AValue: Double);
@@ -338,9 +403,14 @@ type
       write fExternalWriteAllowed;
     property IsVector: Boolean read GetIsVector;
     property Name: string read fName write fName;
-    property Address: string read fAddress write fAddress;
+    property Address: string read fAddress write SetAddress;
     property UnitName: string read fUnitName write SetUnitName;
     property SourceUnitName: string read fSourceUnitName write SetSourceUnitName;
+    { Set by the source during load/configure: a nonempty value declares that
+      incoming physical samples already include its complete hardware stage.
+      HardwareCalibrationEnabled=False selects raw code instead. }
+    property SourceHardwareOutputUnitName: string read fSourceHardwareOutputUnitName
+      write SetSourceHardwareOutputUnitName;
     property Description: string read fDescription write fDescription;
     property GroupPath: string read fGroupPath write fGroupPath;
     property PollFrequencyHz: Double read fPollFrequencyHz write fPollFrequencyHz;
@@ -368,7 +438,7 @@ type
       read fSetpointRangeControlEnabled write fSetpointRangeControlEnabled;
     property SetpointRangeAlarmInfoText: string
       read fSetpointRangeAlarmInfoText write fSetpointRangeAlarmInfoText;
-    property SourceId: string read fSourceId write fSourceId;
+    property SourceId: string read fSourceId write SetSourceId;
     { Set by the producer during Configure, before publication starts. }
     property BlockTimeDomain: TRecorderBlockTimeDomain
       read fBlockTimeDomain write fBlockTimeDomain;
@@ -456,6 +526,7 @@ type
     function ConvertInputUnit(const AUnitName: string): Boolean;
     function ConvertOutputUnit(const AUnitName: string): Boolean;
     function Transform(AValue: Double): Double;
+    function GetUnits: string;
     function InverseTransform(AValue: Double; out AInputValue: Double): Boolean;
     procedure ClearPoints;
     function PointAt(AIndex: Integer): TRecorderCalibrationPoint;
@@ -504,6 +575,7 @@ type
 
   TRecorderTagRegistry = class
   private
+    fTagSourceResolver: TRecorderTagSourceResolver;
     fStructureRevision: QWord;
     fActiveSourceIds: TStringList;                     { Active data source ids for detached tag indication }
     fBlockPublishedTarget: TObject;
@@ -532,6 +604,8 @@ type
     fSelectedTagName: string;                         { Имя текущего выбранного тега }
     fTagGroupPaths: TStringList;                      { Пользовательские группы дерева тегов }
     fTags: TList;                                     { Список тегов (TRecorderTag) }
+    fDisplaySortField: TRecorderTagSortField;
+    fDisplaySortAscending: Boolean;
     fLoadedTagIdAliases: TStringList;
     fLoadedTagNameAliases: TStringList;
     fCalibrations: TRecorderCalibrationList;
@@ -547,6 +621,7 @@ type
     function GetSelectedTag: TRecorderTag;
     function GetTag(AIndex: Integer): TRecorderTag;
     function GetTagCount: Integer;
+    function CompareDisplayTags(ATagA, ATagB: TRecorderTag): Integer;
     procedure MarkRuntimeDataUpdated(ATag: TRecorderTag; ATimeSec: Double);
     procedure MarkInputDataUpdated;
     procedure PublishValueInternal(ATag: TRecorderTag; ATimeSec,
@@ -581,6 +656,11 @@ type
     procedure RegisterLoadedTagAlias(AOldId: TRecorderTagId;
       const AOldName: string; ATarget: TRecorderTag);
     function ContainsTag(ATag: TRecorderTag): Boolean;
+    { Cold UI snapshots only; sorting must not mutate the acquisition list. }
+    procedure SetDisplaySort(AField: TRecorderTagSortField; AAscending: Boolean);
+    procedure GetDisplayTags(ATags: TList);
+    property DisplaySortField: TRecorderTagSortField read fDisplaySortField;
+    property DisplaySortAscending: Boolean read fDisplaySortAscending;
     function RenameTag(ATag: TRecorderTag; const ANewName: string): Boolean;
     function FindCalibrationByName(const AName: string): TRecorderCalibration;
     function FindCalibrationBySdbKey(const AKey: string): TRecorderCalibration;
@@ -588,11 +668,19 @@ type
     function CommitCalibrationEdit(ATarget, ADraft: TRecorderCalibration): Boolean;
     function AddCalibrationCopyForTag(ATag: TRecorderTag;
       APipelineIndex: Integer; ADraft: TRecorderCalibration): TRecorderCalibration;
+    { Creation-time dependency injection only; source lookup belongs to Tag. }
+    procedure ConfigureTagSources(AResolver: TRecorderTagSourceResolver;
+      AOwner: TObject = nil);
     function FindTagHardwareCalibration(ATag: TRecorderTag): TRecorderCalibration;
     function TryGetTagAutoUnit(ATag: TRecorderTag;
       out AUnitName: string): Boolean;
     procedure SyncTagAutoUnit(ATag: TRecorderTag; AForce: Boolean = False);
     procedure RebuildScales(ATag: TRecorderTag);
+    procedure RebuildSourceScales(ATag: TRecorderTag);
+    procedure ValidateTagSourceOutput(ATag: TRecorderTag);
+    function TransformTagSourceOutput(ATag: TRecorderTag; AValue: Double): Double;
+    procedure TransformTagSourceBlock(ATag: TRecorderTag;
+      var AValues: TRecorderDoubleArray; ACount: Integer);
     function FindTagThermocoupleCalibration(ATag: TRecorderTag): TRecorderCalibration;
     function TransformTagHardwareValue(ATag: TRecorderTag; AValue: Double): Double;
     function TransformTagThermocoupleValue(ATag: TRecorderTag; AValue: Double): Double;
@@ -749,6 +837,7 @@ procedure RecorderSetCalibrationStepEnabled(ANames: TStrings;
   AIndex: Integer; AEnabled: Boolean);
 
 const
+  CRecorderDefaultTagGroupPath = 'Основные каналы';
   CDetachedTagSourcePrefix = 'Detached:';
   CMeraTagSourcePrefix = 'Mera file: ';
 
@@ -763,7 +852,8 @@ function RecorderTagSourceIsVisible(ARegistry: TRecorderTagRegistry; ATag: TReco
 implementation
 
 uses
-  StrUtils, uRecorderDebugLog, uRecorderConfiguredDataSources;
+  StrUtils, uRecorderDebugLog, uRecorderConfiguredDataSources,
+  uRecorderDataSources;
 
 const
   CTagThermocoupleInverseMinMv = -20.0;
@@ -1692,17 +1782,79 @@ begin
   fSignalBuffer := TRecorderSignalBuffer.Create(ACapacity);
   InitCriticalSection(fEstimateLock);
   InitCriticalSection(fExternalWriteLock);
+  InitCriticalSection(fRawLock);
   ClearEstimateCache;
 end;
 
 destructor TRecorderTag.Destroy;
 begin
+  DoneCriticalSection(fRawLock);
   DoneCriticalSection(fExternalWriteLock);
   DoneCriticalSection(fEstimateLock);
   fSignalBuffer.Free;
   fRecordingSignalBuffer.Free;
   fCalibrationNames.Free;
   inherited Destroy;
+end;
+
+procedure TRecorderTag.StageRawValue(ATimeSec, AValue: Double);
+begin
+  EnterCriticalSection(fRawLock);
+  try
+    fRawTimeSec := ATimeSec;
+    fRawValue := AValue;
+    fRawPending := True;
+    fRawValid := False;
+  finally
+    LeaveCriticalSection(fRawLock);
+  end;
+end;
+
+procedure TRecorderTag.FinishRawPublication(ATimeSec: Double);
+begin
+  EnterCriticalSection(fRawLock);
+  try
+    fRawValid := fRawPending and (fRawTimeSec = ATimeSec);
+    fRawPending := False;
+  finally
+    LeaveCriticalSection(fRawLock);
+  end;
+end;
+
+procedure TRecorderTag.ClearRawValue;
+begin
+  EnterCriticalSection(fRawLock);
+  try
+    fRawValid := False;
+    fRawPending := False;
+  finally
+    LeaveCriticalSection(fRawLock);
+  end;
+end;
+
+function TRecorderTag.TryGetRawValue(out AValue: Double): Boolean;
+begin
+  EnterCriticalSection(fRawLock);
+  try
+    Result := fRawValid;
+    if Result then AValue := fRawValue else AValue := 0;
+  finally
+    LeaveCriticalSection(fRawLock);
+  end;
+end;
+
+procedure TRecorderTag.SetSourceId(const AValue: string);
+begin
+  if fSourceId = AValue then Exit;
+  ClearRawValue;
+  fSourceId := AValue;
+end;
+
+procedure TRecorderTag.SetAddress(const AValue: string);
+begin
+  if fAddress = AValue then Exit;
+  ClearRawValue;
+  fAddress := AValue;
 end;
 
 procedure TRecorderTag.AddSample(ATimeSec, AValue: Double);
@@ -1714,6 +1866,7 @@ begin
   lTimes[0] := ATimeSec;
   lValues[0] := AValue;
   UpdateEstimateCache(lTimes, lValues, 1);
+  FinishRawPublication(ATimeSec);
   fTextValue := FloatToStr(AValue);
 end;
 
@@ -1724,6 +1877,7 @@ begin
   if ACount > 0 then
   begin
     UpdateEstimateCache(ATimes, AValues, ACount);
+    FinishRawPublication(ATimes[ACount - 1]);
     fTextValue := FloatToStr(AValues[ACount - 1]);
   end;
 end;
@@ -1774,6 +1928,7 @@ end;
 
 procedure TRecorderTag.ClearSignalHistory;
 begin
+  ClearRawValue;
   fSignalBuffer.Clear;
   ClearEstimateCache;
   fTextValue := '';
@@ -2046,6 +2201,8 @@ begin
   fTagGroupPaths.Sorted := True;
   fTagGroupPaths.Duplicates := dupIgnore;
   fTags := TList.Create;
+  fDisplaySortField := rtsAddress;
+  fDisplaySortAscending := True;
   fLoadedTagIdAliases := TStringList.Create;
   fLoadedTagNameAliases := TStringList.Create;
   fLoadedTagNameAliases.CaseSensitive := False;
@@ -2192,6 +2349,8 @@ begin
   end;
 
   fTags.Add(ATag);
+  ATag.fRegistry := Self;
+  ATag.BindSourceResolver(fTagSourceResolver);
   Inc(fStructureRevision);
   RecorderLogTagAddTrace('added', ATag);
   Result := ATag;
@@ -2279,23 +2438,282 @@ begin
   fCalibrationScaleBuilt := False;
 end;
 
+function CompareTagAddress(const ALeft, ARight: string): Integer;
+var
+  lLeftNode, lRightNode, lLeftChannel, lRightChannel: Integer;
+  lLeftNumeric, lRightNumeric: Boolean;
+
+  function SplitAddress(const AText: string; out ANode, AChannel: Integer): Boolean;
+  var
+    lText, lTail: string;
+    lDash, lStart: Integer;
+  begin
+    lText := Trim(AText);
+    if Pos('185-', UpperCase(lText)) = 1 then Delete(lText, 1, 4);
+    lStart := Pos('{', lText);
+    if lStart > 0 then Delete(lText, lStart, 1);
+    if (lText <> '') and (lText[Length(lText)] = '}') then
+      Delete(lText, Length(lText), 1);
+    lDash := Pos('-', lText);
+    if lDash <= 0 then Exit(False);
+    lTail := Copy(lText, lDash + 1, MaxInt);
+    Result := TryStrToInt(Copy(lText, 1, lDash - 1), ANode) and
+      TryStrToInt(lTail, AChannel);
+  end;
+begin
+  lLeftNumeric := SplitAddress(ALeft, lLeftNode, lLeftChannel);
+  lRightNumeric := SplitAddress(ARight, lRightNode, lRightChannel);
+  if lLeftNumeric and lRightNumeric then
+  begin
+    Result := CompareValue(lLeftNode, lRightNode);
+    if Result = 0 then Result := CompareValue(lLeftChannel, lRightChannel);
+  end
+  else if lLeftNumeric then Result := -1
+  else if lRightNumeric then Result := 1
+  else Result := CompareText(ALeft, ARight);
+end;
+
+function TRecorderTagRegistry.CompareDisplayTags(ATagA, ATagB: TRecorderTag): Integer;
+var
+  lGroupA, lGroupB: string;
+begin
+  case fDisplaySortField of
+    rtsName: Result := CompareText(ATagA.Name, ATagB.Name);
+    rtsAddress: Result := CompareTagAddress(ATagA.Address, ATagB.Address);
+    rtsModuleType: Result := CompareText(ATagA.ModuleType, ATagB.ModuleType);
+    rtsFrequency: Result := CompareValue(ATagA.PollFrequencyHz, ATagB.PollFrequencyHz);
+    rtsUnit: Result := CompareText(ATagA.UnitName, ATagB.UnitName);
+    rtsGroup:
+      begin
+        lGroupA := Trim(ATagA.GroupPath);
+        lGroupB := Trim(ATagB.GroupPath);
+        if lGroupA = '' then lGroupA := CRecorderDefaultTagGroupPath;
+        if lGroupB = '' then lGroupB := CRecorderDefaultTagGroupPath;
+        Result := CompareText(lGroupA, lGroupB);
+      end;
+    rtsDescription: Result := CompareText(ATagA.Description, ATagB.Description);
+    rtsId: Result := CompareValue(ATagA.Id, ATagB.Id);
+  else Result := 0;
+  end;
+  if Result = 0 then Result := CompareTagAddress(ATagA.Address, ATagB.Address);
+  if Result = 0 then Result := CompareText(ATagA.Name, ATagB.Name);
+  if Result = 0 then Result := CompareValue(ATagA.Id, ATagB.Id);
+  if not fDisplaySortAscending then Result := -Result;
+end;
+
+function CompareDisplayTagPointers(AItemA, AItemB: Pointer): Integer;
+begin
+  Result := TRecorderTag(AItemA).OwnerRegistry.CompareDisplayTags(
+    TRecorderTag(AItemA), TRecorderTag(AItemB));
+end;
+
+procedure TRecorderTagRegistry.SetDisplaySort(AField: TRecorderTagSortField;
+  AAscending: Boolean);
+begin
+  if (fDisplaySortField = AField) and (fDisplaySortAscending = AAscending) then Exit;
+  fDisplaySortField := AField;
+  fDisplaySortAscending := AAscending;
+  Inc(fStructureRevision);
+end;
+
+procedure TRecorderTagRegistry.GetDisplayTags(ATags: TList);
+begin
+  ATags.Assign(fTags);
+  if fDisplaySortField <> rtsNone then ATags.Sort(@CompareDisplayTagPointers);
+end;
+
+procedure TRecorderTag.BindSourceResolver(AResolver: TRecorderTagSourceResolver);
+begin
+  fSourceResolver := AResolver;
+end;
+
+function TRecorderTag.GetSource: IInterface;
+begin
+  Result := nil;
+  if Assigned(fSourceResolver) then Result := fSourceResolver(SourceId);
+end;
+
+function TRecorderTag.GetLastScale: TRecorderCalibration;
+var
+  I: Integer;
+begin
+  Result := nil;
+  if (fRegistry = nil) or not ChannelCalibrationEnabled then Exit;
+  for I := CalibrationNames.Count - 1 downto 0 do
+    if RecorderCalibrationStepEnabled(CalibrationNames, I) then
+    begin
+      Result := fRegistry.FindCalibrationByName(CalibrationNames[I]);
+      if Result <> nil then Exit;
+    end;
+end;
+
+function TRecorderTag.GetUnits: string;
+var
+  lScale: TRecorderCalibration;
+  lSource: IRecorderDataSource;
+  lFactor: Double;
+  lInfo: TRecorderUnitInfo;
+begin
+  lScale := GetLastScale;
+  if lScale <> nil then Result := lScale.GetUnits
+  else if Supports(GetSource, IRecorderDataSource, lSource) then Result := lSource.GetUnits(Self)
+  else if (fRegistry <> nil) and fRegistry.TryGetTagAutoUnit(Self, Result) then
+  begin
+  end
+  else Result := SourceUnitName;
+  if Trim(Result) = '' then Result := 'б.р.';
+  if not AutoUnit and (Trim(fUnitName) <> '') and
+    (SameText(Result, fUnitName) or
+     RecorderUnitManager.TryGetConversionFactor(Result, fUnitName, lFactor)) then
+    Result := fUnitName;
+  if RecorderUnitManager.TryGetUnitInfo(Result, lInfo) and
+    SameText(lInfo.QuantityId, 'dimensionless') then Result := 'б.р.';
+end;
+
+procedure TRecorderTag.AddCalibrationWarning(const AText: string);
+begin
+  if (AText = '') or (Pos(AText, fCalibrationWarning) > 0) then Exit;
+  if fCalibrationWarning <> '' then fCalibrationWarning := fCalibrationWarning + '; ';
+  fCalibrationWarning := fCalibrationWarning + AText;
+end;
+
+procedure TRecorderTag.ClearCalibrationWarning;
+begin
+  fCalibrationWarning := '';
+end;
+
+procedure TRecorderTagRegistry.ConfigureTagSources(AResolver: TRecorderTagSourceResolver;
+  AOwner: TObject);
+var
+  I: Integer;
+begin
+  { An old manager must not detach bindings installed by a replacement manager. }
+  if (not Assigned(AResolver)) and (AOwner <> nil) and
+    (TMethod(fTagSourceResolver).Data <> Pointer(AOwner)) then Exit;
+  fTagSourceResolver := AResolver;
+  for I := 0 to fTags.Count - 1 do GetTag(I).BindSourceResolver(AResolver);
+end;
+
+function TRecorderTag.PrepareUnitRequest(const AValue: string): TUnitRequest;
+var
+  lDataSource: IRecorderDataSource;
+  lNames: TStringList;
+  lSourceRequest: Boolean;
+  lResolvedSource: IInterface;
+  lOutput: string;
+  lInfo: TRecorderUnitInfo;
+  lFactor: Double;
+  I: Integer;
+begin
+  { One selection policy for preflight and commit. This only reads metadata;
+    datasource validation/setters perform the actual device-specific work. }
+  Result := Default(TUnitRequest);
+  Result.UnitName := Trim(AValue);
+  if RecorderUnitManager.TryGetUnitInfo(Result.UnitName, lInfo) then
+    Result.UnitName := lInfo.Name;
+  if Result.UnitName = '' then Result.UnitName := 'б.р.';
+  lResolvedSource := GetSource;
+  if ChannelCalibrationEnabled then
+    for I := 0 to CalibrationNames.Count - 1 do
+      if RecorderCalibrationStepEnabled(CalibrationNames, I) then
+        Result.ExternalDisplay := True;
+  Result.ExternalDisplay := Result.ExternalDisplay and (fRegistry <> nil);
+  Result.Raw := RecorderUnitManager.TryGetUnitInfo(Result.UnitName, lInfo) and
+    SameText(lInfo.QuantityId, RECORDER_QUANTITY_RAW_CODE);
+  lSourceRequest := not Result.ExternalDisplay or Result.Raw;
+  if Supports(lResolvedSource, IRecorderDataSource, lDataSource) then
+  begin
+    lNames := TStringList.Create;
+    try
+      lDataSource.GetUnitNames(Self, lNames);
+      for I := 0 to lNames.Count - 1 do
+        if SameText(lNames[I], Result.UnitName) or
+          RecorderUnitManager.TryGetConversionFactor(lNames[I], Result.UnitName, lFactor) then
+          lSourceRequest := True;
+    finally
+      lNames.Free;
+    end;
+    if lSourceRequest then
+    begin
+      Result.Source := lDataSource;
+      Exit;
+    end;
+  end;
+  if Result.ExternalDisplay then
+  begin
+    if not fRegistry.TryGetTagAutoUnit(Self, lOutput) or
+      (not SameText(lOutput, Result.UnitName) and
+       not RecorderUnitManager.TryGetConversionFactor(lOutput, Result.UnitName, lFactor)) then
+      raise ERecorderTagError.Create('Incompatible display unit: ' + Result.UnitName);
+  end;
+  if Result.ExternalDisplay or Result.Raw or (fRegistry = nil) then Exit;
+  if (SourceHardwareOutputUnitName <> '') and
+    not SameText(SourceHardwareOutputUnitName, Result.UnitName) and
+    not RecorderUnitManager.TryGetConversionFactor(
+      SourceHardwareOutputUnitName, Result.UnitName, lFactor) then
+    raise ERecorderTagError.Create('Datasource cannot select unit: ' + Result.UnitName);
+end;
+
+procedure TRecorderTag.ValidateUnits(const AValue: string);
+var
+  lRequest: TUnitRequest;
+  lSource: IRecorderDataSource;
+  lError: string;
+begin
+  lRequest := PrepareUnitRequest(AValue);
+  if not Supports(lRequest.Source, IRecorderDataSource, lSource) then Exit;
+  if not lSource.CanSetUnits(Self, lRequest.UnitName, lError) then
+    raise ERecorderTagError.Create(lError);
+end;
+
+procedure TRecorderTag.SetUnits(const AValue: string);
+var
+  lRequest: TUnitRequest;
+  lSource: IRecorderDataSource;
+  lError: string;
+begin
+  lRequest := PrepareUnitRequest(AValue);
+  if Supports(lRequest.Source, IRecorderDataSource, lSource) then
+  begin
+    if not lSource.SetUnits(Self, lRequest.UnitName, lError) then
+      raise ERecorderTagError.Create(lError);
+    lSource.UpdateScales(Self);
+    Exit;
+  end;
+  if not lRequest.ExternalDisplay and lRequest.Raw then
+    HardwareCalibrationEnabled := False;
+  AutoUnit := False;
+  if not SameText(UnitName, lRequest.UnitName) then SetUnitName(lRequest.UnitName);
+end;
+
 procedure TRecorderTag.SetUnitName(const AValue: string);
 begin
   fUnitName := Trim(AValue);
   { При активной ГХ UnitName является единицей результата, а исходная единица
     остаётся самостоятельной. Иначе ручной выбор V/mV затирал бы "код" и
     аппаратный масштаб начинал собираться от неверного входа. }
-  if not ((fHardwareCalibrationEnabled and
+  if not ((fSourceHardwareOutputUnitName <> '') or (fHardwareCalibrationEnabled and
     (Trim(fHardwareCalibrationName) <> '')) or
     (fChannelCalibrationEnabled and (fCalibrationNames <> nil) and
     (fCalibrationNames.Count > 0))) then
-    fSourceUnitName := fUnitName;
+    SetSourceUnitName(fUnitName);
   InvalidateCalibrationScale;
 end;
 
 procedure TRecorderTag.SetSourceUnitName(const AValue: string);
+var
+  lInfo: TRecorderUnitInfo;
 begin
   fSourceUnitName := Trim(AValue);
+  fSourceInputIsRaw := RecorderUnitManager.TryGetUnitInfo(fSourceUnitName, lInfo)
+    and SameText(lInfo.QuantityId, RECORDER_QUANTITY_RAW_CODE);
+  InvalidateCalibrationScale;
+end;
+
+procedure TRecorderTag.SetSourceHardwareOutputUnitName(const AValue: string);
+begin
+  if fSourceHardwareOutputUnitName = Trim(AValue) then Exit;
+  fSourceHardwareOutputUnitName := Trim(AValue);
   InvalidateCalibrationScale;
 end;
 
@@ -2334,6 +2752,7 @@ procedure TRecorderTag.SetHardwareCalibrationEnabled(AValue: Boolean);
 begin
   if fHardwareCalibrationEnabled = AValue then
     Exit;
+  ClearRawValue;
   fHardwareCalibrationEnabled := AValue;
   InvalidateCalibrationScale;
 end;
@@ -2594,45 +3013,29 @@ end;
 function TRecorderTagRegistry.TryGetTagAutoUnit(ATag: TRecorderTag;
   out AUnitName: string): Boolean;
 var
-  I: Integer;
   lCalibration: TRecorderCalibration;
-  lHardwareCalibration: TRecorderCalibration;
 begin
   AUnitName := '';
   Result := False;
   if ATag = nil then
     Exit;
-
-  lHardwareCalibration := FindTagHardwareCalibration(ATag);
-
-  if ATag.ChannelCalibrationEnabled and (ATag.CalibrationNames <> nil) then
-    for I := ATag.CalibrationNames.Count - 1 downto 0 do
-    begin
-      if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
-        Continue;
-      lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
-      if (lCalibration <> nil) and (Trim(lCalibration.UnitOut) <> '') then
-      begin
-        AUnitName := Trim(lCalibration.UnitOut);
-        Exit(True);
-      end;
-    end;
-
-  { MIC-185 выполняет аппаратную ГХ и последующий пересчёт мВ -> Ом/мкстрн
-    внутри datasource. Поэтому при отсутствии канальной ГХ результатом
-    аппаратной части для пользователя является единица источника, а не
-    промежуточный UnitOut аппаратной ГХ. }
-  if (Pos('MIC-185:', ATag.SourceId) = 1) and
-    (Trim(ATag.SourceUnitName) <> '') then
+  lCalibration := ATag.GetLastScale;
+  if (lCalibration <> nil) and (Trim(lCalibration.UnitOut) <> '') then
   begin
-    AUnitName := Trim(ATag.SourceUnitName);
+    AUnitName := lCalibration.GetUnits;
     Exit(True);
   end;
-
-  if (lHardwareCalibration <> nil) and
-    (Trim(lHardwareCalibration.UnitOut) <> '') then
+  if ATag.SourceHardwareOutputUnitName <> '' then
   begin
-    AUnitName := Trim(lHardwareCalibration.UnitOut);
+    if ATag.HardwareCalibrationEnabled then
+      AUnitName := ATag.SourceHardwareOutputUnitName
+    else AUnitName := 'code';
+    Exit(True);
+  end;
+  lCalibration := FindTagHardwareCalibration(ATag);
+  if (lCalibration <> nil) and (Trim(lCalibration.UnitOut) <> '') then
+  begin
+    AUnitName := lCalibration.GetUnits;
     Result := True;
   end;
 end;
@@ -2649,6 +3052,121 @@ begin
   else
     ATag.fUnitName := Trim(ATag.fSourceUnitName);
   ATag.InvalidateCalibrationScale;
+end;
+
+procedure TRecorderTagRegistry.RebuildSourceScales(ATag: TRecorderTag);
+var
+  I: Integer;
+  lCalibration: TRecorderCalibration;
+  lUnit, lResultUnit: string;
+  lFactor: Double;
+begin
+  { Cold preparation only. Runtime follows direct calibration pointers and
+    numeric conversion factors; no source/provider or calibration-name lookup. }
+  ATag.fSourceStepCount := 0;
+  ATag.fSourceTransformError := '';
+  ATag.ClearCalibrationWarning;
+  ATag.fResultScale := 1;
+  ATag.fSourceFinalScale := 1;
+  ATag.fCalibrationScaleLinear := True;
+  if ATag.HardwareCalibrationEnabled then
+    lUnit := ATag.SourceHardwareOutputUnitName
+  else lUnit := 'code';
+  SetLength(ATag.fSourceSteps, ATag.CalibrationNames.Count);
+  if ATag.ChannelCalibrationEnabled then
+    for I := 0 to ATag.CalibrationNames.Count - 1 do
+    begin
+      if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then Continue;
+      lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
+      if lCalibration = nil then
+      begin
+        ATag.fSourceTransformError := 'Calibration not found: ' + ATag.CalibrationNames[I];
+        Break;
+      end;
+      lFactor := 1;
+      if (Trim(lCalibration.UnitIn) <> '') and
+        not SameText(lUnit, lCalibration.UnitIn) and
+        not RecorderUnitManager.TryGetConversionFactor(lUnit, lCalibration.UnitIn, lFactor) then
+      begin
+        ATag.AddCalibrationWarning('Incompatible calibration units: ' +
+          lUnit + ' -> ' + lCalibration.UnitIn);
+        lFactor := 1;
+      end;
+      ATag.fSourceSteps[ATag.fSourceStepCount].Calibration := lCalibration;
+      ATag.fSourceSteps[ATag.fSourceStepCount].InputScale := lFactor;
+      Inc(ATag.fSourceStepCount);
+      if lCalibration.Kind = rckScale then
+        ATag.fResultScale := ATag.fResultScale * lFactor * lCalibration.Scale
+      else ATag.fCalibrationScaleLinear := False;
+      if Trim(lCalibration.UnitOut) <> '' then lUnit := Trim(lCalibration.UnitOut);
+    end;
+  lResultUnit := lUnit;
+  if ATag.AutoUnit then
+    ATag.fUnitName := lResultUnit
+  else if (Trim(ATag.UnitName) <> '') and not SameText(lResultUnit, ATag.UnitName) then
+  begin
+    lFactor := 1;
+    if RecorderUnitManager.TryGetConversionFactor(lResultUnit, ATag.UnitName, lFactor) then
+    begin
+      ATag.fSourceFinalScale := lFactor;
+      ATag.fResultScale := ATag.fResultScale * lFactor;
+    end
+    else
+    begin
+      ATag.AddCalibrationWarning('Incompatible output units: ' + lResultUnit +
+        ' -> ' + ATag.UnitName);
+      ATag.fUnitName := lResultUnit;
+    end;
+  end;
+  ATag.fCalibrationScaleBuilt := True;
+end;
+
+procedure TRecorderTagRegistry.ValidateTagSourceOutput(ATag: TRecorderTag);
+begin
+  if ATag = nil then Exit;
+  RebuildScales(ATag);
+  if ATag.fSourceTransformError <> '' then
+    raise ERecorderTagError.Create(ATag.fSourceTransformError);
+end;
+
+function TRecorderTagRegistry.TransformTagSourceOutput(ATag: TRecorderTag;
+  AValue: Double): Double;
+var
+  I: Integer;
+begin
+  if ATag = nil then Exit(AValue);
+  RebuildScales(ATag);
+  if ATag.SourceHardwareOutputUnitName = '' then
+    raise ERecorderTagError.Create('Source hardware-stage boundary is not configured');
+  if ATag.fSourceTransformError <> '' then
+    raise ERecorderTagError.Create(ATag.fSourceTransformError);
+  if ATag.fCalibrationScaleLinear and not CalibrationCaptureActive(ATag) then
+    Exit(AValue * ATag.fResultScale);
+  Result := AValue;
+  CaptureCalibrationValue(ATag, Result);
+  for I := 0 to ATag.fSourceStepCount - 1 do
+    Result := ATag.fSourceSteps[I].Calibration.Transform(
+      Result * ATag.fSourceSteps[I].InputScale);
+  Result := Result * ATag.fSourceFinalScale;
+end;
+
+procedure TRecorderTagRegistry.TransformTagSourceBlock(ATag: TRecorderTag;
+  var AValues: TRecorderDoubleArray; ACount: Integer);
+var
+  I: Integer;
+begin
+  if (ATag = nil) or (ACount < 0) or (ACount > Length(AValues)) then
+    raise ERecorderTagError.Create('Invalid source output block');
+  RebuildScales(ATag);
+  if ATag.SourceHardwareOutputUnitName = '' then
+    raise ERecorderTagError.Create('Source hardware-stage boundary is not configured');
+  if ATag.fSourceTransformError <> '' then
+    raise ERecorderTagError.Create(ATag.fSourceTransformError);
+  if ATag.fCalibrationScaleLinear and not CalibrationCaptureActive(ATag) then
+    for I := 0 to ACount - 1 do AValues[I] := AValues[I] * ATag.fResultScale
+  else
+    for I := 0 to ACount - 1 do
+      AValues[I] := TransformTagSourceOutput(ATag, AValues[I]);
 end;
 
 procedure TRecorderTagRegistry.RebuildScales(ATag: TRecorderTag);
@@ -2671,11 +3189,30 @@ var
       Exit;
     Result := RecorderUnitManager.TryGetConversionFactor(lCurrentUnit,
       ACalibration.UnitIn, AFactor);
+    if not Result then
+    begin
+      ATag.AddCalibrationWarning('Incompatible calibration units: ' +
+        lCurrentUnit + ' -> ' + ACalibration.UnitIn);
+      AFactor := 1;
+      Result := True;
+    end;
   end;
 begin
   if (ATag = nil) or ATag.fCalibrationScaleBuilt then
     Exit;
+  if ATag.fSourceHardwareOutputUnitName <> '' then
+  begin
+    RebuildSourceScales(ATag);
+    Exit;
+  end;
   ATag.fHardwareScale := 1.0;
+  ATag.ClearCalibrationWarning;
+  ATag.fSourceTransformError := '';
+  ATag.fSourceStepCount := 0;
+  ATag.fSourceFinalScale := 1;
+  ATag.fPreparedHardwareCalibration := nil;
+  ATag.fPreparedHardwareInputScale := 1;
+  SetLength(ATag.fSourceSteps, ATag.CalibrationNames.Count);
   ATag.fResultScale := 1.0;
   ATag.fCalibrationScaleLinear := True;
   lCurrentUnit := Trim(ATag.fSourceUnitName);
@@ -2683,17 +3220,22 @@ begin
     lCurrentUnit := Trim(ATag.fUnitName);
 
   lCalibration := FindTagHardwareCalibration(ATag);
+  if (lCalibration = nil) and ATag.HardwareCalibrationEnabled and
+    (Trim(ATag.HardwareCalibrationName) <> '') then
+    ATag.fSourceTransformError := 'Calibration not found: ' + ATag.HardwareCalibrationName;
   if lCalibration <> nil then
   begin
-    if (lCalibration.Kind <> rckScale) or
-      not TryInputConversion(lCalibration, lConversion) then
+    TryInputConversion(lCalibration, lConversion);
+    ATag.fPreparedHardwareCalibration := lCalibration;
+    ATag.fPreparedHardwareInputScale := lConversion;
+    if lCalibration.Kind <> rckScale then
       ATag.fCalibrationScaleLinear := False
     else
     begin
       ATag.fHardwareScale := lConversion * lCalibration.Scale;
       ATag.fResultScale := ATag.fResultScale * ATag.fHardwareScale;
-      lCurrentUnit := Trim(lCalibration.UnitOut);
     end;
+    if Trim(lCalibration.UnitOut) <> '' then lCurrentUnit := Trim(lCalibration.UnitOut);
   end;
 
   if ATag.ChannelCalibrationEnabled and (ATag.CalibrationNames <> nil) then
@@ -2703,16 +3245,17 @@ begin
         Continue;
       lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
       if lCalibration = nil then
-        Continue;
-      if (lCalibration.Kind <> rckScale) or
-        not TryInputConversion(lCalibration, lConversion) then
       begin
-        ATag.fCalibrationScaleLinear := False;
+        ATag.fSourceTransformError := 'Calibration not found: ' + ATag.CalibrationNames[I];
         Break;
       end;
-      ATag.fResultScale := ATag.fResultScale * lConversion *
-        lCalibration.Scale;
-      lCurrentUnit := Trim(lCalibration.UnitOut);
+      TryInputConversion(lCalibration, lConversion);
+      ATag.fSourceSteps[ATag.fSourceStepCount].Calibration := lCalibration;
+      ATag.fSourceSteps[ATag.fSourceStepCount].InputScale := lConversion;
+      Inc(ATag.fSourceStepCount);
+      if lCalibration.Kind <> rckScale then ATag.fCalibrationScaleLinear := False
+      else ATag.fResultScale := ATag.fResultScale * lConversion * lCalibration.Scale;
+      if Trim(lCalibration.UnitOut) <> '' then lCurrentUnit := Trim(lCalibration.UnitOut);
     end;
 
   { AutoUnit управляет только выбранной единицей результата. Сама цепочка ГХ
@@ -2726,15 +3269,22 @@ begin
     lResultUnit := lAutoUnit;
   if ATag.AutoUnit then
     ATag.fUnitName := lResultUnit
-  else if ATag.fCalibrationScaleLinear and (lResultUnit <> '') and
+  else if (lResultUnit <> '') and
     (Trim(ATag.fUnitName) <> '') and
     not SameText(lResultUnit, Trim(ATag.fUnitName)) then
   begin
     if RecorderUnitManager.TryGetConversionFactor(lResultUnit,
       ATag.fUnitName, lConversion) then
-      ATag.fResultScale := ATag.fResultScale * lConversion
+    begin
+      ATag.fSourceFinalScale := lConversion;
+      ATag.fResultScale := ATag.fResultScale * lConversion;
+    end
     else
-      ATag.fCalibrationScaleLinear := False;
+    begin
+      ATag.AddCalibrationWarning('Incompatible output units: ' + lResultUnit +
+        ' -> ' + ATag.UnitName);
+      ATag.fUnitName := lResultUnit;
+    end;
   end;
   ATag.fCalibrationScaleBuilt := True;
 end;
@@ -2768,11 +3318,20 @@ begin
   if ATag = nil then
     Exit;
   RebuildScales(ATag);
-  if ATag.fCalibrationScaleLinear then
+  if ATag.fSourceTransformError <> '' then
+    raise ERecorderTagError.Create(ATag.fSourceTransformError);
+  if ATag.fCalibrationScaleLinear and (ATag.SourceHardwareOutputUnitName = '') then
     Exit(AValue * ATag.fHardwareScale);
-  lCalibration := FindTagHardwareCalibration(ATag);
-  if lCalibration <> nil then
-    Result := lCalibration.Transform(Result);
+  if ATag.SourceHardwareOutputUnitName <> '' then
+  begin
+    { Source-owned hardware stage is not part of the generic prepared plan. }
+    lCalibration := FindTagHardwareCalibration(ATag);
+    if lCalibration <> nil then Result := lCalibration.Transform(Result);
+    Exit(Result);
+  end;
+  if ATag.fPreparedHardwareCalibration <> nil then
+    Result := ATag.fPreparedHardwareCalibration.Transform(
+      Result * ATag.fPreparedHardwareInputScale);
 end;
 
 function TRecorderTagRegistry.TransformTagThermocoupleValue(ATag: TRecorderTag;
@@ -2824,68 +3383,31 @@ end;
 function TRecorderTagRegistry.TransformTagValue(ATag: TRecorderTag; AValue: Double): Double;
 var
   I: Integer;
-  lCalibration: TRecorderCalibration;
-  lHardwareCalibration: TRecorderCalibration;
-  lConversion: Double;
-  lCurrentUnit: string;
-  lOutputUnit: string;
 begin
   if ATag <> nil then
   begin
     RebuildScales(ATag);
+    if ATag.fSourceTransformError <> '' then
+      raise ERecorderTagError.Create(ATag.fSourceTransformError);
+    if ATag.SourceHardwareOutputUnitName <> '' then
+      Exit(TransformTagSourceOutput(ATag, AValue));
     if ATag.fCalibrationScaleLinear and not CalibrationCaptureActive(ATag) then
       Exit(AValue * ATag.fResultScale);
   end;
   if ATag = nil then
     Exit(AValue);
   Result := AValue;
-  lCurrentUnit := Trim(ATag.SourceUnitName);
-  if lCurrentUnit = '' then
-    lCurrentUnit := Trim(ATag.UnitName);
-
-  lHardwareCalibration := FindTagHardwareCalibration(ATag);
-  if lHardwareCalibration <> nil then
-  begin
-    if (lCurrentUnit <> '') and
-      (Trim(lHardwareCalibration.UnitIn) <> '') and
-      not SameText(lCurrentUnit, Trim(lHardwareCalibration.UnitIn)) and
-      RecorderUnitManager.TryGetConversionFactor(lCurrentUnit,
-        lHardwareCalibration.UnitIn, lConversion) then
-      Result := Result * lConversion;
-    Result := lHardwareCalibration.Transform(Result);
-    lCurrentUnit := Trim(lHardwareCalibration.UnitOut);
-  end;
+  if ATag.fPreparedHardwareCalibration <> nil then
+    Result := ATag.fPreparedHardwareCalibration.Transform(
+      Result * ATag.fPreparedHardwareInputScale);
   { Интерактивная градуировка видит только вход канальной цепочки. Обычный
     runtime не платит за снимки и вычисления; активен лишь короткий append в
     заранее выделенный буфер одной выбранной сессии. }
   CaptureCalibrationValue(ATag, Result);
-  if ATag.ChannelCalibrationEnabled and (ATag.CalibrationNames <> nil) then
-    for I := 0 to ATag.CalibrationNames.Count - 1 do
-    begin
-      if not RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
-        Continue;
-      lCalibration := FindCalibrationByName(ATag.CalibrationNames[I]);
-      if lCalibration <> nil then
-      begin
-        if (lCurrentUnit <> '') and (Trim(lCalibration.UnitIn) <> '') and
-          not SameText(lCurrentUnit, Trim(lCalibration.UnitIn)) and
-          RecorderUnitManager.TryGetConversionFactor(lCurrentUnit,
-            lCalibration.UnitIn, lConversion) then
-          Result := Result * lConversion;
-        Result := lCalibration.Transform(Result);
-        lCurrentUnit := Trim(lCalibration.UnitOut);
-      end;
-    end;
-  { Нелинейная цепочка не имеет ResultScale, поэтому совместимый переход от
-    UnitOut последней включённой ГХ к ручной единице выполняется один раз после
-    всех Transform. AutoUnit уже показывает сам UnitOut и перехода не требует. }
-  lOutputUnit := lCurrentUnit;
-  if (not ATag.AutoUnit) and (lOutputUnit <> '') and
-    (Trim(ATag.UnitName) <> '') and
-    not SameText(lOutputUnit, Trim(ATag.UnitName)) and
-    RecorderUnitManager.TryGetConversionFactor(lOutputUnit, ATag.UnitName,
-      lConversion) then
-    Result := Result * lConversion;
+  for I := 0 to ATag.fSourceStepCount - 1 do
+    Result := ATag.fSourceSteps[I].Calibration.Transform(
+      Result * ATag.fSourceSteps[I].InputScale);
+  Result := Result * ATag.fSourceFinalScale;
 end;
 
 function TRecorderTagRegistry.CalibrationCaptureActive(
@@ -3183,6 +3705,8 @@ begin
     Exit;
 
   ATimeSec := ResolvePublishTime(ATimeSec);
+  if (ATag.SourceHardwareOutputUnitName = '') and ATag.fSourceInputIsRaw then
+    ATag.StageRawValue(ATimeSec, AValue);
   lValue := TransformTagValue(ATag, AValue);
   ATag.AddSample(ATimeSec, lValue);
   MarkRuntimeDataUpdated(ATag, ATimeSec);
@@ -3260,6 +3784,8 @@ begin
     ATag.AddSamples(ATimes, AValues, ACount)
   else
   begin
+    if (ATag.SourceHardwareOutputUnitName = '') and ATag.fSourceInputIsRaw then
+      ATag.StageRawValue(ATimes[ACount - 1], AValues[ACount - 1]);
     SetLength(lValues, ACount);
     for I := 0 to ACount - 1 do
       lValues[I] := TransformTagValue(ATag, AValues[I]);
@@ -3780,6 +4306,11 @@ begin
   end;
   fUnitOut := Trim(AUnitName);
   Result := True;
+end;
+
+function TRecorderCalibration.GetUnits: string;
+begin
+  Result := UnitOut;
 end;
 
 function TRecorderCalibration.Transform(AValue: Double): Double;

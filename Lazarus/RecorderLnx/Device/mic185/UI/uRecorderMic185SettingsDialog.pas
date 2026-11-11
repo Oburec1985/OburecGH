@@ -61,6 +61,7 @@ type
     function FindTagBySourceAddress(const ASourceId,
       AAddress: string): TRecorderTag;
     procedure FitGridColumns;
+    procedure UpdateHardwareCalibrationCell(ARow: Integer);
     function GridRowAddress(ARow: Integer): string;
     function GridRowDefaultName(ARow: Integer): string;
     procedure GetSourceRowSettings(ARow: Integer;
@@ -151,7 +152,7 @@ begin
     fChannelSettings);
   Mic185DefaultModuleProgramSettings(fModuleSettings);
   fPowerMaCode := CMic185DefaultPowerMaCode;
-  gridChannels.ColCount := 10;
+  gridChannels.ColCount := 11;
   gridChannels.FixedRows := 1;
   gridChannels.RowCount := 71;
   gridChannels.Cells[0, 0] := '№';
@@ -164,6 +165,7 @@ begin
   gridChannels.Cells[7, 0] := 'Тип датчика';
   gridChannels.Cells[8, 0] := 'Канал термо';
   gridChannels.Cells[9, 0] := 'Сост. б-ки';
+  gridChannels.Cells[10, 0] := 'Апп. ГХ';
   FillGrid;
 end;
 
@@ -313,6 +315,7 @@ begin
     lTag := FindTagBySourceAddress(lSourceId, lAddress);
     if lTag <> nil then
       UpdateGridRow(I, lTag);
+    UpdateHardwareCalibrationCell(I);
   end;
   FitGridColumns;
 end;
@@ -354,6 +357,23 @@ begin
     if SameText(fRegistry.Tags[I].SourceId, ASourceId) and
       RecorderMic185SameChannelAddress(fRegistry.Tags[I].Address, AAddress) then
       Exit(fRegistry.Tags[I]);
+end;
+
+procedure TRecorderMic185SettingsForm.UpdateHardwareCalibrationCell(ARow: Integer);
+var
+  lSerial: LongWord;
+  lSettings: TMic185ChannelProgramSettings;
+begin
+  if (ARow < 1) or (ARow >= gridChannels.RowCount) then Exit;
+  gridChannels.Cells[10, ARow] := '—';
+  if (ARow > CMic185ChannelCountMax) or
+    not TryStrToDWord(Trim(edSerial.Text), lSerial) or (lSerial = 0) then Exit;
+  GetSourceRowSettings(ARow, lSettings);
+  if RecorderMic185HasHardwareCalibration(fRegistry, lSerial,
+    lSettings.MeasRangeIndex, ARow) then
+    gridChannels.Cells[10, ARow] := 'Есть'
+  else
+    gridChannels.Cells[10, ARow] := 'Нет';
 end;
 
 procedure TRecorderMic185SettingsForm.FitGridColumns;
@@ -560,6 +580,7 @@ begin
     gridChannels.Cells[7, ARow] := '-';
   end;
   gridChannels.Cells[9, ARow] := 'связан';
+  UpdateHardwareCalibrationCell(ARow);
 end;
 
 function TRecorderMic185SettingsForm.EnsureTagForGridRow(

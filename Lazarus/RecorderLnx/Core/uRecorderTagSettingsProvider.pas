@@ -3,10 +3,11 @@ unit uRecorderTagSettingsProvider;
 {
   UI-neutral extension point for device-specific tag settings.
 
-  The tag settings dialog resolves a provider for a tag and delegates device
-  rules to it. A datasource may implement IRecorderTagSettingsProvider itself;
-  providers which do not belong to a live datasource are exposed by a
-  registered resolver. Device names and source-id formats remain outside UI.
+  A datasource exposes its own settings through these interfaces, including
+  while stopped. Tag.GetSource is the preferred owner lookup. Registered
+  providers remain a compatibility path for sources not yet migrated; MIC140
+  and MIC185 have no separate settings-provider objects. Device names and
+  source-id formats remain outside the common UI and tag selection policy.
 }
 
 {$mode objfpc}{$H+}
@@ -24,7 +25,6 @@ type
   { Values displayed by the common dialog. Empty strings mean that the common
     tag/calibration model should supply the value. }
   TRecorderTagSettingsState = record
-    FrequencyEditable: Boolean;
     HardwareSourceConfigurable: Boolean;
     HardwareCalibrationDownloadable: Boolean;
     ChannelCalibrationSelectable: Boolean;
@@ -32,7 +32,6 @@ type
     OutputUnitName: string;
     SourceUnitName: string;
     FrequencyNames: TRecorderStringArray;
-    UnitNames: TRecorderStringArray;
   end;
 
   { Common dialog values offered to a provider before commit. A provider may
@@ -121,7 +120,6 @@ var
 
 procedure RecorderInitTagSettingsState(out AState: TRecorderTagSettingsState);
 begin
-  AState.FrequencyEditable := True;
   AState.HardwareSourceConfigurable := False;
   AState.HardwareCalibrationDownloadable := False;
   AState.ChannelCalibrationSelectable := True;
@@ -129,7 +127,6 @@ begin
   AState.OutputUnitName := '';
   AState.SourceUnitName := '';
   SetLength(AState.FrequencyNames, 0);
-  SetLength(AState.UnitNames, 0);
 end;
 
 procedure RecorderInitTagSettingsDraft(ATag: TRecorderTag;
@@ -252,15 +249,18 @@ var
   lResolver: IRecorderTagSettingsProviderResolver;
   lResolvers: TInterfaceList;
   lSource: IRecorderDataSource;
+  lTagSource: IInterface;
 begin
   AProvider := nil;
   if ATag = nil then
     Exit(False);
 
   lSource := nil;
-  if ADataSources <> nil then
+  lTagSource := ATag.GetSource;
+  Supports(lTagSource, IRecorderDataSource, lSource);
+  if (lSource = nil) and (ADataSources <> nil) then
     lSource := ADataSources.FindSource(ATag.SourceId);
-  if (lSource <> nil) and
+  if Supports(lTagSource, IRecorderTagSettingsProvider, AProvider) or
     Supports(lSource, IRecorderTagSettingsProvider, AProvider) then
     Exit(True);
 

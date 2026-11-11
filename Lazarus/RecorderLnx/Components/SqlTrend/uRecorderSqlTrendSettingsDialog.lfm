@@ -73,6 +73,17 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
     Caption = 'Импорт авто отображений'
     OnClick = btnImportAutoDisplaysClick
   end
+  object cbOnlyRecorderTags: TCheckBox
+    Left = 1028
+    Height = 23
+    Top = 45
+    Width = 144
+    Anchors = [akTop, akRight]
+    Caption = 'Только теги Recorder'
+    Checked = True
+    State = cbChecked
+    TabOrder = 0
+  end
   object btnAutoAxes: TButton
     Left = 908
     Height = 28
@@ -168,13 +179,13 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
       Left = 380
       Height = 23
       Top = 278
-      Width = 100
+      Width = 132
       Anchors = [akLeft, akBottom]
       Caption = 'Показывать'
       OnChange = LineControlsExit
     end
     object btnColor: TButton
-      Left = 544
+      Left = 568
       Height = 28
       Top = 274
       Width = 140
@@ -183,7 +194,7 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
       OnClick = btnColorClick
     end
     object pnlLineColor: TPanel
-      Left = 500
+      Left = 524
       Height = 28
       Top = 274
       Width = 36
@@ -195,7 +206,7 @@ object RecorderSqlTrendSettingsDialog: TRecorderSqlTrendSettingsDialog
     end
     object lblDbRange: TLabel
       Left = 380
-      Top = 320
+      Top = 344
       Width = 620
       Anchors = [akLeft, akRight, akBottom]
       Caption = 'Нажмите «Прочитать каналы из БД», чтобы проверить диапазон данных'

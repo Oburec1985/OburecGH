@@ -10,6 +10,16 @@ unit uRecorderMic140DataSource;
   ReadBlock. There is no separate raw-block acquisition thread here anymore -
   ReadBlock already returns a decommutated TRecorderDeviceSampleBlock.
   Parsing helpers live in Device/MIC140/uRecorderMic140Utils (2026-06).
+
+  Tag unit/settings capabilities are implemented by this datasource itself.
+  ReadState is a cold model query; constructors/configuration do not connect
+  hardware. No MIC-140 provider adapter or source-type resolver is involved.
+
+  Hardware lifecycle boundary: PrepareHardware/Reconfigure perform device
+  operations only; they must not validate tag unit/GX chains or classify their
+  failures as device faults. Start builds the complete runtime transformation
+  cache before starting sample acquisition. Runtime edits use the separate
+  validated RefreshRuntimeTransforms transaction.
 }
 
 {$mode objfpc}{$H+}
@@ -21,7 +31,7 @@ uses
   uRecorderDataSources, uRecorderDeviceInterfaces, uRecorderAcquisitionTypes,
   uRecorderMic140Utils, uRecorderMic140StreamTypes,
   uRecorderMic140DeviceApi,
-  uRecorderTags;
+  uRecorderTags, uRecorderTagSettingsProvider;
 
 const
   MIC140DefaultDiscoverySubnet = '192.168.14.';
@@ -36,8 +46,10 @@ const
   CMic140RangeCount = 3;
 
 type
-  TRecorderMic140DataSource = class(TRecorderDataSourceBase, IRecorderZeroBalanceSupport)
+  TRecorderMic140DataSource = class(TRecorderDataSourceBase,
+    IRecorderZeroBalanceSupport, IRecorderTagSettingsProvider)
   private
+    fTransformLock: TRTLCriticalSection;
     fHardwarePrepared: Boolean;
     fHardwarePrepareAttempted: Boolean;
     { Set once ConfigureDevice succeeds; PrepareHardware programs the device
@@ -100,6 +112,12 @@ type
     fRuntimeAuxTemperature: TMic140AuxTemperatureBlock;
     fLastAuxRevision: QWord;
     fLastPublishedBlockEndTimeSec: Double;
+    function OwnsSettingsTag(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag): Boolean;
+    procedure RefreshRuntimeTransformsLocked;
+    function PrepareUnitModeLocked(ARegistry: TRecorderTagRegistry;
+      ATag: TRecorderTag; const AUnitName: string;
+      out ASettings: TRecorderMic140ChannelSettings;
+      out ARaw: Boolean; out AErrorText: string): Boolean;
     procedure BuildRuntimeCache;
     procedure EnsureRuntimeScratch(ASampleCount, AAuxChannelCount: Integer);
     procedure ResetLogicalBlock;
@@ -107,7 +125,6 @@ type
     function FindTagBySourceAddress(ARegistry: TRecorderTagRegistry;
       const AAddress: string): TRecorderTag;
     function TemperatureChannelSelected(AIndex: Integer): Boolean;
-    function ChannelIndexForTag(ATag: TRecorderTag): Integer;
     function Mic140RawSample(const ABlock: TRecorderDeviceSampleBlock;
       AChannelIndex, ASampleIndex: Integer; ATag: TRecorderTag): Double;
     procedure RebuildTemperatureTagNames;
@@ -128,6 +145,25 @@ type
     procedure DoCreateTags(ARegistry: TRecorderTagRegistry); override;
     procedure DoTick; override;
   public
+    function ReadState(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+      out AState: TRecorderTagSettingsState): Boolean;
+    function NormalizeDraft(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+      var ADraft: TRecorderTagSettingsDraft; out AErrorText: string): Boolean;
+    function ApplyDraft(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+      const ADraft: TRecorderTagSettingsDraft;
+      out AResult: TRecorderTagSettingsApplyResult;
+      out AErrorText: string): Boolean;
+    function DownloadHardwareCalibration(ARegistry: TRecorderTagRegistry;
+      ATag: TRecorderTag; out AResult: TRecorderHardwareCalibrationResult;
+      out AErrorText: string): Boolean;
+    function GetUnits(ATag: TRecorderTag): string; override;
+    procedure GetUnitNames(ATag: TRecorderTag; AUnitNames: TStrings); override;
+    procedure UpdateScales(ATag: TRecorderTag); override;
+    function CanSetUnits(ATag: TRecorderTag;
+      const AUnitName: string; out AErrorText: string): Boolean; override;
+    function SetUnits(ATag: TRecorderTag;
+      const AUnitName: string; out AErrorText: string): Boolean; override;
+    procedure RefreshRuntimeTransforms; override;
     procedure PrepareHardware; override;
     constructor Create(const ASourceId, AHost: string; APort: Word;
       AChannelCount: Integer; APollFrequencyHz: Double; AUpdateTimeMs: Cardinal;
@@ -195,7 +231,7 @@ function RecorderMic140EnsureThermocoupleCalibration(
 implementation
 
 uses
-  Math, Controls, Dialogs, Forms,
+  Math, StrUtils, Controls, Dialogs, Forms, uRecorderUnitManager,
   uRecorderMeraPaths, uRecorderMeraSdbThermocouples, uRecorderSdbStore,
   uRecorderMic140LegacyConstants, uRecorderMic140LegacyTiming,
   uRecorderMic140Thermocouple, uRecorderMic140StreamHelpers,
@@ -644,7 +680,9 @@ end;
 function RecorderMic140ChannelUsesTemperature(
   const ASettings: TRecorderMic140ChannelSettings): Boolean;
 begin
-  Result := Trim(ASettings.ThermocoupleScaleName) <> '';
+  { Compatibility export: OutputMode is the sole policy, not curve presence. }
+  Result := uRecorderMic140DeviceConfig.RecorderMic140ChannelUsesTemperature(
+    ASettings);
 end;
 
 function RecorderMic140ChannelCjcNumber(const ASettings: TRecorderMic140ChannelSettings;
@@ -798,6 +836,7 @@ begin
     TryParseRecorderMic140SourceId(ASourceId, fHost, fPort);
   lSourceId := RecorderMic140SourceId(fHost, fPort);
   inherited Create(lSourceId, 'MIC-140', AUpdateTimeMs);
+  InitCriticalSection(fTransformLock);
   fLastStatusCode := Low(Integer);
   fOutputMode := AOutputMode;
   fPollFrequencyHz := RecorderMic140NormalizeFrequency(APollFrequencyHz);
@@ -1024,6 +1063,10 @@ begin
     if not fRuntimeChannelSettingsValid[I] then
       RecorderMic140InitChannelSettings(fRuntimeChannelSettings[I], I,
         CMic140Mic140SubRev1);
+    RecorderMic140ApplyTagOutputPresentation(fRuntimeChannelTags[I],
+      fRuntimeChannelSettings[I]);
+    if fRuntimeChannelTags[I] <> nil then
+      Registry.ValidateTagSourceOutput(fRuntimeChannelTags[I]);
     { Саму ГХ кэшируем независимо от текущей галочки тега: её можно менять
       во время Preview без пересоздания источника и TCP-сессии. }
     if (fRuntimeChannelTags[I] <> nil) and
@@ -1041,6 +1084,19 @@ begin
         'TC ' + fRuntimeChannelSettings[I].ThermocoupleScaleName)
     else
       fRuntimeThermocoupleCalibrations[I] := nil;
+    if (fRuntimeChannelTags[I] <> nil) and
+      fRuntimeChannelTags[I].HardwareCalibrationEnabled then
+    begin
+      if fRuntimeHardwareCalibrations[I] = nil then
+        raise ERecorderDataSourceError.CreateFmt(
+          'MIC-140 tag %s: hardware calibration was not found',
+          [fRuntimeChannelTags[I].Name]);
+      if fRuntimeTemperatureMode[I] and
+        (fRuntimeThermocoupleCalibrations[I] = nil) then
+        raise ERecorderDataSourceError.CreateFmt(
+          'MIC-140 tag %s: temperature mode requires a thermocouple calibration',
+          [fRuntimeChannelTags[I].Name]);
+    end;
     fRuntimeCjcChannels[I] := RecorderMic140ChannelCjcNumber(
       fRuntimeChannelSettings[I], I, CMic140Mic140SubRev1);
   end;
@@ -1160,7 +1216,378 @@ begin
   fTagNames.Free;
   fTemperatureTagNames.Free;
   fChannelTagNames.Free;
+  DoneCriticalSection(fTransformLock);
   inherited Destroy;
+end;
+
+procedure TRecorderMic140DataSource.RefreshRuntimeTransformsLocked;
+var
+  I, lChannel: Integer;
+  lTag: TRecorderTag;
+  lSettings: TRecorderMic140ChannelSettings;
+  lHardware, lThermocouple: TRecorderCalibration;
+begin
+  if Registry = nil then Exit;
+  { Cold edit boundary, once per edit rather than once per sample. Preserve
+    acquisition buffers and transport; publish cache changes between blocks. }
+    for I := 0 to High(fRuntimeChannelTags) do
+    begin
+      lTag := fRuntimeChannelTags[I];
+      if (lTag = nil) or not RecorderMic140TryGetChannelSettings(Registry,
+        lTag, lChannel, lSettings) then Continue;
+      lHardware := Registry.FindCalibrationByName(lTag.HardwareCalibrationName);
+      lThermocouple := nil;
+      if RecorderMic140ChannelUsesTemperature(lSettings) then
+        lThermocouple := Registry.FindCalibrationByName(
+          'TC ' + lSettings.ThermocoupleScaleName);
+      if lTag.HardwareCalibrationEnabled then
+      begin
+        if lHardware = nil then
+          raise ERecorderDataSourceError.CreateFmt(
+            'MIC-140 tag %s: hardware calibration was not found', [lTag.Name]);
+        if RecorderMic140ChannelUsesTemperature(lSettings) and
+          (lThermocouple = nil) then
+          raise ERecorderDataSourceError.CreateFmt(
+            'MIC-140 tag %s: temperature mode requires a thermocouple calibration',
+            [lTag.Name]);
+      end;
+      RecorderMic140ApplyTagOutputPresentation(lTag, lSettings);
+      Registry.ValidateTagSourceOutput(lTag);
+      fRuntimeChannelSettings[I] := lSettings;
+      fRuntimeChannelSettingsValid[I] := True;
+      fRuntimeHardwareCalibrations[I] := lHardware;
+      fRuntimeThermocoupleCalibrations[I] := lThermocouple;
+      fRuntimeTemperatureMode[I] := RecorderMic140ChannelUsesTemperature(lSettings);
+      fRuntimeCjcChannels[I] := RecorderMic140ChannelCjcNumber(lSettings, I,
+        CMic140Mic140SubRev1);
+    end;
+    fRuntimeThermoCompensation :=
+      RecorderMic140ThermoCompensationForSource(Registry, SourceId);
+end;
+
+procedure TRecorderMic140DataSource.RefreshRuntimeTransforms;
+begin
+  EnterCriticalSection(fTransformLock);
+  try
+    RefreshRuntimeTransformsLocked;
+  finally
+    LeaveCriticalSection(fTransformLock);
+  end;
+end;
+
+function HasExternalCalibration(ATag: TRecorderTag;
+  const ADraft: TRecorderTagSettingsDraft): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  if not ADraft.ChannelCalibrationEnabled then Exit;
+  for I := 0 to ATag.CalibrationNames.Count - 1 do
+    if RecorderCalibrationStepEnabled(ATag.CalibrationNames, I) then
+      Exit(True);
+end;
+
+function TRecorderMic140DataSource.OwnsSettingsTag(ARegistry: TRecorderTagRegistry;
+  ATag: TRecorderTag): Boolean;
+begin
+  Result := (ARegistry <> nil) and (ATag <> nil) and
+    ((Registry = nil) or (Registry = ARegistry)) and
+    SameText(RecorderNormalizeTagSourceId(ATag.SourceId),
+      RecorderNormalizeTagSourceId(SourceId));
+end;
+
+function TRecorderMic140DataSource.GetUnits(ATag: TRecorderTag): string;
+var
+  lChannel: Integer;
+  lSettings: TRecorderMic140ChannelSettings;
+begin
+  if (ATag = nil) or not OwnsSettingsTag(ATag.OwnerRegistry, ATag) or
+    not ParseMic140ChannelNumber(ATag.Address, lChannel) then
+    Exit(inherited GetUnits(ATag));
+  if not ATag.HardwareCalibrationEnabled then Exit('code');
+  if RecorderMic140TryGetChannelSettings(ATag.OwnerRegistry, ATag,
+    lChannel, lSettings) then
+  begin
+    if RecorderMic140ChannelUsesTemperature(lSettings) then Result := 'degC'
+    else Result := 'mV';
+  end
+  else Result := ATag.SourceHardwareOutputUnitName;
+end;
+
+procedure TRecorderMic140DataSource.GetUnitNames(ATag: TRecorderTag;
+  AUnitNames: TStrings);
+var
+  lChannel: Integer;
+begin
+  if AUnitNames = nil then Exit;
+  if (ATag = nil) or not OwnsSettingsTag(ATag.OwnerRegistry, ATag) or
+    not ParseMic140ChannelNumber(ATag.Address, lChannel) then
+  begin
+    inherited GetUnitNames(ATag, AUnitNames);
+    Exit;
+  end;
+  AUnitNames.Clear;
+  AUnitNames.Add('degC');
+  AUnitNames.Add('mV');
+  AUnitNames.Add('V');
+  AUnitNames.Add('uV');
+  AUnitNames.Add('kV');
+end;
+
+procedure TRecorderMic140DataSource.UpdateScales(ATag: TRecorderTag);
+begin
+  if (ATag = nil) or (ATag.OwnerRegistry = nil) then Exit;
+  EnterCriticalSection(fTransformLock);
+  try
+    inherited UpdateScales(ATag);
+    if State = dssRunning then RefreshRuntimeTransformsLocked;
+  finally
+    LeaveCriticalSection(fTransformLock);
+  end;
+end;
+
+function TRecorderMic140DataSource.ReadState(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  out AState: TRecorderTagSettingsState): Boolean;
+begin
+  RecorderInitTagSettingsState(AState);
+  Result := OwnsSettingsTag(ARegistry, ATag);
+  AState.HardwareSourceConfigurable := Result;
+  if not Result then Exit;
+  AState.HardwareCalibrationDownloadable := True;
+  AState.ChannelCalibrationSelectable := True;
+  AState.OutputUnitName := GetUnits(ATag);
+  AState.SourceUnitName := AState.OutputUnitName;
+end;
+
+function TRecorderMic140DataSource.NormalizeDraft(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  var ADraft: TRecorderTagSettingsDraft; out AErrorText: string): Boolean;
+begin
+  AErrorText := '';
+  Result := OwnsSettingsTag(ARegistry, ATag);
+  if not Result then AErrorText := 'Tag settings do not belong to this datasource';
+  if Result then
+    ADraft.PollFrequencyHz := RecorderMic140NormalizeFrequency(ADraft.PollFrequencyHz);
+end;
+
+function TRecorderMic140DataSource.ApplyDraft(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  const ADraft: TRecorderTagSettingsDraft;
+  out AResult: TRecorderTagSettingsApplyResult;
+  out AErrorText: string): Boolean;
+var
+  lChannel: Integer;
+  lSettings: TRecorderMic140ChannelSettings;
+begin
+  RecorderInitTagSettingsApplyResult(AResult);
+  AErrorText := '';
+  Result := OwnsSettingsTag(ARegistry, ATag);
+  if not Result then AErrorText := 'Tag settings do not belong to this datasource';
+  if not Result then Exit;
+  if not SameValue(ATag.PollFrequencyHz, ADraft.PollFrequencyHz, 1E-9) then
+  begin
+    RecorderMic140ApplySourceFrequency(ARegistry, ATag.SourceId,
+      ADraft.PollFrequencyHz);
+    fPollFrequencyHz := ADraft.PollFrequencyHz;
+    AResult.PollFrequencyHz := ADraft.PollFrequencyHz;
+    AResult.FrequencyChanged := True;
+  end;
+  if RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannel, lSettings) then
+  begin
+    if not HasExternalCalibration(ATag, ADraft) then
+    begin
+      if MatchText(Trim(ADraft.UnitName), ['degC', 'C', '°C']) then
+        lSettings.OutputMode := 'degC'
+      else if MatchText(Trim(ADraft.UnitName), ['mV', 'V', 'uV', 'kV', 'мВ', 'В']) then
+        lSettings.OutputMode := 'mV';
+    end;
+    lSettings.HardwareCalibrationEnabled := ADraft.HardwareCalibrationEnabled;
+    lSettings.HardwareCalibrationName := ATag.HardwareCalibrationName;
+    RecorderMic140TryAssignDefaultThermocouple(ARegistry, lSettings);
+    RecorderMic140UpdateChannelSettings(ARegistry, ATag, lSettings);
+    RecorderMic140ApplyTagOutputPresentation(ATag, lSettings);
+    if RecorderMic140ChannelUsesTemperature(lSettings) then
+      AResult.SourceUnitName := 'degC'
+    else
+      AResult.SourceUnitName := 'mV';
+    AResult.SourceUnitChanged := True;
+  end;
+end;
+
+function TRecorderMic140DataSource.DownloadHardwareCalibration(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  out AResult: TRecorderHardwareCalibrationResult;
+  out AErrorText: string): Boolean;
+begin
+  RecorderInitHardwareCalibrationResult(AResult);
+  AErrorText := '';
+  Result := OwnsSettingsTag(ARegistry, ATag);
+  if not Result then AErrorText := 'Tag settings do not belong to this datasource';
+  if not Result then Exit;
+  Result := RecorderMic140DownloadHardwareCalibrationFromDevice(ARegistry,
+    ATag, AErrorText);
+  if Result then
+    AResult.CalibrationName := ATag.HardwareCalibrationName;
+end;
+
+function TRecorderMic140DataSource.PrepareUnitModeLocked(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  const AUnitName: string; out ASettings: TRecorderMic140ChannelSettings;
+  out ARaw: Boolean; out AErrorText: string): Boolean;
+var
+  lChannel: Integer;
+  lInfo: TRecorderUnitInfo;
+begin
+  Result := False;
+  AErrorText := '';
+  ARaw := False;
+  if (ARegistry = nil) or (ATag = nil) or
+    ((Registry <> nil) and (ARegistry <> Registry)) or
+    not SameText(ATag.SourceId, SourceId) then
+  begin
+    AErrorText := 'MIC-140 unit request does not belong to this source';
+    Exit;
+  end;
+  if not RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannel,
+    ASettings) then
+  begin
+    AErrorText := 'MIC-140 channel settings were not found';
+    Exit;
+  end;
+  ARaw := MatchText(Trim(AUnitName), ['code', 'codes', 'код', 'коды']);
+  if not ARaw then
+  begin
+    if not RecorderUnitManager.TryGetUnitInfo(AUnitName, lInfo) then
+    begin
+      AErrorText := 'MIC-140 does not support source units ' + AUnitName;
+      Exit;
+    end;
+    if SameText(lInfo.QuantityId, 'temperature') then
+      ASettings.OutputMode := 'degC'
+    else if SameText(lInfo.QuantityId, RECORDER_QUANTITY_VOLTAGE) then
+      ASettings.OutputMode := 'mV'
+    else
+    begin
+      AErrorText := 'MIC-140 does not support source units ' + AUnitName;
+      Exit;
+    end;
+    { This may prepare an immutable catalogue curve, but the candidate settings
+      stay local: preflight never changes a tag, typed config or its history. }
+    RecorderMic140TryAssignDefaultThermocouple(ARegistry, ASettings);
+  end;
+  if (State = dssRunning) and not ARaw then
+  begin
+    if ARegistry.FindCalibrationByName(ATag.HardwareCalibrationName) = nil then
+    begin
+      AErrorText := 'MIC-140 hardware calibration was not found';
+      Exit;
+    end;
+    if RecorderMic140ChannelUsesTemperature(ASettings) and
+      (ARegistry.FindCalibrationByName(
+        'TC ' + ASettings.ThermocoupleScaleName) = nil) then
+    begin
+      AErrorText := 'MIC-140 temperature mode requires a thermocouple calibration';
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
+
+function TRecorderMic140DataSource.CanSetUnits(ATag: TRecorderTag; const AUnitName: string;
+  out AErrorText: string): Boolean;
+var
+  ARegistry: TRecorderTagRegistry;
+  lSettings: TRecorderMic140ChannelSettings;
+  lRaw: Boolean;
+begin
+  ARegistry := nil;
+  if ATag <> nil then ARegistry := ATag.OwnerRegistry;
+  EnterCriticalSection(fTransformLock);
+  try
+    Result := PrepareUnitModeLocked(ARegistry, ATag, AUnitName, lSettings,
+      lRaw, AErrorText);
+  finally
+    LeaveCriticalSection(fTransformLock);
+  end;
+end;
+
+function TRecorderMic140DataSource.SetUnits(ATag: TRecorderTag; const AUnitName: string;
+  out AErrorText: string): Boolean;
+var
+  ARegistry: TRecorderTagRegistry;
+  lOldSettings, lSettings: TRecorderMic140ChannelSettings;
+  lChannel: Integer;
+  lRaw, lRunning, lOldAuto, lOldHardware: Boolean;
+  lOldUnit, lOldSourceUnit, lOldHardwareUnit, lOldMode: string;
+  lOldNames: TStringList;
+begin
+  ARegistry := nil;
+  if ATag <> nil then ARegistry := ATag.OwnerRegistry;
+  Result := False;
+  AErrorText := '';
+  if (ARegistry = nil) or (ATag = nil) or
+    ((Registry <> nil) and (ARegistry <> Registry)) or
+    not SameText(ATag.SourceId, SourceId) then
+  begin
+    AErrorText := 'MIC-140 unit request does not belong to this source';
+    Exit;
+  end;
+  EnterCriticalSection(fTransformLock);
+  try
+    if not PrepareUnitModeLocked(ARegistry, ATag, AUnitName, lSettings,
+      lRaw, AErrorText) then Exit;
+    if not RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannel,
+      lOldSettings) then
+    begin
+      AErrorText := 'MIC-140 channel settings were not found';
+      Exit;
+    end;
+    lRunning := State = dssRunning;
+    lOldAuto := ATag.AutoUnit;
+    lOldHardware := ATag.HardwareCalibrationEnabled;
+    lOldUnit := ATag.UnitName;
+    lOldSourceUnit := ATag.SourceUnitName;
+    lOldHardwareUnit := ATag.SourceHardwareOutputUnitName;
+    lOldMode := ATag.SourceValueMode;
+    lOldNames := TStringList.Create;
+    try
+      lOldNames.Assign(ATag.CalibrationNames);
+      try
+        lSettings.HardwareCalibrationEnabled := not lRaw;
+        ATag.AutoUnit := False;
+        ATag.HardwareCalibrationEnabled := not lRaw;
+        RecorderMic140UpdateChannelSettings(ARegistry, ATag, lSettings);
+        if lRaw then ATag.UnitName := 'code'
+        else ATag.UnitName := Trim(AUnitName);
+        if lRunning then
+        begin
+          ARegistry.ValidateTagSourceOutput(ATag);
+          RefreshRuntimeTransformsLocked;
+        end;
+        ATag.ClearSignalHistory;
+        Result := True;
+      except
+        on E: Exception do
+        begin
+          AErrorText := E.Message;
+          RecorderMic140UpdateChannelSettings(ARegistry, ATag, lOldSettings);
+          ATag.AutoUnit := lOldAuto;
+          ATag.HardwareCalibrationEnabled := lOldHardware;
+          ATag.SourceValueMode := lOldMode;
+          ATag.SourceUnitName := lOldSourceUnit;
+          ATag.SourceHardwareOutputUnitName := lOldHardwareUnit;
+          ATag.UnitName := lOldUnit;
+          ATag.CalibrationNames.Assign(lOldNames);
+          if lRunning then RefreshRuntimeTransformsLocked;
+        end;
+      end;
+    finally
+      lOldNames.Free;
+    end;
+  finally
+    LeaveCriticalSection(fTransformLock);
+  end;
 end;
 
 function TRecorderMic140DataSource.FindTagBySourceAddress(
@@ -1209,18 +1636,6 @@ begin
   lCount := RecorderMic140VisibleTemperatureCount(CMic140Mic140SubRev1);
   for I := 1 to lCount do
     fTemperatureTagNames.Add(RecorderMic140TemperatureAddressText(lNode, I));
-end;
-
-function TRecorderMic140DataSource.ChannelIndexForTag(ATag: TRecorderTag): Integer;
-var
-  I: Integer;
-begin
-  Result := -1;
-  if (ATag = nil) or (fChannelTagNames = nil) then
-    Exit;
-  for I := 0 to fChannelTagNames.Count - 1 do
-    if SameText(fChannelTagNames[I], ATag.Name) then
-      Exit(I);
 end;
 
 function TRecorderMic140DataSource.Mic140RawSample(
@@ -1377,6 +1792,8 @@ end;
 procedure TRecorderMic140DataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
 var
   I: Integer;
+  lChannelNumber: Integer;
+  lSettings: TRecorderMic140ChannelSettings;
   lChannel: TRecorderDeviceChannel;
   lChannels: TRecorderDeviceChannelArray;
   lCreated: Boolean;
@@ -1517,6 +1934,16 @@ begin
     lTag.ModuleType := lChannel.ModuleType;
     lTag.PollFrequencyHz := lChannel.PollFrequencyHz;
     lTag.SourceId := SourceId;
+    if RecorderMic140TryGetChannelSettings(ARegistry, lTag, lChannelNumber,
+      lSettings) then
+      RecorderMic140ApplyTagOutputPresentation(lTag, lSettings)
+    else
+    begin
+      if SameText(lTag.SourceValueMode, 'degC') then
+        lTag.SourceHardwareOutputUnitName := 'degC'
+      else lTag.SourceHardwareOutputUnitName := 'mV';
+      lTag.SourceUnitName := lTag.SourceHardwareOutputUnitName;
+    end;
     if lCreated or (Trim(lTag.Description) = '') then
       lTag.Description := Format('MIC-140 channel %s; freq=%s Hz; mode=%s',
         [lChannel.Address, FormatFloat('0.######', lChannel.PollFrequencyHz),
@@ -1675,7 +2102,6 @@ begin
     Exit;
   end;
   PublishDiagnostics(CMic140StatusProgrammed, 'programmed', True);
-  BuildRuntimeCache;
   fHardwarePrepared := True;
 end;
 
@@ -1702,6 +2128,10 @@ begin
   end;
   if fDevice.State <> rdsProgrammed then
     Exit;
+  { Rebuild on every acquisition start, including a previously prepared or
+    explicitly reset device. GX errors belong to this logical phase, outside
+    the device.Start error handler and hardware status reporting. }
+  BuildRuntimeCache;
   try
     fDevice.Start;
   except
@@ -1748,7 +2178,6 @@ begin
       AErrorText := 'MIC-140 reconfiguration failed';
       Exit(False);
     end;
-    BuildRuntimeCache;
     Result := True;
   except
     on E: Exception do
@@ -1957,6 +2386,8 @@ var
   {$ENDIF}
   lRaw: Double;
 begin
+  EnterCriticalSection(fTransformLock);
+  try
   { Защита общего тракта от повторной либо переставленной порции. Кольцо
     устройства обязано отдавать FIFO; перекрывающий блок нельзя второй раз
     добавлять в теги под новыми границами логической порции. }
@@ -2139,6 +2570,11 @@ begin
     for lJ := 0 to ABlock.SampleCount - 1 do
       fRuntimeTimes[lJ] := RecorderBlockSampleTime(ABlock, lI, lJ);
 
+    { Preserve the actual ADC tail before software balance, hardware GX and TC.
+      One scalar per channel/block; no second sample buffer is required. }
+    lTag.StageRawValue(fRuntimeTimes[ABlock.SampleCount - 1],
+      ABlock.Values[lI][ABlock.SampleCount - 1]);
+
     if lI < Length(fRuntimeHardwareCalibrations) then
       lHardwareCalibration := fRuntimeHardwareCalibrations[lI]
     else
@@ -2148,22 +2584,17 @@ begin
     else
       lThermocoupleCalibration := nil;
 
-    { ГХ могла быть назначена уже после старта Preview. Обновляем только
-      программный кэш преобразования, не трогая жизненный цикл прибора. }
-    if lTag.HardwareCalibrationEnabled and (lHardwareCalibration = nil) and
-      (Trim(lTag.HardwareCalibrationName) <> '') then
-    begin
-      lHardwareCalibration := Registry.FindCalibrationByName(
-        lTag.HardwareCalibrationName);
-      if lI < Length(fRuntimeHardwareCalibrations) then
-        fRuntimeHardwareCalibrations[lI] := lHardwareCalibration;
-    end;
+    { Calibration pointers are published at the cold refresh boundary. }
+    if lTag.HardwareCalibrationEnabled and (lHardwareCalibration = nil) then
+      raise ERecorderDataSourceError.CreateFmt(
+        'MIC-140 tag %s: hardware calibration was not prepared', [lTag.Name]);
 
     if (not lTag.HardwareCalibrationEnabled) or
       (lHardwareCalibration = nil) then
     begin
       for lJ := 0 to ABlock.SampleCount - 1 do
         fRuntimeValues[lJ] := Mic140RawSample(ABlock, lI, lJ, lTag);
+      Registry.TransformTagSourceBlock(lTag, fRuntimeValues, ABlock.SampleCount);
       Registry.AddBlockSamples(lTag, fRuntimeTimes, fRuntimeValues,
         ABlock.SampleCount, True);
       Registry.PublishBlockNotifications(lTag, fRuntimeTimes, fRuntimeValues,
@@ -2178,6 +2609,7 @@ begin
         lRaw := Mic140RawSample(ABlock, lI, lJ, lTag);
         fRuntimeValues[lJ] := lHardwareCalibration.Transform(lRaw);
       end;
+      Registry.TransformTagSourceBlock(lTag, fRuntimeValues, ABlock.SampleCount);
       Registry.AddBlockSamples(lTag, fRuntimeTimes, fRuntimeValues,
         ABlock.SampleCount, True);
       Registry.PublishBlockNotifications(lTag, fRuntimeTimes, fRuntimeValues,
@@ -2238,14 +2670,17 @@ begin
         [SourceId, lTag.Name]));
       fCjcCorrectLogWritten := True;
     end;
-    { Оба преобразования уже выполнены над блоком. Не отдавать значения в
-      универсальный поточечный тракт повторно: он снова ищет ГХ по строкам. }
+    { Hardware/TC/CJC belong to this source. Apply only the prepared external
+      channel stages afterwards, without repeating the ADC conversion. }
+    Registry.TransformTagSourceBlock(lTag, fRuntimeValues, ABlock.SampleCount);
     Registry.AddBlockSamples(lTag, fRuntimeTimes, fRuntimeValues,
       ABlock.SampleCount, True);
     Registry.PublishBlockNotifications(lTag, fRuntimeTimes, fRuntimeValues,
       ABlock.SampleCount);
   end;
-
+  finally
+    LeaveCriticalSection(fTransformLock);
+  end;
 end;
 
 procedure TRecorderMic140DataSource.DoTick;

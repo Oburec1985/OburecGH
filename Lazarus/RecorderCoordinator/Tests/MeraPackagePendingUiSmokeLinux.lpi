@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12" />
+    <General><Flags><MainUnitHasTitleStatement Value="False" /></Flags><UseAppBundle Value="False" /></General>
+    <BuildModes><Item Name="Default" Default="True" /></BuildModes>
+    <Units><Unit><Filename Value="MeraPackagePendingUiSmoke.lpr" /><IsPartOfProject Value="True" /></Unit></Units>
+    <RequiredPackages><Item><PackageName Value="LCL" /></Item></RequiredPackages>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11" />
+    <Target><Filename Value="lib/pending035-linux/MeraPackagePendingUiSmoke" /></Target>
+    <SearchPaths>
+      <OtherUnitFiles Value="../../RecorderLnx;../../RecorderLnx/Core;../../RecorderLnx/Algs;../../RecorderLnx/Calibrations;../../RecorderLnx/Calibrations/Strains;../../RecorderLnx/SQLdb;../../RecorderLnx/SQLdb/SqlTrend;../../RecorderLnx/Components/SqlTrend;../../RecorderLnx/Device;../../RecorderLnx/Device/Architecture;../../RecorderLnx/Device/MIC140;../../RecorderLnx/Device/MIC140/UI;../../RecorderLnx/Device/MIC140/utils;../../RecorderLnx/Device/mic185;../../RecorderLnx/Device/mic185/UI;../../RecorderLnx/Device/MCbus;../../RecorderLnx/Device/MCbus/UI;../../RecorderLnx/SDB;../../SharedUtils;../../SharedUtils/math;../../Tests/RecorderTests/UITestData;../../third_party/fpspreadsheet" />
+      <UnitOutputDirectory Value="lib/pending035-linux/units" />
+    </SearchPaths>
+  </CompilerOptions>
+</CONFIG>

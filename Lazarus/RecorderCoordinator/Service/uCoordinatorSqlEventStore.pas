@@ -48,6 +48,8 @@ type
 
 implementation
 
+uses md5;
+
 function UriPart(const AValue: string): string;
 begin
   Result := Trim(AValue);
@@ -57,18 +59,27 @@ begin
   if Result = '' then Result := '_';
 end;
 
-function ExistingFileSize(const AFileName: string): Int64;
+function ManifestFilePath(const AEntryPath, ARelativeName: string): string;
 var
-  lStream: TFileStream;
+  I: Integer;
+  lName: string;
+  lByte: Byte;
 begin
-  Result := 0;
-  if not FileExists(AFileName) then Exit;
-  lStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyNone);
-  try
-    Result := lStream.Size;
-  finally
-    lStream.Free;
-  end;
+  lName := ARelativeName;
+  if Pos('://', AEntryPath) > 0 then
+  begin
+    lName := '';
+    for I := 1 to Length(ARelativeName) do
+    begin
+      lByte := Ord(ARelativeName[I]);
+      if Char(lByte) in ['a'..'z', 'A'..'Z', '0'..'9', '-', '_', '.', '~', '/'] then
+        lName := lName + Char(lByte)
+      else lName := lName + '%' + IntToHex(lByte, 2);
+    end;
+  end
+  else if LastDelimiter('\', AEntryPath) > LastDelimiter('/', AEntryPath) then
+    lName := StringReplace(lName, '/', '\', [rfReplaceAll]);
+  Result := Copy(AEntryPath, 1, LastDelimiter('/\', AEntryPath)) + lName;
 end;
 
 constructor TCoordinatorSqlEventStore.Create(const AConfigFileName: string);
@@ -236,6 +247,23 @@ var
   lLocation: TRecorderSqlDbFileLocation;
   lExisting, lRecording: TRecorderSqlDbMeraRecording;
   lFinal: Boolean;
+  lManifestComplete: Boolean;
+  lEntrySize: Int64;
+  I, lOrdinal: Integer;
+
+  procedure UpsertLocation(const AFileId, APath: string; ACommit: Boolean);
+  begin
+    if APath = '' then Exit;
+    lLocation := Default(TRecorderSqlDbFileLocation);
+    lLocation.FileId := AFileId;
+    lLocation.RecorderInstanceId := lDbInstanceId;
+    lLocation.LocationKind := 'source-local';
+    lLocation.PathKey := APath;
+    if lFinal then lLocation.State := 'ready' else lLocation.State := 'building';
+    lLocation.CreatedAtUtc := lRecording.StartedAtUtc;
+    if lFinal then lLocation.VerifiedAtUtc := AInfo.FinishedUtc;
+    fRepository.UpsertDataFileLocation(lLocation, ACommit);
+  end;
 begin
   if (Trim(AInfo.RecordingId) = '') or (Trim(AInfo.InstanceId) = '') then
     raise Exception.Create('Recording lifecycle has no recording/instance id');
@@ -268,34 +296,60 @@ begin
   lEntryPath := EntryPath(AInfo);
   lRelativeName := RelativeEntryName(AInfo);
   lFile := Default(TRecorderSqlDbMeraFile);
-  { One descriptor is currently reported by the client. Reusing recording_id
-    as its file id makes retries idempotent until a full manifest is added. }
+  { Entry identity stays compatible with earlier clients and retries. An
+    unknown size is a sentinel, never a claim that a remote package is empty. }
   lFile.FileId := AInfo.RecordingId;
   lFile.RecordingId := AInfo.RecordingId;
   lFile.FileRole := 'entry-mera';
   lFile.RelativeName := lRelativeName;
   lFile.StorageKey := StorageKey(AInfo, lRelativeName);
   lFile.DataFormat := 'mera';
-  if (lEntryPath <> '') and FileExists(lEntryPath) then
-    lFile.Size := ExistingFileSize(lEntryPath)
-  else
-    lFile.Size := 0;
+  lFile.Size := -1;
   if lFinal then lFile.State := 'ready' else lFile.State := 'building';
   fRepository.UpsertMeraFile(lFile);
-
-  if lEntryPath <> '' then
+  UpsertLocation(lFile.FileId, lEntryPath, True);
+  lManifestComplete := lFinal and AInfo.Manifest.Complete and
+    (AInfo.Manifest.EntryRelativeName = lRelativeName);
+  if lManifestComplete then
   begin
-    lLocation := Default(TRecorderSqlDbFileLocation);
-    lLocation.FileId := lFile.FileId;
-    lLocation.RecorderInstanceId := lDbInstanceId;
-    lLocation.LocationKind := 'source-local';
-    lLocation.PathKey := lEntryPath;
-    { ready means that the source Recorder reported a completed package. The
-      Coordinator need not be able to stat a path located on another host. }
-    if lFinal then lLocation.State := 'ready' else lLocation.State := 'building';
-    lLocation.CreatedAtUtc := lRecording.StartedAtUtc;
-    if lFinal then lLocation.VerifiedAtUtc := AInfo.FinishedUtc;
-    fRepository.UpsertDataFileLocation(lLocation);
+    lEntrySize := -1;
+    lOrdinal := 0;
+    try
+      { All payload descriptors and their locations commit as one short frame.
+        Queries are freed inside each upsert before Flush ends the transaction. }
+      for I := 0 to High(AInfo.Manifest.Files) do
+      begin
+        if AInfo.Manifest.Files[I].RelativeName = lRelativeName then
+        begin
+          lEntrySize := AInfo.Manifest.Files[I].Size;
+          Continue;
+        end;
+        lFile.FileId := MD5Print(MD5String(AInfo.RecordingId + '/' +
+          AInfo.Manifest.Files[I].RelativeName));
+        lFile.FileRole := 'payload';
+        lFile.RelativeName := AInfo.Manifest.Files[I].RelativeName;
+        Inc(lOrdinal);
+        lFile.Ordinal := lOrdinal;
+        lFile.StorageKey := StorageKey(AInfo, 'payload-' + lFile.FileId);
+        lFile.DataFormat := 'binary';
+        lFile.Size := AInfo.Manifest.Files[I].Size;
+        fRepository.UpsertMeraFile(lFile, False);
+        UpsertLocation(lFile.FileId,
+          ManifestFilePath(lEntryPath, lFile.RelativeName), False);
+      end;
+      lFile.FileId := AInfo.RecordingId;
+      lFile.FileRole := 'entry-mera';
+      lFile.RelativeName := lRelativeName;
+      lFile.Ordinal := 0;
+      lFile.StorageKey := StorageKey(AInfo, lRelativeName);
+      lFile.DataFormat := 'mera';
+      lFile.Size := lEntrySize;
+      fRepository.UpsertMeraFile(lFile, False);
+      fRepository.Flush;
+    except
+      fRepository.Rollback;
+      raise;
+    end;
   end;
 
   if lFinal then
@@ -308,7 +362,7 @@ begin
       lRecording.FinishedAtUtc := LocalTimeToUniversal(Now)
     else lRecording.FinishedAtUtc := AInfo.FinishedUtc;
     fRepository.CompleteMeraRecording(AInfo.RecordingId, lRecording.State,
-      lFile.FileId, '', lRecording.FinishedAtUtc);
+      AInfo.RecordingId, AInfo.Manifest.ErrorText, lRecording.FinishedAtUtc);
   end;
 end;
 

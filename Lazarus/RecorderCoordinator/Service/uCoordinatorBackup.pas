@@ -421,15 +421,15 @@ begin
   raise Exception.Create('Активный проект отсутствует в доступных источниках: ' + lProject);
 end;
 
-procedure ResolveAndVerifyExports(var AHost: TBackupHost);
+procedure ResolveAndVerifyExports(var AHost: TBackupHost; AIncludeCalibrations: Boolean);
 var
   lIni: TIniFile;
-  lMetadata, lProjectRoot, lCalibrRoot, lSdbRoot, lProgramRoot,
+  lMetadata, lProjectRoot, lCalibrRoot,
     lMeraRoot, lDefaultMera, lActualMera, lFile, lProjectDir,
     lGeneration, lField, lMarkerData: string;
   lStream: TFileStream;
   I: Integer;
-  lFound: set of (bfApp, bfProject, bfCalibr, bfSdb);
+  lFoundProject, lFoundCalibr: Boolean;
 begin
   lMetadata := IncludeTrailingPathDelimiter(AHost.ConfigRoot) + 'backup-export-info.ini';
   CheckNotLink(lMetadata);
@@ -441,8 +441,8 @@ begin
     begin
       lField := '';
       if SameText(AHost.ConfigRoots[I].DestinationName, 'projects') then lField := 'ProjectsGeneration'
-      else if (AHost.AgentPort = 0) and SameText(AHost.ConfigRoots[I].DestinationName, 'Calibr') then lField := 'CalibrGeneration'
-      else if (AHost.AgentPort = 0) and SameText(AHost.ConfigRoots[I].DestinationName, 'SDB') then lField := 'SdbGeneration';
+      else if AIncludeCalibrations and SameText(AHost.ConfigRoots[I].DestinationName, 'Calibr') then
+        lField := 'CalibrGeneration';
       if lField = '' then Continue;
       lGeneration := lIni.ReadString('BackupExport', lField, '');
       if not IsExportMarker('.recorder-backup-export-' + lGeneration) then
@@ -469,35 +469,24 @@ begin
     end;
     lProjectRoot := NormalRemote(lIni.ReadString('BackupExport', 'ProjectsRoot', ''));
     lCalibrRoot := NormalRemote(lIni.ReadString('BackupExport', 'CalibrRoot', ''));
-    lSdbRoot := NormalRemote(lIni.ReadString('BackupExport', 'SdbRoot', ''));
-    lProgramRoot := NormalRemote(lIni.ReadString('BackupExport', 'ProgramRoot', ''));
     lMeraRoot := NormalRemote(lIni.ReadString('BackupExport', 'RuntimeMeraRoot', ''));
     lDefaultMera := NormalRemote(lIni.ReadString('BackupExport', 'DefaultMeraRoot', ''));
   finally lIni.Free; end;
-  if AHost.AgentPort <> 0 then
-  begin
-    lCalibrRoot := lMeraRoot + '/Calibr';
-    lSdbRoot := lMeraRoot + '/SDB';
-  end;
-  if (lProjectRoot = '') or (lCalibrRoot = '') or (lSdbRoot = '') or
-     (lProgramRoot <> '/opt/mera/RecorderLnx') or (lMeraRoot = '') then
+  if (lProjectRoot = '') or (lMeraRoot = '') then
     raise Exception.Create('Описание опубликованных каталогов неполно: ' + lMetadata);
-  if (lCalibrRoot <> lMeraRoot + '/Calibr') or (lSdbRoot <> lMeraRoot + '/SDB') then
-    raise Exception.Create('Каталоги Calibr/SDB не соответствуют Mera Files');
-  lFound := [];
+  if AIncludeCalibrations and (lCalibrRoot <> lMeraRoot + '/Calibr') then
+    raise Exception.Create('Каталог Calibr не соответствует Mera Files');
+  lFoundProject := False;
+  lFoundCalibr := False;
   for I := 0 to High(AHost.ConfigRoots) do
   begin
-    if SameText(AHost.ConfigRoots[I].DestinationName, 'app-config') then
-    begin AHost.ConfigRoots[I].RemotePath := NormalRemote(AHost.ConfigRootRemote + '/config'); Include(lFound, bfApp); end
-    else if SameText(AHost.ConfigRoots[I].DestinationName, 'projects') then
-    begin AHost.ConfigRoots[I].RemotePath := lProjectRoot; Include(lFound, bfProject); end
+    if SameText(AHost.ConfigRoots[I].DestinationName, 'projects') then
+    begin AHost.ConfigRoots[I].RemotePath := lProjectRoot; lFoundProject := True; end
     else if SameText(AHost.ConfigRoots[I].DestinationName, 'Calibr') then
-    begin AHost.ConfigRoots[I].RemotePath := lCalibrRoot; Include(lFound, bfCalibr); end
-    else if SameText(AHost.ConfigRoots[I].DestinationName, 'SDB') then
-    begin AHost.ConfigRoots[I].RemotePath := lSdbRoot; Include(lFound, bfSdb); end;
+    begin AHost.ConfigRoots[I].RemotePath := lCalibrRoot; lFoundCalibr := True; end;
   end;
-  if lFound <> [bfApp, bfProject, bfCalibr, bfSdb] then
-    raise Exception.Create('Не заданы все опубликованные каталоги конфигурации');
+  if not lFoundProject or (AIncludeCalibrations and not lFoundCalibr) then
+    raise Exception.Create('Не заданы выбранные опубликованные каталоги конфигурации');
   lProjectDir := VerifyActiveProject(AHost);
   lFile := IncludeTrailingPathDelimiter(AHost.ConfigRoot) + 'storage.ini';
   if OptionalFileExists(lFile) then
@@ -635,10 +624,8 @@ function BackupRecorderHost(const ADestinationRoot: string;
 var
   lHostDir, lSnapshotDir, lConfigDir, lName, lMarker, lProgress, lSourceState, lAgentSnapshot: string;
   lProjectSource, lProjectName, lCalibrSource, lProjectsDir: string;
-  lManifest: TIniFile;
   {$IFDEF UNIX}
-  lMarkerHandle, lManifestHandle: cint;
-  lManifestStream: THandleStream;
+  lMarkerHandle: cint;
   {$ELSE}
   lMarkerStream: TFileStream;
   {$ENDIF}
@@ -673,7 +660,7 @@ begin
         raise Exception.Create('Не задан ни один каталог проектов');
       CheckNotLink(lHost.ConfigRoot);
       try
-        ResolveAndVerifyExports(lHost);
+        ResolveAndVerifyExports(lHost, boCalibrations in AOptions);
       except
         on E: EStaleBackupExport do
         begin
@@ -684,7 +671,7 @@ begin
           {$ENDIF}
             Sleep(25000);
           try
-            ResolveAndVerifyExports(lHost);
+            ResolveAndVerifyExports(lHost, boCalibrations in AOptions);
           except
             on RetryError: EStaleBackupExport do
               raise Exception.Create('Не удалось обновить подключение к источнику после ожидания: ' + RetryError.Message);
@@ -692,7 +679,7 @@ begin
         end;
       end;
       lSourceState := SourceState(lHost);
-      ResolveAndVerifyExports(lHost);
+      ResolveAndVerifyExports(lHost, boCalibrations in AOptions);
       if lSourceState <> SourceState(lHost) then
         raise Exception.Create('Настройки источника изменились при проверке');
       lProjectSource := VerifyActiveProject(lHost);
@@ -750,38 +737,6 @@ begin
           'Calibr', lFileSystemManagedPermissions);
       lProgress := 'настройки';
     end;
-    {$IFDEF UNIX}
-    lManifestHandle := fpOpen(PChar(IncludeTrailingPathDelimiter(lSnapshotDir) +
-      'backup-info.ini'), O_RDWR or O_CREAT or O_EXCL or O_NOFOLLOW, &600);
-    if lManifestHandle < 0 then
-      raise Exception.Create('Не удалось безопасно создать описание снимка');
-    lManifestStream := THandleStream.Create(lManifestHandle);
-    try
-      if not lFileSystemManagedPermissions then
-        if RecorderFchmod(lManifestHandle, &600) <> 0 then
-          raise Exception.Create('Не удалось защитить описание резервной копии');
-      lManifest := TIniFile.Create(lManifestStream);
-    {$ELSE}
-    lManifest := TIniFile.Create(IncludeTrailingPathDelimiter(lSnapshotDir) + 'backup-info.ini');
-    {$ENDIF}
-    try
-      lManifest.CacheUpdates := True;
-      lManifest.WriteString('Backup', 'Workstation', AHost.DisplayName);
-      lManifest.WriteString('Backup', 'Address', AHost.Address);
-      lManifest.WriteDateTime('Backup', 'Created', Now);
-      lManifest.WriteBool('Backup', 'Configurations', boConfigurations in AOptions);
-      lManifest.WriteBool('Backup', 'Calibrations', boCalibrations in AOptions);
-      if lFileSystemManagedPermissions then
-        lManifest.WriteString('Backup', 'AccessProtection', 'filesystem-managed');
-      lManifest.WriteString('Sources', 'Project', lProjectName);
-      lManifest.UpdateFile;
-    finally lManifest.Free; end;
-    {$IFDEF UNIX}
-    finally
-      lManifestStream.Free;
-      fpClose(lManifestHandle);
-    end;
-    {$ENDIF}
     if boConfigurations in AOptions then
     begin
       {$IFDEF BACKUP_TEST_HOOKS}
@@ -791,7 +746,7 @@ begin
         VerifyAgentBackup(AHost, lAgentSnapshot)
       else
       begin
-        ResolveAndVerifyExports(lHost);
+        ResolveAndVerifyExports(lHost, boCalibrations in AOptions);
         if lSourceState <> SourceState(lHost) then
           raise Exception.Create('Настройки источника изменились во время копирования');
       end;

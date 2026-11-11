@@ -37,6 +37,12 @@ function RecorderMic185ApplyCurrentCalibration(
   ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
   ANominalPowerMa: Double): Double;
 
+{ Model-only lookup: no serial resolution, CSV loading or device I/O. Missing
+  registered identity/current GX leaves the nominal current unchanged. }
+function RecorderMic185ApplyCachedCurrentCalibration(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  ANominalPowerMa: Double): Double;
+
 function RecorderMic185TryExtractHardwareKx(ACalibration: TRecorderCalibration;
   out AK, AB: Double): Boolean;
 
@@ -44,6 +50,9 @@ function RecorderMic185FormatHardwareKx(AK, AB: Double): string;
 
 function RecorderMic185HardwareCalibrationDisplayText(
   ACalibration: TRecorderCalibration): string;
+{ Presence only: never loads a calibration, changes enable flags or contacts hardware. }
+function RecorderMic185HasHardwareCalibration(ARegistry: TRecorderTagRegistry;
+  ASerial: LongWord; ARangeIndex, AChannelNumber: Integer): Boolean;
 
 implementation
 
@@ -102,6 +111,18 @@ begin
   Result := IncludeTrailingPathDelimiter(RecorderMeraCalibrRootDir) +
     CMic185HardwareCalibrSubDir + Format('sn%4.4d', [ASerial]) +
     PathDelim + 'current' + PathDelim + Format('%2.2d.csv', [AChannelNumber]);
+end;
+
+function RecorderMic185HasHardwareCalibration(ARegistry: TRecorderTagRegistry;
+  ASerial: LongWord; ARangeIndex, AChannelNumber: Integer): Boolean;
+begin
+  if (ASerial = 0) or (AChannelNumber < 1) or
+    (AChannelNumber > CMic185ChannelCountMax) then Exit(False);
+  if (ARegistry <> nil) and (ARegistry.FindCalibrationByName(
+    RecorderMic185MakeHardwareCalibrationName(ASerial, ARangeIndex,
+      AChannelNumber)) <> nil) then Exit(True);
+  Result := FileExistsUTF8(RecorderMic185HardwareCalibrCsvPath(ASerial,
+    ARangeIndex, AChannelNumber));
 end;
 
 function RecorderMic185MakeCurrentCalibrationName(ASerial: LongWord;
@@ -698,6 +719,29 @@ begin
   finally
     lCalibration.Free;
   end;
+end;
+
+function RecorderMic185ApplyCachedCurrentCalibration(
+  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
+  ANominalPowerMa: Double): Double;
+var
+  lCalibration: TRecorderCalibration;
+  lChannelIndex, lChannelNumber, lRangeIndex: Integer;
+  lSerial: LongWord;
+begin
+  Result := ANominalPowerMa;
+  if (ARegistry = nil) or (ATag = nil) or SameValue(ANominalPowerMa, 0.0) then
+    Exit;
+  lChannelIndex := RecorderMic185ChannelAddressToIndex(ATag.Address);
+  if (lChannelIndex < 0) or
+    not Mic185TryParseCalibrationName(ATag.HardwareCalibrationName, lSerial,
+      lRangeIndex, lChannelNumber) then Exit;
+  lCalibration := ARegistry.FindCalibrationByName(
+    RecorderMic185MakeCurrentCalibrationName(lSerial, lChannelIndex + 1));
+  if lCalibration = nil then Exit;
+  Result := lCalibration.Transform(ANominalPowerMa);
+  if SameValue(Result, 0.0, 1E-9) or (Result <> Result) then
+    Result := ANominalPowerMa;
 end;
 
 function RecorderMic185ApplyCurrentCalibration(

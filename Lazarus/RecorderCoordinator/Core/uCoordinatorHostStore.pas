@@ -19,6 +19,7 @@ type
     MeraFilesPath: string;
     RecorderState: string;
     Managed: Boolean;
+    DisableRecording, DisableShutdown, DisableLaunch: Boolean;
   end;
 
   TCoordinatorStoredHosts = array of TCoordinatorStoredHost;
@@ -91,6 +92,9 @@ begin
       Result[lIndex].RecorderState := lIni.ReadString(lSection,
         'recorder_state', 'unknown');
       Result[lIndex].Managed := lIni.ReadBool(lSection, 'managed', False);
+      Result[lIndex].DisableRecording := lIni.ReadBool(lSection, 'disable_recording', False);
+      Result[lIndex].DisableShutdown := lIni.ReadBool(lSection, 'disable_shutdown', False);
+      Result[lIndex].DisableLaunch := lIni.ReadBool(lSection, 'disable_launch', False);
     end;
   finally
     lIni.Free;
@@ -132,6 +136,9 @@ begin
       lIni.WriteString(lSection, 'recorder_state',
         AHosts[lIndex].RecorderState);
       lIni.WriteBool(lSection, 'managed', AHosts[lIndex].Managed);
+      lIni.WriteBool(lSection, 'disable_recording', AHosts[lIndex].DisableRecording);
+      lIni.WriteBool(lSection, 'disable_shutdown', AHosts[lIndex].DisableShutdown);
+      lIni.WriteBool(lSection, 'disable_launch', AHosts[lIndex].DisableLaunch);
     end;
     lIni.UpdateFile;
   finally

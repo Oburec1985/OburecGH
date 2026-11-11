@@ -13,9 +13,17 @@ unit uRecorderDataSources;
     Поточный сбор данных надстроен отдельным runner-классом: рабочий поток
     вызывает Tick источника с его UpdateTimeMs и не знает деталей устройства.
 
-  Ограничения первой версии:
-    Потоковый runner пока обслуживает один источник. Групповой менеджер потоков,
-    диагностика связи и приоритеты будут отдельным слоем.
+  Владение:
+    Manager хранит источники и при ConfigureTags передаёт тегам resolver для
+    GetSource. Registry используется как фабрика тегов, но не маршрутизирует
+    запросы источника. Clear снимает привязки до уничтожения контекстов; замена
+    источника сохраняет manager и возвращает актуальный экземпляр по SourceId.
+    Настройки источника доступны в Stop без подключения к оборудованию.
+    GetUnits/GetUnitNames читают метаданные; CanSetUnits проверяет запрос без
+    изменения тега. SetUnits меняет режим конкретного канала, UpdateScales
+    обновляет подготовленный расчёт без подключения и сброса устройства.
+    Эти операции принадлежат общему интерфейсу и virtual/override базового
+    класса. Частные интерфейсы единиц и проверки единиц не добавлять.
 }
 
 {$mode objfpc}{$H+}
@@ -77,6 +85,16 @@ type
     procedure Tick;
     { Флаг запрошенной остановки, выставленный RequestStop. }
     function GetTryStop: Boolean;
+
+    { Единицы — часть общего источника. Специфика реализуется overrides,
+      а не дополнительными интерфейсами под отдельные приборы. }
+    function GetUnits(ATag: TRecorderTag): string;
+    procedure GetUnitNames(ATag: TRecorderTag; AUnitNames: TStrings);
+    function CanSetUnits(ATag: TRecorderTag; const AUnitName: string;
+      out AErrorText: string): Boolean;
+    function SetUnits(ATag: TRecorderTag; const AUnitName: string;
+      out AErrorText: string): Boolean;
+    procedure UpdateScales(ATag: TRecorderTag);
 
     property SourceId: string read GetSourceId;
     property Name: string read GetName;
@@ -152,6 +170,13 @@ type
     function Reconfigure(AUpdateTimeMs: Cardinal;
       out AErrorText: string): Boolean; virtual;
     procedure RefreshRuntimeTransforms; virtual;
+    function GetUnits(ATag: TRecorderTag): string; virtual;
+    procedure GetUnitNames(ATag: TRecorderTag; AUnitNames: TStrings); virtual;
+    function CanSetUnits(ATag: TRecorderTag; const AUnitName: string;
+      out AErrorText: string): Boolean; virtual;
+    function SetUnits(ATag: TRecorderTag; const AUnitName: string;
+      out AErrorText: string): Boolean; virtual;
+    procedure UpdateScales(ATag: TRecorderTag); virtual;
     { Запуск источника }
     procedure Start; virtual;
     { Подготовка железа/транспорта до старта потока сбора. UI использовать нельзя. }
@@ -332,6 +357,7 @@ type
     fMessageRegistry: TRecorderMessageRegistry;
     fRunning: Boolean;                  { Флаг активности опроса }
     fSources: TList;                    { Список контекстов источников (TSourceContext) }
+    function ResolveTagSource(const ASourceId: string): IInterface;
     function GetLastError(AIndex: Integer): string;
     function GetLastErrorCount: Integer;
     function GetSource(AIndex: Integer): IRecorderDataSource;
@@ -394,7 +420,7 @@ uses
   Windows,
   {$ENDIF}
   Math, LazFileUtils, uRecorderConfiguredDataSources, uSharedAsync,
-  uRecorderHardwareLiveDevices;
+  uRecorderHardwareLiveDevices, uRecorderUnitManager;
 
 {$IFDEF MSWINDOWS}
 type
@@ -620,7 +646,6 @@ end;
 
 procedure TMockSineDataSource.DoCreateTags(ARegistry: TRecorderTagRegistry);
 var
-  lTag: TRecorderTag;
   I: Integer;
 begin
   fTag := nil;
@@ -1745,6 +1770,11 @@ begin
   inherited Destroy;
 end;
 
+function TRecorderDataSourceManager.ResolveTagSource(const ASourceId: string): IInterface;
+begin
+  Result := FindSource(ASourceId);
+end;
+
 function TRecorderDataSourceManager.GetSourceContext(AIndex: Integer): TSourceContext;
 begin
   Result := TSourceContext(fSources[AIndex]);
@@ -1921,7 +1951,9 @@ begin
   if fRunning then
     raise ERecorderDataSourceError.Create('Cannot configure data sources while running');
 
+  if fRegistry <> nil then fRegistry.ConfigureTagSources(nil, Self);
   fRegistry := ARegistry;
+  fRegistry.ConfigureTagSources(@ResolveTagSource);
   fMessageRegistry := AMessageRegistry;
   for I := 0 to fSources.Count - 1 do
   begin
@@ -1934,6 +1966,85 @@ end;
 
 procedure TRecorderDataSourceBase.RefreshRuntimeTransforms;
 begin
+end;
+
+function TRecorderDataSourceBase.GetUnits(ATag: TRecorderTag): string;
+var
+  lCalibration: TRecorderCalibration;
+begin
+  Result := 'б.р.';
+  if ATag = nil then Exit;
+  if ATag.SourceHardwareOutputUnitName <> '' then
+  begin
+    if ATag.HardwareCalibrationEnabled then Result := ATag.SourceHardwareOutputUnitName
+    else Result := 'code';
+  end
+  else
+  begin
+    lCalibration := nil;
+    if ATag.OwnerRegistry <> nil then
+      lCalibration := ATag.OwnerRegistry.FindTagHardwareCalibration(ATag);
+    if (lCalibration <> nil) and (Trim(lCalibration.UnitOut) <> '') then
+      Result := lCalibration.GetUnits
+    else if Trim(ATag.SourceUnitName) <> '' then Result := ATag.SourceUnitName;
+  end;
+end;
+
+procedure TRecorderDataSourceBase.GetUnitNames(ATag: TRecorderTag;
+  AUnitNames: TStrings);
+var
+  lNames: TStringList;
+  lUnit: string;
+  lFactor: Double;
+  I: Integer;
+begin
+  if AUnitNames = nil then Exit;
+  AUnitNames.Clear;
+  lUnit := GetUnits(ATag);
+  lNames := TStringList.Create;
+  try
+    RecorderUnitManager.FillUnitNames(lNames);
+    for I := 0 to lNames.Count - 1 do
+      if SameText(lUnit, lNames[I]) or
+        RecorderUnitManager.TryGetConversionFactor(lUnit, lNames[I], lFactor) then
+        if AUnitNames.IndexOf(lNames[I]) < 0 then AUnitNames.Add(lNames[I]);
+    if AUnitNames.Count = 0 then AUnitNames.Add(lUnit);
+  finally
+    lNames.Free;
+  end;
+end;
+
+function TRecorderDataSourceBase.CanSetUnits(ATag: TRecorderTag;
+  const AUnitName: string; out AErrorText: string): Boolean;
+var
+  lFactor: Double;
+begin
+  Result := SameText(GetUnits(ATag), AUnitName) or
+    RecorderUnitManager.TryGetConversionFactor(GetUnits(ATag), AUnitName, lFactor);
+  AErrorText := '';
+  if not Result then AErrorText := 'Datasource cannot select unit: ' + AUnitName;
+end;
+
+function TRecorderDataSourceBase.SetUnits(ATag: TRecorderTag;
+  const AUnitName: string; out AErrorText: string): Boolean;
+var
+  lInfo: TRecorderUnitInfo;
+begin
+  Result := CanSetUnits(ATag, AUnitName, AErrorText);
+  if not Result or (ATag = nil) then Exit;
+  ATag.AutoUnit := False;
+  if RecorderUnitManager.TryGetUnitInfo(AUnitName, lInfo) and
+    SameText(lInfo.QuantityId, RECORDER_QUANTITY_RAW_CODE) then
+    ATag.HardwareCalibrationEnabled := False
+  else ATag.HardwareCalibrationEnabled := True;
+  ATag.UnitName := AUnitName;
+end;
+
+procedure TRecorderDataSourceBase.UpdateScales(ATag: TRecorderTag);
+begin
+  if (ATag = nil) or (ATag.OwnerRegistry = nil) then Exit;
+  ATag.InvalidateCalibrationScale;
+  ATag.OwnerRegistry.RebuildScales(ATag);
 end;
 
 procedure TRecorderDataSourceManager.PrepareHardwareAll;
@@ -2131,6 +2242,7 @@ var
   I: Integer;
 begin
   StopAll;
+  if fRegistry <> nil then fRegistry.ConfigureTagSources(nil, Self);
   for I := fSources.Count - 1 downto 0 do
   begin
     GetSourceContext(I).Free;

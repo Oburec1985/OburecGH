@@ -36,10 +36,6 @@ uses
   Math, StrUtils,
   uRecorderConfiguredDataSources,
   uRecorderHardwareLiveDevices, uRecorderDeviceInterfaces,
-  uRecorderMic140Utils, uRecorderMic140LegacyTiming,
-  uRecorderMic140StreamTypes, uRecorderMic140DeviceConfig,
-  uRecorderMic140DataSource, uRecorderMic140Calibration,
-  uMic185MebiusTypes, uRecorderMic185DataSource, uRecorderMic185Calibration,
   uRecorderMc201Calibration, uRecorderPxiMx248Types,
   uRecorderPxiMx248Addressing,
   uRecorderPxiMx248Properties,
@@ -69,38 +65,6 @@ type
     function DownloadHardwareCalibration(ARegistry: TRecorderTagRegistry;
       ATag: TRecorderTag; out AResult: TRecorderHardwareCalibrationResult;
       out AErrorText: string): Boolean; virtual;
-  end;
-
-  TRecorderMic140TagSettingsProvider = class(TRecorderHardwareTagSettingsProvider)
-  public
-    function Accepts(ATag: TRecorderTag): Boolean; override;
-    function ReadState(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-      out AState: TRecorderTagSettingsState): Boolean; override;
-    function NormalizeDraft(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-      var ADraft: TRecorderTagSettingsDraft; out AErrorText: string): Boolean; override;
-    function ApplyDraft(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-      const ADraft: TRecorderTagSettingsDraft;
-      out AResult: TRecorderTagSettingsApplyResult;
-      out AErrorText: string): Boolean; override;
-    function DownloadHardwareCalibration(ARegistry: TRecorderTagRegistry;
-      ATag: TRecorderTag; out AResult: TRecorderHardwareCalibrationResult;
-      out AErrorText: string): Boolean; override;
-  end;
-
-  TRecorderMic185TagSettingsProvider = class(TRecorderHardwareTagSettingsProvider)
-  public
-    function Accepts(ATag: TRecorderTag): Boolean; override;
-    function ReadState(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-      out AState: TRecorderTagSettingsState): Boolean; override;
-    function NormalizeDraft(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-      var ADraft: TRecorderTagSettingsDraft; out AErrorText: string): Boolean; override;
-    function ApplyDraft(ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-      const ADraft: TRecorderTagSettingsDraft;
-      out AResult: TRecorderTagSettingsApplyResult;
-      out AErrorText: string): Boolean; override;
-    function DownloadHardwareCalibration(ARegistry: TRecorderTagRegistry;
-      ATag: TRecorderTag; out AResult: TRecorderHardwareCalibrationResult;
-      out AErrorText: string): Boolean; override;
   end;
 
   { MX-248 has one ADC clock for all eight channels. The common tag dialog
@@ -213,193 +177,6 @@ begin
   Result := False;
 end;
 
-function TRecorderMic140TagSettingsProvider.Accepts(ATag: TRecorderTag): Boolean;
-begin
-  Result := (ATag <> nil) and RecorderIsHardwareMic140TagSource(ATag.SourceId);
-end;
-
-function TRecorderMic140TagSettingsProvider.ReadState(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  out AState: TRecorderTagSettingsState): Boolean;
-var
-  lChannel: Integer;
-  lSettings: TRecorderMic140ChannelSettings;
-begin
-  Result := inherited ReadState(ARegistry, ATag, AState);
-  if not Result then Exit;
-  AState.HardwareCalibrationDownloadable := True;
-  AState.ChannelCalibrationSelectable := False;
-  if RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannel, lSettings) then
-  begin
-    if lSettings.ChannelCalibrationEnabled and
-      RecorderMic140ChannelUsesTemperature(lSettings) then
-      AState.OutputUnitName := RecorderMic140OutputModeUnitName(momTemperatureC)
-    else if ATag.HardwareCalibrationEnabled then
-      AState.OutputUnitName := RecorderMic140OutputModeUnitName(momMillivolts);
-  end;
-end;
-
-function TRecorderMic140TagSettingsProvider.NormalizeDraft(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  var ADraft: TRecorderTagSettingsDraft; out AErrorText: string): Boolean;
-begin
-  Result := inherited NormalizeDraft(ARegistry, ATag, ADraft, AErrorText);
-  if Result then
-    ADraft.PollFrequencyHz := RecorderMic140NormalizeFrequency(ADraft.PollFrequencyHz);
-end;
-
-function TRecorderMic140TagSettingsProvider.ApplyDraft(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  const ADraft: TRecorderTagSettingsDraft;
-  out AResult: TRecorderTagSettingsApplyResult;
-  out AErrorText: string): Boolean;
-var
-  lChannel: Integer;
-  lSettings: TRecorderMic140ChannelSettings;
-begin
-  Result := inherited ApplyDraft(ARegistry, ATag, ADraft, AResult, AErrorText);
-  if not Result then Exit;
-  if not SameValue(ATag.PollFrequencyHz, ADraft.PollFrequencyHz, 1E-9) then
-  begin
-    RecorderMic140ApplySourceFrequency(ARegistry, ATag.SourceId,
-      ADraft.PollFrequencyHz);
-    AResult.PollFrequencyHz := ADraft.PollFrequencyHz;
-    AResult.FrequencyChanged := True;
-  end;
-  if RecorderMic140TryGetChannelSettings(ARegistry, ATag, lChannel, lSettings) then
-  begin
-    lSettings.HardwareCalibrationEnabled := ADraft.HardwareCalibrationEnabled;
-    lSettings.HardwareCalibrationName := ATag.HardwareCalibrationName;
-    RecorderMic140UpdateChannelSettings(ARegistry, ATag, lSettings);
-  end;
-end;
-
-function TRecorderMic140TagSettingsProvider.DownloadHardwareCalibration(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  out AResult: TRecorderHardwareCalibrationResult;
-  out AErrorText: string): Boolean;
-begin
-  RecorderInitHardwareCalibrationResult(AResult);
-  Result := RecorderMic140DownloadHardwareCalibrationFromDevice(ARegistry,
-    ATag, AErrorText);
-  if Result then
-    AResult.CalibrationName := ATag.HardwareCalibrationName;
-end;
-
-function TRecorderMic185TagSettingsProvider.Accepts(ATag: TRecorderTag): Boolean;
-begin
-  Result := (ATag <> nil) and RecorderIsHardwareMic185TagSource(ATag.SourceId);
-end;
-
-function TRecorderMic185TagSettingsProvider.ReadState(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  out AState: TRecorderTagSettingsState): Boolean;
-var
-  lSettings: TMic185ChannelProgramSettings;
-begin
-  Result := inherited ReadState(ARegistry, ATag, AState);
-  if not Result then Exit;
-  RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, False);
-  RecorderMic185GetSourceChannelMode(ARegistry, ATag.SourceId, ATag.Address,
-    ATag.PollFrequencyHz, lSettings);
-  AState.HardwareCalibrationDownloadable := True;
-  AState.SourceUnitName := RecorderMic185GetSourceChannelUnitName(ARegistry,
-    ATag.SourceId, ATag.Address);
-  if AState.SourceUnitName = '' then
-    AState.SourceUnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
-  AState.OutputUnitName := AState.SourceUnitName;
-  AState.HardwareCalibrationText := RecorderMic185EffectiveTransformText(
-    ARegistry, ATag, lSettings, ATag.UnitName);
-  SetLength(AState.UnitNames, 3);
-  AState.UnitNames[0] := 'мВ';
-  AState.UnitNames[1] := 'Ом';
-  AState.UnitNames[2] := 'мкстрн';
-end;
-
-function TRecorderMic185TagSettingsProvider.NormalizeDraft(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  var ADraft: TRecorderTagSettingsDraft; out AErrorText: string): Boolean;
-begin
-  Result := inherited NormalizeDraft(ARegistry, ATag, ADraft, AErrorText);
-  if Result then
-    ADraft.PollFrequencyHz := RecorderMic185NormalizeFrequency(ADraft.PollFrequencyHz);
-end;
-
-function TRecorderMic185TagSettingsProvider.ApplyDraft(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  const ADraft: TRecorderTagSettingsDraft;
-  out AResult: TRecorderTagSettingsApplyResult;
-  out AErrorText: string): Boolean;
-var
-  lRange: Double;
-  lSettings: TMic185ChannelProgramSettings;
-  lOriginalSourceUnit: string;
-  lSourceUnit: string;
-begin
-  Result := inherited ApplyDraft(ARegistry, ATag, ADraft, AResult, AErrorText);
-  if not Result then Exit;
-  if not SameValue(ATag.PollFrequencyHz, ADraft.PollFrequencyHz, 1E-9) then
-  begin
-    RecorderMic185ApplySourceFrequency(ARegistry, ATag.SourceId,
-      ADraft.PollFrequencyHz, ADraft.DataUpdateMs);
-    AResult.PollFrequencyHz := ADraft.PollFrequencyHz;
-    AResult.FrequencyChanged := True;
-  end;
-  lOriginalSourceUnit := RecorderMic185GetSourceChannelUnitName(ARegistry,
-    ATag.SourceId, ATag.Address);
-  lSourceUnit := Trim(ADraft.UnitName);
-  if MatchText(lSourceUnit, ['мВ', 'мВ(тензо)', 'Ом', 'мкстрн', 'мкм/м']) and
-    not SameText(lOriginalSourceUnit, lSourceUnit) then
-  begin
-    RecorderMic185SetSourceChannelUnitName(ARegistry, ATag.SourceId,
-      ATag.Address, ADraft.PollFrequencyHz, lSourceUnit);
-    AResult.SourceUnitName := lSourceUnit;
-    AResult.SourceUnitChanged := True;
-  end;
-  if MatchText(lSourceUnit, ['мВ', 'мВ(тензо)', 'Ом', 'мкстрн', 'мкм/м']) and
-    not ADraft.AutoUnit and not SameText(ATag.UnitName, lSourceUnit) then
-  begin
-    AResult.UnitName := lSourceUnit;
-    AResult.UnitChanged := True;
-  end;
-  if ADraft.HardwareCalibrationEnabled then
-  begin
-    RecorderMic185LoadHardwareCalibrationForTag(ARegistry, ATag, True);
-    RecorderMic185GetSourceChannelMode(ARegistry, ATag.SourceId, ATag.Address,
-      ADraft.PollFrequencyHz, lSettings);
-    if SameText(ADraft.UnitName, 'код') or SameText(ADraft.UnitName, 'code') then
-    begin
-      AResult.UnitName := RecorderMic185GetSourceChannelUnitName(ARegistry,
-        ATag.SourceId, ATag.Address);
-      if AResult.UnitName = '' then
-        AResult.UnitName := RecorderMic185RangeUnitText(lSettings.MeasRangeIndex);
-      AResult.UnitChanged := True;
-    end;
-    lRange := RecorderMic185EffectiveRangeMaxForTag(ARegistry, ATag,
-      lSettings, ADraft.UnitName);
-    AResult.RangeMin := -lRange;
-    AResult.RangeMax := lRange;
-    AResult.RangeChanged := True;
-  end;
-  AResult.SignalHistoryMustBeCleared :=
-    (ATag.HardwareCalibrationEnabled <> ADraft.HardwareCalibrationEnabled) or
-    AResult.SourceUnitChanged or AResult.UnitChanged;
-end;
-
-function TRecorderMic185TagSettingsProvider.DownloadHardwareCalibration(
-  ARegistry: TRecorderTagRegistry; ATag: TRecorderTag;
-  out AResult: TRecorderHardwareCalibrationResult;
-  out AErrorText: string): Boolean;
-var
-  lB, lK: Double;
-begin
-  RecorderInitHardwareCalibrationResult(AResult);
-  Result := RecorderMic185DownloadHardwareCalibrationFromDeviceEx(ARegistry,
-    ATag, lK, lB, AResult.CalibrationName, AErrorText);
-  if Result then
-    AResult.PresentationText := RecorderMic185FormatHardwareKx(lK, lB);
-end;
-
 function TRecorderPxiMx248TagSettingsProvider.Accepts(
   ATag: TRecorderTag): Boolean;
 begin
@@ -412,14 +189,41 @@ function TRecorderPxiMx248TagSettingsProvider.ReadState(
   out AState: TRecorderTagSettingsState): Boolean;
 var
   I: Integer;
+  lValues: TStringList;
+  lConfigured: TRecorderConfiguredDataSource;
+  lChannel: Integer;
+  lSourceUnit: string;
 begin
   Result := inherited ReadState(ARegistry, ATag, AState);
   if not Result then Exit;
-  AState.FrequencyEditable := True;
   SetLength(AState.FrequencyNames, CPxiMx248SampleRateCount);
   for I := Low(CPxiMx248SampleRates) to High(CPxiMx248SampleRates) do
     AState.FrequencyNames[I] := IntToStr(CPxiMx248SampleRates[I]);
   AState.HardwareCalibrationDownloadable := True;
+  lSourceUnit := Trim(ATag.SourceUnitName);
+  lConfigured := RecorderConfiguredDataSourcesFind(ARegistry, ATag.SourceId);
+  if (lConfigured <> nil) and
+    PxiMx248TryChannelFromAddress(ATag.Address, lChannel) then
+  begin
+    lValues := TStringList.Create;
+    try
+      lValues.StrictDelimiter := True;
+      lValues.Delimiter := ';';
+      lValues.DelimitedText := lConfigured.SpecificConfigText;
+      if lValues.IndexOfName(Format('channel.%d.amplifier-enabled',
+        [lChannel])) >= 0 then
+        if SameText(lValues.Values[Format('channel.%d.amplifier-enabled',
+          [lChannel])], 'True') then lSourceUnit := 'pC'
+        else lSourceUnit := 'V';
+    finally
+      lValues.Free;
+    end;
+  end;
+  if (lSourceUnit = '') or SameText(lSourceUnit, 'code') then
+    lSourceUnit := 'V';
+  AState.SourceUnitName := lSourceUnit;
+  AState.OutputUnitName := lSourceUnit;
+
 end;
 
 function TRecorderPxiMx248TagSettingsProvider.NormalizeDraft(
@@ -853,10 +657,6 @@ constructor TRecorderHardwareTagSettingsResolver.Create;
 begin
   inherited Create;
   fProviders := TInterfaceList.Create;
-  fProviders.Add(TRecorderMic140TagSettingsProvider.Create as
-    IRecorderHardwareTagSettingsProvider);
-  fProviders.Add(TRecorderMic185TagSettingsProvider.Create as
-    IRecorderHardwareTagSettingsProvider);
   fProviders.Add(TRecorderPxiMx248TagSettingsProvider.Create as
     IRecorderHardwareTagSettingsProvider);
   fProviders.Add(TRecorderMc201TagSettingsProvider.Create as

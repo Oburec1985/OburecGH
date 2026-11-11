@@ -6,7 +6,7 @@ unit uRecorderSqlDbRuntime;
 interface
 
 uses
-  Classes, SysUtils, uRecorderSqlDbTypes;
+  Classes, SysUtils, Math, uRecorderSqlDbTypes;
 
 function RecorderSqlServerAvailable(AConfig: TRecorderSqlDbConfig;
   out AError: string): Boolean;
@@ -80,7 +80,9 @@ type
     destructor Destroy; override;
     { Создаёт writer-поток и начинает принимать задания. }
     procedure Start;
-    { Запрещает новые задания, ждёт выгрузки очереди и останавливает поток. }
+    { Запрещает новые задания, завершает текущий SQL-кадр и останавливает поток.
+      Старые ожидающие значения освобождаются при уничтожении runtime: смена
+      периода не должна блокировать UI, выгружая очередь по старым настройкам. }
     procedure Stop;
     { Открывает новую регистрацию/сеанс записи в БД. }
     procedure BeginRegistration(const AReason: string;
@@ -259,6 +261,8 @@ end;
 function TRecorderSqlDbRuntime.Enqueue(AJob: TJob): Boolean;
 var
   L: TList;
+  I: Integer;
+  lPending: TJob;
 begin
   Result := False;
   if (AJob = nil) or not fAccepting then
@@ -268,6 +272,27 @@ begin
   end;
   L := fJobs.LockList;
   try
+    { A value job is a pending snapshot, not an immutable event.  If the SQL
+      writer is temporarily slower than the producers, keep only the newest
+      pending value of each physical channel.  Otherwise several minutes of
+      obsolete frames accumulate, the queue overflows, and the ARM appears to
+      lag even after Firebird catches up.  Events and registration boundaries
+      are deliberately never coalesced. }
+    if AJob.Kind = jkValue then
+      for I := L.Count - 1 downto 0 do
+      begin
+        lPending := TJob(L[I]);
+        if (lPending.Kind = jkValue) and
+           (((AJob.Address <> '') and (lPending.Address = AJob.Address) and
+             (lPending.SourceId = AJob.SourceId)) or
+            ((AJob.Address = '') and (lPending.Address = '') and
+             (lPending.Name = AJob.Name))) then
+        begin
+          L[I] := AJob;
+          lPending.Free;
+          Exit(True);
+        end;
+      end;
     if L.Count >= fConfig.QueueCapacity then
     begin
       Inc(fDropped);
@@ -390,13 +415,21 @@ var
   lSignals: TStringList;
   lStored: TRecorderStoredFile;
   lSequence: Int64;
-  lPendingValues: Integer;
+  lValueFrame: TRecorderSqlValueWrites;
+
+  procedure FlushValueFrame;
+  begin
+    if Length(lValueFrame) = 0 then Exit;
+    R.InsertSignalValuesBatch(lRegistrationId, lValueFrame, False);
+    R.Flush;
+    SetLength(lValueFrame, 0);
+  end;
 begin
   R := nil; S := nil; lSignals := TStringList.Create;
   try
     lRegistrationId := '';
     lSequence := 0;
-    lPendingValues := 0;
+    SetLength(lValueFrame, 0);
     lSignals.NameValueSeparator := '=';
     try
       if not RecorderSqlServerAvailable(fConfig, fLastError) then
@@ -416,7 +449,11 @@ begin
       lDefaultObjectId := R.EnsureObject(fConfig.ObjectName, fConfig.ObjectType,
         fConfig.SerialNumber);
       lObjectId := lDefaultObjectId;
-      while not fThread.IsStopping or HasJobs do
+      { A restart must not rediscover every existing signal with a separate
+        Firebird round trip.  Preload the identity-to-id map once so the first
+        measurement frame can be written immediately. }
+      R.LoadSignalIdMap(lObjectId, lSignals);
+      while not fThread.IsStopping do
       begin
         J := PopJob;
         if J = nil then begin Sleep(10); Continue; end;
@@ -424,11 +461,8 @@ begin
           { Events and registration/file boundaries must be committed in their
             own logical order. Values accumulated before them are flushed once,
             instead of committing every individual sample. }
-          if (J.Kind <> jkValue) and (lPendingValues > 0) then
-          begin
-            R.Flush;
-            lPendingValues := 0;
-          end;
+          if (J.Kind <> jkValue) and (Length(lValueFrame) > 0) then
+            FlushValueFrame;
           case J.Kind of
           jkStart:
             begin
@@ -439,7 +473,10 @@ begin
               else
                 lEffectiveObjectId := lDefaultObjectId;
               if lObjectId <> lEffectiveObjectId then
+              begin
                 lSignals.Clear;
+                R.LoadSignalIdMap(lEffectiveObjectId, lSignals);
+              end;
               lObjectId := lEffectiveObjectId;
               lRegistrationId := R.BeginRegistration(lObjectId, J.TestId,
                 J.Text, J.TimeUtc);
@@ -463,9 +500,15 @@ begin
                 lSignals.Values[lSignalKey] := lSignalId;
               end;
               Inc(lSequence);
-              R.InsertSignalValue(lRegistrationId, lSignalId, J.TimeUtc,
-                J.Value, J.Quality, lSequence, False);
-              Inc(lPendingValues);
+              SetLength(lValueFrame, Length(lValueFrame) + 1);
+              with lValueFrame[High(lValueFrame)] do
+              begin
+                SignalId := lSignalId;
+                TimestampUtc := J.TimeUtc;
+                Value := J.Value;
+                Quality := J.Quality;
+                SequenceNo := lSequence;
+              end;
             end;
           jkEvent:
             begin
@@ -497,19 +540,26 @@ begin
                 J.TimeUtc, J.TimeUtc);
             end;
           end;
-          { At the normal one-second recording period this is one commit for
-            the whole group of channels. The size limit also bounds an
-            unusually large transaction when producers continuously enqueue. }
-          if (lPendingValues > 0) and
-             ((lPendingValues >= 512) or (not HasJobs)) then
+          { Values arriving during one producer period form one SQL frame.
+            The normal empty-queue boundary sends all channels with one bulk
+            INSERT.  The hard ceiling only protects against a producer that
+            never yields and an unbounded SQL statement. }
+          { Firebird limits one dynamic statement to 256 relation contexts.
+            Keep a small safety margin; current KIP frames (up to 223 selected
+            channels) still fit into exactly one request. }
+          if Length(lValueFrame) >= 240 then
+            FlushValueFrame
+          else if (Length(lValueFrame) > 0) and (not HasJobs) then
           begin
-            R.Flush;
-            lPendingValues := 0;
+            { Producers publish channels sequentially.  Give the remainder of
+              the same period a short collection window so a temporarily
+              empty queue does not split one frame into many SQL requests. }
+            Sleep(Min(50, Max(5, fConfig.RecordPeriodMs div 10)));
+            if not HasJobs then FlushValueFrame;
           end;
         finally J.Free; end;
       end;
-      if lPendingValues > 0 then
-        R.Flush;
+      FlushValueFrame;
       if lRegistrationId <> '' then
         R.FinishRegistration(lRegistrationId, 'interrupted', Now);
     except

@@ -33,6 +33,7 @@ type
     ListenAddress: string;
     Port: Word;
     EventWindowSec: Integer;
+    SqlRecordPeriodSec: Integer;
     CreateRecordingEvents: Boolean;
     StartAllOnAnyRecording: Boolean;
     SqlDbConfigFile: string;
@@ -280,6 +281,7 @@ begin
   ListenAddress := '0.0.0.0';
   Port := 8765;
   EventWindowSec := 30;
+  SqlRecordPeriodSec := 1;
   CreateRecordingEvents := True;
   StartAllOnAnyRecording := False;
   HostAgentPort := 8766;
@@ -366,6 +368,10 @@ begin
     ListenAddress := lIni.ReadString('service', 'listen', ListenAddress);
     Port := lIni.ReadInteger('service', 'port', Port);
     EventWindowSec := lIni.ReadInteger('service', 'event_window_sec', EventWindowSec);
+    SqlRecordPeriodSec := lIni.ReadInteger('commands',
+      'sql_record_period_sec', SqlRecordPeriodSec);
+    if SqlRecordPeriodSec < 1 then SqlRecordPeriodSec := 1;
+    if SqlRecordPeriodSec > 86400 then SqlRecordPeriodSec := 86400;
     CreateRecordingEvents := lIni.ReadBool('events', 'create_recording_events',
       CreateRecordingEvents);
     FirebirdHost := Trim(lIni.ReadString('events', 'firebird_host', FirebirdHost));
@@ -512,6 +518,8 @@ begin
     lIni.WriteBool('events', 'create_recording_events', CreateRecordingEvents);
     lIni.WriteBool('commands', 'start_all_on_any_recording',
       StartAllOnAnyRecording);
+    lIni.WriteInteger('commands', 'sql_record_period_sec',
+      SqlRecordPeriodSec);
     lIni.WriteInteger('host_agent', 'port', HostAgentPort);
     lIni.WriteString('host_agent', 'token', HostAgentToken);
     lIni.WriteString('events', 'firebird_host', FirebirdHost);

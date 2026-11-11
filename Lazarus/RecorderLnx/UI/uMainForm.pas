@@ -61,6 +61,7 @@ uses
   uRecorderApplicationController, uRecorderConfigurationService,
   uRecorderComponentToolGroup,
   uRecorderCoordinatorProtocol, uRecorderCoordinatorClient,
+  uRecorderMeraPackageManifest,
   uRecorderWindowDragTrace, uRecorderProjectConfiguration,
   uRecorderBuiltInFormsUI, uRecorderComponentManager;
 
@@ -93,6 +94,7 @@ type
     mmLog: TMemo;                                // Поле вывода протокола (лога) работы программы
     pnMain: TPanel;                              // Главная центральная панель (область формуляров)
     pnDataView: TPanel;
+    cbShowRawCodes: TCheckBox;
     pnRight: TPanel;                             // Правая боковая панель
     pnRightCommands: TPanel;                     // Панель кнопок управления сбором
     pnRightStatus: TPanel;                       // Панель индикатора состояния
@@ -120,6 +122,7 @@ type
     procedure cbSqlDbRecordingChange(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure btnViewModeClick(Sender: TObject);
+    procedure cbShowRawCodesChange(Sender: TObject);
     procedure edTagSearchChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -959,7 +962,12 @@ end;
 procedure TMainForm.lbTagsDblClick(Sender: TObject);
 begin
   UpdateSelectedTagFromList;
-  OpenSelectedTagSettings;
+  if ((fRecorder <> nil) and (fRecorder.StateMachine.State = rsStop)) or
+    ((fFormEditor <> nil) and fFormEditor.Enabled) then
+    OpenSelectedTagSettings
+  else if (fBuiltInForms <> nil) and (fRecorder <> nil) and
+    (fRecorder.TagRegistry <> nil) then
+    fBuiltInForms.FocusDigitalTag(fRecorder.TagRegistry.SelectedTag);
 end;
 
 procedure TMainForm.pnRightCommandsClick(Sender: TObject);
@@ -1001,8 +1009,13 @@ begin
     for I := 0 to lSources.Count - 1 do
     begin
       lSourceId := lSources[I];
+      { SQL mirrors remain selectable while the database is offline. Their
+        values may be stale, but hiding every imported tag makes it impossible
+        to configure forms before connectivity is restored. SQL availability
+        is shown by the source status instead of controlling tag visibility. }
       if RecorderConfiguredDataSourceEnabled(fRecorder.TagRegistry,lSourceId) and
-        RecorderHardwareSourceLinkOk(fRecorder.TagRegistry, lSourceId) then
+        (SameText(lSourceId, CRecorderSqlSourceId) or
+         RecorderHardwareSourceLinkOk(fRecorder.TagRegistry, lSourceId)) then
         fRecorder.TagRegistry.RegisterActiveSource(lSourceId)
       else
         fRecorder.TagRegistry.UnregisterActiveSource(lSourceId);
@@ -1228,6 +1241,8 @@ var
   lDir, lMera, lMeasureName, lStarted, lFinished, lProject, lHost,
   lShareName: string;
   lActive: Boolean;
+  lLocalMera: string;
+  lPayload: TJSONObject;
 begin
   lActive := (fRecorder <> nil) and
     (fRecorder.StateMachine.State = rsRecord);
@@ -1244,6 +1259,7 @@ begin
     lMeasureName := 'Запись RecorderLnx';
   end;
   lShareName := Trim(fRecorder.RunSettings.RecordShareName);
+  lLocalMera := lMera;
   lHost := Trim(RecorderComputerName);
   if (lMera <> '') and (lHost <> '') and (lShareName <> '') then
     lMera := 'smb://' + lHost + '/' + lShareName + '/' +
@@ -1266,6 +1282,17 @@ begin
      LowerCase(BoolToStr((lDir <> '') and DirectoryExists(lDir), True)),
      JsonQuoted(lStarted), JsonQuoted(lFinished),
      JsonQuoted(lMeasureName), JsonQuoted(lProject)]);
+  if ACompleted then
+  begin
+    { CloseRecordFrame closes the writer before constructing this payload. }
+    lPayload := TJSONObject(GetJSON(Result));
+    try
+      lPayload.Add('package_manifest', RecorderBuildMeraManifest(lDir, lLocalMera));
+      Result := lPayload.AsJSON;
+    finally
+      lPayload.Free;
+    end;
+  end;
 end;
 
 procedure TMainForm.UpdateCoordinatorSnapshot;
@@ -1734,6 +1761,12 @@ begin
   else
     fBuiltInForms.SetDigitalViewMode(rdvmTags);
   RenderDigitalPage(True);
+end;
+
+procedure TMainForm.cbShowRawCodesChange(Sender: TObject);
+begin
+  EnsureBaseToolbar;
+  fBuiltInForms.SetShowRawCodes(cbShowRawCodes.Checked);
 end;
 
 procedure TMainForm.btnSqlDbClick(Sender: TObject);
@@ -2901,18 +2934,38 @@ end;
 
 procedure TMainForm.ConfigureOptionalSqlDb;
 var
-  lMessage: string;
+  lMessage, lErrorLower: string;
+  lAttempt: Integer;
 begin
-  try
-    fRecorder.SqlDbManager.Configure(
-      RecorderProjectSqlConfigFileName(fProjectConfigDir));
-  except
-    on E: Exception do
-    begin
-      fRecorder.SqlDbManager.DisableRuntimeAfterConfigurationError;
-      lMessage := 'SQL database unavailable: ' + E.ClassName + ': ' + E.Message;
-      RecorderDebugLog(lMessage);
-      AddLog(lMessage, rlkSystem);
+  for lAttempt := 1 to 4 do
+  begin
+    try
+      fRecorder.SqlDbManager.Configure(
+        RecorderProjectSqlConfigFileName(fProjectConfigDir));
+      Exit;
+    except
+      on E: Exception do
+      begin
+        lErrorLower := LowerCase(E.Message);
+        { Several recorders can register their signals in the common Firebird
+          database at the same time after a fleet update.  Firebird then may
+          abort one metadata transaction with a transient update conflict.
+          Do not disable SQL for the whole process after that first collision. }
+        if (lAttempt < 4) and
+          ((Pos('deadlock', lErrorLower) > 0) or
+           (Pos('update conflict', lErrorLower) > 0) or
+           (Pos('concurrent transaction', lErrorLower) > 0)) then
+        begin
+          Sleep(250 * lAttempt);
+          Continue;
+        end;
+        fRecorder.SqlDbManager.DisableRuntimeAfterConfigurationError;
+        lMessage := 'SQL database unavailable: ' + E.ClassName + ': ' +
+          E.Message;
+        RecorderDebugLog(lMessage);
+        AddLog(lMessage, rlkSystem);
+        Exit;
+      end;
     end;
   end;
 end;
@@ -3186,6 +3239,7 @@ var
   lSelectedTag: TRecorderTag;
   lTag: TRecorderTag;
   lTopIndex: Integer;
+  lDisplayTags: TList;
 begin
   lTopIndex := 0;
   if lbTags.TopItem <> nil then
@@ -3195,15 +3249,17 @@ begin
   if lSelectedName <> '' then
     lSelectedTag := fRecorder.TagRegistry.FindByName(lSelectedName);
 
+  lDisplayTags := TList.Create;
   lbTags.Items.BeginUpdate;
   try
+    fRecorder.TagRegistry.GetDisplayTags(lDisplayTags);
     lbTags.Items.Clear;
     SetLength(fTagListPollRates, fRecorder.TagRegistry.TagCount);
     lFilter := LowerCase(Trim(AFilter));
 
-    for I := 0 to fRecorder.TagRegistry.TagCount - 1 do
+    for I := 0 to lDisplayTags.Count - 1 do
     begin
-      lTag := fRecorder.TagRegistry.Tags[I];
+      lTag := TRecorderTag(lDisplayTags[I]);
       if not RecorderTagSourceIsVisible(fRecorder.TagRegistry, lTag) then
         Continue;
       if (lFilter <> '') and
@@ -3232,6 +3288,7 @@ begin
       lbTags.Items[lTopIndex].MakeVisible(False);
   finally
     lbTags.Items.EndUpdate;
+    lDisplayTags.Free;
   end;
 end;
 

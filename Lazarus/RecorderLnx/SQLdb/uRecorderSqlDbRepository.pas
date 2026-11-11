@@ -15,7 +15,10 @@ type
     fConfig: TRecorderSqlDbConfig;
     fConnection: TSQLConnection;
     fTransaction: TSQLTransaction;
+    fSignalValueInsertQueries: TList;
+    fValueTransactionStartedAt: QWord;
     fDatabaseEnsured: Boolean;
+    procedure ClearSignalValueInsertQueries;
     function CreateConnection: TSQLConnection;
     function TableExists(const AName: string): Boolean;
     function IndexExists(const AName: string): Boolean;
@@ -37,6 +40,7 @@ type
     procedure Close;
     procedure EnsureDatabase;
     procedure Flush;
+    procedure Rollback;
     function SchemaVersion: Integer;
     function HealthCheck: Boolean;
     function EnsureObject(const AName, AObjectType, ASerialNumber: string): string;
@@ -45,6 +49,7 @@ type
     function EnsureSignal(const AObjectId, AName, AValueType, AUnit,
       ARecorderTag: string; const ARecorderSourceId: string = '';
       const ARecorderAddress: string = ''): string;
+    procedure LoadSignalIdMap(const AObjectId: string; AItems: TStrings);
     function RenameSignalByRecorderAddress(const AObjectId,
       ARecorderSourceId, ARecorderAddress, ANewName, AUnit: string): Boolean;
     function BeginRegistration(const AObjectId, ATestId, AReason: string;
@@ -54,6 +59,8 @@ type
     procedure InsertSignalValue(const ARegistrationId, ASignalId: string;
       ATimestampUtc, AValue: Double; AQuality: Integer; ASequenceNo: Int64;
       ACommit: Boolean = True);
+    procedure InsertSignalValuesBatch(const ARegistrationId: string;
+      const AValues: TRecorderSqlValueWrites; ACommit: Boolean = True);
     procedure InsertEvent(const ARegistrationId, AObjectId, ASignalId: string;
       ATimestampUtc: Double; const AEventType, ASeverity, AText: string;
       AValue: Double; const APayloadJson: string);
@@ -69,8 +76,10 @@ type
     function BeginMeraRecording(const ARecording: TRecorderSqlDbMeraRecording): string;
     procedure CompleteMeraRecording(const ARecordingId, AState,
       AEntryFileId, AErrorText: string; AFinishedAtUtc: Double);
-    procedure UpsertMeraFile(const AFile: TRecorderSqlDbMeraFile);
-    procedure UpsertDataFileLocation(const ALocation: TRecorderSqlDbFileLocation);
+    procedure UpsertMeraFile(const AFile: TRecorderSqlDbMeraFile;
+      ACommit: Boolean = True);
+    procedure UpsertDataFileLocation(const ALocation: TRecorderSqlDbFileLocation;
+      ACommit: Boolean = True);
     procedure ListMeraRecordings(AFromUtc, AToUtc: Double;
       out AItems: TRecorderSqlDbMeraRecordings);
     function GetCurrentMeraRecording(const ARecorderInstanceId: string;
@@ -126,6 +135,49 @@ uses
   SQLite3Conn, IBConnection, PQConnection;
 
 const
+  { Older Recorder clients registered an entry descriptor with size zero when
+    Coordinator could not stat its SMB URI. Payload files may truly be empty. }
+  CMeraUnknownManifestSql = '(min(f.file_size)<0 or max(case when ' +
+    'm.file_role=''entry-mera'' and f.file_size=0 then 1 else 0 end)>0)';
+
+function SignalIdentityKey(const AName, ASourceId, AAddress: string): string;
+begin
+  if Trim(AAddress) <> '' then
+    Result := Trim(ASourceId) + '|' + Trim(AAddress)
+  else
+    Result := AName;
+end;
+
+procedure TRecorderSqlDbRepository.LoadSignalIdMap(const AObjectId: string;
+  AItems: TStrings);
+var
+  lQuery: TSQLQuery;
+begin
+  if AItems = nil then Exit;
+  AItems.Clear;
+  EnsureDatabase;
+  lQuery := TSQLQuery.Create(nil);
+  try
+    lQuery.DataBase := fConnection;
+    lQuery.Transaction := fTransaction;
+    lQuery.SQL.Text :=
+      'select id,name,recorder_source_id,recorder_address from signals ' +
+      'where object_id=:object_id';
+    lQuery.ParamByName('object_id').AsString := AObjectId;
+    lQuery.Open;
+    while not lQuery.EOF do
+    begin
+      AItems.Values[SignalIdentityKey(lQuery.Fields[1].AsString,
+        lQuery.Fields[2].AsString, lQuery.Fields[3].AsString)] :=
+        lQuery.Fields[0].AsString;
+      lQuery.Next;
+    end;
+  finally
+    lQuery.Free;
+  end;
+end;
+
+const
   CSchemaTables: array[0..17] of string = (
     'schema_info', 'objects', 'property_definitions', 'object_property_values',
     'signals', 'signal_bindings', 'tests', 'registrations',
@@ -171,13 +223,33 @@ begin
     raise ERecorderSqlDbError.Create('SQLdb config is nil');
   fConfig := TRecorderSqlDbConfig.Create;
   fConfig.Assign(AConfig);
+  fSignalValueInsertQueries := TList.Create;
 end;
 
 destructor TRecorderSqlDbRepository.Destroy;
 begin
   Close;
+  fSignalValueInsertQueries.Free;
   fConfig.Free;
   inherited Destroy;
+end;
+
+procedure TRecorderSqlDbRepository.ClearSignalValueInsertQueries;
+var
+  I: Integer;
+begin
+  if fSignalValueInsertQueries = nil then Exit;
+  { The cache is a flat list of pairs [row-count, TSQLQuery].  Row counts are
+    encoded as Pointer values and are not objects.  Free only the query in
+    every odd slot; calling Free on a row count caused the writer thread's
+    Access violation on its first Flush. }
+  I := fSignalValueInsertQueries.Count - 1;
+  while I >= 1 do
+  begin
+    TObject(fSignalValueInsertQueries[I]).Free;
+    Dec(I, 2);
+  end;
+  fSignalValueInsertQueries.Clear;
 end;
 
 function TRecorderSqlDbRepository.CreateConnection: TSQLConnection;
@@ -293,6 +365,10 @@ end;
 procedure TRecorderSqlDbRepository.Close;
 begin
   fDatabaseEnsured := False;
+  { The prepared value writer belongs to this connection/transaction pair.
+    Release it before either owner disappears. }
+  ClearSignalValueInsertQueries;
+  fValueTransactionStartedAt := 0;
   { SQLDB keeps a reference from the connection to its transaction.  Close
     and detach the connection before freeing the transaction; otherwise an
     error during Open can leave Connection.Transaction pointing to an
@@ -411,6 +487,10 @@ begin
   try
     lQuery.DataBase := fConnection;
     lQuery.Transaction := fTransaction;
+    { One network query returns the current frame for every mirrored SQL tag.
+      The correlated lookup is executed server-side and uses the
+      (signal_id,timestamp_utc) index, so historical rows are not ranked or
+      transferred to the client. }
     lQuery.SQL.Text :=
       'select s.name,v.timestamp_utc,v.measured_value ' +
       'from signals s join signal_values v on v.signal_id=s.id ' +
@@ -667,12 +747,32 @@ procedure TRecorderSqlDbRepository.ReadTrendPoints(ASignalNames: TStrings;
   AFromUtc, AToUtc: Double; AMaxPointsPerSignal: Integer;
   out APoints: TRecorderSqlTrendPoints; AExcludeFrom: Boolean);
 var
-  I, J, lBucket, lLastBucket, lSignalCount, lOutputStart: Integer;
+  I, lBucket, lLastBucket, lBucketCount, lSignalCount,
+    lOutputStart: Integer;
   lQuery: TSQLQuery;
-  lName: string;
+  lName, lCurrentName, lNameFilter: string;
   lPoint, lFirstPoint, lLastPoint: TRecorderSqlTrendPoint;
   lSignalPoints: TRecorderSqlTrendPoints;
   lHasFirst: Boolean;
+
+  procedure AppendCurrentSignal;
+  var
+    K: Integer;
+  begin
+    if not lHasFirst then Exit;
+    lSignalPoints[0] := lFirstPoint;
+    lSignalCount := 1 + lBucketCount;
+    if (lSignalCount = 0) or
+      (lLastPoint.RowId <> lSignalPoints[lSignalCount - 1].RowId) then
+    begin
+      lSignalPoints[lSignalCount] := lLastPoint;
+      Inc(lSignalCount);
+    end;
+    lOutputStart := Length(APoints);
+    SetLength(APoints, lOutputStart + lSignalCount);
+    for K := 0 to lSignalCount - 1 do
+      APoints[lOutputStart + K] := lSignalPoints[K];
+  end;
 begin
   SetLength(APoints, 0);
   if (ASignalNames = nil) or (ASignalNames.Count = 0) or
@@ -687,66 +787,67 @@ begin
   try
     lQuery.DataBase := fConnection;
     lQuery.Transaction := fTransaction;
+    lNameFilter := '';
+    for I := 0 to ASignalNames.Count - 1 do
+    begin
+      if lNameFilter <> '' then lNameFilter := lNameFilter + ',';
+      lNameFilter := lNameFilter + ':signal_' + IntToStr(I);
+    end;
     lQuery.SQL.Text :=
       'select v.id, s.name, v.timestamp_utc, v.measured_value '+
       'from signal_values v join signals s on s.id=v.signal_id '+
-      'where s.name=:signal_name and v.timestamp_utc' +
+      'where s.name in (' + lNameFilter + ') and v.timestamp_utc' +
       IfThen(AExcludeFrom, '>', '>=') + ':time_from '+
-      'and v.timestamp_utc<=:time_to order by v.timestamp_utc';
-    SetLength(lSignalPoints, AMaxPointsPerSignal);
+      'and v.timestamp_utc<=:time_to order by s.name,v.timestamp_utc,v.id';
     for I := 0 to ASignalNames.Count - 1 do
+      lQuery.ParamByName('signal_' + IntToStr(I)).AsString :=
+        ASignalNames[I];
+    lQuery.ParamByName('time_from').AsFloat := AFromUtc;
+    lQuery.ParamByName('time_to').AsFloat := AToUtc;
+    lQuery.Open;
+    SetLength(lSignalPoints, AMaxPointsPerSignal);
+    lCurrentName := '';
+    lHasFirst := False;
+    lBucketCount := 0;
+    lLastBucket := -1;
+    while not lQuery.EOF do
     begin
-      lName := ASignalNames[I];
-      lQuery.Close;
-      lQuery.ParamByName('signal_name').AsString := lName;
-      lQuery.ParamByName('time_from').AsFloat := AFromUtc;
-      lQuery.ParamByName('time_to').AsFloat := AToUtc;
-      lQuery.Open;
-      lSignalCount := 0;
-      lLastBucket := -1;
-      lHasFirst := False;
-      while not lQuery.EOF do
+      lName := lQuery.Fields[1].AsString;
+      if (lCurrentName <> '') and (not SameText(lCurrentName, lName)) then
       begin
-        lPoint.RowId := lQuery.Fields[0].AsString;
-        lPoint.SignalName := lQuery.Fields[1].AsString;
-        lPoint.TimestampUtc := lQuery.Fields[2].AsFloat;
-        lPoint.Value := lQuery.Fields[3].AsFloat;
-        if not lHasFirst then
+        AppendCurrentSignal;
+        lHasFirst := False;
+        lBucketCount := 0;
+        lLastBucket := -1;
+      end;
+      lCurrentName := lName;
+      lPoint.RowId := lQuery.Fields[0].AsString;
+      lPoint.SignalName := lName;
+      lPoint.TimestampUtc := lQuery.Fields[2].AsFloat;
+      lPoint.Value := lQuery.Fields[3].AsFloat;
+      if not lHasFirst then
+      begin
+        lFirstPoint := lPoint;
+        lLastPoint := lPoint;
+        lHasFirst := True;
+      end
+      else
+      begin
+        lLastPoint := lPoint;
+        lBucket := EnsureRange(Floor((lPoint.TimestampUtc - AFromUtc) /
+          (AToUtc - AFromUtc) * (AMaxPointsPerSignal - 2)), 0,
+          AMaxPointsPerSignal - 3);
+        if (lBucket <> lLastBucket) and
+          (lBucketCount < AMaxPointsPerSignal - 2) then
         begin
-          lFirstPoint := lPoint;
-          lLastPoint := lPoint;
-          lHasFirst := True;
-        end
-        else
-        begin
-          lLastPoint := lPoint;
-          lBucket := EnsureRange(Floor((lPoint.TimestampUtc - AFromUtc) /
-            (AToUtc - AFromUtc) * (AMaxPointsPerSignal - 2)), 0,
-            AMaxPointsPerSignal - 3);
-          if (lBucket <> lLastBucket) and
-            (lSignalCount < AMaxPointsPerSignal - 2) then
-          begin
-            lSignalPoints[1 + lSignalCount] := lPoint;
-            Inc(lSignalCount);
-            lLastBucket := lBucket;
-          end;
+          lSignalPoints[1 + lBucketCount] := lPoint;
+          Inc(lBucketCount);
+          lLastBucket := lBucket;
         end;
-        lQuery.Next;
       end;
-      if not lHasFirst then Continue;
-      lSignalPoints[0] := lFirstPoint;
-      Inc(lSignalCount);
-      if lLastPoint.TimestampUtc <>
-        lSignalPoints[lSignalCount - 1].TimestampUtc then
-      begin
-        lSignalPoints[lSignalCount] := lLastPoint;
-        Inc(lSignalCount);
-      end;
-      lOutputStart := Length(APoints);
-      SetLength(APoints, lOutputStart + lSignalCount);
-      for J := 0 to lSignalCount - 1 do
-        APoints[lOutputStart + J] := lSignalPoints[J];
+      lQuery.Next;
     end;
+    AppendCurrentSignal;
   finally
     lQuery.Free;
   end;
@@ -766,7 +867,27 @@ end;
 
 procedure TRecorderSqlDbRepository.Flush;
 begin
-  Commit;
+  { One writer frame is one database transaction.  A long-lived
+    CommitRetaining transaction eventually stopped producing visible frames
+    on Firebird, while a full Commit invalidates SQLDB prepared statements.
+    SQLDB query objects must be released while their transaction is still
+    active; freeing them after Commit can dereference an invalid transaction
+    handle.  Release the batch statements first, then commit the frame and
+    start a clean transaction.  The next frame lazily prepares only the few
+    batch statements it actually needs. }
+  ClearSignalValueInsertQueries;
+  if fTransaction.Active then
+    fTransaction.Commit;
+  fTransaction.StartTransaction;
+  fValueTransactionStartedAt := GetTickCount64;
+end;
+
+procedure TRecorderSqlDbRepository.Rollback;
+begin
+  ClearSignalValueInsertQueries;
+  if fTransaction.Active then fTransaction.Rollback;
+  fTransaction.StartTransaction;
+  fValueTransactionStartedAt := GetTickCount64;
 end;
 
 procedure TRecorderSqlDbRepository.Exec(const ASql: string);
@@ -1458,6 +1579,99 @@ begin
   finally lQuery.Free; end;
 end;
 
+procedure TRecorderSqlDbRepository.InsertSignalValuesBatch(
+  const ARegistrationId: string; const AValues: TRecorderSqlValueWrites;
+  ACommit: Boolean);
+var
+  I, lOffset, lRows: Integer;
+  lSql: string;
+  lQuery: TSQLQuery;
+
+  function BatchQuery(ARows: Integer): TSQLQuery;
+  var
+    J: Integer;
+  begin
+    { Queries are stored in pairs: row count encoded as Pointer, then query. }
+    for J := 0 to (fSignalValueInsertQueries.Count div 2) - 1 do
+      if PtrInt(fSignalValueInsertQueries[J * 2]) = ARows then
+        Exit(TSQLQuery(fSignalValueInsertQueries[J * 2 + 1]));
+    Result := TSQLQuery.Create(nil);
+    Result.DataBase := fConnection;
+    Result.Transaction := fTransaction;
+    lSql := 'insert into signal_values(id,registration_id,signal_id,' +
+      'timestamp_utc,measured_value,quality,sequence_no) ';
+    for J := 0 to ARows - 1 do
+    begin
+      if J > 0 then lSql := lSql + ' union all ';
+      { UNION parameters have no column context in Firebird, therefore every
+        parameter needs an explicit type at prepare time. }
+      lSql := lSql + 'select cast(:id' + IntToStr(J) + ' as varchar(36)),' +
+        'cast(:registration_id' + IntToStr(J) + ' as varchar(36)),' +
+        'cast(:signal_id' + IntToStr(J) + ' as varchar(36)),' +
+        'cast(:timestamp_utc' + IntToStr(J) + ' as double precision),' +
+        'cast(:measured_value' + IntToStr(J) + ' as double precision),' +
+        'cast(:quality' + IntToStr(J) + ' as integer),' +
+        'cast(:sequence_no' + IntToStr(J) + ' as bigint) from rdb$database';
+    end;
+    Result.SQL.Text := lSql;
+    Result.Prepare;
+    fSignalValueInsertQueries.Add(Pointer(PtrInt(ARows)));
+    fSignalValueInsertQueries.Add(Result);
+  end;
+begin
+  if Length(AValues) = 0 then Exit;
+  if fConfig.Backend = rsbFirebird then
+  begin
+    { Keep Firebird safely below its DSQL context/parameter limits. Four
+      cached requests carry the current 223-channel KIP frame instead of 223
+      network round trips. }
+    lOffset := 0;
+    while lOffset < Length(AValues) do
+    begin
+      lRows := Min(64, Length(AValues) - lOffset);
+      lQuery := BatchQuery(lRows);
+      for I := 0 to lRows - 1 do
+      begin
+        lQuery.ParamByName('id' + IntToStr(I)).AsString := RecorderSqlDbNewId;
+        lQuery.ParamByName('registration_id' + IntToStr(I)).AsString := ARegistrationId;
+        lQuery.ParamByName('signal_id' + IntToStr(I)).AsString := AValues[lOffset + I].SignalId;
+        lQuery.ParamByName('timestamp_utc' + IntToStr(I)).AsFloat := AValues[lOffset + I].TimestampUtc;
+        lQuery.ParamByName('measured_value' + IntToStr(I)).AsFloat := AValues[lOffset + I].Value;
+        lQuery.ParamByName('quality' + IntToStr(I)).AsInteger := AValues[lOffset + I].Quality;
+        lQuery.ParamByName('sequence_no' + IntToStr(I)).AsLargeInt := AValues[lOffset + I].SequenceNo;
+      end;
+      lQuery.ExecSQL;
+      Inc(lOffset, lRows);
+    end;
+  end;
+  if fConfig.Backend <> rsbFirebird then
+  begin
+    lQuery := TSQLQuery.Create(nil);
+    try
+      lQuery.DataBase := fConnection;
+      lQuery.Transaction := fTransaction;
+      lQuery.SQL.Text :=
+        'insert into signal_values(id,registration_id,signal_id,' +
+        'timestamp_utc,measured_value,quality,sequence_no) values(' +
+        ':id,:registration_id,:signal_id,:timestamp_utc,:measured_value,' +
+        ':quality,:sequence_no)';
+      lQuery.Prepare;
+    for I := 0 to High(AValues) do
+    begin
+      lQuery.ParamByName('id').AsString := RecorderSqlDbNewId;
+      lQuery.ParamByName('registration_id').AsString := ARegistrationId;
+      lQuery.ParamByName('signal_id').AsString := AValues[I].SignalId;
+      lQuery.ParamByName('timestamp_utc').AsFloat := AValues[I].TimestampUtc;
+      lQuery.ParamByName('measured_value').AsFloat := AValues[I].Value;
+      lQuery.ParamByName('quality').AsInteger := AValues[I].Quality;
+      lQuery.ParamByName('sequence_no').AsLargeInt := AValues[I].SequenceNo;
+      lQuery.ExecSQL;
+    end;
+    finally lQuery.Free; end;
+  end;
+  if ACommit then Commit;
+end;
+
 procedure TRecorderSqlDbRepository.InsertEvent(const ARegistrationId,
   AObjectId, ASignalId: string; ATimestampUtc: Double; const AEventType,
   ASeverity, AText: string; AValue: Double; const APayloadJson: string);
@@ -1718,7 +1932,7 @@ begin
 end;
 
 procedure TRecorderSqlDbRepository.UpsertMeraFile(
-  const AFile: TRecorderSqlDbMeraFile);
+  const AFile: TRecorderSqlDbMeraFile; ACommit: Boolean);
 var
   lExists: Boolean;
   lQuery: TSQLQuery;
@@ -1774,14 +1988,14 @@ begin
     lQuery.ParamByName('name').AsString := AFile.RelativeName;
     lQuery.ParamByName('ordinal').AsInteger := AFile.Ordinal;
     lQuery.ExecSQL;
-    Commit;
+    if ACommit then Commit;
   finally
     lQuery.Free;
   end;
 end;
 
 procedure TRecorderSqlDbRepository.UpsertDataFileLocation(
-  const ALocation: TRecorderSqlDbFileLocation);
+  const ALocation: TRecorderSqlDbFileLocation; ACommit: Boolean);
 var
   lId: string;
   lQuery: TSQLQuery;
@@ -1831,7 +2045,7 @@ begin
     else lQuery.ParamByName('verified').AsFloat := ALocation.VerifiedAtUtc;
     lQuery.ParamByName('error').AsString := ALocation.ErrorText;
     lQuery.ExecSQL;
-    Commit;
+    if ACommit then Commit;
   finally
     lQuery.Free;
   end;
@@ -1975,7 +2189,8 @@ begin
     lQuery.SQL.Text :=
       'select id,file_id,recorder_instance_id,location_kind,path_key,state,' +
       'created_at_utc,verified_at_utc,error_text from data_file_locations ' +
-      'where file_id=:id order by location_kind,created_at_utc';
+      'where file_id=:id order by case when location_kind=''operator-selected'' ' +
+      'then 0 else 1 end,location_kind,created_at_utc';
     lQuery.ParamByName('id').AsString := AFileId;
     lQuery.Open;
     while not lQuery.EOF do
@@ -2014,7 +2229,8 @@ begin
     lQuery.SQL.Text :=
       'select e.id,max(r.correlation_id),e.display_name,e.description,' +
       'e.timestamp_utc,max(r.finished_at_utc),max(r.state),' +
-      'count(distinct r.id),cast(coalesce(sum(f.file_size),0) as bigint) ' +
+      'count(distinct r.id),cast(case when ' + CMeraUnknownManifestSql + ' then -1 ' +
+      'else coalesce(sum(f.file_size),0) end as bigint) ' +
       'from events e join mera_recordings r on r.event_id=e.id ' +
       'left join mera_recording_files m ' +
       'on m.recording_id=r.id left join data_files f on f.id=m.file_id ' +
@@ -2073,8 +2289,8 @@ begin
       'coalesce(e.description,e.event_text),e.measured_value,' +
       'e.timestamp_utc,max(r.finished_at_utc),' +
       'coalesce(max(r.state),''active''),count(distinct r.id),' +
-      'cast(coalesce(sum(f.file_size),0) as bigint),' +
-      'count(distinct m.file_id) ' +
+      'cast(case when ' + CMeraUnknownManifestSql + ' then -1 else coalesce(sum(f.file_size),0) end as bigint),' +
+      'count(distinct case when m.file_role=''entry-mera'' then m.file_id else null end) ' +
       'from events e left join signals s on s.id=e.signal_id ' +
       'left join mera_recordings r on r.event_id=e.id ' +
       'left join mera_recording_files m on m.recording_id=r.id ' +
@@ -2141,7 +2357,7 @@ begin
     lQuery.SQL.Text :=
       'select r.event_id,count(distinct m.file_id) ' +
       'from mera_recordings r join mera_recording_files m ' +
-      'on m.recording_id=r.id group by r.event_id';
+      'on m.recording_id=r.id where m.file_role=''entry-mera'' group by r.event_id';
     lQuery.Open;
     while not lQuery.EOF do
     begin
@@ -2234,7 +2450,10 @@ begin
     lQuery.DataBase := fConnection;
     lQuery.Transaction := fTransaction;
     lQuery.SQL.Text :=
-      'update data_file_locations set path_key=:path where id=:location ' +
+      { This method is the operator edit/repair command. Preserve that explicit
+        intent when the dialog is reopened or a source completion is retried. }
+      'update data_file_locations set path_key=:path,' +
+      'location_kind=''operator-selected'' where id=:location ' +
       'and exists(select 1 from mera_recording_files m ' +
       'join mera_recordings r on r.id=m.recording_id ' +
       'where m.file_id=data_file_locations.file_id and r.event_id=:event)';
@@ -2352,8 +2571,8 @@ begin
       'select r.id,r.event_id,r.recorder_instance_id,r.registration_id,' +
       'r.correlation_id,r.display_name,r.started_at_utc,r.finished_at_utc,' +
       'r.state,r.entry_file_id,r.project_name,r.error_text,i.instance_key,' +
-      'i.host_name,count(m.file_id),' +
-      'cast(coalesce(sum(f.file_size),0) as bigint) ' +
+      'i.host_name,case when ' + CMeraUnknownManifestSql + ' then -1 else count(m.file_id) end,' +
+      'cast(case when ' + CMeraUnknownManifestSql + ' then -1 else coalesce(sum(f.file_size),0) end as bigint) ' +
       'from mera_recordings r join recorder_instances i ' +
       'on i.id=r.recorder_instance_id left join mera_recording_files m ' +
       'on m.recording_id=r.id left join data_files f on f.id=m.file_id ' +

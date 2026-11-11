@@ -33,6 +33,15 @@ type
   end;
   TRecorderSqlTrendPoints = array of TRecorderSqlTrendPoint;
 
+  TRecorderSqlValueWrite = record
+    SignalId: string;
+    TimestampUtc: Double;
+    Value: Double;
+    Quality: Integer;
+    SequenceNo: Int64;
+  end;
+  TRecorderSqlValueWrites = array of TRecorderSqlValueWrite;
+
   TRecorderSqlLatestValue = record
     SignalName: string;
     TimestampUtc: Double;

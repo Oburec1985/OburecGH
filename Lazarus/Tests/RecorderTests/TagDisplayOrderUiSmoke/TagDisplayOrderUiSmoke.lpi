@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General><Flags><MainUnitHasTitleStatement Value="False"/></Flags><UseAppBundle Value="False"/></General>
+    <BuildModes><Item Name="Default" Default="True"/></BuildModes>
+    <Units><Unit><Filename Value="TagDisplayOrderUiSmoke.lpr"/><IsPartOfProject Value="True"/></Unit></Units>
+    <RequiredPackages>
+      <Item><PackageName Value="SynEdit"/></Item>
+      <Item><PackageName Value="bgracontrols"/></Item>
+      <Item><PackageName Value="DateTimeCtrls"/></Item>
+      <Item><PackageName Value="LzrObrPack"/></Item>
+      <Item><PackageName Value="TAChartLazarusPkg"/></Item>
+      <Item><PackageName Value="LCL"/></Item>
+    </RequiredPackages>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target><Filename Value="lib/TagDisplayOrderUiSmoke"/></Target>
+    <SearchPaths>
+      <OtherUnitFiles Value="../../../RecorderLnx;../../../RecorderLnx/Algs;../../../RecorderLnx/Core;../../../RecorderLnx/UI;../../../RecorderLnx/Mdb;../../../RecorderLnx/Components/Common;../../../RecorderLnx/Components/Donut;../../../RecorderLnx/Components/Editor;../../../RecorderLnx/Components/FrequencyResponse;../../../RecorderLnx/Components/ImpactHammer;../../../RecorderLnx/Components/Lissajous;../../../RecorderLnx/Components/MeasurementSection;../../../RecorderLnx/Components/Oscillogram;../../../RecorderLnx/Components/SignalGenerator;../../../RecorderLnx/Components/Spectrum;../../../RecorderLnx/Components/SqlTrend;../../../RecorderLnx/Components/Standard;../../../RecorderLnx/Components/ThreeD;../../../RecorderLnx/Components/Trend;../../../RecorderLnx/Calibrations;../../../RecorderLnx/Calibrations/Strains;../../../RecorderLnx/Device;../../../RecorderLnx/Device/Modbus;../../../RecorderLnx/Device/Modbus/Core;../../../RecorderLnx/Device/Modbus/Runtime;../../../RecorderLnx/Device/Modbus/UI;../../../RecorderLnx/Device/DAC/Core;../../../RecorderLnx/Device/DAC/Component;../../../RecorderLnx/Device/DAC/Audio;../../../RecorderLnx/Device/DAC/Null;../../../RecorderLnx/Device/DAC/PXIe;../../../RecorderLnx/Device/OPC;../../../RecorderLnx/Device/MIC140;../../../RecorderLnx/Device/MIC140/UI;../../../RecorderLnx/Device/MIC140/utils;../../../RecorderLnx/Device/mic185;../../../RecorderLnx/Device/mic185/UI;../../../RecorderLnx/Device/MCbus;../../../RecorderLnx/Device/MCbus/UI;../../../RecorderLnx/Device/Architecture;../../../RecorderLnx/Device/PXI/MX248/Core;../../../RecorderLnx/Device/PXI/MX248/Runtime;../../../RecorderLnx/Device/PXI/MX248/Transport/Windows;../../../RecorderLnx/Device/PXI/MX248/UI;../../../RecorderLnx/SDB;../../../RecorderLnx/SQLdb;../../../RecorderLnx/SQLdb/SqlTrend;../../../RecorderLnx/Plugins/SDK;../../../RecorderLnx/Plugins/LuaCalcPlugin;../../../RecorderLnx/../SharedUtils;../../../RecorderLnx/../SharedUtils/math;../../../RecorderLnx/../SharedUtils/3d/core;../../../RecorderLnx/../SharedUtils/3d/contracts;../../../RecorderLnx/../SharedUtils/3d/io;../../../RecorderLnx/../SharedUtils/3d/interaction;../../../RecorderLnx/../SharedUtils/3d/motion;../../../RecorderLnx/../SharedUtils/3d/lcl;../../../RecorderLnx/../SharedUtils/3d/render/opengl;../../../RecorderLnx/../Tests/RecorderTests/UITestData;../../../RecorderLnx/../third_party/fpspreadsheet"/>
+      <UnitOutputDirectory Value="lib/units"/>
+    </SearchPaths>
+  </CompilerOptions>
+</CONFIG>
+
+
